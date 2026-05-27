@@ -67,3 +67,7 @@ Expecting 'ATTRIBUTE_WORD', got 'COMMENT'
 For more information, see https://docs.github.com/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams#creating-mermaid-diagrams
 
 How can we solve it?
+
+# Github Copilot (Claude Haiku 4.5)
+
+9. can you do an adversarial review of the docs and the readme.md?
