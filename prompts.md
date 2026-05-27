@@ -53,3 +53,5 @@ R:"docs/PRD.md in the repo".
 5. can you update the docs to match with claude.md criteria?
 
 6. can you populate the data-model.md?
+
+7. can you made an architecture-diagram.md file with architectural c4 diagrams related to NomadHome using mermaid?
