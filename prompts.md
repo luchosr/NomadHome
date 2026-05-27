@@ -55,3 +55,15 @@ R:"docs/PRD.md in the repo".
 6. can you populate the data-model.md?
 
 7. can you made an architecture-diagram.md file with architectural c4 diagrams related to NomadHome using mermaid?
+
+8. when I review the data-model from github, the diagram in README.md (point 3.1) I see this error:
+   Unable to render rich display
+
+Parse error on line 14:
+... uuid userId PK_FK "1:1 with USER"
+-----------------------^
+Expecting 'ATTRIBUTE_WORD', got 'COMMENT'
+
+For more information, see https://docs.github.com/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams#creating-mermaid-diagrams
+
+How can we solve it?
