@@ -42,8 +42,6 @@ A Co-living and Workspace platform
 
 ## 1. Product Description
 
-> Describe in detail the following aspects of the product:
-
 ### **1.1. Objective:**
 
 NomadHome is a SaaS marketplace that connects digital nomads, remote teams, and distributed workers with co-living spaces and workspaces — and the property hosts and operators that supply them.
@@ -51,12 +49,14 @@ NomadHome is a SaaS marketplace that connects digital nomads, remote teams, and 
 **Problem solved.** Nomad housing today is fragmented across Airbnb (optimized for nightly stays, hostile to longer ones), individual co-living operators (hard to compare, no portable identity or review history), separate coworking platforms (when you only need a desk), and informal Facebook/Slack channels (no trust signals). On the supply side, independent operators lack a focused channel to reach the nomad audience.
 
 **Who it's for.**
+
 - **Digital nomads and remote workers** booking 1-week to 3-month stays across cities, who value flexibility and community.
 - **Remote team leads** booking group accommodation and workspace for a distributed-team offsite.
 - **Property hosts and small co-living operators** looking for a focused channel without the longer-stay tax of Airbnb.
 - **Platform admins** moderating the marketplace at the minimum needed to keep it trustworthy.
 
 **Value delivered.**
+
 - **One place** to discover, book, pay, and review longer stays — replacing the patchwork above.
 - **A basic trust layer** (verified email, reviews, role-based access) appropriate for the MVP audience size.
 - **All-inclusive pricing** with a transparent split fee model (guest service fee + host commission).
@@ -68,18 +68,18 @@ NomadHome is a SaaS marketplace that connects digital nomads, remote teams, and 
 
 The MVP delivers ten capabilities, each scoped to the minimum that proves the end-to-end booking loop. Source of truth: [docs/PRD.md](docs/PRD.md) §6 and [docs/tasks.md](docs/tasks.md).
 
-| # | Capability | What it delivers in MVP |
-| - | ---------- | ----------------------- |
-| 1 | **Identity** | Email/password registration with email verification; login with short-lived JWT access tokens + revocable refresh tokens stored in `httpOnly` cookies; roles `guest` / `host` / `admin` (a single account can hold multiple); auth audit log for `registered`, `login_succeeded`, `login_failed`, `role_added`, `user_disabled`. |
-| 2 | **Listings** | Hosts create, edit, publish, and unpublish properties (co-living) and workspaces (hot desks, meeting rooms) with title, description, type, city, capacity, nightly rate, photos (signed-URL upload), and amenities. Listings move through `DRAFT → PUBLISHED → DISABLED` with invariants enforced in the domain layer (no publishing without a photo, amenity, and non-zero rate). |
-| 3 | **Search** | Guests search published listings by city + date range. Filter by price range, type, amenities (AND semantics), and capacity. Results are paginated, URL-state-synced so they're shareable, and exclude any listing whose `AvailabilityBlock` rows overlap the requested range. |
-| 4 | **Booking** | Instant booking with atomic hold: a `Booking (PENDING_PAYMENT)` and its `AvailabilityBlock (BOOKING_HOLD)` are inserted in one transaction guarded by a Postgres `EXCLUDE USING gist` constraint — concurrent double-booking is structurally impossible. Guests can cancel before check-in; refund amount is computed per cancellation policy and queued as `RefundRequest (PENDING_ADMIN)`. |
-| 5 | **Payments** | Stripe Checkout (hosted) for guest payment — NomadHome never touches card data. Platform charges a configurable **split fee**: a guest service fee added on top of the host price, plus a host commission deducted from the host's payout. Both fees are snapshotted on the booking at creation time so future config changes never retro-alter existing bookings. Webhooks (`checkout.session.completed`, `checkout.session.expired`) are signature-verified and idempotent via a `StripeProcessedEvent` dedup table. Host payouts are **manual** in MVP: admins see what is owed per host and record the out-of-band transfer. |
-| 6 | **Reviews** | One guest review per completed booking (1–5 stars + optional free text, max 2000 chars), enforced by `Review.bookingId UNIQUE`. `Listing.averageRating` and `Listing.reviewCount` are recomputed in the same transaction as the review insert. |
-| 7 | **Host tooling** | Minimal host dashboard listing own listings (all statuses) and upcoming bookings sorted by check-in. Guest PII minimized to first name + last initial. |
-| 8 | **Admin** | Role-guarded admin surface (no separate `apps/admin` in MVP). Disable users with cascading effects: hide their listings, flag affected confirmed bookings, revoke all refresh tokens. Disable listings with notice emails to affected guests/hosts. Compute and record manual host payouts. |
-| 9 | **Platform** | English-only, mobile-responsive web. All user-facing strings routed through a `t(key)` helper backed by a single English lookup table so future i18n is an integration, not a refactor. |
-| 10 | **Compliance** | bcrypt (cost ≥12) for passwords; HTTPS in production; refresh tokens stored as hashes; auth event audit log; PII minimization on host-facing endpoints; rate limits on auth endpoints. |
+| #   | Capability       | What it delivers in MVP                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Identity**     | Email/password registration with email verification; login with short-lived JWT access tokens + revocable refresh tokens stored in `httpOnly` cookies; roles `guest` / `host` / `admin` (a single account can hold multiple); auth audit log for `registered`, `login_succeeded`, `login_failed`, `role_added`, `user_disabled`.                                                                                                                                                                                                                                                                                                 |
+| 2   | **Listings**     | Hosts create, edit, publish, and unpublish properties (co-living) and workspaces (hot desks, meeting rooms) with title, description, type, city, capacity, nightly rate, photos (signed-URL upload), and amenities. Listings move through `DRAFT → PUBLISHED → DISABLED` with invariants enforced in the domain layer (no publishing without a photo, amenity, and non-zero rate).                                                                                                                                                                                                                                               |
+| 3   | **Search**       | Guests search published listings by city + date range. Filter by price range, type, amenities (AND semantics), and capacity. Results are paginated, URL-state-synced so they're shareable, and exclude any listing whose `AvailabilityBlock` rows overlap the requested range.                                                                                                                                                                                                                                                                                                                                                   |
+| 4   | **Booking**      | Instant booking with atomic hold: a `Booking (PENDING_PAYMENT)` and its `AvailabilityBlock (BOOKING_HOLD)` are inserted in one transaction guarded by a Postgres `EXCLUDE USING gist` constraint — concurrent double-booking is structurally impossible. Guests can cancel before check-in; refund amount is computed per cancellation policy and queued as `RefundRequest (PENDING_ADMIN)`.                                                                                                                                                                                                                                     |
+| 5   | **Payments**     | Stripe Checkout (hosted) for guest payment — NomadHome never touches card data. Platform charges a configurable **split fee**: a guest service fee added on top of the host price, plus a host commission deducted from the host's payout. Both fees are snapshotted on the booking at creation time so future config changes never retro-alter existing bookings. Webhooks (`checkout.session.completed`, `checkout.session.expired`) are signature-verified and idempotent via a `StripeProcessedEvent` dedup table. Host payouts are **manual** in MVP: admins see what is owed per host and record the out-of-band transfer. |
+| 6   | **Reviews**      | One guest review per completed booking (1–5 stars + optional free text, max 2000 chars), enforced by `Review.bookingId UNIQUE`. `Listing.averageRating` and `Listing.reviewCount` are recomputed in the same transaction as the review insert.                                                                                                                                                                                                                                                                                                                                                                                   |
+| 7   | **Host tooling** | Minimal host dashboard listing own listings (all statuses) and upcoming bookings sorted by check-in. Guest PII minimized to first name + last initial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 8   | **Admin**        | Role-guarded admin surface (no separate `apps/admin` in MVP). Disable users with cascading effects: hide their listings, flag affected confirmed bookings, revoke all refresh tokens. Disable listings with notice emails to affected guests/hosts. Compute and record manual host payouts.                                                                                                                                                                                                                                                                                                                                      |
+| 9   | **Platform**     | English-only, mobile-responsive web. All user-facing strings routed through a `t(key)` helper backed by a single English lookup table so future i18n is an integration, not a refactor.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 10  | **Compliance**   | bcrypt (cost ≥12) for passwords; HTTPS in production; refresh tokens stored as hashes; auth event audit log; PII minimization on host-facing endpoints; rate limits on auth endpoints.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 **Explicitly not in MVP** ([docs/PRD.md](docs/PRD.md) §3.2 and Appendix A): native mobile, PWA, i18n beyond English, OAuth, in-app messaging, push notifications, calendar sync, automated payouts, refund automation, community features, roommate matching, dynamic pricing, channel manager integrations, analytics dashboards, dispute resolution, public partner API, ID verification, host-to-guest reviews, group bookings as a first-class object.
 
@@ -141,14 +141,15 @@ C4Container
 
 **Pattern: Layered DDD per bounded context.** The four bounded contexts are **Identity**, **Listings**, **Booking & Payments**, and **Trust** (Reviews + Admin). Each contains the four canonical layers:
 
-| Layer | Lives in | Responsibility |
-| ----- | -------- | -------------- |
-| **Presentation** | `apps/api/src/presentation/` | Controllers, Express routes, middleware (`requireAuth`, `requireRole`) |
-| **Application** | `apps/api/src/application/` | Services that orchestrate workflows; transactions span here |
-| **Domain** | `apps/api/src/domain/` | Entities, value objects, repository interfaces, domain services — zero external dependencies |
-| **Infrastructure** | `apps/api/src/infrastructure/` | Prisma-backed repositories, Stripe/Resend/storage clients, logger |
+| Layer              | Lives in                       | Responsibility                                                                               |
+| ------------------ | ------------------------------ | -------------------------------------------------------------------------------------------- |
+| **Presentation**   | `apps/api/src/presentation/`   | Controllers, Express routes, middleware (`requireAuth`, `requireRole`)                       |
+| **Application**    | `apps/api/src/application/`    | Services that orchestrate workflows; transactions span here                                  |
+| **Domain**         | `apps/api/src/domain/`         | Entities, value objects, repository interfaces, domain services — zero external dependencies |
+| **Infrastructure** | `apps/api/src/infrastructure/` | Prisma-backed repositories, Stripe/Resend/storage clients, logger                            |
 
 **Why this architecture.**
+
 - **Bounded contexts mirror the marketplace's natural domains.** Adding a Post-MVP capability (in-app messaging, community, dynamic pricing) becomes a new context, not a refactor of existing code.
 - **Repository interfaces in domain + Prisma in infrastructure** keeps business logic independent of the ORM. Service tests inject in-memory fakes and run in milliseconds; the ORM itself is replaceable.
 - **Shared Zod schemas in `packages/shared`** eliminate FE↔BE drift structurally: a schema change anywhere is a schema change everywhere.
@@ -157,12 +158,14 @@ C4Container
 - **Monorepo + pnpm workspaces + Turbo** keeps FE, BE, DB, and contracts in one place so behavior-changing PRs touch all sides atomically.
 
 **Benefits.**
+
 - **Fast onboarding.** The structure is predictable — any new feature lives in the same place for the same reason.
 - **High testability.** Every layer is mockable at its boundary; the ≥80% coverage gate on changed lines is reachable without painful integration plumbing.
 - **Scope-defended MVP.** The Post-MVP backlog has a known landing zone (a new context); CLAUDE.md §9 Checkpoint F enforces it.
 - **Structural correctness over runtime correctness.** Critical invariants (no double-booking, no fee retroactivity, no duplicate review) are enforced by the database and the domain layer, not by remembering to check in every controller.
 
 **Trade-offs / costs.**
+
 - **More boilerplate up front** vs a "controller → Prisma directly" style. The payoff arrives the second time we touch a feature.
 - **Monorepo discipline** is required — package boundaries are enforced by lint rules and CI, not by goodwill.
 - **Admin lives behind role-guarded routes in `apps/web`**, not in a separate `apps/admin/`, to cut MVP surface area. Promoting admin to its own app is Post-MVP.
@@ -171,19 +174,19 @@ C4Container
 
 ### **2.2. Description of Main Components:**
 
-| Component | Technology | Responsibility |
-| --------- | ---------- | -------------- |
-| **`apps/web`** — Web App | React 18, Vite, TypeScript (strict), TanStack Query (v5), Zustand, React Router (v6), Tailwind CSS, shadcn/ui, React Hook Form + Zod (resolver) | Single-page app serving guest, host, and admin surfaces behind role-guarded routes. State is split by intent: TanStack Query owns **server state** (caching, invalidation, retries); Zustand owns **ephemeral UI state** (drawer open, theme); URL query params own **shareable filter state** (search inputs). Forms use RHF with Zod schemas imported from `packages/shared` so the same validation runs on the wire and in the browser. |
-| **`apps/api`** — REST API | Node.js ≥20.19, Express, TypeScript (strict, `noUncheckedIndexedAccess`), bcrypt (cost 12+), jsonwebtoken, Stripe SDK, Resend SDK, pino (structured logging), express-rate-limit | Long-lived process exposing `/api/v1`. Layered DDD organized by bounded context. Holds all secrets (JWT, Stripe, Resend, DB credentials). Middleware: `requireAuth` parses JWT and rejects disabled users; `requireRole(role)` factory enforces RBAC; global error middleware maps domain errors to the standard `{ success: false, error: { message, code } }` envelope. |
-| **`PostgreSQL`** — Database | Postgres 15+ with `citext` and `btree_gist` extensions | Single relational store for all aggregates. `citext` powers case-insensitive email uniqueness; `btree_gist` powers the `EXCLUDE USING gist (listingId WITH =, daterange("startDate", "endDate", '[)') WITH &&)` constraint on `AvailabilityBlock` that prevents overlapping bookings under concurrent writes. Daily backups; one logical database per environment. |
-| **`packages/db`** — Database Package | Prisma 5+ | Owns `prisma/schema.prisma` (the single source of truth for DB structure), `prisma/migrations/` (version-controlled), and `seed.ts` (admin user + amenity lookup + initial `PlatformFeeConfig`). Generates the typed Prisma client consumed exclusively by `apps/api`. |
-| **`packages/shared`** — Shared Contracts | TypeScript, Zod | The contract bridge between FE and BE. Zod schemas (e.g., `RegisterUserSchema`, `CreateListingSchema`, `SearchListingsQuerySchema`) are imported by both `apps/api` (server-side validation) and `apps/web` (RHF resolver). Also home to DTO types and the `t(key)` i18n helper backed by a typed English lookup table. |
-| **`packages/ui`** — Shared UI Primitives | React, shadcn/ui (built on Radix), Tailwind, Lucide React (icons) | Visual primitives shared between guest, host, and admin surfaces of `apps/web`. shadcn components are kept unmodified; variation is achieved by composing them with `cn(...)` utility classes. |
-| **`packages/config`** — Shared Config | ESLint, Prettier, TypeScript, Tailwind config presets | One source of lint/format/type/Tailwind rules. Every workspace package extends from here. |
-| **Stripe** (external) | Stripe Checkout (hosted) + webhooks | Hosted payment surface. NomadHome creates a Checkout Session with `metadata.bookingId`, redirects the guest, and listens for `checkout.session.completed` / `checkout.session.expired` webhooks. Signature-verified and idempotent via the `StripeProcessedEvent` dedup table — replays cause no duplicate emails or status flips. Card data never touches NomadHome servers. |
-| **Resend** (external) | Resend HTTP API | Transactional email: `verify-email`, `booking-confirmation-guest`, `booking-confirmation-host`, `booking-cancelled-host`, `refund-pending-guest`, `listing-disabled-notice`, `payout-recorded`. No marketing email in MVP. |
-| **Photo Storage** (external, TBD) | Cloudflare R2 / AWS S3 / Supabase Storage — pending decision (XC-7.3) | Listing photo uploads via signed PUT URL flow. The API issues short-lived presigned URLs; the browser uploads directly; the API then persists the resulting URL in `ListingPhoto`. No image bytes flow through `apps/api`. |
-| **CI** | GitHub Actions | Blocking gate per [CLAUDE.md](CLAUDE.md) §7: install (frozen lockfile) → lint → typecheck → test (≥80% coverage on changed lines) → Playwright E2E → build → `openspec validate --strict`. Branch protection on `main` requires green CI + at least one human review. |
+| Component                                | Technology                                                                                                                                                                       | Responsibility                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`apps/web`** — Web App                 | React 18, Vite, TypeScript (strict), TanStack Query (v5), Zustand, React Router (v6), Tailwind CSS, shadcn/ui, React Hook Form + Zod (resolver)                                  | Single-page app serving guest, host, and admin surfaces behind role-guarded routes. State is split by intent: TanStack Query owns **server state** (caching, invalidation, retries); Zustand owns **ephemeral UI state** (drawer open, theme); URL query params own **shareable filter state** (search inputs). Forms use RHF with Zod schemas imported from `packages/shared` so the same validation runs on the wire and in the browser. |
+| **`apps/api`** — REST API                | Node.js ≥20.19, Express, TypeScript (strict, `noUncheckedIndexedAccess`), bcrypt (cost 12+), jsonwebtoken, Stripe SDK, Resend SDK, pino (structured logging), express-rate-limit | Long-lived process exposing `/api/v1`. Layered DDD organized by bounded context. Holds all secrets (JWT, Stripe, Resend, DB credentials). Middleware: `requireAuth` parses JWT and rejects disabled users; `requireRole(role)` factory enforces RBAC; global error middleware maps domain errors to the standard `{ success: false, error: { message, code } }` envelope.                                                                  |
+| **`PostgreSQL`** — Database              | Postgres 15+ with `citext` and `btree_gist` extensions                                                                                                                           | Single relational store for all aggregates. `citext` powers case-insensitive email uniqueness; `btree_gist` powers the `EXCLUDE USING gist (listingId WITH =, daterange("startDate", "endDate", '[)') WITH &&)` constraint on `AvailabilityBlock` that prevents overlapping bookings under concurrent writes. Daily backups; one logical database per environment.                                                                         |
+| **`packages/db`** — Database Package     | Prisma 5+                                                                                                                                                                        | Owns `prisma/schema.prisma` (the single source of truth for DB structure), `prisma/migrations/` (version-controlled), and `seed.ts` (admin user + amenity lookup + initial `PlatformFeeConfig`). Generates the typed Prisma client consumed exclusively by `apps/api`.                                                                                                                                                                     |
+| **`packages/shared`** — Shared Contracts | TypeScript, Zod                                                                                                                                                                  | The contract bridge between FE and BE. Zod schemas (e.g., `RegisterUserSchema`, `CreateListingSchema`, `SearchListingsQuerySchema`) are imported by both `apps/api` (server-side validation) and `apps/web` (RHF resolver). Also home to DTO types and the `t(key)` i18n helper backed by a typed English lookup table.                                                                                                                    |
+| **`packages/ui`** — Shared UI Primitives | React, shadcn/ui (built on Radix), Tailwind, Lucide React (icons)                                                                                                                | Visual primitives shared between guest, host, and admin surfaces of `apps/web`. shadcn components are kept unmodified; variation is achieved by composing them with `cn(...)` utility classes.                                                                                                                                                                                                                                             |
+| **`packages/config`** — Shared Config    | ESLint, Prettier, TypeScript, Tailwind config presets                                                                                                                            | One source of lint/format/type/Tailwind rules. Every workspace package extends from here.                                                                                                                                                                                                                                                                                                                                                  |
+| **Stripe** (external)                    | Stripe Checkout (hosted) + webhooks                                                                                                                                              | Hosted payment surface. NomadHome creates a Checkout Session with `metadata.bookingId`, redirects the guest, and listens for `checkout.session.completed` / `checkout.session.expired` webhooks. Signature-verified and idempotent via the `StripeProcessedEvent` dedup table — replays cause no duplicate emails or status flips. Card data never touches NomadHome servers.                                                              |
+| **Resend** (external)                    | Resend HTTP API                                                                                                                                                                  | Transactional email: `verify-email`, `booking-confirmation-guest`, `booking-confirmation-host`, `booking-cancelled-host`, `refund-pending-guest`, `listing-disabled-notice`, `payout-recorded`. No marketing email in MVP.                                                                                                                                                                                                                 |
+| **Photo Storage** (external, TBD)        | Cloudflare R2 / AWS S3 / Supabase Storage — pending decision (XC-7.3)                                                                                                            | Listing photo uploads via signed PUT URL flow. The API issues short-lived presigned URLs; the browser uploads directly; the API then persists the resulting URL in `ListingPhoto`. No image bytes flow through `apps/api`.                                                                                                                                                                                                                 |
+| **CI**                                   | GitHub Actions                                                                                                                                                                   | Blocking gate per [CLAUDE.md](CLAUDE.md) §7: install (frozen lockfile) → lint → typecheck → test (≥80% coverage on changed lines) → Playwright E2E → build → `openspec validate --strict`. Branch protection on `main` requires green CI + at least one human review.                                                                                                                                                                      |
 
 Detailed per-context component diagrams ([Identity](docs/architecture-diagram.md#41-identity-context), [Listings](docs/architecture-diagram.md#42-listings-context), [Booking & Payments](docs/architecture-diagram.md#43-booking--payments-context), [Trust](docs/architecture-diagram.md#44-trust-context-reviews--admin-moderation)) and dynamic sequence views ([registration](docs/architecture-diagram.md#51-guest-registration), [booking happy path](docs/architecture-diagram.md#52-booking-happy-path-search--pay--confirm), [cancellation](docs/architecture-diagram.md#53-guest-cancellation), [admin cascade](docs/architecture-diagram.md#54-admin-disables-a-host-cascade)) live in [docs/architecture-diagram.md](docs/architecture-diagram.md).
 
@@ -292,11 +295,12 @@ nomadhome/
 ```
 
 **Patterns at a glance**:
+
 - **Monorepo with pnpm workspaces** so FE/BE/DB/contracts evolve together; PRs touch every side atomically.
 - **Layered DDD inside `apps/api`** (presentation → application → domain → infrastructure) with bounded contexts mirroring the marketplace's natural domains. Full rationale in [docs/backend-standards.md](docs/backend-standards.md).
 - **Feature folders inside `apps/web`** colocating queries, stores, and pages per feature. Explicit separation of server state (TanStack Query), ephemeral UI state (Zustand), and shareable filter state (URL params). Full rationale in [docs/frontend-standards.md](docs/frontend-standards.md).
 - **`openspec/` as source of truth** for what the system does — every behavior change flows through Proposal → Spec → Implementation → Archive ([CLAUDE.md](CLAUDE.md) §4).
-- **`docs/` as source of truth** for *why* it does it — PRD, data model, C4 diagrams, standards, tasks.
+- **`docs/` as source of truth** for _why_ it does it — PRD, data model, C4 diagrams, standards, tasks.
 
 ### **2.4. Infrastructure and Deployment**
 
@@ -557,18 +561,19 @@ Eight aggregates anchor the MVP. The remaining ten entities (refresh tokens, aud
 
 Authoritative account record. Roles are an array so one account can hold `["guest", "host"]` simultaneously.
 
-| Attribute | Type | Key / Constraints | Description |
-| --------- | ---- | ----------------- | ----------- |
-| `id` | `uuid` | **PK** | UUID v4. |
-| `email` | `citext` | **UNIQUE**, NOT NULL | Case-insensitive uniqueness via Postgres `citext`. |
-| `passwordHash` | `string` | NOT NULL | bcrypt, cost ≥12. Never returned by any endpoint. |
-| `roles` | `string[]` | NOT NULL, default `["guest"]` | Subset of `{guest, host, admin}`. |
-| `emailVerifiedAt` | `DateTime?` | nullable | NULL until `/auth/verify-email` consumed. Booking + listing actions require this set. |
-| `disabledAt` | `DateTime?` | nullable | Set by `AdminService.disableUser`. `requireAuth` rejects any user with this set (`401 ACCOUNT_DISABLED`). |
-| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
-| `updatedAt` | `DateTime` | NOT NULL, `@updatedAt` | |
+| Attribute         | Type        | Key / Constraints             | Description                                                                                               |
+| ----------------- | ----------- | ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `id`              | `uuid`      | **PK**                        | UUID v4.                                                                                                  |
+| `email`           | `citext`    | **UNIQUE**, NOT NULL          | Case-insensitive uniqueness via Postgres `citext`.                                                        |
+| `passwordHash`    | `string`    | NOT NULL                      | bcrypt, cost ≥12. Never returned by any endpoint.                                                         |
+| `roles`           | `string[]`  | NOT NULL, default `["guest"]` | Subset of `{guest, host, admin}`.                                                                         |
+| `emailVerifiedAt` | `DateTime?` | nullable                      | NULL until `/auth/verify-email` consumed. Booking + listing actions require this set.                     |
+| `disabledAt`      | `DateTime?` | nullable                      | Set by `AdminService.disableUser`. `requireAuth` rejects any user with this set (`401 ACCOUNT_DISABLED`). |
+| `createdAt`       | `DateTime`  | NOT NULL, default `now()`     |                                                                                                           |
+| `updatedAt`       | `DateTime`  | NOT NULL, `@updatedAt`        |                                                                                                           |
 
 **Relationships**:
+
 - `User 1 ── 0..1 HostProfile` (guest can upgrade to host via US-1.3)
 - `User 1 ── 0..N Listing` (as host)
 - `User 1 ── 0..N Booking` (as guest, FK `guestId`; also denormalized as `hostId`)
@@ -582,25 +587,25 @@ Authoritative account record. Roles are an array so one account can hold `["gues
 
 The inventory record. Contains `ListingPhoto[]` and `ListingAmenity[]` as part of the aggregate — modifications must go through the root.
 
-| Attribute | Type | Key / Constraints | Description |
-| --------- | ---- | ----------------- | ----------- |
-| `id` | `uuid` | **PK** | |
-| `hostId` | `uuid` | **FK** → `User.id`, NOT NULL | Host owner. |
-| `title` | `string` | NOT NULL | |
-| `description` | `text` | NOT NULL | |
-| `type` | `enum ListingType` | NOT NULL | `PROPERTY` or `WORKSPACE`. |
-| `city` | `string` | NOT NULL, indexed | Exact-match search in MVP. |
-| `country` | `string` | NOT NULL | ISO 3166-1 alpha-2. |
-| `addressLine` | `string` | NOT NULL | |
-| `latitude`, `longitude` | `Decimal(9,6)?` | nullable | For map display. |
-| `capacity` | `int` | NOT NULL, ≥1 | |
-| `nightlyRateCents` | `int` | NOT NULL, >0 | Integer cents (never floats). |
-| `currency` | `string` | NOT NULL, default `"USD"` | ISO 4217. |
-| `status` | `enum ListingStatus` | NOT NULL, default `DRAFT` | `DRAFT → PUBLISHED → DISABLED`. |
-| `averageRating` | `Decimal(3,2)?` | nullable | **Denormalized** from `Review`. Recomputed in the same transaction as each review insert. |
-| `reviewCount` | `int` | NOT NULL, default 0 | **Denormalized** from `Review`. |
-| `disabledAt` | `DateTime?` | nullable | Set only by admin (US-8.2). |
-| `createdAt`, `updatedAt` | `DateTime` | | |
+| Attribute                | Type                 | Key / Constraints            | Description                                                                               |
+| ------------------------ | -------------------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `id`                     | `uuid`               | **PK**                       |                                                                                           |
+| `hostId`                 | `uuid`               | **FK** → `User.id`, NOT NULL | Host owner.                                                                               |
+| `title`                  | `string`             | NOT NULL                     |                                                                                           |
+| `description`            | `text`               | NOT NULL                     |                                                                                           |
+| `type`                   | `enum ListingType`   | NOT NULL                     | `PROPERTY` or `WORKSPACE`.                                                                |
+| `city`                   | `string`             | NOT NULL, indexed            | Exact-match search in MVP.                                                                |
+| `country`                | `string`             | NOT NULL                     | ISO 3166-1 alpha-2.                                                                       |
+| `addressLine`            | `string`             | NOT NULL                     |                                                                                           |
+| `latitude`, `longitude`  | `Decimal(9,6)?`      | nullable                     | For map display.                                                                          |
+| `capacity`               | `int`                | NOT NULL, ≥1                 |                                                                                           |
+| `nightlyRateCents`       | `int`                | NOT NULL, >0                 | Integer cents (never floats).                                                             |
+| `currency`               | `string`             | NOT NULL, default `"USD"`    | ISO 4217.                                                                                 |
+| `status`                 | `enum ListingStatus` | NOT NULL, default `DRAFT`    | `DRAFT → PUBLISHED → DISABLED`.                                                           |
+| `averageRating`          | `Decimal(3,2)?`      | nullable                     | **Denormalized** from `Review`. Recomputed in the same transaction as each review insert. |
+| `reviewCount`            | `int`                | NOT NULL, default 0          | **Denormalized** from `Review`.                                                           |
+| `disabledAt`             | `DateTime?`          | nullable                     | Set only by admin (US-8.2).                                                               |
+| `createdAt`, `updatedAt` | `DateTime`           |                              |                                                                                           |
 
 **Domain invariants** (enforced in `Listing.publish()`): cannot transition to `PUBLISHED` without ≥1 `ListingPhoto`, ≥1 `ListingAmenity`, and `nightlyRateCents > 0`. Re-enabling a `DISABLED` listing reverts to `DRAFT`, never directly to `PUBLISHED` — host must re-publish.
 
@@ -614,32 +619,33 @@ The inventory record. Contains `ListingPhoto[]` and `ListingAmenity[]` as part o
 
 Snapshot-heavy. Prices and fees are frozen at booking time so subsequent `PlatformFeeConfig` changes never retro-alter financials.
 
-| Attribute | Type | Key / Constraints | Description |
-| --------- | ---- | ----------------- | ----------- |
-| `id` | `uuid` | **PK** | |
-| `listingId` | `uuid` | **FK** → `Listing.id`, NOT NULL | |
-| `guestId` | `uuid` | **FK** → `User.id`, NOT NULL | |
-| `hostId` | `uuid` | **FK** → `User.id`, NOT NULL | Denormalized for host-side queries. |
-| `checkIn` | `Date` | NOT NULL | Inclusive. |
-| `checkOut` | `Date` | NOT NULL, > `checkIn` | Exclusive. |
-| `nights` | `int` | NOT NULL, ≥1 | Snapshot. |
-| `nightlyRateCents` | `int` | NOT NULL | **SNAPSHOT — immutable** after insert. |
-| `subtotalCents` | `int` | NOT NULL | = `nightlyRateCents * nights`. |
-| `guestServiceFeeBps` | `int` | NOT NULL | SNAPSHOT from `PlatformFeeConfig`. |
-| `guestServiceFeeCents` | `int` | NOT NULL | |
-| `hostCommissionBps` | `int` | NOT NULL | SNAPSHOT. |
-| `hostCommissionCents` | `int` | NOT NULL | |
-| `currency` | `string` | NOT NULL | SNAPSHOT. |
-| `totalChargedCents` | `int` | NOT NULL | What the guest is charged (= `subtotal + guestServiceFee`). |
-| `payoutCents` | `int` | NOT NULL | What the host receives (= `subtotal − hostCommission`). |
-| `status` | `enum BookingStatus` | NOT NULL, default `PENDING_PAYMENT` | `PENDING_PAYMENT → CONFIRMED → COMPLETED`, or `→ CANCELLED`. |
-| `stripeCheckoutSessionId` | `string?` | nullable | Set when checkout starts. |
-| `stripePaymentIntentId` | `string?` | nullable | Captured from webhook. |
-| `confirmedAt` | `DateTime?` | nullable | Set on `checkout.session.completed`. |
-| `cancelledAt`, `cancellationReason` | `DateTime? / string?` | nullable | |
-| `createdAt` | `DateTime` | default `now()` | |
+| Attribute                           | Type                  | Key / Constraints                   | Description                                                  |
+| ----------------------------------- | --------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| `id`                                | `uuid`                | **PK**                              |                                                              |
+| `listingId`                         | `uuid`                | **FK** → `Listing.id`, NOT NULL     |                                                              |
+| `guestId`                           | `uuid`                | **FK** → `User.id`, NOT NULL        |                                                              |
+| `hostId`                            | `uuid`                | **FK** → `User.id`, NOT NULL        | Denormalized for host-side queries.                          |
+| `checkIn`                           | `Date`                | NOT NULL                            | Inclusive.                                                   |
+| `checkOut`                          | `Date`                | NOT NULL, > `checkIn`               | Exclusive.                                                   |
+| `nights`                            | `int`                 | NOT NULL, ≥1                        | Snapshot.                                                    |
+| `nightlyRateCents`                  | `int`                 | NOT NULL                            | **SNAPSHOT — immutable** after insert.                       |
+| `subtotalCents`                     | `int`                 | NOT NULL                            | = `nightlyRateCents * nights`.                               |
+| `guestServiceFeeBps`                | `int`                 | NOT NULL                            | SNAPSHOT from `PlatformFeeConfig`.                           |
+| `guestServiceFeeCents`              | `int`                 | NOT NULL                            |                                                              |
+| `hostCommissionBps`                 | `int`                 | NOT NULL                            | SNAPSHOT.                                                    |
+| `hostCommissionCents`               | `int`                 | NOT NULL                            |                                                              |
+| `currency`                          | `string`              | NOT NULL                            | SNAPSHOT.                                                    |
+| `totalChargedCents`                 | `int`                 | NOT NULL                            | What the guest is charged (= `subtotal + guestServiceFee`).  |
+| `payoutCents`                       | `int`                 | NOT NULL                            | What the host receives (= `subtotal − hostCommission`).      |
+| `status`                            | `enum BookingStatus`  | NOT NULL, default `PENDING_PAYMENT` | `PENDING_PAYMENT → CONFIRMED → COMPLETED`, or `→ CANCELLED`. |
+| `stripeCheckoutSessionId`           | `string?`             | nullable                            | Set when checkout starts.                                    |
+| `stripePaymentIntentId`             | `string?`             | nullable                            | Captured from webhook.                                       |
+| `confirmedAt`                       | `DateTime?`           | nullable                            | Set on `checkout.session.completed`.                         |
+| `cancelledAt`, `cancellationReason` | `DateTime? / string?` | nullable                            |                                                              |
+| `createdAt`                         | `DateTime`            | default `now()`                     |                                                              |
 
 **Invariants**:
+
 - Atomic creation: `Booking (PENDING_PAYMENT)` and its `AvailabilityBlock (BOOKING_HOLD)` are inserted in one transaction, guarded by the EXCLUDE constraint.
 - Fee snapshot immutability: the seven `*Bps` / `*Cents` / `currency` / `nightlyRateCents` columns are never UPDATEd after insert.
 - Hold lifecycle: a `BOOKING_HOLD` row exists iff status ∈ `{PENDING_PAYMENT, CONFIRMED}`. `CANCELLED` deletes the hold; `COMPLETED` keeps it as historical record.
@@ -650,15 +656,15 @@ Snapshot-heavy. Prices and fees are frozen at booking time so subsequent `Platfo
 
 The most operationally critical table. Three sources distinguished by `source`:
 
-| Attribute | Type | Key / Constraints | Description |
-| --------- | ---- | ----------------- | ----------- |
-| `id` | `uuid` | **PK** | |
-| `listingId` | `uuid` | **FK** → `Listing.id`, NOT NULL | |
-| `startDate` | `Date` | NOT NULL | Inclusive. |
-| `endDate` | `Date` | NOT NULL | Exclusive. |
-| `source` | `enum AvailabilityBlockSource` | NOT NULL | `HOST_BLOCK` (host calendar block), `BOOKING_HOLD` (active booking), `ADMIN_BLOCK` (moderation). |
-| `bookingId` | `uuid?` | **FK** → `Booking.id`, nullable | NOT NULL when `source = BOOKING_HOLD`. |
-| `createdAt` | `DateTime` | | |
+| Attribute   | Type                           | Key / Constraints               | Description                                                                                      |
+| ----------- | ------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `id`        | `uuid`                         | **PK**                          |                                                                                                  |
+| `listingId` | `uuid`                         | **FK** → `Listing.id`, NOT NULL |                                                                                                  |
+| `startDate` | `Date`                         | NOT NULL                        | Inclusive.                                                                                       |
+| `endDate`   | `Date`                         | NOT NULL                        | Exclusive.                                                                                       |
+| `source`    | `enum AvailabilityBlockSource` | NOT NULL                        | `HOST_BLOCK` (host calendar block), `BOOKING_HOLD` (active booking), `ADMIN_BLOCK` (moderation). |
+| `bookingId` | `uuid?`                        | **FK** → `Booking.id`, nullable | NOT NULL when `source = BOOKING_HOLD`.                                                           |
+| `createdAt` | `DateTime`                     |                                 |                                                                                                  |
 
 **Postgres EXCLUDE constraint** (the centerpiece of the booking guarantee):
 
@@ -677,12 +683,12 @@ Two transactions inserting overlapping ranges for the same listing cannot both s
 
 #### **`PlatformFeeConfig`** — Snapshotted at booking time
 
-| Attribute | Type | Constraints | Description |
-| --------- | ---- | ----------- | ----------- |
-| `id` | `uuid` | **PK** | |
-| `guestServiceFeeBps` | `int` | NOT NULL | Basis points. E.g., 1200 = 12%. |
-| `hostCommissionBps` | `int` | NOT NULL | E.g., 300 = 3%. |
-| `effectiveFrom` | `DateTime` | NOT NULL | "Current" = highest `effectiveFrom <= now()`. |
+| Attribute            | Type       | Constraints | Description                                   |
+| -------------------- | ---------- | ----------- | --------------------------------------------- |
+| `id`                 | `uuid`     | **PK**      |                                               |
+| `guestServiceFeeBps` | `int`      | NOT NULL    | Basis points. E.g., 1200 = 12%.               |
+| `hostCommissionBps`  | `int`      | NOT NULL    | E.g., 300 = 3%.                               |
+| `effectiveFrom`      | `DateTime` | NOT NULL    | "Current" = highest `effectiveFrom <= now()`. |
 
 Historical rows are kept for auditability. `PricingService.currentConfig()` resolves the active row; `BookingService.startCheckout` snapshots the values onto the booking — no FK to this table from `Booking`, on purpose.
 
@@ -690,15 +696,15 @@ Historical rows are kept for auditability. `PricingService.currentConfig()` reso
 
 #### **`Review`** — Trust aggregate
 
-| Attribute | Type | Key / Constraints | Description |
-| --------- | ---- | ----------------- | ----------- |
-| `id` | `uuid` | **PK** | |
-| `bookingId` | `uuid` | **FK** → `Booking.id`, **UNIQUE** | One review per booking. |
-| `listingId` | `uuid` | **FK** → `Listing.id` | Denormalized for read-side fanout. |
-| `guestId` | `uuid` | **FK** → `User.id` | |
-| `rating` | `int` | NOT NULL, CHECK 1..5 | |
-| `body` | `text?` | nullable, max 2000 chars | |
-| `createdAt` | `DateTime` | default `now()` | |
+| Attribute   | Type       | Key / Constraints                 | Description                        |
+| ----------- | ---------- | --------------------------------- | ---------------------------------- |
+| `id`        | `uuid`     | **PK**                            |                                    |
+| `bookingId` | `uuid`     | **FK** → `Booking.id`, **UNIQUE** | One review per booking.            |
+| `listingId` | `uuid`     | **FK** → `Listing.id`             | Denormalized for read-side fanout. |
+| `guestId`   | `uuid`     | **FK** → `User.id`                |                                    |
+| `rating`    | `int`      | NOT NULL, CHECK 1..5              |                                    |
+| `body`      | `text?`    | nullable, max 2000 chars          |                                    |
+| `createdAt` | `DateTime` | default `now()`                   |                                    |
 
 Insert triggers (in app, not DB) recompute `Listing.averageRating` and `Listing.reviewCount` in the **same transaction** as the review insert — guarantees consistency under concurrent reviews.
 
@@ -706,23 +712,23 @@ Insert triggers (in app, not DB) recompute `Listing.averageRating` and `Listing.
 
 #### **`Payout`** + **`PayoutBooking`** — Manual host payouts (MVP)
 
-| `Payout` attribute | Type | Constraints | Description |
-| ------------------ | ---- | ----------- | ----------- |
-| `id` | `uuid` | **PK** | |
-| `hostId` | `uuid` | **FK** → `User.id` | |
-| `amountCents` | `int` | NOT NULL, ≥0 | Sum of related `Booking.payoutCents`. |
-| `currency` | `string` | NOT NULL | |
-| `paidAt` | `Date` | NOT NULL | Date of out-of-band transfer. |
-| `method` | `string` | NOT NULL | `bank_transfer`, `wise`, `paypal`, etc. |
-| `externalReference` | `string?` | nullable | Reference id from external system. |
-| `notes` | `text?` | nullable | |
-| `recordedByAdminId` | `uuid` | **FK** → `User.id` | Admin who recorded the payout. |
-| `createdAt` | `DateTime` | default `now()` | |
+| `Payout` attribute  | Type       | Constraints        | Description                             |
+| ------------------- | ---------- | ------------------ | --------------------------------------- |
+| `id`                | `uuid`     | **PK**             |                                         |
+| `hostId`            | `uuid`     | **FK** → `User.id` |                                         |
+| `amountCents`       | `int`      | NOT NULL, ≥0       | Sum of related `Booking.payoutCents`.   |
+| `currency`          | `string`   | NOT NULL           |                                         |
+| `paidAt`            | `Date`     | NOT NULL           | Date of out-of-band transfer.           |
+| `method`            | `string`   | NOT NULL           | `bank_transfer`, `wise`, `paypal`, etc. |
+| `externalReference` | `string?`  | nullable           | Reference id from external system.      |
+| `notes`             | `text?`    | nullable           |                                         |
+| `recordedByAdminId` | `uuid`     | **FK** → `User.id` | Admin who recorded the payout.          |
+| `createdAt`         | `DateTime` | default `now()`    |                                         |
 
-| `PayoutBooking` attribute | Type | Constraints |
-| ------------------------- | ---- | ----------- |
-| `payoutId` | `uuid` | **PK** + **FK** → `Payout.id` |
-| `bookingId` | `uuid` | **PK** + **FK** → `Booking.id`, **UNIQUE** |
+| `PayoutBooking` attribute | Type   | Constraints                                |
+| ------------------------- | ------ | ------------------------------------------ |
+| `payoutId`                | `uuid` | **PK** + **FK** → `Payout.id`              |
+| `bookingId`               | `uuid` | **PK** + **FK** → `Booking.id`, **UNIQUE** |
 
 The `bookingId UNIQUE` constraint is the key guarantee: a booking can be settled exactly once. `PayoutService.recordPayout` validates eligibility (booking is `COMPLETED`, not yet attached to any `Payout`) and inserts both rows in a single transaction.
 
@@ -732,14 +738,14 @@ The `bookingId UNIQUE` constraint is the key guarantee: a booking can be settled
 
 Lazy-created when a guest upgrades to host (US-1.3). Decouples host-specific contact info from the core identity record.
 
-| Attribute | Type | Constraints |
-| --------- | ---- | ----------- |
-| `userId` | `uuid` | **PK** + **FK** → `User.id`, UNIQUE |
-| `displayName` | `string` | NOT NULL, min length 2 |
-| `phone` | `string` | NOT NULL, E.164 validated at app layer |
-| `payoutEmail` | `string` | NOT NULL |
-| `acceptedTermsVersion` | `string` | NOT NULL, frozen at onboarding |
-| `createdAt` | `DateTime` | default `now()` |
+| Attribute              | Type       | Constraints                            |
+| ---------------------- | ---------- | -------------------------------------- |
+| `userId`               | `uuid`     | **PK** + **FK** → `User.id`, UNIQUE    |
+| `displayName`          | `string`   | NOT NULL, min length 2                 |
+| `phone`                | `string`   | NOT NULL, E.164 validated at app layer |
+| `payoutEmail`          | `string`   | NOT NULL                               |
+| `acceptedTermsVersion` | `string`   | NOT NULL, frozen at onboarding         |
+| `createdAt`            | `DateTime` | default `now()`                        |
 
 ---
 
@@ -781,7 +787,6 @@ components:
             details: { type: array, items: { type: object } }
 
 paths:
-
   # =====================================================================
   # 1) Register a new guest account — US-1.1
   # =====================================================================
@@ -829,8 +834,8 @@ paths:
               example:
                 success: true
                 data:
-                  userId: "0190a5b9-7e9e-7a4a-a98c-3b8a6e7f1d20"
-                  email: "jane@example.com"
+                  userId: '0190a5b9-7e9e-7a4a-a98c-3b8a6e7f1d20'
+                  email: 'jane@example.com'
         '400':
           description: Validation failed.
           content:
@@ -839,7 +844,7 @@ paths:
               example:
                 success: false
                 error:
-                  message: "password must be at least 10 characters"
+                  message: 'password must be at least 10 characters'
                   code: VALIDATION_ERROR
         '409':
           description: Email already registered.
@@ -849,7 +854,7 @@ paths:
               example:
                 success: false
                 error:
-                  message: "Email already registered"
+                  message: 'Email already registered'
                   code: EMAIL_ALREADY_REGISTERED
         '429':
           description: Rate limit exceeded (5 req/min/IP).
@@ -877,15 +882,16 @@ paths:
           in: query
           required: true
           schema: { type: string, format: date }
-          example: "2026-07-01"
+          example: '2026-07-01'
         - name: checkOut
           in: query
           required: true
           schema: { type: string, format: date }
-          example: "2026-07-15"
+          example: '2026-07-15'
         - name: type
           in: query
-          schema: { type: string, enum: [property, workspace, any], default: any }
+          schema:
+            { type: string, enum: [property, workspace, any], default: any }
         - name: minPriceCents
           in: query
           schema: { type: integer, minimum: 0 }
@@ -916,11 +922,11 @@ paths:
               example:
                 success: true
                 data:
-                  - id: "0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31"
-                    title: "Sunny co-living loft in Príncipe Real"
+                  - id: '0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31'
+                    title: 'Sunny co-living loft in Príncipe Real'
                     type: PROPERTY
                     city: Lisbon
-                    coverPhotoUrl: "https://cdn.nomadhome.local/lst/0190a5d4/cover.jpg"
+                    coverPhotoUrl: 'https://cdn.nomadhome.local/lst/0190a5d4/cover.jpg'
                     nightlyRateCents: 7500
                     currency: USD
                     nights: 14
@@ -963,12 +969,12 @@ paths:
               required: [listingId, checkIn, checkOut]
               properties:
                 listingId: { type: string, format: uuid }
-                checkIn:   { type: string, format: date }
-                checkOut:  { type: string, format: date }
+                checkIn: { type: string, format: date }
+                checkOut: { type: string, format: date }
             example:
-              listingId: "0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31"
-              checkIn:   "2026-07-01"
-              checkOut:  "2026-07-15"
+              listingId: '0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31'
+              checkIn: '2026-07-01'
+              checkOut: '2026-07-15'
       responses:
         '200':
           description: Checkout session created. Booking is `PENDING_PAYMENT`.
@@ -977,8 +983,8 @@ paths:
               example:
                 success: true
                 data:
-                  bookingId: "0190a5e1-44b8-7f00-9a12-2c1f3d8a9b4c"
-                  checkoutUrl: "https://checkout.stripe.com/c/pay/cs_test_a1B2c3..."
+                  bookingId: '0190a5e1-44b8-7f00-9a12-2c1f3d8a9b4c'
+                  checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_a1B2c3...'
         '401':
           description: Missing or invalid JWT.
         '403':
@@ -993,7 +999,7 @@ paths:
               example:
                 success: false
                 error:
-                  message: "Selected dates are no longer available"
+                  message: 'Selected dates are no longer available'
                   code: OVERLAP_CONFLICT
 ```
 
@@ -1026,11 +1032,13 @@ The three stories below are the spine of the MVP — registration, search, and b
 - **And** I am redirected to a "check your email" landing page; no auth tokens are issued until I verify and log in
 
 **Edge cases**:
+
 - Email already registered → `409 EMAIL_ALREADY_REGISTERED` (no enumeration leak — error message is generic).
 - Password too weak → `400 VALIDATION_ERROR` with field-level message via Zod.
 - Rate limit: 5 requests/minute/IP via express-rate-limit → `429`.
 
 **Non-functional**:
+
 - bcrypt cost factor configurable via env (`BCRYPT_COST`), default 12.
 - Verification token: 32 random bytes, stored as hash, 24-hour TTL.
 - All user-facing strings via `t()` (e.g., `t('auth.register.errors.emailTaken')`).
@@ -1060,12 +1068,14 @@ The three stories below are the spine of the MVP — registration, search, and b
 - **And** the search query and filter state are encoded in URL query parameters so results are shareable and reload-stable
 
 **Edge cases**:
+
 - Empty result → clear empty-state copy via `t('search.empty')`; no error.
 - Invalid date range (`checkOut <= checkIn`) → `400` with field-level message.
 - Disabled listings (`status = DISABLED`) and draft listings (`status = DRAFT`) are always excluded.
 - City matching is case- and accent-insensitive (`citext` + normalization).
 
 **Non-functional**:
+
 - p95 latency < 200ms for a 1k-listing dataset; backed by composite index `(city, status)`.
 - In-memory LRU cache, 60s TTL, keyed by normalized query — to absorb traffic spikes on popular city pages.
 - TanStack Query on the client uses `keepPreviousData: true` so the result grid stays painted while a refined query is in-flight.
@@ -1093,6 +1103,7 @@ The three stories below are the spine of the MVP — registration, search, and b
 - **Then** a `Booking` row is created with status `CONFIRMED`, the dates are blocked on the listing's `AvailabilityBlock` via a `BOOKING_HOLD` row (inserted atomically with the booking), the guest service fee and host commission are snapshotted onto the booking, and confirmation emails are sent to both guest and host
 
 **Edge cases & invariants**:
+
 - **Concurrent double-booking**: two guests racing for the same dates → one wins (`200 OK`), the other receives `409 OVERLAP_CONFLICT`. Enforced by the Postgres `EXCLUDE USING gist` constraint on `AvailabilityBlock` — not by app code.
 - **Stripe session expiry**: if the guest abandons checkout and the session expires, the `checkout.session.expired` webhook flips the booking to `CANCELLED` and releases the `BOOKING_HOLD`.
 - **Webhook idempotency**: replays of `checkout.session.completed` insert into `StripeProcessedEvent` first; on conflict, no side effects fire (no duplicate emails, no duplicate status flips).
@@ -1100,6 +1111,7 @@ The three stories below are the spine of the MVP — registration, search, and b
 - **Atomic creation**: `Booking` + `BOOKING_HOLD` inside one transaction; rollback on overlap leaves no orphan rows.
 
 **Non-functional**:
+
 - All money flows as `Money` value objects (integer cents + currency) — no floating-point arithmetic anywhere in pricing.
 - Stripe webhook signature verified via `stripe.webhooks.constructEvent` before any side effects.
 - Confirmation email delivery failure does not roll back the booking — the booking is the source of truth; emails are retryable.
@@ -1128,6 +1140,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 **Context.** The booking system is the highest-stakes capability in the MVP — it must be transactional, idempotent, and racing-safe. This ticket implements the create-side end-to-end: from the guest's "Reserve" tap to the redirect to Stripe Checkout. Confirmation (driven by the webhook) lives in a sibling ticket `NH-102`.
 
 **Scope.**
+
 - Add `Booking` domain entity with `confirm()`, `cancel(reason)`, `complete()` methods and the snapshot invariant (fee/rate columns immutable after insert).
 - Add `IBookingRepository` interface and `BookingRepository` Prisma implementation.
 - Add `PricingService.computeBreakdown(listing, range, feeConfig)` using `Money` value objects end-to-end.
@@ -1141,6 +1154,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 - Wire `BookingService` into the composition root (`apps/api/src/index.ts`).
 
 **Files allowed to touch.**
+
 - `packages/db/prisma/schema.prisma` — add `Booking`, `PlatformFeeConfig`, `StripeProcessedEvent` models; create migration `add_bookings`.
 - `packages/shared/src/schemas/bookings.ts` — `CreateBookingSchema`, `BookingDTO`, `PriceBreakdownDTO`.
 - `apps/api/src/domain/models/Booking.ts`, `Money.ts`, `DateRange.ts`.
@@ -1154,17 +1168,20 @@ Three representative tickets — one per discipline (backend, frontend, database
 - Tests in `apps/api/src/**/__tests__/*.test.ts`.
 
 **Forbidden.**
+
 - Touching `openspec/specs/` directly — only `openspec archive` does that.
 - Modifying the `AvailabilityBlock` EXCLUDE constraint (lives in `NH-100` database ticket below).
 - Implementing the webhook handler (separate ticket `NH-102`).
 - Bypassing the snapshot invariant (no UPDATE path may touch `*Bps` / `*Cents` / `currency` / `nightlyRateCents` after insert).
 
 **Acceptance criteria (verbatim from the OpenSpec delta spec).**
+
 - Given an authenticated email-verified guest and an available listing, when `POST /bookings` is called, then a `Booking (PENDING_PAYMENT)` is created, a `BOOKING_HOLD` `AvailabilityBlock` exists with `bookingId` set, all seven snapshot columns are populated, a Stripe Checkout Session is created with `metadata.bookingId`, and the response contains `{ bookingId, checkoutUrl }`.
 - Given two concurrent `POST /bookings` requests for the same listing + overlapping dates, when both reach the DB, then one succeeds and the other receives `409 OVERLAP_CONFLICT`, and no orphan rows are left.
 - Given `PlatformFeeConfig` is changed after a booking is created, when the booking's snapshot columns are read, then they reflect the values at booking creation time (immutability test).
 
 **Quality gates to pass.**
+
 - `pnpm lint` (zero warnings).
 - `pnpm typecheck` (zero errors).
 - `pnpm test --changed --coverage` (all green, ≥80% coverage on changed lines).
@@ -1172,6 +1189,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 - `openspec validate add-booking-and-payments` passes.
 
 **NFRs.**
+
 - Atomicity: booking + hold creation in single transaction; verified by integration test that injects a fault between the two inserts.
 - Snapshot immutability: enforced in domain entity (no setter for snapshot fields) AND by Postgres-level absence of an UPDATE path on those columns in the repository.
 - Pricing math: all via `Money` (integer cents); no floating point. Verified by unit test of bps math.
@@ -1194,6 +1212,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 **Context.** The search experience is the front door of the marketplace. URL-state sync is non-negotiable — nomads share search results with travel partners, and reload-stable URLs are required for any future SEO work. State separation per [docs/frontend-standards.md](docs/frontend-standards.md): TanStack Query owns server state, URL params own filter values, Zustand only owns ephemeral UI ("is the filter drawer open?").
 
 **Scope.**
+
 - Add `useListingsSearchQuery(query)` hook in `apps/web/src/features/search/hooks/` using TanStack Query with `keepPreviousData: true` and a query key that includes the normalized query object.
 - Add `useSearchUIStore` (Zustand) storing only `filtersPanelOpen` and `toggleFiltersPanel` — no filter values.
 - Add `SearchPage` (`/search`):
@@ -1209,6 +1228,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 - Wire route `/search` in `apps/web/src/routes/`.
 
 **Files allowed to touch.**
+
 - `apps/web/src/features/search/` (entire feature folder — create as needed).
 - `apps/web/src/routes/index.tsx` (route registration).
 - `packages/shared/src/schemas/search.ts` (extend `SearchListingsQuerySchema` with optional filter fields if not already present — coordinated with `NH-102` backend search filters).
@@ -1217,24 +1237,28 @@ Three representative tickets — one per discipline (backend, frontend, database
 - Tests in `apps/web/src/features/search/__tests__/` and `apps/web/e2e/search.spec.ts`.
 
 **Forbidden.**
+
 - Storing filter values in Zustand or `useState` — they belong in the URL exclusively.
 - Adding any `i18next` dependency — MVP uses the `t()` helper from `packages/shared/src/strings/`.
 - Adding map/location features beyond what's needed for the listing card (lat/long display is `NH-203`).
 - Modifying the API contract — if the backend response shape needs adjustment, raise a follow-up ticket and pause.
 
 **Acceptance criteria.**
+
 - Given a user lands on `/search?city=Lisbon&checkIn=2026-07-01&checkOut=2026-07-15`, when the page mounts, then the form is pre-filled, the search query fires, and results render.
 - Given a user applies the "wifi" + "workspace_desk" amenities filter, when results render, then only listings with both amenities are shown, and the URL contains `?...&amenityCodes=wifi&amenityCodes=workspace_desk`.
 - Given a user reloads the page, when the page mounts, then the form, filters, and result grid are restored from the URL.
 - Given a user is on page 2 and refines the city, when the new query fires, then prior results stay painted (no flash of empty state) and pagination resets to page 1.
 
 **Quality gates.**
+
 - `pnpm lint`, `pnpm typecheck`, `pnpm test --changed --coverage` (≥80% on changed lines).
 - `pnpm test:e2e search.spec.ts` passes the URL-state-survives-reload scenario.
 - Lighthouse mobile score on `/search` ≥ 90 in performance + a11y (run via `pnpm preview` + manual Lighthouse run before opening PR).
 - Every user-facing string goes through `t()` — verified by the project's ESLint rule (XC-2.2 in [docs/tasks.md](docs/tasks.md)).
 
 **NFRs.**
+
 - Accessibility: keyboard navigation through the filter panel; all form inputs labelled; price slider has accessible-name + value-text.
 - Performance: search bar input debounced 300ms before triggering a new fetch.
 - Mobile-first: filters live in a `Sheet` on screens `<md`, sidebar on `>=md`.
@@ -1256,6 +1280,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 **Context.** This is the migration that makes double-booking structurally impossible. The Postgres `EXCLUDE USING gist` constraint on `AvailabilityBlock` is what guarantees two concurrent inserts for overlapping ranges cannot both succeed. Without it, app-layer overlap checks have a race-condition window that production traffic will find. The migration also adds the rest of the booking & payments tables so `NH-101` can land cleanly.
 
 **Scope.**
+
 - Ensure the `btree_gist` extension is enabled (added in the `init` migration; verify here).
 - Add Prisma models: `Booking`, `PlatformFeeConfig`, `StripeProcessedEvent`, `RefundRequest`. Enums: `BookingStatus`, `RefundStatus`.
 - Generate migration with `pnpm db:migrate:dev --name add_bookings_and_payments`.
@@ -1270,9 +1295,10 @@ Three representative tickets — one per discipline (backend, frontend, database
   ```
 - Add required indexes on `Booking`: `(guestId, status)`, `(hostId, status, checkIn)`, `(listingId, status)`. Composite index `(listingId, startDate, endDate)` on `AvailabilityBlock` (in addition to the EXCLUDE).
 - Update `packages/db/seed.ts` to insert one initial `PlatformFeeConfig` row sourced from env vars `PLATFORM_GUEST_FEE_BPS` and `PLATFORM_HOST_COMMISSION_BPS`. Skip if already present (idempotent seed).
-- Document the EXCLUDE constraint in a short comment block at the top of the migration file explaining *why* it cannot be replaced by app-level checks.
+- Document the EXCLUDE constraint in a short comment block at the top of the migration file explaining _why_ it cannot be replaced by app-level checks.
 
 **Files allowed to touch.**
+
 - `packages/db/prisma/schema.prisma`.
 - `packages/db/prisma/migrations/<timestamp>_add_bookings_and_payments/migration.sql`.
 - `packages/db/seed.ts`.
@@ -1280,12 +1306,14 @@ Three representative tickets — one per discipline (backend, frontend, database
 - `docs/data-model.md` (refresh §3.10, §3.11, §3.12, §3.13, §3.14 if any shape diverges from what's documented).
 
 **Forbidden.**
+
 - Touching any code in `apps/api/src/` (separate ticket `NH-101`).
 - Modifying tables outside `Booking & Payments` scope.
 - Removing the EXCLUDE constraint or replacing it with an app-level workaround.
 - Hand-editing the migration name/timestamp after generation.
 
 **Acceptance criteria.**
+
 - Running `pnpm db:migrate:reset && pnpm db:migrate:deploy && pnpm db:seed` against a fresh local Postgres completes without error.
 - The `btree_gist` extension is present (`SELECT * FROM pg_extension WHERE extname = 'btree_gist';` returns one row).
 - Attempting to insert two `AvailabilityBlock` rows for the same `listingId` with overlapping `[startDate, endDate)` ranges raises `23P01 exclusion_violation` (verified by integration test in `apps/api/__tests__/availability.exclude.integration.test.ts`).
@@ -1293,6 +1321,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 - `prisma format && prisma validate` pass.
 
 **Quality gates.**
+
 - `pnpm typecheck` (Prisma client regenerates and downstream code still compiles).
 - `pnpm test --filter @nomadhome/db` if a db-package test suite exists, otherwise the `availability.exclude.integration.test.ts` lives in `apps/api`.
 - Migration is reviewed before merge — destructive operations are explicitly called out in the PR description.
@@ -1300,6 +1329,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 **Rollback strategy.** The down-migration drops the new tables + constraint in reverse-FK order. The seed insert is `INSERT ... ON CONFLICT DO NOTHING` so re-runs are idempotent.
 
 **NFRs.**
+
 - The EXCLUDE constraint is the **single source of truth** for overlap prevention. App-level `AvailabilityService.isAvailable` exists for UX (returning `400` early) but the DB is the final word.
 - Migrations are never edited in place after merge — corrections ship as new migrations.
 
