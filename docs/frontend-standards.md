@@ -1,6 +1,14 @@
 ---
-description: Frontend development standards, best practices, and conventions for the LTI React application including component patterns, state management, UI/UX guidelines, and testing practices
-globs: ["frontend/src/**/*.{js,jsx,ts,tsx}", "frontend/cypress/**/*.{ts,js}", "frontend/tsconfig.json", "frontend/cypress.config.ts", "frontend/package.json"]
+description: Frontend development standards, best practices, and conventions, including Vite configuration, state separation (TanStack Query + Zustand), Tailwind CSS + shadcn/ui styling, React Hook Form + Zod validation, and localized string helpers.
+globs:
+  [
+    'apps/web/src/**/*.{ts,tsx}',
+    'apps/web/e2e/**/*.{ts,js}',
+    'apps/web/tsconfig.json',
+    'apps/web/vite.config.ts',
+    'apps/web/package.json',
+    'apps/web/tailwind.config.js',
+  ]
 alwaysApply: true
 ---
 
@@ -8,524 +16,380 @@ alwaysApply: true
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Technology Stack](#technology-stack)
-  - [Core Technologies](#core-technologies)
-  - [UI Framework](#ui-framework)
-  - [State Management & Data Flow](#state-management--data-flow)
-  - [Testing Framework](#testing-framework)
-  - [Development Tools](#development-tools)
-- [Project Structure](#project-structure)
-- [Coding Standards](#coding-standards)
-  - [Language and Naming Conventions](#language-and-naming-conventions)
-  - [Component Conventions](#component-conventions)
-  - [State Management](#state-management)
-  - [Service Layer Architecture](#service-layer-architecture)
-- [UI/UX Standards](#uiux-standards)
-  - [Bootstrap Integration](#bootstrap-integration)
-  - [Form Handling](#form-handling)
-  - [Navigation Patterns](#navigation-patterns)
-  - [Accessibility](#accessibility)
-- [Testing Standards](#testing-standards)
-  - [End-to-End Testing with Cypress](#end-to-end-testing-with-cypress)
-  - [Test Organization](#test-organization)
-- [Configuration Standards](#configuration-standards)
-  - [TypeScript Configuration](#typescript-configuration)
-  - [ESLint Configuration](#eslint-configuration)
-  - [Environment Configuration](#environment-configuration)
-- [Performance Best Practices](#performance-best-practices)
-  - [Component Optimization](#component-optimization)
-  - [Bundle Optimization](#bundle-optimization)
-  - [API Efficiency](#api-efficiency)
-- [Development Workflow](#development-workflow)
-  - [Git Workflow](#git-workflow)
-  - [Development Scripts](#development-scripts)
-  - [Code Quality](#code-quality)
-- [Migration Strategy](#migration-strategy)
-  - [TypeScript Migration](#typescript-migration)
-  - [Component Modernization](#component-modernization)
+- [Frontend Project Configuration and Best Practices](#frontend-project-configuration-and-best-practices)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Technology Stack](#technology-stack)
+    - [Core Technologies](#core-technologies)
+    - [UI \& Styling Framework](#ui--styling-framework)
+    - [State Management \& Data Flow](#state-management--data-flow)
+    - [Forms \& Validation](#forms--validation)
+    - [Internationalization (i18n) MVP](#internationalization-i18n-mvp)
+    - [Testing \& Tools](#testing--tools)
+  - [Project Structure](#project-structure)
+  - [Coding Standards](#coding-standards)
+    - [Naming Conventions](#naming-conventions)
+    - [Component Conventions](#component-conventions)
+    - [State Separation Philosophy](#state-separation-philosophy)
+      - [1. Server State (TanStack Query)](#1-server-state-tanstack-query)
+      - [2. Global Client State (Zustand)](#2-global-client-state-zustand)
+    - [Form Architecture](#form-architecture)
+  - [UI/UX Standards](#uiux-standards)
+    - [Tailwind CSS \& shadcn/ui Integration](#tailwind-css--shadcnui-integration)
+    - [Localization \& Copy Access](#localization--copy-access)
+  - [Testing Standards](#testing-standards)
+  - [Configuration Standards](#configuration-standards)
+    - [Path Mappings](#path-mappings)
+  - [Performance Best Practices](#performance-best-practices)
+  - [Development Workflow](#development-workflow)
+    - [CLI Commands](#cli-commands)
 
 ---
 
 ## Overview
 
-This document outlines the best practices, conventions, and standards used in the LTI frontend application. These practices ensure code consistency, maintainability, and optimal development experience.
+This document defines the architecture, coding standards, and engineering practices. Moving away from legacy configurations, this project leverages a high-performance build pipeline, utility-first styling, explicit state boundary separation, and strict runtime type validation.
 
 ## Technology Stack
 
 ### Core Technologies
-- **React 18.3.1**: Modern React with functional components and hooks
-- **TypeScript 4.9.5**: For type safety and better development experience
-- **Create React App 5.0.1**: Build tooling and development server
-- **React Router DOM 6.23.1**: Client-side routing and navigation
 
-### UI Framework
-- **Bootstrap 5.3.3**: CSS framework for responsive design
-- **React Bootstrap 2.10.2**: Bootstrap components for React
-- **React Bootstrap Icons 1.11.4**: Icon library
-- **React DatePicker 6.9.0**: Date input components
+- **React 18.3+**: Modern functional UI rendering using hooks.
+- **Vite**: Ultra-fast next-generation frontend tooling and bundler.
+- **TypeScript**: Strict compile-time static type safety.
+- **React Router (v6+)**: Declarative, client-side application routing.
+
+### UI & Styling Framework
+
+- **Tailwind CSS**: Utility-first CSS framework for atomic layouts.
+- **shadcn/ui**: Accessible, customizable component primitives built on top of Radix UI and styled via Tailwind.
+- **Lucide React**: Clean, modern iconography companion library.
 
 ### State Management & Data Flow
-- **React Hooks**: useState, useEffect for local state management
-- **React Beautiful DND 13.1.1**: Drag and drop functionality
-- **Axios**: HTTP client for API communication
 
-### Testing Framework
-- **Cypress 14.4.1**: End-to-end testing
-- **Jest**: Unit testing (via Create React App)
-- **React Testing Library**: Component testing utilities
+- **TanStack Query (v5+)**: Dedicated asynchronous **server state** management (caching, data fetching, mutations, synchronization).
+- **Zustand**: Lightweight, atomic **client state** management for global UI indicators, local preferences, and transient application states.
 
-### Development Tools
-- **ESLint**: Code linting with React-specific rules
-- **TypeScript**: Static type checking
-- **Web Vitals**: Performance monitoring
+### Forms & Validation
+
+- **React Hook Form**: Performance-focused, uncontrolled form hooks minimizing unnecessary re-renders.
+- **Zod**: Declarative schema validation for runtime type enforcement and form error mapping.
+
+### Internationalization (i18n) MVP
+
+- **Thin `t(key)` Helper**: Light abstraction using an English-only lookup dictionary. Prepares the codebase for easy `i18next` integration post-MVP without bundle-size overhead today.
+
+### Testing & Tools
+
+- **Playwright**: End-to-End (E2E) feature verification for critical user flows (per [CLAUDE.md](../CLAUDE.md) §3).
+- **Vitest**: Blazing-fast Vite-native unit and component testing runner.
+
+---
 
 ## Project Structure
 
 ```
-frontend/
-├── public/                 # Static assets
+apps/web/
+├── public/                 # Pure static assets (favicons, etc.)
 ├── src/
-│   ├── components/        # Reusable UI components
-│   ├── services/         # API service layer
-│   ├── pages/           # Page components (future organization)
-│   ├── assets/          # Images, fonts, static resources
-│   ├── App.js           # Main application component
-│   ├── index.tsx        # Application entry point
-│   └── index.css        # Global styles
-├── cypress/
-│   └── e2e/            # End-to-end test files
-├── package.json         # Dependencies and scripts
-├── tsconfig.json       # TypeScript configuration
-└── cypress.config.ts   # Cypress configuration
+│   ├── assets/            # Global media assets (images, fonts)
+│   ├── components/        # UI Layer
+│   │   ├── ui/            # shadcn/ui low-level primitives (unmodified/installed)
+│   │   └── shared/        # Reusable compound UI components (cards, tables)
+│   ├── features/          # Domain-driven features (colocating queries, stores, pages)
+│   │   └── listings/
+│   │       ├── components/
+│   │       ├── hooks/     # Feature-specific custom queries/mutations
+│   │       ├── store.ts   # Feature-specific Zustand store (if needed)
+│   │       └── pages/
+│   ├── hooks/             # Global reusable utilities (useAuth, useDebounce)
+│   ├── lib/               # Third-party configurations (api-client, shadcn utils)
+│   ├── routes/            # React Router tree configuration
+│   ├── App.tsx            # Main Application Shell & Context Providers
+│   ├── index.css          # Global Tailwind directives and CSS variables
+│   └── main.tsx           # Application Bootstrap entry point
+├── e2e/                   # Playwright E2E Test Suite
+├── tailwind.config.js     # Tailwind CSS theme configurations
+├── tsconfig.json          # Strict TypeScript engine configuration
+└── vite.config.ts         # Vite build and plugin architecture config
+
+packages/shared/
+└── src/
+    └── strings/
+        ├── en.ts           # MVP base English lookup table
+        └── index.ts        # t(key) structural implementation (shared FE + BE)
 ```
+
+> **Note**: user-facing copy lives in `packages/shared/src/strings/`, not under `apps/web/src/locales/`, so the same `t()` helper can be reused by `apps/api/` for transactional email subjects and similar copy.
+
+---
 
 ## Coding Standards
 
 ### Naming Conventions
 
-- **Component Naming**: Use PascalCase for React components (e.g., `CandidateCard`, `PositionDetails`, `RecruiterDashboard`)
-- **Variable Naming**: Use camelCase for variables and functions (e.g., `candidateId`, `handleSubmit`, `fetchPositions`)
-- **Constants Naming**: Use UPPER_SNAKE_CASE for constants (e.g., `MAX_CANDIDATES_PER_PAGE`, `API_BASE_URL`)
-- **Type/Interface Naming**: Use PascalCase for types and interfaces (e.g., `CandidateData`, `PositionProps`, `ICandidateService`)
-- **File Naming**: Use PascalCase for component files (e.g., `CandidateCard.tsx`, `PositionDetails.tsx`) and camelCase for utility files (e.g., `candidateService.js`, `apiUtils.ts`)
-- **CSS Class Naming**: Use kebab-case for CSS classes (e.g., `candidate-card`, `position-details`)
-- **Hook Naming**: Use camelCase starting with "use" prefix (e.g., `useCandidate`, `usePositionData`, `useFormValidation`)
+- **Component & File Naming**: Use PascalCase for React Components and their files (e.g., `ListingCard.tsx`, `HostDashboardShell.tsx`).
+- **Hook Naming**: Prefix with `use`, utilizing camelCase (e.g., `useListingQuery`, `useUIStore`).
+- **Validation Schemas**: Suffix with `Schema` using camelCase (e.g., `loginFormSchema`, `createListingSchema`).
+- **Variables & Functions**: standard camelCase (e.g., `isSubmitting`, `onFilterChange`).
+- **Constants**: Strict `UPPER_SNAKE_CASE` (e.g., `PAGINATION_LIMIT`, `DEBOUNCE_DELAY`).
 
-**Examples:**
-
-```typescript
-// Good: All in English
-import React, { useState, useEffect } from 'react';
-
-type CandidateCardProps = {
-    candidate: Candidate;
-    index: number;
-    onClick: (candidate: Candidate) => void;
-};
-
-const CandidateCard: React.FC<CandidateCardProps> = ({ candidate, index, onClick }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    
-    // Handle candidate card click event
-    const handleCardClick = () => {
-        onClick(candidate);
-    };
-    
-    return (
-        <div className="candidate-card" onClick={handleCardClick}>
-            {/* Component JSX */}
-        </div>
-    );
-};
-
-// Avoid: Non-English comments or names
-const TarjetaCandidato: React.FC<PropsTarjetaCandidato> = ({ candidato, indice, alHacerClic }) => {
-    const [estaCargando, setEstaCargando] = useState(false);
-    
-    // Manejar evento de clic en la tarjeta de candidato
-    const manejarClicTarjeta = () => {
-        alHacerClic(candidato);
-    };
-    
-    return (
-        <div className="tarjeta-candidato" onClick={manejarClicTarjeta}>
-            {/* JSX del componente */}
-        </div>
-    );
-};
-```
-
-**Error Messages and Console Logs:**
-
-```typescript
-// Good: English error messages
-catch (error) {
-    console.error('Failed to fetch candidates:', error);
-    setError('Unable to load candidates. Please try again later.');
-}
-
-// Avoid: Non-English messages
-catch (error) {
-    console.error('Error al obtener candidatos:', error);
-    setError('No se pudieron cargar los candidatos. Por favor, inténtelo de nuevo más tarde.');
-}
-```
-
-**Service Layer Examples:**
-
-```typescript
-// Good: English naming in services
-export const candidateService = {
-    getAllCandidates: async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/candidates`);
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching candidates:', error);
-            throw error;
-        }
-    }
-};
-
-// Avoid: Non-English naming
-export const servicioCandidatos = {
-    obtenerTodosLosCandidatos: async () => {
-        try {
-            const respuesta = await axios.get(`${API_BASE_URL}/candidates`);
-            return respuesta.data;
-        } catch (error) {
-            console.error('Error al obtener candidatos:', error);
-            throw error;
-        }
-    }
-};
-```
+---
 
 ### Component Conventions
 
-#### Functional Components
-- **Always use functional components** with hooks instead of class components
-- Use **TypeScript for new components** when possible
-- Keep **JavaScript for legacy components** until migration
+- **Functional Syntax**: Write all components as functional array declarations or explicit `React.FC` standard definitions.
+- **Props Typing**: Strongly type props using TypeScript `interface` or `type`. Always destructure properties inside the component arguments block.
+- **Encapsulation**: If a sub-component is only ever used in one feature page, isolate it inside that feature block rather than placing it in global components.
 
 ```typescript
-// Preferred - TypeScript functional component
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { t } from '@nomadhome/shared/strings';
 
-type Position = {
-    id: number;
-    title: string;
-    status: 'Open' | 'Contratado' | 'Cerrado' | 'Borrador';
-};
-
-const Positions: React.FC = () => {
-    const [positions, setPositions] = useState<Position[]>([]);
-    // Component logic
-};
-```
-
-#### Component Props
-- **Define TypeScript interfaces** for component props when using TypeScript
-- Use **destructuring** for props
-- Include **default values** where appropriate
-
-```typescript
-type CandidateCardProps = {
-    candidate: Candidate;
-    index: number;
-    onClick: (candidate: Candidate) => void;
-};
-
-const CandidateCard: React.FC<CandidateCardProps> = ({ candidate, index, onClick }) => {
-    // Component implementation
-};
-```
-
-### State Management
-
-#### Local State with Hooks
-- Use **useState** for component-level state
-- Use **useEffect** for side effects and data fetching
-- **Extract custom hooks** for reusable stateful logic
-
-```javascript
-const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'Borrador'
-});
-
-const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-        ...prev,
-        [name]: value
-    }));
-};
-```
-
-#### Loading and Error States
-- **Always handle loading states** for async operations
-- **Implement error handling** with user-friendly messages
-- **Use React Bootstrap Alert** components for feedback
-
-```javascript
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState('');
-const [success, setSuccess] = useState('');
-
-// In async function
-try {
-    setLoading(true);
-    const data = await apiCall();
-    setSuccess('Operation completed successfully');
-} catch (error) {
-    setError('Error message: ' + error.message);
-} finally {
-    setLoading(false);
+interface FeedbackBannerProps {
+  status: 'success' | 'error';
+  onActionClose: () => void;
 }
-```
 
-### Service Layer Architecture
-
-#### API Services
-- **Centralize API calls** in service files
-- Use **axios** for HTTP requests
-- **Export service objects** with grouped methods
-- **Handle errors at service level** when appropriate
-
-```javascript
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3010';
-
-export const positionService = {
-    getAllPositions: async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/positions`);
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching positions:', error);
-            throw error;
-        }
-    },
-    
-    updatePosition: async (id, positionData) => {
-        try {
-            const response = await axios.put(`${API_BASE_URL}/positions/${id}`, positionData);
-            return response.data;
-        } catch (error) {
-            console.error('Error updating position:', error);
-            throw error;
-        }
-    }
+export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({ status, onActionClose }) => {
+  return (
+    <div className={`p-4 rounded-md ${status === 'success' ? 'bg-green-100' : 'bg-red-100'}`}>
+      <p className="text-sm font-medium">
+        {status === 'success' ? t('banner.success_message') : t('banner.error_message')}
+      </p>
+      <Button onClick={onActionClose} variant="ghost" size="sm" className="mt-2">
+        {t('common.close')}
+      </Button>
+    </div>
+  );
 };
 ```
+
+---
+
+### State Separation Philosophy
+
+To optimize rendering speeds and simplify debugging pathways, states must reside within explicit domains:
+
+#### 1. Server State (TanStack Query)
+
+Any state originating from an external API endpoint must be managed via TanStack Query. **Do not** manually store fetched network data inside local `useState` or global Zustand hooks.
+
+```typescript
+// apps/web/src/features/listings/hooks/useListingsSearchQuery.ts
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+import type { ListingSearchResultDTO, SearchListingsQuery } from '@nomadhome/shared/schemas/search';
+
+const fetchListings = async (query: SearchListingsQuery): Promise<ListingSearchResultDTO[]> => {
+  const { data } = await apiClient.get('/api/v1/listings/search', { params: query });
+  return data.data;
+};
+
+export const useListingsSearchQuery = (query: SearchListingsQuery) => {
+  return useQuery({
+    queryKey: ['listings', 'search', query],
+    queryFn: () => fetchListings(query),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000, // 1 minute — short, since availability changes
+  });
+};
+```
+
+#### 2. Global Client State (Zustand)
+
+Use Zustand exclusively for state synchronized across the UI that does not stem from a server database (e.g., sidebar toggles, theme settings, temporary filter parameters).
+
+```typescript
+// apps/web/src/features/search/store.ts
+import { create } from 'zustand';
+
+interface SearchUIState {
+  filtersPanelOpen: boolean;
+  toggleFiltersPanel: () => void;
+}
+
+export const useSearchUIStore = create<SearchUIState>((set) => ({
+  filtersPanelOpen: false,
+  toggleFiltersPanel: () =>
+    set((state) => ({ filtersPanelOpen: !state.filtersPanelOpen })),
+}));
+```
+
+> **What does NOT belong in Zustand**: the search filter values themselves (city, dates, price range) — those belong in the URL query string so results are shareable. Reach for Zustand only for ephemeral UI like "is the filter drawer open."
+
+---
+
+### Form Architecture
+
+Forms must implement **React Hook Form** partnered with structural runtime parsing from **Zod**. This ensures standard programmatic constraint compilation before execution hand-offs.
+
+```typescript
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { t } from '@nomadhome/shared/strings';
+// IMPORTANT: schemas come from packages/shared so backend and frontend validate against the same source of truth.
+import { CreateListingSchema, type CreateListingPayload } from '@nomadhome/shared/schemas/listings';
+
+export const ListingBasicsForm: React.FC<{
+  onSubmit: (data: CreateListingPayload) => Promise<void>;
+}> = ({ onSubmit }) => {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<CreateListingPayload>({
+    resolver: zodResolver(CreateListingSchema),
+    defaultValues: { title: '', city: '', nightlyRateCents: 0, capacity: 1 },
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
+      <div>
+        <label className="text-sm font-medium">{t('listings.form.title')}</label>
+        <Input {...register('title')} className="mt-1" />
+        {errors.title && <p className="text-xs text-destructive mt-1">{errors.title.message}</p>}
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">{t('listings.form.city')}</label>
+        <Input {...register('city')} className="mt-1" />
+        {errors.city && <p className="text-xs text-destructive mt-1">{errors.city.message}</p>}
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">{t('listings.form.nightlyRate')}</label>
+        <Input type="number" {...register('nightlyRateCents', { valueAsNumber: true })} className="mt-1" />
+        {errors.nightlyRateCents && <p className="text-xs text-destructive mt-1">{errors.nightlyRateCents.message}</p>}
+      </div>
+
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? t('common.saving') : t('common.save')}
+      </Button>
+    </form>
+  );
+};
+```
+
+> **Cross-stack invariant**: `CreateListingSchema` is imported from `@nomadhome/shared`. The backend uses the same schema in [docs/backend-standards.md](backend-standards.md) §Validation Patterns. A schema change anywhere is a schema change everywhere — no drift possible.
+
+---
 
 ## UI/UX Standards
 
-### Bootstrap Integration
-- Use **React Bootstrap components** instead of plain Bootstrap
-- **Import Bootstrap CSS** in the main App component
-- Follow **Bootstrap responsive grid system** (Container, Row, Col)
+### Tailwind CSS & shadcn/ui Integration
 
-```javascript
-import { Container, Row, Col, Card, Button, Form, Alert } from 'react-bootstrap';
-```
+- **Composition Rules**: Build layouts primarily using Tailwind layout utilities (`flex`, `grid`, `gap`, `p-`, `m-`). Avoid hardcoding manual widths or explicit px styling heights unless completely inescapable.
+- **Component Strategy**: Use `shadcn/ui` custom building blocks (`/components/ui`) as immutable dependency atoms. To vary presentation styling, override variables dynamically using the tailwind merging standard execution utility `cn(...)`.
 
-### Form Handling
-- Use **controlled components** for form inputs
-- Implement **real-time validation** where appropriate
-- **Disable submit buttons** during form submission
-- **Clear form state** after successful submission
+```typescript
+import { cn } from '@/lib/utils';
 
-```javascript
-<Form onSubmit={handleSubmit}>
-    <Form.Group className="mb-3">
-        <Form.Label>Title *</Form.Label>
-        <Form.Control
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            required
-        />
-    </Form.Group>
-    <Button type="submit" disabled={saving}>
-        {saving ? 'Saving...' : 'Save'}
-    </Button>
-</Form>
-```
-
-### Navigation Patterns
-- Use **React Router** for all navigation
-- **Implement breadcrumbs** with back navigation
-- Use **programmatic navigation** with useNavigate hook
-
-```javascript
-import { useNavigate } from 'react-router-dom';
-
-const navigate = useNavigate();
-
-// Navigation examples
-<Button variant="link" onClick={() => navigate('/')}>
-    ← Back to Dashboard
+// Extending standard primitive styling smoothly via cn utility wrapper
+<Button className={cn("w-full bg-indigo-600 hover:bg-indigo-700", customClassName)}>
+  {t('common.submit')}
 </Button>
 ```
 
-### Accessibility
-- Include **aria-label** attributes for interactive elements
-- Use **semantic HTML** elements
-- Ensure **keyboard navigation** support
-- Provide **alternative text** for images
+### Localization & Copy Access
 
-```javascript
-<Form.Control 
-    type="text" 
-    placeholder="Search by title" 
-    aria-label="Search positions by title"
-/>
+Hardcoded conversational text fragments are strictly prohibited anywhere inside functional markup interfaces. All copy variants must utilize the localization engine framework dictionary layout patterns.
+
+```typescript
+// packages/shared/src/strings/en.ts
+export const en = {
+  common: {
+    save: 'Save',
+    saving: 'Saving...',
+    close: 'Close',
+  },
+  listings: {
+    form: {
+      title: 'Listing title',
+      city: 'City',
+      nightlyRate: 'Nightly rate (USD cents)',
+    },
+  },
+  search: {
+    empty: 'No listings match your search. Try widening the dates or removing filters.',
+  },
+  bookings: {
+    notice: {
+      listingDisabled: 'This listing has been disabled by NomadHome. Your booking remains valid; contact support for questions.',
+    },
+  },
+} as const;
+
+// packages/shared/src/strings/index.ts
+import { en } from './en';
+
+export type PathsToStringProps<T> = T extends string
+  ? ''
+  : {
+      [K in Extract<keyof T, string>]: Dot<K, PathsToStringProps<T[K]>>;
+    }[Extract<keyof T, string>];
+
+type Dot<T extends string, U extends string> = U extends '' ? T : `${T}.${U}`;
+type LocaleKeys = PathsToStringProps<typeof en>;
+
+export const t = (key: LocaleKeys): string => {
+  return (
+    key
+      .split('.')
+      .reduce(
+        (accumulator: any, currentKey) => accumulator?.[currentKey],
+        en,
+      ) || key
+  );
+};
 ```
+
+---
 
 ## Testing Standards
 
-### End-to-End Testing with Cypress
-- **Test user workflows** rather than implementation details
-- Use **data-testid** attributes for reliable element selection
-- **Organize tests by feature** (candidates.cy.ts, positions.cy.ts)
-- **Include API testing** alongside UI testing
+- **E2E Integration Verification (Playwright)**: Prioritize testing broad user workflows rather than component methods. Add descriptive `data-testid` variables inside input sections to isolate elements clearly. Specs live under `apps/web/e2e/<change-id>.spec.ts`.
+- **Unit Mechanics (Vitest)**: Target utility calculations, data mutation helpers, string transformers, and schema parameters inside individual `.test.ts` setups.
 
-```typescript
-describe('Positions API - Update', () => {
-    beforeEach(() => {
-        cy.window().then((win) => {
-            win.localStorage.clear();
-        });
-    });
-
-    it('should update a position successfully', () => {
-        const updateData = {
-            title: 'Updated Test Position',
-            status: 'Open'
-        };
-
-        cy.request({
-            method: 'PUT',
-            url: `${API_URL}/positions/${testPositionId}`,
-            body: updateData
-        }).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body.data.title).to.eq(updateData.title);
-        });
-    });
-});
-```
-
-### Test Organization
-- **Group related tests** with describe blocks
-- **Use descriptive test names** that explain the expected behavior
-- **Test both success and error scenarios**
-- **Include edge cases** and validation testing
+---
 
 ## Configuration Standards
 
-### TypeScript Configuration
-- Enable **strict mode** for type checking
-- Use **path mapping** with "@/*" for cleaner imports
-- Include **both Cypress and Node types**
-- Configure **ES5 target** for broader compatibility
+### Path Mappings
+
+Imports use clean semantic shortcuts starting from the application core root workspace path alias pointer syntax definitions:
 
 ```json
+// tsconfig.json
 {
-    "compilerOptions": {
-        "strict": true,
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["src/*"]
-        },
-        "types": ["cypress", "node"]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
     }
+  }
 }
 ```
 
-### ESLint Configuration
-- Extend **React App** configuration
-- Include **Jest rules** for testing
-- **Automatic code formatting** and error detection
-- **Consistent code style** across the project
-
-### Environment Configuration
-- Use **environment variables** for API URLs
-- **Separate configurations** for development and production
-- **Configure Cypress** with environment-specific settings
-
-```javascript
-// cypress.config.ts
-export default defineConfig({
-    e2e: {
-        baseUrl: 'http://localhost:3000',
-        env: {
-            API_URL: 'http://localhost:3010'
-        }
-    }
-});
-```
+---
 
 ## Performance Best Practices
 
-### Component Optimization
-- **Lazy load** components when appropriate
-- **Memoize expensive calculations** with useMemo
-- **Avoid unnecessary re-renders** with useCallback
-- **Extract reusable logic** into custom hooks
+1.  **Lazy Loading**: Split heavy workspace code views using `React.lazy()` alongside layout boundary placeholders (`Suspense`) at the router level.
+2.  **Stale Query Controls**: Finetune TanStack Query parameters (`staleTime`, `gcTime`) carefully to avoid unnecessary network polling overheads.
+3.  **Atomic State Triggers**: Select specific state paths out of Zustand global definitions (`useSearchUIStore(state => state.filtersPanelOpen)`) to protect external structures from global rendering recalculation updates.
 
-### Bundle Optimization
-- **Tree shaking** enabled through Create React App
-- **Code splitting** at route level
-- **Optimize images** and static assets
-- **Monitor bundle size** with build tools
-
-### API Efficiency
-- **Implement proper error handling** for network requests
-- **Cache API responses** where appropriate
-- **Use loading states** to improve perceived performance
-- **Batch API calls** when possible
+---
 
 ## Development Workflow
 
-- **Feature Branches**: Develop features in separate branches, adding descriptive suffix "-frontend" to allow working in parallel and avoid conflicts or collisions
-- **Descriptive Commits**: Write descriptive commit messages in English
-- **Code Review**: Code review before merging
-- **Small Branches**: Keep branches small and focused
+### CLI Commands
 
-### Development Scripts
 ```bash
-npm start          # Development server
-npm test           # Run unit tests
-npm run build      # Production build
-npm run cypress:open    # Open Cypress test runner
-npm run cypress:run     # Run Cypress tests headlessly
+pnpm dev             # Boots local Vite processing engine instance
+pnpm build           # Transpiles production distribution package targets
+pnpm lint            # Activates comprehensive ESLint verification checks
+pnpm preview         # Serves static production local production builds
+pnpm test            # Vitest unit/component runner
+pnpm test:e2e        # Playwright headless run
 ```
-
-### Code Quality
-- **ESLint validation** before commits
-- **TypeScript compilation** without errors
-- **All tests passing** before deployment
-- **Performance monitoring** with Web Vitals
-
-## Migration Strategy
-
-### TypeScript Migration
-- **Gradual migration** from JavaScript to TypeScript
-- **New components in TypeScript** by default
-- **Maintain existing JavaScript** components until planned refactor
-- **Add types incrementally** to existing code
-
-### Component Modernization
-- **Functional components** over class components
-- **Hooks** instead of lifecycle methods
-- **React Bootstrap** components for consistency
-- **Responsive design** principles throughout
-
-This document serves as the foundation for maintaining code quality and consistency across the LTI frontend application. All team members should follow these practices to ensure a maintainable and scalable codebase.

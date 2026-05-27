@@ -1,372 +1,517 @@
-# Data Model Documentation
+# NomadHome — Data Model (MVP)
 
-This document describes the data model for the LTI (Learning Tracking Initiative) application, including entity descriptions, field definitions, relationships, and an entity-relationship diagram.
+> **Status**: Draft v0.1
+> **Last updated**: 2026-05-27
+> **Sources**: [docs/PRD.md](PRD.md) §8 (user stories) and [docs/tasks.md](tasks.md) (per-story DB tasks).
+> **Authority**: This document is the canonical reference for the MVP data model. The runtime source of truth is [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.prisma); when this document and the schema disagree, the schema wins and this document must be updated in the same OpenSpec change.
+> **Scope**: MVP only. Post-MVP entities (messaging, community, calendar sync, etc.) are listed in §10 as deferred, not as part of the model.
 
-## Model Descriptions
+---
 
-### 1. Candidate
-Represents a job candidate who can apply for positions within the system.
+## 1. Overview
 
-**Fields:**
-- `id`: Unique identifier for the candidate (Primary Key)
-- `firstName`: Candidate's first name (max 100 characters)
-- `lastName`: Candidate's last name (max 100 characters)
-- `email`: Candidate's unique email address (max 255 characters)
-- `phone`: Candidate's phone number (optional, max 15 characters)
-- `address`: Candidate's address (optional, max 100 characters)
+The MVP data model is organized around four bounded contexts, each owning a small cluster of aggregates:
 
-**Validation Rules:**
-- First name and last name are required, 2-100 characters, letters only
-- Email is required, must be unique, and follow valid email format
-- Phone is optional but must follow Spanish format (6|7|9)XXXXXXXX if provided
-- Address is optional but cannot exceed 100 characters
-- Maximum of 3 education records per candidate
+| Context | Aggregates | Purpose |
+| ------- | ---------- | ------- |
+| **Identity** | `User`, `HostProfile`, `RefreshToken`, `EmailVerificationToken`, `AuthAuditEvent` | Authentication, authorization, audit |
+| **Listings** | `Listing` (root, with `ListingPhoto` + `ListingAmenity`), `Amenity`, `AvailabilityBlock` | Inventory and availability |
+| **Booking & Payments** | `Booking`, `PlatformFeeConfig`, `StripeProcessedEvent`, `RefundRequest`, `Payout` (with `PayoutBooking`) | End-to-end reservation, money flow |
+| **Trust** | `Review`, `BookingFlag` | Reviews, admin moderation cascades |
 
-**Relationships:**
-- `educations`: One-to-many relationship with Education model
-- `workExperiences`: One-to-many relationship with WorkExperience model
-- `resumes`: One-to-many relationship with Resume model
-- `applications`: One-to-many relationship with Application model
+All identifiers are UUIDs (`@default(uuid())`). All monetary amounts are stored as **integer cents** (`amountCents: Int`) with an explicit `currency` column (ISO 4217). All timestamps are `DateTime` (Postgres `timestamptz`). Fee percentages are stored as **basis points** (`bps`, where 100 bps = 1%).
 
-### 2. Education
-Represents educational background information for candidates.
+---
 
-**Fields:**
-- `id`: Unique identifier for the education record (Primary Key)
-- `institution`: Name of the educational institution (max 100 characters)
-- `title`: Degree or certification title obtained (max 250 characters)
-- `startDate`: Start date of the education period
-- `endDate`: End date of the education period (optional, null if ongoing)
-- `candidateId`: Foreign key referencing the Candidate
-
-**Validation Rules:**
-- Institution is required and cannot exceed 100 characters
-- Title is required and cannot exceed 250 characters
-- Start date is required and must be in valid date format
-- End date is optional but must be valid if provided
-- Maximum of 3 education records per candidate
-
-**Relationships:**
-- `candidate`: Many-to-one relationship with Candidate model
-
-### 3. WorkExperience
-Represents work history and professional experience for candidates.
-
-**Fields:**
-- `id`: Unique identifier for the work experience record (Primary Key)
-- `company`: Name of the company or organization (max 100 characters)
-- `position`: Job title or position held (max 100 characters)
-- `description`: Description of responsibilities and achievements (optional, max 200 characters)
-- `startDate`: Start date of the work experience
-- `endDate`: End date of the work experience (optional, null if current)
-- `candidateId`: Foreign key referencing the Candidate
-
-**Validation Rules:**
-- Company name is required and cannot exceed 100 characters
-- Position is required and cannot exceed 100 characters
-- Description is optional but cannot exceed 200 characters if provided
-- Start date is required and must be in valid date format
-- End date is optional but must be valid if provided
-
-**Relationships:**
-- `candidate`: Many-to-one relationship with Candidate model
-
-### 4. Resume
-Represents uploaded resume files associated with candidates.
-
-**Fields:**
-- `id`: Unique identifier for the resume record (Primary Key)
-- `filePath`: File system path to the uploaded resume (max 500 characters)
-- `fileType`: MIME type or file extension of the resume (max 50 characters)
-- `uploadDate`: Date and time when the resume was uploaded
-- `candidateId`: Foreign key referencing the Candidate
-
-**Validation Rules:**
-- File path is required and cannot exceed 500 characters
-- File type is required and cannot exceed 50 characters
-- Upload date is automatically set when file is uploaded
-- Supported file types: PDF and DOCX (max 10MB)
-
-**Relationships:**
-- `candidate`: Many-to-one relationship with Candidate model
-
-### 5. Company
-Represents companies that post job positions and employ staff.
-
-**Fields:**
-- `id`: Unique identifier for the company (Primary Key)
-- `name`: Unique company name
-
-**Relationships:**
-- `employees`: One-to-many relationship with Employee model
-- `positions`: One-to-many relationship with Position model
-
-### 6. Employee
-Represents employees within companies who can conduct interviews.
-
-**Fields:**
-- `id`: Unique identifier for the employee (Primary Key)
-- `name`: Employee's full name
-- `email`: Employee's unique email address
-- `role`: Employee's role or job title
-- `isActive`: Boolean indicating if the employee is currently active
-- `companyId`: Foreign key referencing the Company
-
-**Relationships:**
-- `company`: Many-to-one relationship with Company model
-- `interviews`: One-to-many relationship with Interview model
-
-### 7. InterviewType
-Defines different types of interviews that can be conducted.
-
-**Fields:**
-- `id`: Unique identifier for the interview type (Primary Key)
-- `name`: Name of the interview type (e.g., "Technical", "HR", "Behavioral")
-- `description`: Detailed description of the interview type (optional)
-
-**Relationships:**
-- `interviewSteps`: One-to-many relationship with InterviewStep model
-
-### 8. InterviewFlow
-Represents a sequence of interview steps that define the hiring process.
-
-**Fields:**
-- `id`: Unique identifier for the interview flow (Primary Key)
-- `description`: Description of the interview flow process (optional)
-
-**Relationships:**
-- `interviewSteps`: One-to-many relationship with InterviewStep model
-- `positions`: One-to-many relationship with Position model
-
-### 9. InterviewStep
-Represents individual steps within an interview flow.
-
-**Fields:**
-- `id`: Unique identifier for the interview step (Primary Key)
-- `name`: Name of the interview step
-- `orderIndex`: Numeric order of this step within the flow
-- `interviewFlowId`: Foreign key referencing the InterviewFlow
-- `interviewTypeId`: Foreign key referencing the InterviewType
-
-**Relationships:**
-- `interviewFlow`: Many-to-one relationship with InterviewFlow model
-- `interviewType`: Many-to-one relationship with InterviewType model
-- `applications`: One-to-many relationship with Application model
-- `interviews`: One-to-many relationship with Interview model
-
-### 10. Position
-Represents job positions available for application.
-
-**Fields:**
-- `id`: Unique identifier for the position (Primary Key)
-- `companyId`: Foreign key referencing the Company (required)
-- `interviewFlowId`: Foreign key referencing the InterviewFlow (required)
-- `title`: Job title (required, max 100 characters)
-- `description`: Brief description of the position (required)
-- `status`: Current status of the position (default: "Draft", valid values: Open, Contratado, Cerrado, Borrador)
-- `isVisible`: Boolean indicating if the position is publicly visible (default: false)
-- `location`: Job location (required)
-- `jobDescription`: Detailed job description (required)
-- `requirements`: Job requirements and qualifications (optional)
-- `responsibilities`: Job responsibilities (optional)
-- `salaryMin`: Minimum salary range (optional, must be >= 0)
-- `salaryMax`: Maximum salary range (optional, must be >= 0 and >= salaryMin)
-- `employmentType`: Type of employment (e.g., "Full-time", "Part-time", "Contract") (optional)
-- `benefits`: Job benefits description (optional)
-- `companyDescription`: Description of the hiring company (optional)
-- `applicationDeadline`: Deadline for applications (optional, must be a future date)
-- `contactInfo`: Contact information for inquiries (optional)
-
-**Validation Rules:**
-- Title is required and cannot exceed 100 characters
-- Description, location, and jobDescription are required fields
-- Status must be one of: Open, Contratado, Cerrado, Borrador
-- Company and interview flow references must exist in the database
-- Salary values must be non-negative numbers
-- Application deadline must be a future date if provided
-
-**Relationships:**
-- `company`: Many-to-one relationship with Company model
-- `interviewFlow`: Many-to-one relationship with InterviewFlow model
-- `applications`: One-to-many relationship with Application model
-
-### 11. Application
-Represents a candidate's application to a specific position.
-
-**Fields:**
-- `id`: Unique identifier for the application (Primary Key)
-- `applicationDate`: Date when the application was submitted
-- `currentInterviewStep`: Current step in the interview process
-- `notes`: Additional notes about the application (optional)
-- `positionId`: Foreign key referencing the Position
-- `candidateId`: Foreign key referencing the Candidate
-- `interviewStepId`: Foreign key referencing the current InterviewStep
-
-**Relationships:**
-- `position`: Many-to-one relationship with Position model
-- `candidate`: Many-to-one relationship with Candidate model
-- `interviewStep`: Many-to-one relationship with InterviewStep model
-- `interviews`: One-to-many relationship with Interview model
-
-### 12. Interview
-Represents individual interview sessions conducted as part of an application.
-
-**Fields:**
-- `id`: Unique identifier for the interview (Primary Key)
-- `interviewDate`: Date and time of the interview
-- `result`: Interview result or outcome (optional)
-- `score`: Numeric score or rating from the interview (optional)
-- `notes`: Interview notes and feedback (optional)
-- `applicationId`: Foreign key referencing the Application
-- `interviewStepId`: Foreign key referencing the InterviewStep
-- `employeeId`: Foreign key referencing the conducting Employee
-
-**Relationships:**
-- `application`: Many-to-one relationship with Application model
-- `interviewStep`: Many-to-one relationship with InterviewStep model
-- `employee`: Many-to-one relationship with Employee model
-
-## Entity Relationship Diagram
+## 2. Entity-Relationship Diagram
 
 ```mermaid
 erDiagram
-    Candidate {
-        Int id PK
-        String firstName
-        String lastName
-        String email UK
-        String phone
-        String address
-    }
-    Education {
-        Int id PK
-        String institution
-        String title
-        DateTime startDate
-        DateTime endDate
-        Int candidateId FK
-    }
-    WorkExperience {
-        Int id PK
-        String company
-        String position
-        String description
-        DateTime startDate
-        DateTime endDate
-        Int candidateId FK
-    }
-    Resume {
-        Int id PK
-        String filePath
-        String fileType
-        DateTime uploadDate
-        Int candidateId FK
-    }
-    Company {
-        Int id PK
-        String name UK
-    }
-    Employee {
-        Int id PK
-        String name
-        String email UK
-        String role
-        Boolean isActive
-        Int companyId FK
-    }
-    InterviewType {
-        Int id PK
-        String name
-        String description
-    }
-    InterviewFlow {
-        Int id PK
-        String description
-    }
-    InterviewStep {
-        Int id PK
-        String name
-        Int orderIndex
-        Int interviewFlowId FK
-        Int interviewTypeId FK
-    }
-    Position {
-        Int id PK
-        String title
-        String description
-        String status
-        Boolean isVisible
-        String location
-        String jobDescription
-        String requirements
-        String responsibilities
-        Float salaryMin
-        Float salaryMax
-        String employmentType
-        String benefits
-        String companyDescription
-        DateTime applicationDeadline
-        String contactInfo
-        Int companyId FK
-        Int interviewFlowId FK
-    }
-    Application {
-        Int id PK
-        DateTime applicationDate
-        Int currentInterviewStep
-        String notes
-        Int positionId FK
-        Int candidateId FK
-        Int interviewStepId FK
-    }
-    Interview {
-        Int id PK
-        DateTime interviewDate
-        String result
-        Int score
-        String notes
-        Int applicationId FK
-        Int interviewStepId FK
-        Int employeeId FK
-    }
+    User ||--o| HostProfile : "1:0..1"
+    User ||--o{ Listing : "host owns"
+    User ||--o{ Booking : "guest books"
+    User ||--o{ RefreshToken : "has"
+    User ||--o{ EmailVerificationToken : "has"
+    User ||--o{ AuthAuditEvent : "subject of"
+    User ||--o{ Payout : "host receives"
+    User ||--o{ BookingFlag : "admin flagged by"
 
-    Candidate ||--o{ Education : "has"
-    Candidate ||--o{ WorkExperience : "has"
-    Candidate ||--o{ Resume : "has"
-    Candidate ||--o{ Application : "submits"
-    
-    Company ||--o{ Employee : "employs"
-    Company ||--o{ Position : "offers"
-    
-    InterviewType ||--o{ InterviewStep : "defines"
-    InterviewFlow ||--o{ InterviewStep : "includes"
-    InterviewFlow ||--o{ Position : "guides"
-    
-    Position ||--o{ Application : "receives"
-    Application ||--o{ Interview : "includes"
-    
-    InterviewStep ||--o{ Application : "current_step"
-    InterviewStep ||--o{ Interview : "conducted_at"
-    
-    Employee ||--o{ Interview : "conducts"
+    Listing ||--o{ ListingPhoto : "has"
+    Listing }o--o{ Amenity : "via ListingAmenity"
+    Listing ||--o{ AvailabilityBlock : "has"
+    Listing ||--o{ Booking : "has"
+    Listing ||--o{ Review : "has"
+
+    Booking ||--|| AvailabilityBlock : "owns hold (BOOKING_HOLD)"
+    Booking ||--o| RefundRequest : "0..1"
+    Booking ||--o| Review : "0..1"
+    Booking ||--o| PayoutBooking : "0..1 (settled)"
+    Booking ||--o{ BookingFlag : "may be flagged"
+
+    Payout ||--|{ PayoutBooking : "settles"
+    PlatformFeeConfig ||..|| Booking : "snapshotted at create"
+    StripeProcessedEvent ||..|| Booking : "dedupes webhooks"
 ```
 
-## Key Design Principles
+> Diamond cardinality reminder: `||` = exactly one, `o|` = zero or one, `o{` = zero or more, `|{` = one or more.
 
-1. **Referential Integrity**: All foreign key relationships ensure data consistency across the system.
+---
 
-2. **Flexibility**: The interview flow system allows for customizable hiring processes per position.
+## 3. Aggregates and Entities
 
-3. **Audit Trail**: Application and interview dates provide a complete timeline of the hiring process.
+For each aggregate root the table below lists every column with type, constraints, and intent. Composite indexes are listed in §6.
 
-4. **Extensibility**: The modular design allows for easy addition of new features and data points.
+### 3.1 `User` (Identity aggregate root)
 
-5. **Data Normalization**: The model follows database normalization principles to minimize redundancy and ensure data integrity.
+Authoritative account record. Roles are kept as a `String[]` array so a single account can hold multiple roles (e.g., `["guest", "host"]`) — see [docs/PRD.md](PRD.md) §5.
 
-## Notes
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `email` | `citext` | UNIQUE, NOT NULL | Case-insensitive; Postgres `citext` extension required |
+| `passwordHash` | `string` | NOT NULL | bcrypt cost ≥12 |
+| `roles` | `string[]` | NOT NULL, default `["guest"]` | Subset of `{guest, host, admin}` |
+| `emailVerifiedAt` | `DateTime?` | nullable | NULL until `/auth/verify-email` consumed |
+| `disabledAt` | `DateTime?` | nullable | Set by US-8.1; rejected by `requireAuth` |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+| `updatedAt` | `DateTime` | NOT NULL, `@updatedAt` | |
 
-- All `id` fields serve as primary keys with auto-increment functionality
-- Foreign key relationships maintain referential integrity
-- Optional fields allow for flexible data entry while maintaining required core information
-- The interview system supports multi-step hiring processes with different types of interviews
-- Email fields have unique constraints to prevent duplicate accounts 
+**Invariants:**
+- A user with `disabledAt != null` cannot log in (enforced in `requireAuth` middleware; refresh tokens are revoked at disable time).
+- Booking/listing actions require `emailVerifiedAt != null` (browsing does not).
+
+### 3.2 `HostProfile`
+
+1:1 with `User`. Created lazily when a user calls `POST /users/me/become-host` (US-1.3).
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `userId` | `uuid` | PK + FK → `User.id` UNIQUE | |
+| `displayName` | `string` | NOT NULL, min length 2 | |
+| `phone` | `string` | NOT NULL | E.164 validated at app layer |
+| `payoutEmail` | `string` | NOT NULL | Resend-format email |
+| `acceptedTermsVersion` | `string` | NOT NULL | Frozen at onboarding time |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+### 3.3 `RefreshToken`
+
+Server-side revocable refresh token (PRD §10).
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `userId` | `uuid` | FK → `User.id`, ON DELETE CASCADE | |
+| `tokenHash` | `string` | NOT NULL, UNIQUE | Store hash, never raw token |
+| `expiresAt` | `DateTime` | NOT NULL | TTL from `JWT_REFRESH_TTL` |
+| `revokedAt` | `DateTime?` | nullable | Set on logout, rotation, or user disable |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+| `lastUsedAt` | `DateTime?` | nullable | Updated on each rotation |
+| `userAgent` | `string?` | nullable | Captured at issue for forensic context |
+
+### 3.4 `EmailVerificationToken`
+
+Single-use token issued at registration.
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `userId` | `uuid` | FK → `User.id`, ON DELETE CASCADE | |
+| `tokenHash` | `string` | NOT NULL, UNIQUE | |
+| `expiresAt` | `DateTime` | NOT NULL | 24h default |
+| `usedAt` | `DateTime?` | nullable | Set when consumed; rejects replay |
+
+### 3.5 `AuthAuditEvent`
+
+Append-only log driving the basic audit trail required by PRD §10 compliance.
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `userId` | `uuid?` | FK → `User.id`, nullable | Null for failed logins where email is unknown |
+| `event` | `enum AuthAuditEventType` | NOT NULL | See §5 |
+| `ipAddress` | `string` | NOT NULL | |
+| `userAgent` | `string?` | nullable | |
+| `metadata` | `json?` | nullable | E.g., role added, reason for disable |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+### 3.6 `Listing` (Listings aggregate root)
+
+The aggregate root for inventory. Contains `ListingPhoto` and `ListingAmenity` as part of the aggregate; modifications must go through the root in the application layer.
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `hostId` | `uuid` | FK → `User.id` | Host owner |
+| `title` | `string` | NOT NULL | |
+| `description` | `text` | NOT NULL | |
+| `type` | `enum ListingType` | NOT NULL | `PROPERTY` or `WORKSPACE` |
+| `city` | `string` | NOT NULL | |
+| `country` | `string` | NOT NULL | ISO 3166-1 alpha-2 |
+| `addressLine` | `string` | NOT NULL | |
+| `latitude` | `Decimal?` | nullable, precision 9, scale 6 | |
+| `longitude` | `Decimal?` | nullable, precision 9, scale 6 | |
+| `capacity` | `int` | NOT NULL, ≥1 | |
+| `nightlyRateCents` | `int` | NOT NULL, >0 | |
+| `currency` | `string` | NOT NULL, default `"USD"` | ISO 4217 |
+| `status` | `enum ListingStatus` | NOT NULL, default `DRAFT` | |
+| `averageRating` | `Decimal?` | nullable, precision 3, scale 2 | Denormalized (US-6.1) |
+| `reviewCount` | `int` | NOT NULL, default 0 | Denormalized |
+| `disabledAt` | `DateTime?` | nullable | Set by US-8.2 |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+| `updatedAt` | `DateTime` | NOT NULL, `@updatedAt` | |
+
+**Invariants (enforced in `Listing.publish()` domain method, [docs/tasks.md](tasks.md) 2.1.9):**
+- Cannot transition to `PUBLISHED` without ≥1 `ListingPhoto`, ≥1 `ListingAmenity`, and `nightlyRateCents > 0`.
+- `disabledAt` is set only by admin (`AdminService.disableListing`); re-enabling reverts to `DRAFT`, not `PUBLISHED`.
+
+### 3.7 `ListingPhoto`
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `listingId` | `uuid` | FK → `Listing.id`, ON DELETE CASCADE | |
+| `url` | `string` | NOT NULL | Stored URL from signed-upload flow (XC-7.3) |
+| `position` | `int` | NOT NULL | UNIQUE per listing |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+Composite UNIQUE `(listingId, position)`.
+
+### 3.8 `Amenity` (lookup)
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `code` | `string` | PK | E.g., `wifi`, `kitchen`, `workspace_desk` |
+| `label` | `string` | NOT NULL | English display label |
+
+Seeded by [`packages/db/seed.ts`](../packages/db/seed.ts) with the list in [docs/tasks.md](tasks.md) 2.1.3.
+
+### 3.9 `ListingAmenity` (join)
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `listingId` | `uuid` | FK → `Listing.id`, ON DELETE CASCADE | |
+| `amenityCode` | `string` | FK → `Amenity.code` | |
+
+Composite PK `(listingId, amenityCode)`.
+
+### 3.10 `AvailabilityBlock`
+
+Date-range row blocking a listing. Three sources, distinguished by `source`:
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `listingId` | `uuid` | FK → `Listing.id`, ON DELETE CASCADE | |
+| `startDate` | `Date` | NOT NULL | Inclusive |
+| `endDate` | `Date` | NOT NULL | Exclusive |
+| `source` | `enum AvailabilityBlockSource` | NOT NULL | `HOST_BLOCK`, `BOOKING_HOLD`, `ADMIN_BLOCK` |
+| `bookingId` | `uuid?` | FK → `Booking.id`, nullable | NOT NULL when `source = BOOKING_HOLD` |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+**Overlap exclusion (Postgres-specific):** add a manual SQL step in the migration:
+
+```sql
+ALTER TABLE "AvailabilityBlock"
+  ADD CONSTRAINT availability_no_overlap
+  EXCLUDE USING gist (
+    "listingId" WITH =,
+    daterange("startDate", "endDate", '[)') WITH &&
+  );
+```
+
+This guarantees the marketplace cannot double-book at the DB level even under race conditions (per [docs/tasks.md](tasks.md) 2.3.2 and 4.1.18 — the loser of a race gets `409 OVERLAP_CONFLICT`).
+
+### 3.11 `Booking` (Booking aggregate root)
+
+Snapshot-heavy: prices and fees are frozen at booking time so subsequent config changes never retroactively alter financials (PRD §7 invariant).
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `listingId` | `uuid` | FK → `Listing.id` | |
+| `guestId` | `uuid` | FK → `User.id` | |
+| `hostId` | `uuid` | FK → `User.id` | Denormalized for host-side queries |
+| `checkIn` | `Date` | NOT NULL | Inclusive |
+| `checkOut` | `Date` | NOT NULL | Exclusive, > `checkIn` |
+| `nights` | `int` | NOT NULL, ≥1 | Computed and snapshotted |
+| `nightlyRateCents` | `int` | NOT NULL | Snapshot of `Listing.nightlyRateCents` |
+| `subtotalCents` | `int` | NOT NULL | = `nightlyRateCents * nights` |
+| `guestServiceFeeBps` | `int` | NOT NULL | Snapshot from `PlatformFeeConfig` |
+| `guestServiceFeeCents` | `int` | NOT NULL | |
+| `hostCommissionBps` | `int` | NOT NULL | Snapshot from `PlatformFeeConfig` |
+| `hostCommissionCents` | `int` | NOT NULL | |
+| `currency` | `string` | NOT NULL | ISO 4217 |
+| `totalChargedCents` | `int` | NOT NULL | = `subtotalCents + guestServiceFeeCents` |
+| `payoutCents` | `int` | NOT NULL | = `subtotalCents - hostCommissionCents` |
+| `status` | `enum BookingStatus` | NOT NULL, default `PENDING_PAYMENT` | |
+| `stripeCheckoutSessionId` | `string?` | nullable | Set when checkout starts |
+| `stripePaymentIntentId` | `string?` | nullable | Captured from webhook |
+| `confirmedAt` | `DateTime?` | nullable | Set on `checkout.session.completed` |
+| `cancelledAt` | `DateTime?` | nullable | Set on guest cancel or session expiry |
+| `cancellationReason` | `string?` | nullable | |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+**Lifecycle:**
+
+```
+PENDING_PAYMENT ──(checkout.session.completed)──▶ CONFIRMED ──(checkOut <= today + nightly job)──▶ COMPLETED
+       │                                              │
+       │                                              ├─(guest cancels before check-in)──▶ CANCELLED
+       │
+       └─(checkout.session.expired or guest abandons)─▶ CANCELLED
+```
+
+**Invariants:**
+- A `BOOKING_HOLD` row in `AvailabilityBlock` exists iff `Booking.status IN (PENDING_PAYMENT, CONFIRMED)`. Transitioning to `CANCELLED` deletes the hold; transitioning to `COMPLETED` keeps the hold (historical record).
+- Fee snapshot columns are immutable after creation (enforced by domain entity; no UPDATE path mutates them).
+
+### 3.12 `PlatformFeeConfig`
+
+Single live config row; historical rows allowed for auditability of past changes.
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `guestServiceFeeBps` | `int` | NOT NULL | E.g., 1200 = 12% |
+| `hostCommissionBps` | `int` | NOT NULL | E.g., 300 = 3% |
+| `effectiveFrom` | `DateTime` | NOT NULL | Current row = highest `effectiveFrom <= now()` |
+
+Lookup helper in `PricingService.currentConfig()`. Values for MVP are open (XC-7.1 in [docs/tasks.md](tasks.md)).
+
+### 3.13 `StripeProcessedEvent`
+
+Idempotency table for Stripe webhooks.
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `eventId` | `string` | PK | Stripe event id (`evt_...`) |
+| `processedAt` | `DateTime` | NOT NULL, default `now()` | |
+
+Webhook handler inserts before side-effects; conflict → skip.
+
+### 3.14 `RefundRequest`
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `bookingId` | `uuid` | FK → `Booking.id`, UNIQUE | One refund per booking in MVP |
+| `amountCents` | `int` | NOT NULL, ≥0 | Computed per cancellation policy (XC-7.2) |
+| `status` | `enum RefundStatus` | NOT NULL, default `PENDING_ADMIN` | |
+| `requestedAt` | `DateTime` | NOT NULL, default `now()` | |
+| `processedAt` | `DateTime?` | nullable | |
+| `notes` | `text?` | nullable | |
+
+### 3.15 `Review`
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `bookingId` | `uuid` | FK → `Booking.id`, UNIQUE | One review per booking |
+| `listingId` | `uuid` | FK → `Listing.id` | Denormalized for read-side fanout |
+| `guestId` | `uuid` | FK → `User.id` | |
+| `rating` | `int` | NOT NULL, 1..5 (CHECK) | |
+| `body` | `text?` | nullable, max 2000 | |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+After insert, `ReviewService` recomputes `Listing.averageRating` and `Listing.reviewCount` in the same transaction.
+
+### 3.16 `Payout`
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `hostId` | `uuid` | FK → `User.id` | |
+| `amountCents` | `int` | NOT NULL, ≥0 | = SUM of related `Booking.payoutCents` |
+| `currency` | `string` | NOT NULL | |
+| `paidAt` | `Date` | NOT NULL | Out-of-band transfer date |
+| `method` | `string` | NOT NULL | `bank_transfer`, `wise`, `paypal`, etc. |
+| `externalReference` | `string?` | nullable | Reference id from external system |
+| `notes` | `text?` | nullable | |
+| `recordedByAdminId` | `uuid` | FK → `User.id` | Admin who recorded the payout |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+### 3.17 `PayoutBooking` (join)
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `payoutId` | `uuid` | FK → `Payout.id`, ON DELETE CASCADE | |
+| `bookingId` | `uuid` | FK → `Booking.id`, UNIQUE | Booking can only be settled once |
+
+Composite PK `(payoutId, bookingId)`. The `bookingId` UNIQUE is the key invariant preventing double-settlement (US-5.2).
+
+### 3.18 `BookingFlag`
+
+Audit row written when an admin cascade affects a booking (US-8.1, US-8.2).
+
+| Column | Type | Constraints | Notes |
+| ------ | ---- | ----------- | ----- |
+| `id` | `uuid` | PK | |
+| `bookingId` | `uuid` | FK → `Booking.id` | |
+| `reason` | `enum BookingFlagReason` | NOT NULL | `HOST_DISABLED`, `GUEST_DISABLED`, `LISTING_DISABLED` |
+| `flaggedAt` | `DateTime` | NOT NULL, default `now()` | |
+| `resolvedAt` | `DateTime?` | nullable | |
+| `resolutionNote` | `text?` | nullable | |
+| `flaggedByAdminId` | `uuid` | FK → `User.id` | |
+
+---
+
+## 4. Aggregate boundaries (DDD)
+
+Per [docs/backend-standards.md](backend-standards.md) §Aggregates, the application layer only loads/saves aggregate **roots**; nested entities/value objects are mutated through the root.
+
+| Aggregate root | Members loaded together | Cannot be modified independently |
+| -------------- | ----------------------- | -------------------------------- |
+| `User` | — (refresh tokens, audit events, verification tokens are separate aggregates referenced by `userId`) | — |
+| `HostProfile` | — | — (own aggregate, 1:1 with User) |
+| `Listing` | `ListingPhoto[]`, `ListingAmenity[]`, current `AvailabilityBlock[]` window | `ListingPhoto`, `ListingAmenity` |
+| `Booking` | — (review, refund, payout-link referenced separately) | — |
+| `Payout` | `PayoutBooking[]` | `PayoutBooking` |
+| `Review` | — | — |
+
+`AvailabilityBlock` is a borderline case: rows of `source = HOST_BLOCK` belong to the `Listing` aggregate; rows of `source = BOOKING_HOLD` are owned by the `Booking` aggregate (lifecycle is tied to booking status). The repository layer enforces this: `ListingRepository.replaceHostBlocks()` only manages `HOST_BLOCK` rows, while `BookingRepository.confirm()` and `BookingRepository.cancel()` manage the `BOOKING_HOLD` row.
+
+---
+
+## 5. Enums
+
+```prisma
+enum AuthAuditEventType {
+  registered
+  login_succeeded
+  login_failed
+  password_reset_requested
+  role_added
+  user_disabled
+}
+
+enum ListingType {
+  PROPERTY
+  WORKSPACE
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  DISABLED
+}
+
+enum AvailabilityBlockSource {
+  HOST_BLOCK
+  BOOKING_HOLD
+  ADMIN_BLOCK
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum RefundStatus {
+  PENDING_ADMIN
+  PROCESSED
+  REJECTED
+}
+
+enum BookingFlagReason {
+  HOST_DISABLED
+  GUEST_DISABLED
+  LISTING_DISABLED
+}
+```
+
+---
+
+## 6. Indexes
+
+Beyond primary keys and the implicit indexes Prisma creates on foreign keys, the following composite/secondary indexes are required to meet the NFRs in [docs/tasks.md](tasks.md):
+
+| Table | Index | Reason |
+| ----- | ----- | ------ |
+| `User` | `email` (already UNIQUE) | Login lookup |
+| `Listing` | `(city, status)` | Search (US-3.1) |
+| `Listing` | `(hostId)` | Host dashboard (US-7.1) |
+| `Listing` | `(nightlyRateCents)` | Filter (US-3.2) |
+| `Listing` | `(capacity)` | Filter (US-3.2) |
+| `AvailabilityBlock` | `(listingId, startDate, endDate)` | Overlap checks (US-2.3, US-4.1) |
+| `AvailabilityBlock` | EXCLUDE constraint (see §3.10) | DB-level overlap prevention |
+| `Booking` | `(guestId, status)` | "My bookings" (US-4.1 frontend) |
+| `Booking` | `(hostId, status, checkIn)` | Host upcoming bookings (US-7.1) |
+| `Booking` | `(listingId, status)` | Settlement query (US-5.2) |
+| `RefreshToken` | `(userId)` | Bulk revoke on user disable |
+| `AuthAuditEvent` | `(userId, createdAt)` | Audit lookup |
+| `Review` | `(listingId, createdAt)` | Listing detail page reviews list |
+| `Payout` | `(hostId, paidAt)` | Payout history (US-5.2) |
+| `PayoutBooking` | `bookingId` UNIQUE | Prevents double-settlement |
+
+---
+
+## 7. Cross-cutting invariants
+
+These cross multiple tables and are enforced at the application layer inside DB transactions:
+
+1. **Atomic booking creation** ([docs/tasks.md](tasks.md) 4.1.8): inserting a `Booking (PENDING_PAYMENT)` and its `AvailabilityBlock (BOOKING_HOLD)` happens in one transaction. Either both succeed or both roll back; no orphan holds.
+2. **Fee snapshot immutability** (PRD §7): `Booking.guestServiceFeeBps`, `guestServiceFeeCents`, `hostCommissionBps`, `hostCommissionCents`, `nightlyRateCents`, `currency` are never UPDATEd after insert. Changing `PlatformFeeConfig` only affects future bookings.
+3. **Webhook idempotency** ([docs/tasks.md](tasks.md) 4.1.9): every Stripe webhook handler inserts into `StripeProcessedEvent` before performing side-effects; conflict → skip. Replaying the same event never duplicates emails or status transitions.
+4. **Cascade on user disable** (US-8.1): in one transaction — set `User.disabledAt`, set `Listing.status = DISABLED` for that host's listings, insert `BookingFlag` rows for affected confirmed bookings, revoke all `RefreshToken` rows for the user.
+5. **Cascade on listing disable** (US-8.2): in one transaction — set `Listing.status = DISABLED`, insert `BookingFlag(LISTING_DISABLED)` rows for that listing's future confirmed bookings.
+6. **One review per booking** (US-6.1): enforced by `Review.bookingId` UNIQUE + application-layer error mapping (`REVIEW_ALREADY_EXISTS` → 409). Average rating recompute is in the same transaction as the insert.
+7. **One settlement per booking** (US-5.2): enforced by `PayoutBooking.bookingId` UNIQUE. `PayoutService.recordPayout` reads eligible bookings inside a transaction and inserts `Payout` + `PayoutBooking` rows atomically.
+8. **No orphan booking holds**: a periodic job (or webhook expiry handler) sweeps `Booking` rows where `status = PENDING_PAYMENT` and `createdAt < now() - 30 min`, sets them to `CANCELLED`, and removes the associated `BOOKING_HOLD`.
+
+---
+
+## 8. Migration plan (suggested order)
+
+Run as discrete migrations so each can be reasoned about independently. Names map 1:1 to the OpenSpec changes in [docs/tasks.md](tasks.md) §"Mapping to OpenSpec changes".
+
+| # | Migration | Adds | OpenSpec change |
+| - | --------- | ---- | --------------- |
+| 1 | `init` | Extensions: `citext`, `btree_gist` (for the EXCLUDE constraint) | `init-monorepo` |
+| 2 | `add_identity_tables` | `User`, `EmailVerificationToken`, `AuthAuditEvent`, `RefreshToken`, `HostProfile`, enums | `add-identity` |
+| 3 | `add_listings` | `Listing`, `ListingPhoto`, `Amenity`, `ListingAmenity`, `AvailabilityBlock` (+ EXCLUDE constraint), enums | `add-listings` |
+| 4 | `add_bookings_and_payments` | `Booking`, `PlatformFeeConfig`, `StripeProcessedEvent`, `RefundRequest`, enums | `add-booking-and-payments` |
+| 5 | `add_reviews` | `Review` + denormalized columns on `Listing` (`averageRating`, `reviewCount`) | `add-reviews` |
+| 6 | `add_payouts_and_flags` | `Payout`, `PayoutBooking`, `BookingFlag`, enum | `add-admin-tools` |
+
+Seed data ([`packages/db/seed.ts`](../packages/db/seed.ts)):
+- One verified admin user (env `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD`).
+- `Amenity` lookup rows from the list in [docs/tasks.md](tasks.md) 2.1.3.
+- Initial `PlatformFeeConfig` row from env (XC-7.1).
+
+---
+
+## 9. Open data-model questions (blocking)
+
+Map 1:1 to [docs/PRD.md](PRD.md) §12. None of these unblock the `init-monorepo` change, but each blocks the listed downstream change.
+
+| # | Question | Blocks |
+| - | -------- | ------ |
+| 1 | Photo storage backend (Cloudflare R2 vs S3 vs Supabase Storage) — does `ListingPhoto` need a `storageProvider` column? Default: single provider, no column. | `add-listings` |
+| 2 | Exact fee percentages (`guestServiceFeeBps`, `hostCommissionBps`) | `add-booking-and-payments` |
+| 3 | Cancellation policy tiers — do they live as code constants or as a `CancellationPolicy` table? Default: code constants in MVP. | `add-booking-and-payments` |
+| 4 | Multi-currency: USD-only assumption confirmed? If yes, `currency` columns stay but never vary in MVP. | `add-booking-and-payments` |
+| 5 | Min/max stay rules per listing — add `minNights`/`maxNights` columns on `Listing` or defer to Post-MVP? | `add-listings` |
+
+---
+
+## 10. Post-MVP entities (deferred)
+
+The following are explicitly **not** in this data model; listed here only so they have a known landing zone when promoted out of [docs/PRD.md](PRD.md) Appendix A:
+
+- `Message`, `Conversation` — in-app messaging
+- `Event`, `EventRSVP`, `InterestGroup`, `CommunityMember` — community features
+- `iCalSync`, `CalendarLink` — calendar sync
+- `PayoutSchedule`, `PayoutMethod`, `Invoice` — automated payouts and billing
+- `Dispute`, `DisputeMessage` — dispute resolution
+- `OAuthIdentity` — social login
+- `IdentityVerification` (KYC), `BackgroundCheck` — verification
+- `DataExportRequest`, `DataDeletionRequest` — GDPR tooling
+- `HostReview` — host-to-guest reviews
+- `GroupBooking`, `GroupBookingMember` — first-class group/team-offsite bookings
+- `Locale`, `Translation` — i18n beyond the English-only `t()` table
+
+---
+
+# End of data-model.md
