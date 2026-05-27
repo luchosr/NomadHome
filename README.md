@@ -332,7 +332,7 @@ erDiagram
     }
 
     HOST_PROFILE {
-        uuid userId PK_FK "1:1 with USER"
+        uuid userId PK,FK "1:1 with USER"
         string displayName
         string phone "E.164"
         string payoutEmail
@@ -405,8 +405,8 @@ erDiagram
     }
 
     LISTING_AMENITY {
-        uuid listingId PK_FK
-        string amenityCode PK_FK
+        uuid listingId PK,FK
+        string amenityCode PK,FK
     }
 
     AVAILABILITY_BLOCK {
@@ -459,7 +459,7 @@ erDiagram
 
     REFUND_REQUEST {
         uuid id PK
-        uuid bookingId FK_UK "one per booking"
+        uuid bookingId FK,UK "one per booking"
         int amountCents
         enum status "PENDING_ADMIN|PROCESSED|REJECTED"
         datetime requestedAt
@@ -469,7 +469,7 @@ erDiagram
 
     REVIEW {
         uuid id PK
-        uuid bookingId FK_UK "one per booking"
+        uuid bookingId FK,UK "one per booking"
         uuid listingId FK
         uuid guestId FK
         int rating "CHECK 1..5"
@@ -491,8 +491,8 @@ erDiagram
     }
 
     PAYOUT_BOOKING {
-        uuid payoutId PK_FK
-        uuid bookingId PK_FK_UK "UK prevents double-settlement"
+        uuid payoutId PK,FK
+        uuid bookingId PK,FK,UK "UK prevents double-settlement"
     }
 
     BOOKING_FLAG {
