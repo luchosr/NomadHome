@@ -68,7 +68,11 @@ touch openspec/AGENTS.md openspec/project.md
 
 **Severity**: 🟠 **MAJOR**  
 **Area**: Spec-first workflow  
-**Status**: ❌ FAIL
+**Status**: ✅ RESOLVED — 2026-06-11
+
+#### Resolution
+
+Bootstrapped via OpenSpec change `bootstrap-capability-specs` (PR #1, merged 2026-06-11). Ten capability specs were authored from PRD §8 user stories (30 requirements, 53 scenarios), validated with `openspec validate --strict`, and materialized into `openspec/specs/<capability>/spec.md` for: `identity`, `listings`, `search`, `booking`, `payments`, `reviews`, `host-tooling`, `admin`, `platform`, `compliance`. Archived change at `openspec/changes/archive/2026-06-11-bootstrap-capability-specs/`. Six `[OPEN]` markers remain embedded in the relevant specs and are tracked as follow-ups in that change's `tasks.md` §5.
 
 #### The Problem
 
@@ -482,7 +486,7 @@ issued and the old one is revoked.
 | Severity       | Area                   | Finding                              | Fix Type | Effort |
 | -------------- | ---------------------- | ------------------------------------ | -------- | ------ |
 | 🔴 **BLOCKER** | System readiness       | `openspec/` folder missing           | Code     | 4h     |
-| 🟠 **MAJOR**   | Spec-first workflow    | `openspec/specs/` missing            | Spec     | 6h     |
+| ✅ RESOLVED    | Spec-first workflow    | `openspec/specs/` missing            | Spec     | 6h     |
 | 🟠 **MAJOR**   | Single source of truth | Conflict resolution undefined        | Spec     | 2h     |
 | 🟠 **MAJOR**   | Scope defense          | Post-MVP not enforced                | Spec     | 3h     |
 | 🟡 **MINOR**   | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
