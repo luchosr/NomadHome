@@ -1,6 +1,12 @@
 ---
-description: Backend development standards, best practices, and conventions for the LTI Node.js/TypeScript/Express application including Domain-Driven Design, SOLID principles, architecture patterns, API design, and testing practices
-globs: ["backend/src/**/*.ts", "backend/prisma/**/*.{prisma,ts}", "backend/jest.config.js", "backend/tsconfig.json", "backend/serverless.yml", "backend/package.json"]
+description: Backend development standards, best practices, and conventions for the  Node.js/TypeScript/Express application including Domain-Driven Design, SOLID principles, architecture patterns, API design, and testing practices
+globs:
+  [
+    'apps/api/src/**/*.ts',
+    'packages/db/**/*.{prisma,ts}',
+    'apps/api/tsconfig.json',
+    'apps/api/package.json',
+  ]
 alwaysApply: true
 ---
 
@@ -8,94 +14,117 @@ alwaysApply: true
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Technology Stack](#technology-stack)
-  - [Core Technologies](#core-technologies)
-  - [Database & ORM](#database--orm)
-  - [Testing Framework](#testing-framework)
-  - [Development Tools](#development-tools)
-- [Architecture Overview](#architecture-overview)
-  - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
-  - [Layered Architecture](#layered-architecture)
-  - [Project Structure](#project-structure)
-- [Domain-Driven Design Principles](#domain-driven-design-principles)
-  - [Entities](#entities)
-  - [Value Objects](#value-objects)
-  - [Aggregates](#aggregates)
-  - [Repositories](#repositories)
-  - [Domain Services](#domain-services)
-  - [Additional Recommendations](#additional-recommendations)
-- [SOLID and DRY Principles](#solid-and-dry-principles)
-  - [Single Responsibility Principle (SRP)](#single-responsibility-principle-srp)
-  - [Open/Closed Principle (OCP)](#openclosed-principle-ocp)
-  - [Liskov Substitution Principle (LSP)](#liskov-substitution-principle-lsp)
-  - [Interface Segregation Principle (ISP)](#interface-segregation-principle-isp)
-  - [Dependency Inversion Principle (DIP)](#dependency-inversion-principle-dip)
-  - [DRY (Don't Repeat Yourself)](#dry-dont-repeat-yourself)
-- [Coding Standards](#coding-standards)
-  - [Language and Naming Conventions](#language-and-naming-conventions)
-  - [TypeScript Usage](#typescript-usage)
-  - [Error Handling](#error-handling)
-  - [Validation Patterns](#validation-patterns)
-  - [Logging Standards](#logging-standards)
-- [API Design Standards](#api-design-standards)
-  - [REST Endpoints](#rest-endpoints)
-  - [Request/Response Patterns](#requestresponse-patterns)
-  - [Error Response Format](#error-response-format)
-  - [CORS Configuration](#cors-configuration)
-- [Database Patterns](#database-patterns)
-  - [Prisma Schema](#prisma-schema)
-  - [Migrations](#migrations)
-  - [Repository Pattern](#repository-pattern)
-- [Testing Standards](#testing-standards)
-  - [Unit Testing](#unit-testing)
-  - [Integration Testing](#integration-testing)
-  - [Test Coverage Requirements](#test-coverage-requirements)
-  - [Mocking Standards](#mocking-standards)
-- [Performance Best Practices](#performance-best-practices)
-  - [Database Query Optimization](#database-query-optimization)
-  - [Async/Await Patterns](#asyncawait-patterns)
-  - [Error Handling Performance](#error-handling-performance)
-- [Security Best Practices](#security-best-practices)
-  - [Input Validation](#input-validation)
-  - [Environment Variables](#environment-variables)
-  - [Dependency Injection](#dependency-injection)
-- [Development Workflow](#development-workflow)
-  - [Git Workflow](#git-workflow)
-  - [Development Scripts](#development-scripts)
-  - [Code Quality](#code-quality)
-- [Serverless Deployment](#serverless-deployment)
-  - [AWS Lambda Configuration](#aws-lambda-configuration)
-  - [Serverless Framework](#serverless-framework)
+- [Backend Project Standards and Best Practices](#backend-project-standards-and-best-practices)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Technology Stack](#technology-stack)
+    - [Core Technologies](#core-technologies)
+    - [Database \& ORM](#database--orm)
+    - [Testing Framework](#testing-framework)
+    - [Development Tools](#development-tools)
+  - [Architecture Overview](#architecture-overview)
+    - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
+    - [Layered Architecture](#layered-architecture)
+    - [Project Structure](#project-structure)
+  - [Domain-Driven Design Principles](#domain-driven-design-principles)
+    - [Entities](#entities)
+    - [Value Objects](#value-objects)
+    - [Aggregates](#aggregates)
+    - [Repositories](#repositories)
+    - [Domain Services](#domain-services)
+    - [Additional Recommendations](#additional-recommendations)
+  - [SOLID and DRY Principles](#solid-and-dry-principles)
+    - [SOLID Principles](#solid-principles)
+      - [Single Responsibility Principle (SRP)](#single-responsibility-principle-srp)
+      - [Open/Closed Principle (OCP)](#openclosed-principle-ocp)
+      - [Liskov Substitution Principle (LSP)](#liskov-substitution-principle-lsp)
+      - [Interface Segregation Principle (ISP)](#interface-segregation-principle-isp)
+      - [Dependency Inversion Principle (DIP)](#dependency-inversion-principle-dip)
+    - [DRY (Don't Repeat Yourself)](#dry-dont-repeat-yourself)
+  - [Coding Standards](#coding-standards)
+    - [Naming Conventions](#naming-conventions)
+    - [TypeScript Usage](#typescript-usage)
+    - [Error Handling](#error-handling)
+    - [Validation Patterns](#validation-patterns)
+    - [Logging Standards](#logging-standards)
+  - [API Design Standards](#api-design-standards)
+    - [REST Endpoints](#rest-endpoints)
+    - [Request/Response Patterns](#requestresponse-patterns)
+    - [Error Response Format](#error-response-format)
+    - [CORS Configuration](#cors-configuration)
+  - [Database Patterns](#database-patterns)
+    - [Prisma Schema](#prisma-schema)
+    - [Migrations](#migrations)
+    - [Repository Pattern](#repository-pattern)
+  - [Testing Standards](#testing-standards)
+    - [Test File Structure](#test-file-structure)
+    - [Test Organization Pattern](#test-organization-pattern)
+    - [Test Case Naming Convention](#test-case-naming-convention)
+    - [Test Structure (AAA Pattern)](#test-structure-aaa-pattern)
+    - [Mocking Standards](#mocking-standards)
+    - [Test Coverage Requirements](#test-coverage-requirements)
+    - [Error Testing](#error-testing)
+    - [Controller Testing Specifics](#controller-testing-specifics)
+    - [Service Testing Specifics](#service-testing-specifics)
+    - [Database Testing](#database-testing)
+    - [Async Testing](#async-testing)
+    - [Test Data Management](#test-data-management)
+    - [Integration Testing](#integration-testing)
+    - [Code Quality Standards](#code-quality-standards)
+      - [TypeScript Usage](#typescript-usage-1)
+      - [Documentation](#documentation)
+      - [Performance Considerations](#performance-considerations)
+    - [Integration with Development Workflow](#integration-with-development-workflow)
+    - [Common Anti-Patterns to Avoid](#common-anti-patterns-to-avoid)
+    - [Example Test Structure](#example-test-structure)
+  - [Performance Best Practices](#performance-best-practices)
+    - [Database Query Optimization](#database-query-optimization)
+    - [Async/Await Patterns](#asyncawait-patterns)
+    - [Error Handling Performance](#error-handling-performance)
+  - [Security Best Practices](#security-best-practices)
+    - [Input Validation](#input-validation)
+    - [Environment Variables](#environment-variables)
+    - [Dependency Injection](#dependency-injection)
+  - [Development Workflow](#development-workflow)
+    - [Git Workflow](#git-workflow)
+    - [Development Scripts](#development-scripts)
+    - [Code Quality](#code-quality)
+  - [Deployment](#deployment)
 
 ---
 
 ## Overview
 
-This document outlines the best practices, conventions, and standards used in the LTI backend application. The backend follows Domain-Driven Design (DDD) principles and implements a layered architecture to ensure code consistency, maintainability, and scalability.
+This document outlines the best practices, conventions, and standards used in the backend application. The backend follows Domain-Driven Design (DDD) principles and implements a layered architecture to ensure code consistency, maintainability, and scalability.
 
 ## Technology Stack
 
 ### Core Technologies
+
 - **Node.js**: Runtime environment
 - **TypeScript**: Type-safe development with strict mode
 - **Express.js**: Web application framework
 - **Prisma**: Modern ORM for database access
 
 ### Database & ORM
+
 - **PostgreSQL**: Relational database (Docker container)
 - **Prisma Client**: Type-safe database client
 - **Prisma Migrate**: Database migration tool
 
 ### Testing Framework
-- **Jest**: Testing framework with TypeScript support
-- **Coverage Threshold**: 90% for branches, functions, lines, and statements
+
+- **Vitest**: Testing framework with TypeScript support
+- **Coverage Threshold**: 80% on changed lines (per [CLAUDE.md](../CLAUDE.md) §7); aim for 90% on critical domain code
 - **Test Location**: `__tests__` directories and `.test.ts` files
+- **Playwright**: End-to-end tests for critical flows (lives under `apps/web/e2e/` but exercises both `apps/web/` and `apps/api/`)
 
 ### Development Tools
-- **ESLint**: Code linting
+
+- **ESLint**: Code linting (shared config in `packages/config/`)
+- **Prettier**: Formatting (shared config in `packages/config/`)
 - **TypeScript Compiler**: Type checking and compilation
-- **Serverless Framework**: AWS Lambda deployment support
+- **pnpm + Turbo**: Monorepo task orchestration
 
 ## Architecture Overview
 
@@ -104,6 +133,7 @@ This document outlines the best practices, conventions, and standards used in th
 Domain-Driven Design is a methodology that focuses on modeling software according to business logic and domain knowledge. By centering development on a deep understanding of the domain, DDD facilitates the creation of complex systems.
 
 **Benefits:**
+
 - **Improved Communication**: Promotes a common language between developers and domain experts, improving communication and reducing interpretation errors.
 - **Clear Domain Models**: Helps build models that accurately reflect business rules and processes.
 - **High Maintainability**: By dividing the system into subdomains, it facilitates maintenance and software evolution.
@@ -113,54 +143,62 @@ Domain-Driven Design is a methodology that focuses on modeling software accordin
 The backend follows a layered DDD architecture:
 
 **Presentation Layer** (`src/presentation/`)
+
 - Controllers handle HTTP requests/responses
 - Routes define API endpoints
 - Controllers use services from Application layer
 
 **Application Layer** (`src/application/`)
+
 - Services contain business logic and orchestration
 - Validator handles input validation
 - Services use repositories from Domain layer
 
 **Domain Layer** (`src/domain/`)
-- Models define core business entities (Candidate, Position, Application, Interview, etc.)
+
+- Models define core business entities (User, Listing, Booking, Review, Payout, etc. — see [docs/data-model.md](../docs/data-model.md))
 - Repository interfaces define data access contracts
 - Pure business logic without external dependencies
 
 **Infrastructure Layer** (implicit)
+
 - Prisma ORM handles database operations
 - Repository implementations (via Prisma) satisfy domain interfaces
 
 ### Project Structure
 
 ```
-backend/
+apps/api/
 ├── src/
 │   ├── domain/
-│   │   ├── models/          # Domain entities
+│   │   ├── models/          # Domain entities (per capability)
 │   │   └── repositories/    # Repository interfaces
 │   ├── application/
 │   │   ├── services/        # Business logic services
-│   │   └── validator.ts     # Input validation
+│   │   └── validator.ts     # Input validation (delegates to Zod schemas in packages/shared)
 │   ├── presentation/
 │   │   └── controllers/     # HTTP request handlers
 │   ├── infrastructure/
-│   │   ├── logger.ts        # Logging utilities
-│   │   └── prismaClient.ts  # Prisma client setup
+│   │   ├── logger.ts        # Logging utilities (pino)
+│   │   ├── email/           # Resend (or SendGrid) client wrapper
+│   │   ├── payments/        # Stripe client wrapper
+│   │   └── repositories/    # Prisma-backed repository implementations
 │   ├── routes/              # Express route definitions
-│   ├── middleware/          # Express middleware
-│   ├── index.ts             # Application entry point
-│   └── lambda.ts            # AWS Lambda handler
-├── prisma/
-│   ├── schema.prisma        # Database schema
-│   └── migrations/          # Database migrations
+│   ├── middleware/          # Express middleware (requireAuth, requireRole, error handler)
+│   └── index.ts             # Application entry point
 ├── test-utils/
 │   ├── builders/            # Test data builders
 │   └── mocks/               # Mock helpers
-├── jest.config.js           # Jest configuration
+├── vitest.config.ts         # Vitest configuration
 ├── tsconfig.json            # TypeScript configuration
-├── serverless.yml           # Serverless Framework config
 └── package.json             # Dependencies and scripts
+
+packages/db/
+├── prisma/
+│   ├── schema.prisma        # Single source of truth for DB structure
+│   ├── migrations/          # Version-controlled migrations
+│   └── seed.ts              # Seed script
+└── package.json
 ```
 
 ## Domain-Driven Design Principles
@@ -170,183 +208,347 @@ backend/
 Entities are objects with a distinct identity that persists over time.
 
 **Before:**
+
 ```typescript
-// Previously, candidate data might have been handled as a simple JSON object without methods.
-const candidate = {
-    id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com'
+// Anemic: data only, no behavior — every caller has to know the invariants.
+const user = {
+  id: 'usr_01H...',
+  email: 'jane@example.com',
+  passwordHash: '$2b$12$...',
+  roles: ['guest'],
+  emailVerifiedAt: null,
+  disabledAt: null,
 };
 ```
 
 **After:**
+
 ```typescript
-export class Candidate {
-    id?: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    
-    // Constructor and methods that encapsulate business logic
-    constructor(data: any) {
-        this.id = data.id;
-        this.firstName = data.firstName;
-        this.lastName = data.lastName;
-        this.email = data.email;
-    }
+import { CreateUserInput } from '@nomadhome/shared/schemas/auth';
+
+export class User {
+  id: string;
+  email: string;
+  passwordHash: string;
+  roles: string[];
+  emailVerifiedAt: Date | null;
+  disabledAt: Date | null;
+
+  constructor(data: User) {
+    this.id = data.id;
+    this.email = data.email;
+    this.passwordHash = data.passwordHash;
+    this.roles = data.roles;
+    this.emailVerifiedAt = data.emailVerifiedAt;
+    this.disabledAt = data.disabledAt;
+  }
+
+  hasRole(role: 'guest' | 'host' | 'admin'): boolean {
+    return this.roles.includes(role);
+  }
+
+  isActive(): boolean {
+    return this.disabledAt === null && this.emailVerifiedAt !== null;
+  }
+
+  static create(input: CreateUserInput): User {
+    return new User({
+      id: crypto.randomUUID(),
+      email: input.email.toLowerCase(),
+      passwordHash: input.passwordHash,
+      roles: ['guest'],
+      emailVerifiedAt: null,
+      disabledAt: null,
+    });
+  }
 }
 ```
 
-**Explanation**: `Candidate` is an entity because it has a unique identifier (`id`) that distinguishes it from other candidates, even if other properties are identical.
+**Explanation**: `User` is an entity because it has a stable identity (`id`) that distinguishes it from other users even when other attributes change. Behavior (`hasRole`, `isActive`, `create`) is owned by the entity rather than scattered across services.
 
 **Best Practice**: Entities should encapsulate business logic related to their domain concept and maintain consistency of their internal state.
 
 ### Value Objects
 
-Value Objects describe aspects of the domain without conceptual identity. They are defined by their attributes rather than an identifier.
+Value Objects describe aspects of the domain without conceptual identity. They are defined by their attributes rather than an identifier and are immutable.
 
 **Before:**
-```typescript
-// Handling education information as a simple object
-const education = {
-    institution: 'University',
-    degree: 'Bachelor',
-    startDate: '2010-01-01',
-    endDate: '2014-01-01'
-};
-```
 
-**After:**
 ```typescript
-export class Education {
-    institution: string;
-    title: string;
-    startDate: Date;
-    endDate?: Date;
-    
-    constructor(data: any) {
-        this.institution = data.institution;
-        this.title = data.title;
-        this.startDate = new Date(data.startDate);
-        this.endDate = data.endDate ? new Date(data.endDate) : undefined;
-    }
+// Money passed around as a primitive pair — easy to mix up cents and dollars,
+// easy to add USD + EUR without noticing.
+function computeTotal(rateCents: number, nights: number) {
+  return rateCents * nights;
 }
 ```
 
-**Explanation**: `Education` can be considered a Value Object in some contexts, as it describes a candidate's education without needing a unique identifier. However, in the current model, it has been assigned an id, which could contradict the pure definition of a Value Object in DDD.
+**After:**
 
-**Recommendation**: Classes like `Education` and `WorkExperience` currently have unique identifiers, classifying them as entities. In many cases, these could be treated as Value Objects within the context of a `Candidate` aggregate. Consider removing unique identifiers from classes that should be Value Objects, or incorporating them as part of the Candidate document if using a NoSQL database.
+```typescript
+export class Money {
+  readonly amountCents: number;
+  readonly currency: string; // ISO 4217
+
+  private constructor(amountCents: number, currency: string) {
+    if (!Number.isInteger(amountCents)) {
+      throw new Error('Money.amountCents must be an integer (cents)');
+    }
+    this.amountCents = amountCents;
+    this.currency = currency;
+  }
+
+  static of(amountCents: number, currency: string): Money {
+    return new Money(amountCents, currency);
+  }
+
+  plus(other: Money): Money {
+    this.assertSameCurrency(other);
+    return new Money(this.amountCents + other.amountCents, this.currency);
+  }
+
+  minus(other: Money): Money {
+    this.assertSameCurrency(other);
+    return new Money(this.amountCents - other.amountCents, this.currency);
+  }
+
+  multiply(factor: number): Money {
+    return new Money(Math.round(this.amountCents * factor), this.currency);
+  }
+
+  applyBps(bps: number): Money {
+    return this.multiply(bps / 10_000);
+  }
+
+  equals(other: Money): boolean {
+    return this.amountCents === other.amountCents && this.currency === other.currency;
+  }
+
+  private assertSameCurrency(other: Money): void {
+    if (this.currency !== other.currency) {
+      throw new Error(`Currency mismatch: ${this.currency} vs ${other.currency}`);
+    }
+  }
+}
+```
+
+**Explanation**: `Money` is a Value Object because it has no identity — two `Money(1000, "USD")` instances are interchangeable. It is immutable (every operation returns a new instance), and it pushes invariants (integer cents, currency match) into the type itself rather than relying on caller discipline. This is exactly the shape we need for booking pricing where amounts and fees flow across services.
+
+**Recommendation**: Prefer Value Objects whenever a concept has no lifecycle of its own. Other NomadHome examples that fit: `DateRange` (check-in/check-out), `Email`, `BasisPoints`.
 
 ### Aggregates
 
 Aggregates are clusters of objects that must be treated as a unit. They have a root entity that enforces invariants and consistency boundaries.
 
 **Before:**
+
 ```typescript
-// Candidate and education data handled separately
-const candidate = { id: 1, name: 'John Doe' };
-const educations = [{ candidateId: 1, institution: 'University' }];
+// Listing, photos, and amenities mutated independently from controllers —
+// nothing prevents publishing a listing with zero photos.
+const listing = { id: 'lst_1', status: 'PUBLISHED', nightlyRateCents: 0 };
+const photos = []; // empty
+await db.listing.update({ where: { id: 'lst_1' }, data: { status: 'PUBLISHED' } });
 ```
 
 **After:**
+
 ```typescript
-export class Candidate {
-    id?: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    educations: Education[];
-    
-    constructor(data: any) {
-        this.id = data.id;
-        this.firstName = data.firstName;
-        this.lastName = data.lastName;
-        this.email = data.email;
-        this.educations = data.educations?.map(edu => new Education(edu)) || [];
+export class Listing {
+  id: string;
+  hostId: string;
+  title: string;
+  type: 'PROPERTY' | 'WORKSPACE';
+  nightlyRate: Money;
+  capacity: number;
+  status: 'DRAFT' | 'PUBLISHED' | 'DISABLED';
+  photos: ListingPhoto[];
+  amenityCodes: string[];
+
+  constructor(data: Omit<Listing, 'publish' | 'unpublish' | 'addPhoto'>) {
+    Object.assign(this, data);
+  }
+
+  publish(): void {
+    if (this.status === 'DISABLED') {
+      throw new Error('Cannot publish a disabled listing');
     }
+    if (this.photos.length < 1) {
+      throw new Error('Listing requires at least one photo before publishing');
+    }
+    if (this.amenityCodes.length < 1) {
+      throw new Error('Listing requires at least one amenity before publishing');
+    }
+    if (this.nightlyRate.amountCents <= 0) {
+      throw new Error('Listing nightly rate must be greater than zero');
+    }
+    this.status = 'PUBLISHED';
+  }
+
+  unpublish(): void {
+    if (this.status === 'PUBLISHED') {
+      this.status = 'DRAFT';
+    }
+  }
+
+  addPhoto(photo: ListingPhoto): void {
+    const exists = this.photos.some((p) => p.position === photo.position);
+    if (exists) {
+      throw new Error(`Photo position ${photo.position} already taken`);
+    }
+    this.photos.push(photo);
+  }
 }
 ```
 
-**Explanation**: `Candidate` acts as an aggregate root that contains `Education`, `WorkExperience`, `Resume`, and `Application`. `Candidate` is the root of the aggregate, as the other entities only make sense in relation to a candidate.
+**Explanation**: `Listing` is the aggregate root that contains `ListingPhoto[]` and amenity references. All mutations (publish, add a photo) go through the root, which enforces invariants in one place. The `publish()` method codifies the rules from [docs/data-model.md](../docs/data-model.md) §3.6 so they cannot be bypassed.
 
-**Recommendation**: Aggregates should be carefully designed to ensure that all operations within the aggregate boundary maintain consistency. Operations that affect `Education` and `WorkExperience` should be handled through the aggregate root, `Candidate`, to maintain integrity and encapsulation.
+**Recommendation**: Operations that affect aggregate members (`ListingPhoto`, the amenity join) are handled through the root. Repositories load and save the root as a unit; never let callers `INSERT` into `ListingPhoto` directly.
 
 ### Repositories
 
-Repositories provide interfaces for accessing aggregates and entities, encapsulating data access logic.
+Repositories provide interfaces for accessing aggregates and entities, encapsulating data access logic. The interface lives in the **domain** layer; the Prisma-backed implementation lives in the **infrastructure** layer.
 
 **Before:**
+
 ```typescript
-// Direct database access without abstraction
-function getCandidateById(id: number) {
-    return database.query('SELECT * FROM candidates WHERE id = ?', [id]);
+// Direct Prisma access from controllers — couples HTTP to ORM,
+// makes testing slow, and leaks "ORM shape" into the rest of the code.
+function getListingById(id: string) {
+  return prisma.listing.findUnique({ where: { id } });
 }
 ```
 
 **After:**
+
 ```typescript
-export interface ICandidateRepository {
-    findById(id: number): Promise<Candidate | null>;
-    save(candidate: Candidate): Promise<Candidate>;
-    findAll(): Promise<Candidate[]>;
+// apps/api/src/domain/repositories/IListingRepository.ts
+export interface IListingRepository {
+  findById(id: string): Promise<Listing | null>;
+  findPublishedByCity(query: SearchQuery): Promise<Paginated<Listing>>;
+  save(listing: Listing): Promise<Listing>;
+  delete(id: string): Promise<void>;
 }
 
-export class CandidateRepository implements ICandidateRepository {
-    async findById(id: number): Promise<Candidate | null> {
-        const data = await prisma.candidate.findUnique({ where: { id } });
-        return data ? new Candidate(data) : null;
-    }
-    
-    async save(candidate: Candidate): Promise<Candidate> {
-        // Implementation with Prisma
-    }
+// apps/api/src/infrastructure/repositories/ListingRepository.ts
+export class ListingRepository implements IListingRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async findById(id: string): Promise<Listing | null> {
+    const data = await this.prisma.listing.findUnique({
+      where: { id },
+      include: { photos: true, amenities: true },
+    });
+    return data ? this.toDomain(data) : null;
+  }
+
+  async save(listing: Listing): Promise<Listing> {
+    // Upsert root + nested photos/amenities in one transaction so the
+    // aggregate is persisted as a unit.
+    return this.prisma.$transaction(async (tx) => {
+      const saved = await tx.listing.upsert({
+        where: { id: listing.id },
+        create: this.toPersistence(listing),
+        update: this.toPersistence(listing),
+      });
+      await this.syncPhotos(tx, listing);
+      await this.syncAmenities(tx, listing);
+      return this.toDomain(saved);
+    });
+  }
+
+  private toDomain(row: PrismaListing & { photos: PrismaListingPhoto[]; amenities: { amenityCode: string }[] }): Listing {
+    return new Listing({
+      id: row.id,
+      hostId: row.hostId,
+      title: row.title,
+      type: row.type,
+      nightlyRate: Money.of(row.nightlyRateCents, row.currency),
+      capacity: row.capacity,
+      status: row.status,
+      photos: row.photos.map((p) => new ListingPhoto(p)),
+      amenityCodes: row.amenities.map((a) => a.amenityCode),
+    });
+  }
+
+  private toPersistence(listing: Listing) {
+    return {
+      id: listing.id,
+      hostId: listing.hostId,
+      title: listing.title,
+      type: listing.type,
+      nightlyRateCents: listing.nightlyRate.amountCents,
+      currency: listing.nightlyRate.currency,
+      capacity: listing.capacity,
+      status: listing.status,
+    };
+  }
+
+  // syncPhotos, syncAmenities, findPublishedByCity, delete elided for brevity
 }
 ```
 
-**Explanation**: `CandidateRepository` provides a clear interface for accessing candidate data, encapsulating database access logic.
+**Explanation**: `ListingRepository` provides a clear interface for accessing the `Listing` aggregate, encapsulating Prisma usage. Domain code depends on `IListingRepository`; only the infrastructure layer depends on Prisma. This is what makes service tests fast (mock the interface) and integration tests focused (test the implementation against a real database).
 
-**Recommendation**: 
-- Develop complete repository interfaces for each entity and aggregate, ensuring all database interactions for those entities pass through the repository
-- Implement repository methods that handle collections of entities, such as lists of Candidates, that can be filtered or modified in bulk
-- Use dependency injection to inject Prisma client into repositories
+**Recommendation**:
+
+- Develop complete repository interfaces for each aggregate, ensuring all database interactions pass through the repository.
+- Implement repository methods that handle collections (e.g., `findPublishedByCity`), filtered or modified in bulk.
+- Use dependency injection to inject `PrismaClient` into repositories — never reach for a singleton.
 
 ### Domain Services
 
-Domain Services contain business logic that doesn't naturally belong to an entity or value object.
+Domain Services contain business logic that doesn't naturally belong to an entity or value object — typically logic that spans multiple aggregates or depends on configuration external to any single entity.
 
 **Before:**
+
 ```typescript
-// Loose functions to handle business logic
-function calculateAge(candidate: any): number {
-    const today = new Date();
-    const birthDate = new Date(candidate.birthDate);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    return age;
+// Pricing math scattered across booking controller, email template,
+// and admin payout report — every implementation drifts subtly.
+function priceBreakdown(listing: any, nights: number, feeConfig: any) {
+  const subtotal = listing.nightlyRateCents * nights;
+  const guestFee = Math.round(subtotal * (feeConfig.guestServiceFeeBps / 10000));
+  const hostCommission = Math.round(subtotal * (feeConfig.hostCommissionBps / 10000));
+  return { subtotal, guestFee, hostCommission, total: subtotal + guestFee };
 }
 ```
 
 **After:**
+
 ```typescript
-export class CandidateService {
-    static calculateAge(candidate: Candidate): number {
-        const today = new Date();
-        const birthDate = new Date(candidate.birthDate);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        return age;
-    }
+export interface PriceBreakdown {
+  nights: number;
+  nightlyRate: Money;
+  subtotal: Money;
+  guestServiceFee: Money;
+  hostCommission: Money;
+  total: Money; // what the guest is charged
+  payout: Money; // what the host receives
+}
+
+export class PricingService {
+  computeBreakdown(
+    listing: Listing,
+    dateRange: DateRange,
+    feeConfig: PlatformFeeConfig,
+  ): PriceBreakdown {
+    const nights = dateRange.nights();
+    const subtotal = listing.nightlyRate.multiply(nights);
+    const guestServiceFee = subtotal.applyBps(feeConfig.guestServiceFeeBps);
+    const hostCommission = subtotal.applyBps(feeConfig.hostCommissionBps);
+
+    return {
+      nights,
+      nightlyRate: listing.nightlyRate,
+      subtotal,
+      guestServiceFee,
+      hostCommission,
+      total: subtotal.plus(guestServiceFee),
+      payout: subtotal.minus(hostCommission),
+    };
+  }
 }
 ```
 
-**Explanation**: `CandidateService` encapsulates business logic related to candidates, such as calculating age, providing a centralized and coherent point for handling these operations.
+**Explanation**: `PricingService` encapsulates a calculation that depends on three inputs (a `Listing` aggregate, a `DateRange` value object, and a `PlatformFeeConfig` row). It does not belong on `Listing` because the fee config is external, and it does not belong on `Booking` because we need to quote a price *before* a booking exists. A domain service is the right home. The result uses `Money` end-to-end, so currency-mismatch bugs cannot reach a Stripe Checkout session.
 
 ### Additional Recommendations
 
@@ -379,283 +581,332 @@ SOLID principles are five object-oriented design principles that help create mor
 Each class should have a single responsibility or reason to change.
 
 **Before:**
+
 ```typescript
-// A method that handles multiple responsibilities: validation and data storage
-function processCandidate(candidate: any) {
-    if (!candidate.email.includes('@')) {
-        console.error('Invalid email');
-        return;
-    }
-    database.save(candidate);
-    console.log('Candidate saved');
+// One function that validates, hashes, persists, audits, and emails — five reasons to change.
+async function registerUser(input: { email: string; password: string }) {
+  if (!input.email.includes('@')) {
+    console.error('Invalid email');
+    return;
+  }
+  const hash = await bcrypt.hash(input.password, 12);
+  const user = await prisma.user.create({ data: { email: input.email, passwordHash: hash } });
+  await prisma.authAuditEvent.create({ data: { userId: user.id, event: 'registered' } });
+  await resend.emails.send({ to: input.email, subject: 'Verify your email', html: '...' });
+  console.log('User registered');
+  return user;
 }
 ```
 
 **After:**
+
 ```typescript
-export class Candidate {
-    // The class now only handles logic related to the candidate
-    validateEmail(): void {
-        if (!this.email.includes('@')) {
-            throw new Error('Invalid email');
-        }
+// Domain entity — owns invariants only.
+export class User {
+  validateEmail(): void {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+      throw new ValidationError('Invalid email');
     }
+  }
 }
 
-export class CandidateRepository {
-    async save(candidate: Candidate): Promise<Candidate> {
-        candidate.validateEmail();
-        return await prisma.candidate.create({ data: candidate });
-    }
+// Application service — orchestrates the workflow.
+export class IdentityService {
+  constructor(
+    private readonly users: IUserRepository,
+    private readonly audit: AuthAuditService,
+    private readonly email: EmailService,
+    private readonly hasher: PasswordHasher,
+  ) {}
+
+  async register(input: RegisterUserInput): Promise<User> {
+    const user = User.create({ email: input.email, passwordHash: await this.hasher.hash(input.password) });
+    user.validateEmail();
+    await this.users.save(user);
+    await this.audit.record('registered', { userId: user.id, ipAddress: input.ipAddress });
+    await this.email.sendVerification(user);
+    return user;
+  }
 }
 ```
 
-**Explanation**: The `Candidate` class now has separate methods for validation, while the repository handles data persistence, complying with the single responsibility principle.
+**Explanation**: Each class now has a single reason to change — `User` for invariants, `IUserRepository` for persistence, `AuthAuditService` for audit, `EmailService` for delivery, `IdentityService` for orchestration. New rules around email format never force a change in the persistence layer, and vice versa.
 
-**Observation**: The `Candidate` class in `backend/src/domain/models/Candidate.ts` handles both business logic and data access logic.
-
-**Recommendation**: Separate data access logic into a repository layer to adhere more closely to SRP.
+**Recommendation**: When you find yourself writing "and" in the description of a function ("validates and saves and emails"), split it.
 
 #### Open/Closed Principle (OCP)
 
 Software entities should be open for extension but closed for modification.
 
 **Before:**
+
 ```typescript
-// Direct modification of the class to add functionality
-class Candidate {
-    saveToDatabase() {
-        // code to save to database
-    }
-    // To add new functionality, we modify the class directly
-    sendEmail() {
-        // code to send an email
-    }
+// Adding a new cancellation tier requires editing the if/else block every time.
+function refundAmountCents(booking: Booking, today: Date): number {
+  const daysUntilCheckIn = Math.floor((booking.checkIn.getTime() - today.getTime()) / 86_400_000);
+  if (daysUntilCheckIn >= 7) return booking.totalChargedCents;
+  if (daysUntilCheckIn >= 1) return Math.floor(booking.totalChargedCents * 0.5);
+  return 0;
 }
 ```
 
 **After:**
+
 ```typescript
-export class Candidate {
-    saveToDatabase() {
-        // code to save to database
-    }
+export interface CancellationPolicy {
+  refund(booking: Booking, today: Date): Money;
 }
 
-// Extend functionality without modifying the existing class
-class CandidateWithEmail extends Candidate {
-    sendEmail() {
-        // code to send an email
-    }
+export class TieredCancellationPolicy implements CancellationPolicy {
+  constructor(private readonly tiers: { minDaysBefore: number; refundFraction: number }[]) {}
+
+  refund(booking: Booking, today: Date): Money {
+    const daysUntilCheckIn = Math.floor((booking.checkIn.getTime() - today.getTime()) / 86_400_000);
+    const tier = this.tiers.find((t) => daysUntilCheckIn >= t.minDaysBefore);
+    const fraction = tier?.refundFraction ?? 0;
+    return booking.totalCharged.multiply(fraction);
+  }
 }
+
+// Adding a new policy (e.g., NonRefundablePolicy, GraceWindowPolicy) requires no edit to
+// existing code or callers — just implement the interface and inject it.
 ```
 
-**Explanation**: The email sending functionality is extended in a subclass, keeping the original class closed for modifications but open for extensions.
+**Explanation**: The refund logic is now closed for modification (`TieredCancellationPolicy` does not change when product wants a new tier scheme) but open for extension (a new `CancellationPolicy` implementation replaces it via DI). This matters for NomadHome because cancellation tiers are listed as an open question (XC-7.2 in [docs/tasks.md](tasks.md)) and will likely change post-MVP.
 
-**Observation**: The `addCandidate` function in `backend/src/application/services/candidateService.ts` directly instantiates `Candidate`, `Education`, `WorkExperience`, and `Resume` classes.
-
-**Recommendation**: Use factory methods to create instances, allowing for easier extension without modifying existing code.
+**Recommendation**: When a function grows a chain of `if` branches keyed off a configurable concept, that concept wants to become an interface.
 
 #### Liskov Substitution Principle (LSP)
 
 Objects of a derived class should be replaceable with objects of the base class without altering the program's functionality.
 
 **Before:**
+
 ```typescript
-// Subclass that cannot completely replace its base class
-class TemporaryCandidate extends Candidate {
-    saveToDatabase() {
-        throw new Error("Temporary candidates can't be saved.");
-    }
+// In-memory test double that violates the contract — production code
+// expects a returned User, this throws instead.
+class InMemoryUserRepository implements IUserRepository {
+  async save(user: User): Promise<User> {
+    throw new Error('save is not supported in tests');
+  }
+  // ...
 }
 ```
 
 **After:**
+
 ```typescript
-class TemporaryCandidate extends Candidate {
-    saveToDatabase() {
-        // Appropriate implementation that allows temporary handling
-        console.log("Handled temporarily");
-        // Alternative: Save to temporary storage
-    }
+class InMemoryUserRepository implements IUserRepository {
+  private readonly store = new Map<string, User>();
+
+  async save(user: User): Promise<User> {
+    this.store.set(user.id, user);
+    return user; // honors the contract: returns the persisted user
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return [...this.store.values()].find((u) => u.email === email) ?? null;
+  }
 }
 ```
 
-**Explanation**: `TemporaryCandidate` now provides an appropriate implementation that respects the base class contract, allowing substitution without errors.
+**Explanation**: `InMemoryUserRepository` is a fully substitutable implementation of `IUserRepository`. Tests using it behave the same way production code does — no surprise exceptions, no special-cased behavior. This matters because the same `IdentityService.register` should pass tests that swap the Prisma-backed repository for the in-memory one.
 
-**Observation**: Currently, there is no inheritance in use where LSP could be violated. The project uses composition over inheritance, which generally supports LSP.
-
-**Recommendation**: Continue using composition to avoid LSP violations and ensure that any future inheritance structures allow derived classes to substitute their base classes without altering how the program works.
+**Recommendation**: Prefer composition over inheritance. When you do extend, treat the parent's contract as a hard constraint: derived classes accept the same inputs and return the same kinds of outputs.
 
 #### Interface Segregation Principle (ISP)
 
 Many specific interfaces are better than a single general interface.
 
 **Before:**
+
 ```typescript
-// A large interface that small clients don't fully use
-interface CandidateOperations {
-    save(): void;
-    validate(): void;
-    sendEmail(): void;
-    generateReport(): void;
+// A god repository that every consumer depends on, even those that only read.
+interface IListingRepository {
+  findById(id: string): Promise<Listing | null>;
+  findPublishedByCity(query: SearchQuery): Promise<Paginated<Listing>>;
+  save(listing: Listing): Promise<Listing>;
+  delete(id: string): Promise<void>;
+  recomputeAverageRating(listingId: string): Promise<void>;
+  syncPhotos(listingId: string, photos: ListingPhoto[]): Promise<void>;
+  syncAmenities(listingId: string, amenityCodes: string[]): Promise<void>;
 }
 ```
 
 **After:**
+
 ```typescript
-interface SaveOperation {
-    save(): void;
+// Read-side: used by Search, listing detail page, host dashboard.
+export interface IListingReader {
+  findById(id: string): Promise<Listing | null>;
+  findPublishedByCity(query: SearchQuery): Promise<Paginated<Listing>>;
 }
 
-interface EmailOperations {
-    sendEmail(): void;
+// Write-side: used by host listing create/edit flows.
+export interface IListingWriter {
+  save(listing: Listing): Promise<Listing>;
+  delete(id: string): Promise<void>;
 }
 
-interface ReportOperations {
-    generateReport(): void;
+// Specialized: used by ReviewService after each review insert.
+export interface IListingRatingUpdater {
+  recomputeAverageRating(listingId: string): Promise<void>;
 }
 
-class Candidate implements SaveOperation, EmailOperations {
-    save() {
-        // implementation
-    }
-    
-    sendEmail() {
-        // implementation
-    }
+// The Prisma-backed class can implement all three; consumers only depend on
+// the slice they need, which keeps tests focused and reduces accidental coupling.
+export class ListingRepository implements IListingReader, IListingWriter, IListingRatingUpdater {
+  // ...
 }
 ```
 
-**Explanation**: Interfaces are segregated into smaller operations, allowing classes to implement only the interfaces they need.
+**Explanation**: A controller that only renders the public listing page depends on `IListingReader`. It doesn't see `save()`, so it cannot accidentally write. Tests for that controller mock only two methods instead of seven.
 
-**Observation**: The project does not currently use TypeScript interfaces extensively to enforce contracts for classes.
-
-**Recommendation**: Define more granular interfaces for service classes to ensure they only implement the methods they need.
+**Recommendation**: When more than half of an interface's methods are unused by a given consumer, the interface is too wide. Split it along usage boundaries.
 
 #### Dependency Inversion Principle (DIP)
 
 High-level modules should not depend on low-level modules; both should depend on abstractions.
 
 **Before:**
+
 ```typescript
-// Direct dependency on a concrete implementation
-class Candidate {
-    private database = new PrismaClient();
-    
-    save() {
-        this.database.candidate.create({ data: this });
-    }
+// IdentityService depends directly on Prisma, Resend, and Stripe SDKs.
+// Unit tests need real connections; swapping providers means rewriting the service.
+class IdentityService {
+  private readonly prisma = new PrismaClient();
+  private readonly resend = new Resend(process.env.RESEND_API_KEY!);
+
+  async register(email: string, password: string) {
+    const hash = await bcrypt.hash(password, 12);
+    const user = await this.prisma.user.create({ data: { email, passwordHash: hash } });
+    await this.resend.emails.send({ to: email, subject: '...', html: '...' });
+    return user;
+  }
 }
 ```
 
 **After:**
+
 ```typescript
-interface Database {
-    save(candidate: Candidate): Promise<Candidate>;
+// Domain-layer abstractions
+export interface IUserRepository { save(user: User): Promise<User>; /* ... */ }
+export interface EmailService { sendVerification(user: User): Promise<void>; }
+export interface PasswordHasher { hash(plain: string): Promise<string>; verify(plain: string, hash: string): Promise<boolean>; }
+
+// Application service depends only on abstractions.
+export class IdentityService {
+  constructor(
+    private readonly users: IUserRepository,
+    private readonly email: EmailService,
+    private readonly hasher: PasswordHasher,
+  ) {}
+
+  async register(input: RegisterUserInput): Promise<User> {
+    const user = User.create({
+      email: input.email,
+      passwordHash: await this.hasher.hash(input.password),
+    });
+    await this.users.save(user);
+    await this.email.sendVerification(user);
+    return user;
+  }
 }
 
-class Candidate {
-    private database: Database;
-    
-    constructor(database: Database) {
-        this.database = database;
-    }
-    
-    async save(): Promise<Candidate> {
-        return await this.database.save(this);
-    }
-}
+// Composition root (apps/api/src/index.ts) wires the concrete implementations.
+const identityService = new IdentityService(
+  new ListingRepository(prisma),
+  new ResendEmailService(resendClient),
+  new BcryptPasswordHasher({ cost: 12 }),
+);
 ```
 
-**Explanation**: `Candidate` now depends on an abstraction (Database), not a concrete implementation, which facilitates flexibility and code testing.
+**Explanation**: `IdentityService` no longer knows about Prisma, Resend, or bcrypt. Unit tests inject in-memory fakes; swapping Resend for SendGrid is a one-line change in the composition root. The high-level orchestration logic and the low-level infrastructure both depend on the abstractions in between.
 
-**Observation**: Classes like `Candidate` directly depend on the concrete `PrismaClient` for database operations.
-
-**Recommendation**: Use dependency injection to invert the dependency, relying on abstractions rather than concrete implementations. Inject `PrismaClient` through the constructor or a setter method.
+**Recommendation**: Inject dependencies through the constructor. Reserve `new SomeSDK()` for the composition root (`apps/api/src/index.ts`) and for tests.
 
 ### DRY (Don't Repeat Yourself)
 
 The DRY principle focuses on reducing duplication in code. Each piece of knowledge should have a single, unambiguous, and authoritative representation within a system.
 
 **Before:**
+
 ```typescript
-// Repeated code to validate emails in multiple functions
-function saveCandidate(candidate: Candidate) {
-    if (!candidate.email.includes('@')) {
-        throw new Error('Invalid email');
-    }
-    // save logic
+// Same overlap check duplicated in two services — one will drift.
+class BookingService {
+  async startCheckout(input: CreateBookingInput) {
+    const overlaps = await prisma.availabilityBlock.findMany({
+      where: { listingId: input.listingId, startDate: { lt: input.checkOut }, endDate: { gt: input.checkIn } },
+    });
+    if (overlaps.length > 0) throw new ConflictError('Dates not available');
+    // ...
+  }
 }
 
-function updateCandidate(candidate: Candidate) {
-    if (!candidate.email.includes('@')) {
-        throw new Error('Invalid email');
-    }
-    // update logic
+class AvailabilityService {
+  async block(input: BlockInput) {
+    const overlaps = await prisma.availabilityBlock.findMany({
+      where: { listingId: input.listingId, startDate: { lt: input.endDate }, endDate: { gt: input.startDate } },
+    });
+    if (overlaps.length > 0) throw new ConflictError('Range overlaps existing block');
+    // ...
+  }
 }
 ```
 
 **After:**
+
 ```typescript
-export class Candidate {
-    validateEmail(): void {
-        if (!this.email.includes('@')) {
-            throw new Error('Invalid email');
-        }
-    }
-    
-    async save(): Promise<Candidate> {
-        this.validateEmail();
-        // save logic
-    }
-    
-    async update(): Promise<Candidate> {
-        this.validateEmail();
-        // update logic
-    }
+export class AvailabilityService {
+  constructor(private readonly blocks: IAvailabilityBlockRepository) {}
+
+  async isAvailable(listingId: string, range: DateRange): Promise<boolean> {
+    const overlaps = await this.blocks.findOverlapping(listingId, range);
+    return overlaps.length === 0;
+  }
 }
+
+// Booking and host-block flows both delegate to the single source of truth.
+await this.availability.isAvailable(input.listingId, range); // BookingService
+await this.availability.isAvailable(input.listingId, range); // host block flow
 ```
 
-**Explanation**: Email validation is centralized in a single `validateEmail` method, eliminating code duplication in the save and update functions.
+**Explanation**: The overlap rule lives in exactly one place. When we add the Postgres EXCLUDE constraint at the DB level (see [docs/data-model.md](data-model.md) §3.10), we only need to update one method to surface the resulting error as `409 OVERLAP_CONFLICT`.
 
-**Observation**: The methods for saving entities like `Candidate`, `Education`, `WorkExperience`, and `Resume` contain repetitive logic for handling database operations.
-
-**Recommendation**: Abstract common database operation logic into a reusable function or class.
+**Recommendation**: When two services compute the same domain fact (availability, pricing, refund amount), extract it into a single service the others depend on.
 
 ## Coding Standards
 
 ### Naming Conventions
 
-- **Variable Naming**: Use camelCase for variables and functions (e.g., `candidateId`, `findCandidateById`)
-- **Class Naming**: Use PascalCase for classes and interfaces (e.g., `Candidate`, `CandidateRepository`)
-- **Constants Naming**: Use UPPER_SNAKE_CASE for constants (e.g., `MAX_CANDIDATES_PER_PAGE`)
-- **Type Naming**: Use PascalCase for types and interfaces (e.g., `CandidateData`, `ICandidateRepository`)
-- **File Naming**: Use camelCase for file names (e.g., `candidateService.ts`, `candidateController.ts`)
+- **Variable Naming**: Use camelCase for variables and functions (e.g., `listingId`, `findUserById`)
+- **Class Naming**: Use PascalCase for classes and interfaces (e.g., `Listing`, `ListingRepository`)
+- **Constants Naming**: Use UPPER_SNAKE_CASE for constants (e.g., `MAX_SEARCH_RESULTS_PER_PAGE`)
+- **Type Naming**: Use PascalCase for types and interfaces (e.g., `BookingDTO`, `IListingRepository`)
+- **File Naming**: Use camelCase for file names (e.g., `listingService.ts`, `bookingController.ts`)
 
 **Examples:**
 
 ```typescript
 // Good: All in English
-export class CandidateRepository {
-    async findById(candidateId: number): Promise<Candidate | null> {
-        // Find candidate by ID in the database
-        const candidate = await this.prisma.candidate.findUnique({
-            where: { id: candidateId }
-        });
-        return candidate ? new Candidate(candidate) : null;
-    }
+export class ListingRepository {
+  async findById(listingId: string): Promise<Listing | null> {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { photos: true, amenities: true },
+    });
+    return listing ? this.toDomain(listing) : null;
+  }
 }
 
 // Avoid: Non-English comments or names
-export class RepositorioCandidato {
-    async buscarPorId(idCandidato: number): Promise<Candidato | null> {
-        // Buscar candidato por ID en la base de datos
-        const candidato = await this.prisma.candidate.findUnique({
-            where: { id: idCandidato }
-        });
-        return candidato ? new Candidato(candidato) : null;
-    }
+export class RepositorioAlojamiento {
+  async buscarPorId(idAlojamiento: string): Promise<Alojamiento | null> {
+    const alojamiento = await this.prisma.listing.findUnique({
+      where: { id: idAlojamiento },
+    });
+    return alojamiento ? new Alojamiento(alojamiento) : null;
+  }
 }
 ```
 
@@ -663,12 +914,12 @@ export class RepositorioCandidato {
 
 ```typescript
 // Good: English error messages
-throw new NotFoundError('Candidate not found with the provided ID');
-logger.error('Failed to create candidate', { error: error.message });
+throw new NotFoundError('Listing not found with the provided ID');
+logger.error('Failed to create listing', { error: error.message });
 
 // Avoid: Non-English messages
-throw new NotFoundError('Candidato no encontrado con el ID proporcionado');
-logger.error('Error al crear candidato', { error: error.message });
+throw new NotFoundError('Alojamiento no encontrado con el ID proporcionado');
+logger.error('Error al crear alojamiento', { error: error.message });
 ```
 
 ### TypeScript Usage
@@ -680,13 +931,13 @@ logger.error('Error al crear candidato', { error: error.message });
 
 ```typescript
 // Good: Explicit types
-async function findCandidateById(id: number): Promise<Candidate | null> {
-    // implementation
+async function findListingById(id: string): Promise<Listing | null> {
+  // implementation
 }
 
 // Avoid: Using any
 function processData(data: any): any {
-    // implementation
+  // implementation
 }
 ```
 
@@ -698,21 +949,21 @@ function processData(data: any): any {
 
 ```typescript
 export class NotFoundError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'NotFoundError';
-    }
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
 }
 
 // In controller
 try {
-    const candidate = await candidateService.findById(id);
-    if (!candidate) {
-        throw new NotFoundError('Candidate not found');
-    }
-    res.json(candidate);
+  const listing = await listingService.findById(id);
+  if (!listing) {
+    throw new NotFoundError('Listing not found');
+  }
+  res.json({ success: true, data: listing });
 } catch (error) {
-    next(error);
+  next(error);
 }
 ```
 
@@ -723,16 +974,20 @@ try {
 - **Validate Before Processing**: Always validate before executing business logic
 
 ```typescript
-import { validateCandidateData } from '../application/validator';
+import { CreateListingSchema } from '@nomadhome/shared/schemas/listings';
 
-export async function addCandidate(req: Request, res: Response, next: NextFunction) {
-    try {
-        const validatedData = validateCandidateData(req.body);
-        const candidate = await candidateService.create(validatedData);
-        res.status(201).json(candidate);
-    } catch (error) {
-        next(error);
-    }
+export async function createListing(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const validated = CreateListingSchema.parse(req.body);
+    const listing = await listingService.create({ hostId: req.user.id, payload: validated });
+    res.status(201).json({ success: true, data: listing });
+  } catch (error) {
+    next(error);
+  }
 }
 ```
 
@@ -743,12 +998,10 @@ export async function addCandidate(req: Request, res: Response, next: NextFuncti
 - **Structured Logging**: Include relevant context in log messages
 
 ```typescript
-import { Logger } from '../infrastructure/logger';
+import { logger } from '../infrastructure/logger';
 
-const logger = new Logger();
-
-logger.info('Candidate created', { candidateId: candidate.id });
-logger.error('Failed to create candidate', { error: error.message });
+logger.info('Listing published', { listingId: listing.id, hostId: listing.hostId });
+logger.error('Failed to create booking', { error: error.message, listingId, guestId });
 ```
 
 ## API Design Standards
@@ -760,11 +1013,12 @@ logger.error('Failed to create candidate', { error: error.message });
 - **Resource-Based URLs**: URLs should represent resources, not actions
 
 ```typescript
-GET    /candidates          // List candidates
-GET    /candidates/:id      // Get candidate by ID
-POST   /candidates          // Create new candidate
-PUT    /candidates/:id      // Update candidate
-DELETE /candidates/:id      // Delete candidate
+GET    /api/v1/listings/search   // Search listings (public)
+GET    /api/v1/listings/:id      // Get listing by ID
+POST   /api/v1/listings          // Create new listing (host)
+PUT    /api/v1/listings/:id      // Update listing (host owner)
+POST   /api/v1/listings/:id/publish    // Publish listing (host owner)
+POST   /api/v1/listings/:id/unpublish  // Revert to draft (host owner)
 ```
 
 ### Request/Response Patterns
@@ -828,8 +1082,8 @@ DELETE /candidates/:id      // Delete candidate
 import cors from 'cors';
 
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -865,45 +1119,52 @@ npx prisma migrate deploy
 
 ```typescript
 // Domain layer interface
-export interface ICandidateRepository {
-    findById(id: number): Promise<Candidate | null>;
-    save(candidate: Candidate): Promise<Candidate>;
+export interface IBookingRepository {
+  findById(id: string): Promise<Booking | null>;
+  save(booking: Booking): Promise<Booking>;
+  findUpcomingForHost(hostId: string): Promise<Booking[]>;
 }
 
 // Infrastructure layer implementation
-export class CandidateRepository implements ICandidateRepository {
-    constructor(private prisma: PrismaClient) {}
-    
-    async findById(id: number): Promise<Candidate | null> {
-        const data = await this.prisma.candidate.findUnique({ where: { id } });
-        return data ? new Candidate(data) : null;
-    }
+export class BookingRepository implements IBookingRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async findById(id: string): Promise<Booking | null> {
+    const data = await this.prisma.booking.findUnique({ where: { id } });
+    return data ? new Booking(data) : null;
+  }
+
+  // save, findUpcomingForHost elided
 }
 ```
 
 ## Testing Standards
 
-The project has strict requirements for code quality and maintainability. These are the unit testing standards and best practices that must be applied. 
+The project has strict requirements for code quality and maintainability. These are the unit testing standards and best practices that must be applied.
 
 ### Test File Structure
+
 - Use descriptive test file names: `[componentName].test.ts`
 - Place test files alongside the source code they test
-- Use Jest as the testing framework with TypeScript support
-- Maintain 90% coverage threshold for branches, functions, lines, and statements
-
+- Use Vitest as the testing framework with TypeScript support (per [CLAUDE.md](../CLAUDE.md) §3)
+- Coverage floor: ≥80% on changed lines (per [CLAUDE.md](../CLAUDE.md) §7); target 90% on critical domain code
 
 ### Test Organization Pattern
+
 Template:
+
 ```typescript
+import { describe, it, beforeEach, expect, vi } from 'vitest';
+
 describe('[ComponentName] - [methodName]', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('should_[expected_behavior]_when_[condition]', () => {
     it('should [specific test case]', async () => {
       // Arrange
-      // Act  
+      // Act
       // Assert
     });
   });
@@ -911,96 +1172,102 @@ describe('[ComponentName] - [methodName]', () => {
 ```
 
 Real example:
+
 ```typescript
-describe('CandidateService - findById', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
+import { describe, it, beforeEach, expect, vi, type Mock } from 'vitest';
 
-    it('should return candidate when found', async () => {
-        // Arrange
-        const candidateId = 1;
-        const mockCandidate = new Candidate({ id: 1, firstName: 'John' });
-        (CandidateRepository.findById as jest.Mock).mockResolvedValue(mockCandidate);
+describe('ListingService - findById', () => {
+  let repo: { findById: Mock };
+  let service: ListingService;
 
-        // Act
-        const result = await candidateService.findById(candidateId);
+  beforeEach(() => {
+    vi.clearAllMocks();
+    repo = { findById: vi.fn() };
+    service = new ListingService(repo as unknown as IListingRepository);
+  });
 
-        // Assert
-        expect(result).toEqual(mockCandidate);
-        expect(CandidateRepository.findById).toHaveBeenCalledWith(candidateId);
-    });
+  it('should return listing when found', async () => {
+    // Arrange
+    const listingId = 'lst_01H...';
+    const mockListing = aListing({ id: listingId, status: 'PUBLISHED' });
+    repo.findById.mockResolvedValue(mockListing);
+
+    // Act
+    const result = await service.findById(listingId);
+
+    // Assert
+    expect(result).toEqual(mockListing);
+    expect(repo.findById).toHaveBeenCalledWith(listingId);
+  });
 });
 ```
 
-
-
 ### Test Case Naming Convention
+
 - Use descriptive, behavior-driven naming: `should_[expected_behavior]_when_[condition]`
 - Group related test cases under descriptive `describe` blocks
 - Use snake_case for describe blocks and camelCase for individual tests
 
 ### Test Structure (AAA Pattern)
+
 Always follow the Arrange-Act-Assert pattern:
+
 ```typescript
-it('should update candidate stage successfully when valid data provided', async () => {
-  // Arrange - Set up test data and mocks
-  const candidateId = 1;
-  const applicationId = 1;
-  const newInterviewStep = 2;
-  
-  // Act - Execute the function under test
-  const result = await updateCandidateStage(candidateId, applicationId, newInterviewStep);
-  
-  // Assert - Verify the expected behavior
-  expect(result).toEqual(expectedResult);
+it('should confirm booking and snapshot fees when checkout completes', async () => {
+  // Arrange — Set up test data and mocks
+  const booking = aBooking({ status: 'PENDING_PAYMENT' });
+  const stripeEvent = aCheckoutCompletedEvent({ bookingId: booking.id });
+  bookingRepo.findById.mockResolvedValue(booking);
+
+  // Act — Execute the function under test
+  const result = await bookingService.handleStripeWebhook(stripeEvent);
+
+  // Assert — Verify the expected behavior
+  expect(result.status).toBe('CONFIRMED');
+  expect(result.confirmedAt).toBeInstanceOf(Date);
+  expect(emailService.sendBookingConfirmation).toHaveBeenCalledTimes(2); // guest + host
 });
 ```
 
 Assertion pattern:
+
 - Use specific matchers: `toHaveBeenCalledWith()`, `toHaveBeenCalledTimes()`
 - Verify both successful operations and error conditions
 - Check that mocks were called with correct parameters
 - Assert on return values and side effects
-
-
-
-
-
-
-
 
 ### Mocking Standards
 
 - Mock all external dependencies (models, services, database clients)
 - Mock repository layers in service tests
 - Mock service layers in controller tests
-- Use `jest.mock()` at the top of test files for module-level mocking
+- Use `vi.mock()` at the top of test files for module-level mocking
 - Create mock instances with realistic data structures
 - Clear all mocks in `beforeEach()` to ensure test isolation
-
 
 ### Test Coverage Requirements
 
 - **Comprehensive test coverage**: Include these test categories for each function:
+
 1. **Happy Path Tests**: Valid inputs producing expected outputs
 2. **Error Handling Tests**: Invalid inputs, missing data, database errors
 3. **Edge Cases**: Boundary values, null/undefined inputs, empty data
 4. **Validation Tests**: Input validation, business rule enforcement
 5. **Integration Points**: External service calls, database operations
 
-- **Threshold**: 90% for branches, functions, lines, and statements
-- **Coverage Reports**: Generate coverage reports with `npm run test:coverage`
-- **Coverage Files**: Coverage reports in `coverage/` directory adding the date, like YYYYMMDD-backend-coverage.md
-
+- **Threshold**: ≥80% on changed lines (CI gate per [CLAUDE.md](../CLAUDE.md) §7); target 90% on critical domain code
+- **Coverage Reports**: Generate coverage reports with `pnpm test --coverage`
+- **Coverage Files**: Coverage reports in `coverage/` directory adding the date, like YYYYMMDD-api-coverage.md
 
 ### Error Testing
+
 - Test both expected errors and unexpected errors
 - Verify error messages are descriptive and helpful
 - Test error propagation through service layers
 - Ensure proper HTTP status codes in controller tests
 
 ### Controller Testing Specifics
+
 - Mock the service layer completely
 - Test HTTP request/response handling
 - Verify parameter parsing and validation
@@ -1008,6 +1275,7 @@ Assertion pattern:
 - Use realistic Express Request/Response mocks
 
 ### Service Testing Specifics
+
 - Mock domain models and repositories
 - Test business logic in isolation
 - Verify data transformation and validation
@@ -1015,18 +1283,21 @@ Assertion pattern:
 - Mock external dependencies (Prisma, validators)
 
 ### Database Testing
+
 - Mock Prisma client and all database operations
 - Test both successful and failed database operations
 - Verify correct database queries and parameters
 - Test transaction handling and rollback scenarios
 
 ### Async Testing
+
 - Always use `async/await` for asynchronous operations
 - Use `Promise.allSettled()` for testing concurrent operations
 - Properly handle promise rejections in tests
 - Test timeout scenarios where applicable
 
 ### Test Data Management
+
 - Use factory functions for creating test data
 - Keep test data consistent and realistic
 - Avoid hardcoded values in multiple places
@@ -1038,34 +1309,38 @@ Assertion pattern:
 - **Database Testing**: Test repository implementations with database
 - **End-to-End Flow**: Test complete request flows
 
-
 ### Code Quality Standards
 
 #### TypeScript Usage
+
 - Use strict typing for all test parameters and return values
 - Define proper interfaces for mock data
 - Use type assertions sparingly and with proper justification
 - Leverage TypeScript's type system for better test reliability
 
 #### Documentation
+
 - Write clear, descriptive test names that explain the scenario
 - Add comments for complex test setups
 - Document any special test conditions or edge cases
 - Keep test code as readable as production code
 
 #### Performance Considerations
+
 - Keep tests fast and focused
 - Avoid unnecessary async operations in tests
 - Use appropriate mock strategies to avoid real I/O
 - Group related tests to minimize setup/teardown overhead
 
 ### Integration with Development Workflow
+
 - Run tests before every commit
 - Ensure all tests pass before merging
 - Use test-driven development when appropriate
 - Update tests when modifying existing functionality
 
 ### Common Anti-Patterns to Avoid
+
 - Don't test implementation details, test behavior
 - Don't create overly complex test setups
 - Don't ignore failing tests or skip error scenarios
@@ -1074,8 +1349,6 @@ Assertion pattern:
 - Don't write tests that are too tightly coupled to implementation
 
 ### Example Test Structure
-
-
 
 ## Performance Best Practices
 
@@ -1087,17 +1360,19 @@ Assertion pattern:
 
 ```typescript
 // Good: Fetch related data efficiently
-const candidate = await prisma.candidate.findUnique({
-    where: { id },
-    include: {
-        educations: true,
-        workExperiences: true
-    }
+const listing = await prisma.listing.findUnique({
+  where: { id },
+  include: {
+    photos: { orderBy: { position: 'asc' } },
+    amenities: { include: { amenity: true } },
+    reviews: { take: 10, orderBy: { createdAt: 'desc' } },
+  },
 });
 
 // Avoid: N+1 queries
-const candidate = await prisma.candidate.findUnique({ where: { id } });
-const educations = await prisma.education.findMany({ where: { candidateId: id } });
+const listing = await prisma.listing.findUnique({ where: { id } });
+const photos = await prisma.listingPhoto.findMany({ where: { listingId: id } });
+const amenities = await prisma.listingAmenity.findMany({ where: { listingId: id } });
 ```
 
 ### Async/Await Patterns
@@ -1108,9 +1383,10 @@ const educations = await prisma.education.findMany({ where: { candidateId: id } 
 
 ```typescript
 // Good: Parallel operations
-const [candidates, positions] = await Promise.all([
-    candidateService.findAll(),
-    positionService.findAll()
+const [listing, recentReviews, upcomingBookings] = await Promise.all([
+  listingService.findById(listingId),
+  reviewService.findRecentForListing(listingId, { limit: 10 }),
+  bookingService.findUpcomingForListing(listingId),
 ]);
 ```
 
@@ -1137,10 +1413,10 @@ const [candidates, positions] = await Promise.all([
 ```typescript
 // Validate required environment variables
 const requiredEnvVars = ['DATABASE_URL', 'PORT'];
-requiredEnvVars.forEach(varName => {
-    if (!process.env[varName]) {
-        throw new Error(`Missing required environment variable: ${varName}`);
-    }
+requiredEnvVars.forEach((varName) => {
+  if (!process.env[varName]) {
+    throw new Error(`Missing required environment variable: ${varName}`);
+  }
 });
 ```
 
@@ -1151,18 +1427,26 @@ requiredEnvVars.forEach(varName => {
 - **Testability**: Use dependency injection to improve testability
 
 ```typescript
-// Middleware to inject Prisma client
-app.use((req: Request, res: Response, next: NextFunction) => {
-    req.prisma = prisma;
-    next();
+// Composition root (apps/api/src/index.ts) wires concrete services once.
+const prisma = new PrismaClient();
+const listingRepository = new ListingRepository(prisma);
+const listingService = new ListingService(listingRepository);
+
+// Middleware exposes services on the request (or use a DI container if the graph grows).
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  req.services = { listingService /* ... */ };
+  next();
 });
 
-// Use in controllers
-export async function getCandidate(req: Request, res: Response) {
-    const candidate = await req.prisma.candidate.findUnique({
-        where: { id: req.params.id }
-    });
-    res.json(candidate);
+// Use in controllers — controllers depend on services, not on Prisma.
+export async function getListing(req: Request, res: Response, next: NextFunction) {
+  try {
+    const listing = await req.services.listingService.findById(req.params.id);
+    if (!listing) throw new NotFoundError('Listing not found');
+    res.json({ success: true, data: listing });
+  } catch (error) {
+    next(error);
+  }
 }
 ```
 
@@ -1178,13 +1462,13 @@ export async function getCandidate(req: Request, res: Response) {
 ### Development Scripts
 
 ```bash
-npm run dev          # Development server with hot reload
-npm run build        # Build for production
-npm test             # Run tests
-npm run test:coverage # Run tests with coverage
-npm run prisma:generate  # Generate Prisma client
-npx prisma migrate dev   # Create and apply migration
-npx prisma db seed       # Seed database
+pnpm dev             # Development server with hot reload
+pnpm build           # Build for production
+pnpm test            # Run tests
+pnpm test --coverage # Run tests with coverage
+pnpm db:generate     # Generate Prisma client
+pnpm db:migrate:dev  # Create and apply migration
+pnpm db:seed         # Seed database
 ```
 
 ### Code Quality
@@ -1194,35 +1478,10 @@ npx prisma db seed       # Seed database
 - **All Tests Passing**: Ensure all tests pass before deployment
 - **Code Review**: Review code for adherence to standards
 
-## Serverless Deployment
+## Deployment
 
-### AWS Lambda Configuration
+The deployment target is not locked at the MVP stage. The locked stack ([CLAUDE.md](../CLAUDE.md) §3) is Node.js + Express running as a long-lived process; the API entry point is `apps/api/src/index.ts`. Any change to deployment topology (containers, Lambda, edge runtime) requires an ADR via the OpenSpec workflow and is out of scope for this standards document.
 
-- **Lambda Handler**: Entry point is `src/lambda.ts`
-- **Serverless HTTP**: Use `serverless-http` to wrap Express app
-- **Environment Variables**: Configure environment variables in `serverless.yml`
+---
 
-### Serverless Framework
-
-- **Configuration File**: `serverless.yml` defines Lambda configuration
-- **Build Command**: Use `npm run build:lambda` for Lambda builds
-- **Deployment**: Deploy using Serverless Framework CLI
-
-```typescript
-// lambda.ts
-import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
-import serverless from 'serverless-http';
-import { app } from './index';
-
-const serverlessHandler = serverless(app);
-
-export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  context.callbackWaitsForEmptyEventLoop = false;
-  return await serverlessHandler(event, context) as APIGatewayProxyResult;
-};
-```
-
-This document serves as the foundation for maintaining code quality and consistency across the LTI backend application. All team members should follow these practices to ensure a maintainable, scalable, and testable codebase.
+This document serves as the foundation for maintaining code quality and consistency across the backend application. All team members should follow these practices to ensure a maintainable, scalable, and testable codebase.
