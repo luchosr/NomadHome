@@ -1,0 +1,120 @@
+# NomadHome — OpenSpec Project Context
+
+> Read this before every ticket. It is the canonical context for OpenSpec artifact generation: tech stack, MVP scope, conflict-resolution hierarchy, and the conventions every change must respect. For the longer-form orchestrator playbook see [../CLAUDE.md](../CLAUDE.md); for product motivation see [../docs/PRD.md](../docs/PRD.md).
+
+## 1. Product, in one paragraph
+
+NomadHome is a SaaS marketplace connecting digital nomads and remote teams with co-living spaces and workspaces, and the property hosts/operators who provide them. The MVP ships the smallest end-to-end booking loop that proves the product: a guest can discover a listing, book it, pay through Stripe Checkout, complete the stay, and leave a review; a host can list inventory and see upcoming bookings; an admin can keep the marketplace clean. The MVP is a **learning vehicle**, not a growth vehicle.
+
+## 2. Capability map (MVP)
+
+Each capability has a canonical `openspec/specs/<capability>/spec.md`.
+
+| # | Capability | Purpose |
+| --- | --- | --- |
+| 1 | `identity` | Email/password registration, login, JWT + refresh tokens, role escalation, auth audit |
+| 2 | `listings` | Host-owned listings (`property` / `workspace`), draft/published lifecycle, availability |
+| 3 | `search` | Guest-facing search by city + dates, filters, paginated results |
+| 4 | `booking` | Instant-booking reservations, cancellation, single-listing invariant |
+| 5 | `payments` | Stripe Checkout for guest payment, fee snapshotting, manual payout recording |
+| 6 | `reviews` | One guest review per completed booking; listing aggregate display |
+| 7 | `host-tooling` | Minimal host dashboard: owned listings + upcoming bookings |
+| 8 | `admin` | Role-guarded disable/re-enable for users and listings |
+| 9 | `platform` | English-only, mobile-responsive web; `t()` helper; Zod-validated REST contract |
+| 10 | `compliance` | bcrypt hashing, HTTPS in production, append-only auth audit log |
+
+## 3. Scope boundaries
+
+### In MVP (do build)
+
+Everything covered by §2 capabilities. The full table is `CLAUDE.md` §2.
+
+### Out of MVP — deferred (do not build until explicitly promoted)
+
+PWA / offline; native mobile; i18n beyond the `t()` helper; OAuth / social login; in-app messaging; push notifications; calendar sync (iCal, Google Calendar); automated payouts; refund automation; invoices; multi-tier billing; community features (member directory, events, house rules); roommate matching; dynamic pricing; channel-manager integrations (Airbnb, Booking.com); analytics dashboards; dispute resolution; public partner API; multi-currency; ID verification / background checks; GDPR self-service tooling; host-to-guest reviews; group-booking as a first-class object; multi-listing cart; digital keys / smart-lock; loyalty.
+
+Promotion procedure: explicit user instruction "promote `<feature>` out of post-MVP," followed by an ADR documenting the decision in `openspec/changes/promote-<feature>/design.md`. Sub-agents must refuse to expand scope on their own.
+
+## 4. Tech stack (locked)
+
+| Layer | Choice | Notes |
+| --- | --- | --- |
+| Runtime | Node.js ≥ 20.19.0 | Required by OpenSpec CLI |
+| Language | TypeScript, strict mode, `noUncheckedIndexedAccess: true` | No `any` in shipped code without an ADR |
+| Package manager | pnpm with workspaces | Turbo (or Nx via ADR) for task orchestration |
+| Frontend framework | React (functional components + hooks only) | No class components |
+| Frontend tooling | Vite, React Router, TanStack Query (server state), Zustand (client state) | Strict separation of server vs. client state |
+| Forms / validation | React Hook Form + Zod | Same Zod schemas shared between FE and BE |
+| Styling | Tailwind CSS + shadcn/ui | No CSS-in-JS unless added via ADR |
+| Backend framework | Node.js + Express (Fastify only via ADR) | REST API |
+| ORM | Prisma | Migrations live in `packages/db` |
+| Database | PostgreSQL | Single source of schema truth: `packages/db/prisma/schema.prisma` |
+| Auth | JWT access tokens + server-side refresh tokens, bcrypt (cost ≥ 10) | Refresh tokens revocable from server side |
+| Payments | Stripe Checkout (no Stripe Elements, no card collection on platform) | Webhook handler on `checkout.session.completed` |
+| Email | Resend (or SendGrid via ADR) for transactional only | No marketing infra in MVP |
+| i18n | English only; `t(key)` helper backed by an English lookup table | Avoids `i18next` until post-MVP |
+| Tests | Vitest (unit + integration, ≥ 80% coverage on changed code); Playwright (E2E for critical flows) | Run on every PR |
+| Quality | ESLint + Prettier (zero warnings on `pnpm lint`); Husky + lint-staged; commitlint | Conventional Commits enforced |
+
+## 5. Monorepo layout (MVP)
+
+```
+nomadhome/
+├── apps/
+│   ├── web/          # React app — guest, host, and admin views behind role-guarded routes
+│   └── api/          # Node.js REST API
+├── packages/
+│   ├── db/           # Prisma schema, migrations, seed
+│   ├── shared/       # Shared types, Zod schemas, constants, the t() helper
+│   ├── ui/           # Shared shadcn-based React components
+│   └── config/       # Shared ESLint, TS, Tailwind config
+├── openspec/         # OpenSpec contract (this folder)
+├── docs/             # Long-form documentation (PRD, standards, data model, etc.)
+└── .github/          # CI/CD workflows
+```
+
+A dedicated `apps/admin/` app is **deferred to post-MVP**. Admin functionality lives behind role-guarded routes in `apps/web/`.
+
+## 6. Conflict resolution hierarchy
+
+When two documents disagree, the higher-numbered source wins. The corollary: do not fix the conflict downstream — fix the lower-numbered document until it stops disagreeing.
+
+1. **Approved OpenSpec delta** in `openspec/changes/<change-id>/specs/<capability>/spec.md` (during a change), or the **canonical capability spec** in `openspec/specs/<capability>/spec.md` (between changes) — authoritative for system behavior
+2. **This file (`openspec/project.md`)** — authoritative for tech stack, scope boundaries, conventions, and this hierarchy
+3. **`docs/data-model.md`** — authoritative for database schema details where no spec-level scenario decides them (e.g., column types, precision, basis-points vs. percentage representation)
+4. **`packages/db/prisma/schema.prisma`** — authoritative for runtime schema once code exists; must be reconciled with `docs/data-model.md` at every migration
+5. **`docs/PRD.md`** — authoritative for *why* (business motivation, personas, success metrics); never authoritative for *what the system does* at the requirement level
+6. **`CLAUDE.md`** — authoritative for orchestrator workflow, sub-agent protocol, communication contract
+7. **Other `docs/*.md`** (standards, architecture diagrams) — context only; cite but never decide on the basis of these alone
+
+Concrete examples of how to apply this:
+
+- PRD says "Platform service fee is a percentage" and data model says "basis points." → Data model wins for storage (item 3); PRD is updated to say "expressed as basis points internally."
+- A backend service is computing fees using a hardcoded number that diverges from `packages/db/prisma/schema.prisma`. → Schema wins (item 4); the service is patched and a regression test is added.
+- An OpenSpec scenario says "results paginate at 20 per page" and PRD §8.3 says "20 per page (configurable)." → Spec wins (item 1); PRD is updated to point at the spec for the authoritative value.
+
+## 7. Conventions you must respect in every change
+
+- **Commits**: Conventional Commits with a `(<TICKET-ID>)` suffix when a ticket exists. `<type>` is one of `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`. Husky + commitlint will reject anything else.
+- **Branches**: `feature/<TICKET-ID>-<kebab-slug>` for tickets; `chore/<kebab-slug>` for openspec maintenance.
+- **Worktrees**: One ticket → one branch → one worktree. Never mix tickets in one worktree.
+- **PR titles**: Reflect the change's purpose and reference the OpenSpec change-id when applicable.
+- **Tests**: TDD red phase precedes any implementation. The QA sub-agent writes failing tests from spec scenarios before backend/frontend write code.
+- **i18n**: All user-facing strings go through the `t()` helper from day one, even though only English ships in MVP. No hardcoded JSX text.
+- **Validation**: Zod schemas in `packages/shared/` are the single source of truth for API request/response shapes, imported by both backend (runtime validation) and frontend (type inference).
+- **No `console.log` or `TODO` without a ticket reference** in shipped code. CI blocks them.
+
+## 8. Open decisions tracked in capability specs
+
+These are intentionally unresolved at the baseline and must be resolved by the first ticket that implements the relevant capability. Each is marked inline with `[OPEN]` inside the relevant `openspec/specs/<capability>/spec.md`:
+
+| Capability | Open decision | Source |
+| --- | --- | --- |
+| `identity` | Access-token TTL, refresh-token TTL, rotation policy (sliding vs. absolute) | Finding 9 of `docs/adversarial-review.md` |
+| `search` | Pagination strategy (offset vs. cursor), default + max page size | Finding 11 |
+| `platform` | `t(key)` naming convention, missing-key behavior, backend reuse | Finding 12 |
+| `payments` | Guest service fee % and host commission % | PRD §7 + §12 |
+| `booking` | Cancellation policy windows and refund tiers | PRD §12 |
+| `listings` | Photo storage backend (Cloudflare R2 vs. S3 vs. Supabase Storage) | PRD §12; `docs/data-model.md` §9 |
+
+The first ticket to touch each capability MUST resolve its own `[OPEN]` (replacing the marker with the concrete decision and an ADR in the change's `design.md`) before merging.
