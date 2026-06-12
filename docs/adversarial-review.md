@@ -248,7 +248,19 @@ There is **no user story for "guest disabled"** → flag bookings. The enum is o
 
 **Severity**: 🟠 **MAJOR**  
 **Area**: Concurrent state safety  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+Overlap-conflict semantics are now specified in two places that respect the conflict-resolution hierarchy (`openspec/project.md` §6 — data-model is canonical for schema-level behavior; PRD is canonical for business intent).
+
+**`docs/data-model.md` §3.10 — "Overlap-conflict semantics"**: defines the structured `409 OVERLAP_CONFLICT` response shape (including a `conflict.bookingId` field that MUST be populated when the existing block is a `BOOKING_HOLD`, so a host who hits a conflict can identify and contact the affected guest), and a matrix covering every existing-block source vs. a new `HOST_BLOCK` insertion. The matrix covers the reviewer's specific case (host-block-vs-pending-payment) plus the three other host-block conflict paths (host-vs-own, host-vs-confirmed, host-vs-admin-block).
+
+**`docs/PRD.md` §8.2 US-2.3**: tightened with two new Given/When/Then blocks covering the conflict paths — one for overlapping a `BOOKING_HOLD` (returns `bookingId`), one for overlapping a `HOST_BLOCK` or `ADMIN_BLOCK`. The happy-path criterion was clarified to specify "no existing blocks or bookings overlapping it."
+
+`ADMIN_BLOCK` insertion remains out of MVP (admin moderation tooling beyond enable/disable is deferred per `openspec/project.md` §3.1 row "Admin"). The enum value exists for forward compatibility but no user story currently produces an `ADMIN_BLOCK` row; this is called out in both data-model §3.10 and PRD US-2.3.
+
+`openspec/specs/listings/spec.md` already specifies "The system MUST NOT allow a host to block a date range that overlaps any existing booking hold or confirmed booking on the same listing," so no spec change was needed. Adding a dedicated `BOOKING_HOLD (PENDING_PAYMENT)` scenario to the listings spec is a coverage-tightening follow-up.
 
 #### The Problem
 
@@ -525,7 +537,7 @@ issued and the old one is revoked.
 | ✅ RESOLVED    | Single source of truth | Conflict resolution undefined        | Spec     | 2h     |
 | ✅ RESOLVED    | Scope defense          | Post-MVP not enforced                | Spec     | 3h     |
 | ✅ RESOLVED    | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
-| 🟠 **MAJOR**   | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
+| ✅ RESOLVED    | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
 | 🟡 **MINOR**   | Implementation         | Photo storage untracked              | Docs     | 1h     |
 | 🟠 **MAJOR**   | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |
 | 🟡 **MINOR**   | Security               | Token rotation policy undefined      | Spec     | 1h     |
