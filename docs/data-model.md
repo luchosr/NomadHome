@@ -221,6 +221,37 @@ ALTER TABLE "AvailabilityBlock"
 
 This guarantees the marketplace cannot double-book at the DB level even under race conditions (per [docs/tasks.md](tasks.md) 2.3.2 and 4.1.18 — the loser of a race gets `409 OVERLAP_CONFLICT`).
 
+#### Overlap-conflict semantics
+
+The EXCLUDE constraint rejects every overlap at the DB layer with Postgres error `23P01`. The application layer MUST translate that into a structured `409 OVERLAP_CONFLICT` response whose body identifies the conflicting block so the caller can act on it:
+
+```json
+{
+  "error": "OVERLAP_CONFLICT",
+  "conflict": {
+    "blockId": "<uuid of the existing AvailabilityBlock>",
+    "source": "HOST_BLOCK | BOOKING_HOLD | ADMIN_BLOCK",
+    "startDate": "<inclusive>",
+    "endDate": "<exclusive>",
+    "bookingId": "<uuid, present only when source = BOOKING_HOLD>"
+  }
+}
+```
+
+The `bookingId` field MUST be returned when the existing block has `source = BOOKING_HOLD`, so a host who hits a conflict can contact the affected guest (resolves Finding 6 of `docs/adversarial-review.md`).
+
+**Matrix — host-initiated block (the only block-creation flow in MVP):**
+
+| Existing block | New block | Result | Notes |
+| --- | --- | --- | --- |
+| (no existing block on the range) | `HOST_BLOCK` | 201 created | normal path of US-2.3 |
+| `HOST_BLOCK` | `HOST_BLOCK` | 409 `OVERLAP_CONFLICT` | host attempting to re-block their own range — caller-side coalescing is the host's responsibility |
+| `BOOKING_HOLD` (`Booking.status = PENDING_PAYMENT`) | `HOST_BLOCK` | 409 `OVERLAP_CONFLICT` | a guest's checkout is in progress; the response includes `bookingId` so the host can contact the guest or wait for the 30-minute hold sweeper ([§7](#7-cross-cutting-invariants) invariant 8) |
+| `BOOKING_HOLD` (`Booking.status = CONFIRMED`) | `HOST_BLOCK` | 409 `OVERLAP_CONFLICT` | confirmed booking — the response includes `bookingId`; the host's remedy is to coordinate cancellation/refund with the guest |
+| `ADMIN_BLOCK` | `HOST_BLOCK` | 409 `OVERLAP_CONFLICT` | host cannot override an admin block; remedy is to contact an admin |
+
+The matrix intentionally only covers `HOST_BLOCK` as the new-block source. `BOOKING_HOLD` insertion is covered by the atomic-booking-creation invariant ([§7](#7-cross-cutting-invariants) invariant 1) and the race-loser scenario in `openspec/specs/booking/spec.md`. `ADMIN_BLOCK` insertion is **out of MVP** — admin moderation tooling beyond enable/disable is deferred ([openspec/project.md](../openspec/project.md) §3.1 row "Admin"), so the enum value exists for forward compatibility but no user story currently produces an `ADMIN_BLOCK` row.
+
 ### 3.11 `Booking` (Booking aggregate root)
 
 Snapshot-heavy: prices and fees are frozen at booking time so subsequent config changes never retroactively alter financials (PRD §7 invariant).
