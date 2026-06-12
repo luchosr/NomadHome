@@ -159,7 +159,17 @@ Add a code-review gate that checks Zod schemas against data-model.md enums and t
 
 **Severity**: 🟠 **MAJOR**  
 **Area**: Scope defense  
-**Status**: ❌ FAIL
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+Both halves of the recommended fix are in place:
+
+**Part 1 — Structured per-domain scope table.** `openspec/project.md` §3.1 now defines 13 domains (Identity & Auth, Email, Listings, Search, Booking, Payments, Reviews, Host tooling, Admin, Community / Social, Platform / UX, Analytics & Integrations, Compliance) with three buckets each: ✅ In MVP, ⏸ Post-MVP (deferred — promotable via §3.3), ❌ Never. The three-bucket distinction is what this finding asked for: Post-MVP items can be promoted, Never items cannot.
+
+**Part 2 — Lint enforcement.** `openspec/project.md` §3.2 holds a machine-readable JSON denylist immediately under the `<!-- mvp-scope-denylist -->` marker, with ~19 `never` terms and ~60 `postMvp` terms. `scripts/check-mvp-scope.mjs` parses that block, walks every `openspec/changes/*/tasks.md` (skipping `archive/`), blocks (exit 1) on case-insensitive substring matches against the `never` list, and warns (exit 0) on matches against the `postMvp` list. Sanity-tested on a synthetic `tasks.md` containing both `SMS` (Never) and `OAuth` (Post-MVP) — script correctly blocked and warned. CI / Husky wiring is deferred until `package.json` exists; the script is runnable today via `node scripts/check-mvp-scope.mjs`.
+
+`openspec/AGENTS.md` §5 was updated to reference the script as a pre-PR check.
 
 #### The Problem
 
@@ -505,7 +515,7 @@ issued and the old one is revoked.
 | ✅ RESOLVED    | System readiness       | `openspec/` folder missing           | Code     | 4h     |
 | ✅ RESOLVED    | Spec-first workflow    | `openspec/specs/` missing            | Spec     | 6h     |
 | ✅ RESOLVED    | Single source of truth | Conflict resolution undefined        | Spec     | 2h     |
-| 🟠 **MAJOR**   | Scope defense          | Post-MVP not enforced                | Spec     | 3h     |
+| ✅ RESOLVED    | Scope defense          | Post-MVP not enforced                | Spec     | 3h     |
 | 🟡 **MINOR**   | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
 | 🟠 **MAJOR**   | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
 | 🟡 **MINOR**   | Implementation         | Photo storage untracked              | Docs     | 1h     |

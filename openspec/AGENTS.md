@@ -62,7 +62,7 @@ Inside each:
 ## 5. Bright-line rules
 
 - ❌ Do not write to `openspec/specs/<capability>/spec.md` by hand. The archive step is what materializes those files; doing it manually breaks the change-id provenance chain.
-- ❌ Do not propose features listed under "Out of MVP" in `openspec/project.md` §3. They need explicit scope promotion first.
+- ❌ Do not propose features listed under "Out of MVP" in `openspec/project.md` §3. They need explicit scope promotion first. Before opening any PR that touches `openspec/changes/`, run `node scripts/check-mvp-scope.mjs` — it blocks ❌ Never terms and warns on ⏸ Post-MVP terms. CI / Husky wiring lands later, but the script is runnable today.
 - ❌ Do not skip the Gate handshakes documented in `CLAUDE.md` §9 — even for "small" changes that already have a proposal.
 - ✅ Do append `[OPEN]` markers inside scenarios when a downstream decision is required (TTLs, percentages, naming conventions). Track them as follow-up tasks in `tasks.md` §5.
 - ✅ Do keep changes atomic — one capability area or one cross-cutting concern per change. Do not bundle "add booking" + "add payments" into one proposal.
