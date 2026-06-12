@@ -499,7 +499,19 @@ When phone is promoted out of Post-MVP, it will be re-added via an OpenSpec chan
 
 **Severity**: 🟡 **MINOR**  
 **Area**: Usability/API contract  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-13
+
+#### Resolution
+
+Closed via the `decide-search-pagination` OpenSpec change (archived `archive/2026-06-12-decide-search-pagination/` — folder uses CLI's UTC date heuristic; local-time archive was 2026-06-13). The three-option ADR in `design.md` picked **offset / limit pagination at 20/page (min 1, max 100)** with the `{ data, pagination: { total, page, pageSize, hasMore } }` envelope — exactly the reviewer's recommended contract.
+
+**Specification surface, post-change:**
+
+- **`openspec/specs/search/spec.md`** — requirement "Search results are paginated" now spells out the query parameters (`?page` + `?pageSize`), defaults, bounds, and the response envelope. Five total scenarios cover first-page-of-multi-page (existing, tightened to assert the envelope), default-params-applied, last-page-reports-hasMore-false, page-out-of-range-rejected, pageSize-out-of-range-rejected. The `[OPEN]` marker is fully removed.
+- **`docs/PRD.md` §8.3 US-3.1** — gains a "Pagination contract" subsection declaring the same query params, defaults, envelope, and validation behavior, cross-referencing the spec and the archived ADR.
+- **`openspec/project.md` §8 / `docs/OPEN-DECISIONS.md` synopsis** — the `search` row is removed entirely (last sub-decision closed).
+
+The chosen contract is portable: any future paginated endpoint (host dashboard bookings, admin user/listing lists, payouts dashboard) MAY adopt the same envelope by reference. Each ticket decides at implementation time; deviations require their own ADR.
 
 #### The Problem
 
@@ -592,7 +604,7 @@ When phone is promoted out of Post-MVP, it will be re-added via an OpenSpec chan
 | ✅ RESOLVED    | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |
 | ✅ RESOLVED    | Security               | Token rotation policy undefined      | Spec     | 1h     |
 | ✅ RESOLVED    | Data completeness      | Phone number unjustified             | Spec     | 1h     |
-| 🟡 **MINOR**   | API contract           | Pagination strategy undefined        | Spec     | 1h     |
+| ✅ RESOLVED    | API contract           | Pagination strategy undefined        | Spec     | 1h     |
 | 🟡 **MINOR**   | Developer UX           | i18n key format undefined            | Docs     | 2h     |
 
 ---

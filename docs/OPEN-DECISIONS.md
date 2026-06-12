@@ -18,7 +18,6 @@ Six decisions are deferred from the MVP baseline. Each blocks a specific future 
 | Decision | Capability | Blocks change-id |
 | --- | --- | --- |
 | Access-token TTL | `identity` | `add-identity` |
-| Pagination strategy + default + max page size | `search` | `add-search` |
 | `t(key)` naming convention, missing-key behavior, backend reuse | `platform` | `add-platform-strings` (or the first feature ticket adding user-facing strings) |
 | Guest service fee % and host commission % | `payments` | `add-payments` |
 | Cancellation policy windows and refund tiers | `booking` | `add-booking` |
