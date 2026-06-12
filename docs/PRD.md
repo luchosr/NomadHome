@@ -186,8 +186,21 @@ User stories follow the format: *As a [persona], I want [capability] so that [ou
 **US-2.3** — As a host, I want to manage listing availability so that I do not get double-booked.
 
 - **Given** I own a published listing
-- **When** I block a date range
+- **When** I block a date range that has no existing blocks or bookings overlapping it
 - **Then** that range is unavailable for booking and does not appear as bookable in search results
+
+- **Given** I own a published listing
+- **And** the date range I attempt to block overlaps an existing `BOOKING_HOLD` (whether the underlying booking is in `PENDING_PAYMENT` or `CONFIRMED`)
+- **When** I submit the block
+- **Then** the operation fails with `409 OVERLAP_CONFLICT`
+- **And** the response includes the conflicting booking's identifier so I can contact the affected guest (full response shape in `docs/data-model.md` §3.10)
+- **And** the existing booking is left unchanged
+
+- **Given** I own a published listing
+- **And** the date range I attempt to block overlaps an existing `HOST_BLOCK` of my own, or an `ADMIN_BLOCK`
+- **When** I submit the block
+- **Then** the operation fails with `409 OVERLAP_CONFLICT`
+- **And** the response identifies the conflicting block; for an `ADMIN_BLOCK` the host's remedy is to contact an admin
 
 ### 8.3 Search
 
