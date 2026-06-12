@@ -458,7 +458,18 @@ issued and the old one is revoked.
 
 **Severity**: 🟡 **MINOR**  
 **Area**: Data completeness  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+Took the reviewer's recommended option (b) — **scope reduction**. The `phone` column has been removed everywhere it appeared.
+
+- **`docs/data-model.md` §3.2** — `phone` row dropped from `HostProfile`; a deferral note explains why (no MVP user story consumes it; payouts use `payoutEmail`; SMS is ❌ Never per `openspec/project.md` §3.1; the natural triggers — Stripe Connect KYC and identity verification — are Post-MVP per PRD §3.2).
+- **`docs/tasks.md`** — three references removed: 1.3.1 (HostProfile model task), 1.3.2 (BecomeHostSchema task), §720 (Privacy cross-cutting concern's "+ masked phone" qualifier). Verified by grep that no other phone references remain across `docs/` and `openspec/specs/`.
+
+No OpenSpec change was needed: `openspec/specs/identity/spec.md` does not enumerate the fields of the host-onboarding form — it only requires that the user "complete the host onboarding form" — so the canonical spec is silent on phone and the doc-level removal does not contradict it.
+
+When phone is promoted out of Post-MVP, it will be re-added via an OpenSpec change that motivates the column with a concrete user story — the same closure-loop pattern used for `GUEST_DISABLED` (Finding 5) and `ADMIN_BLOCK` (Finding 6 deferral).
 
 #### The Problem
 
@@ -580,7 +591,7 @@ issued and the old one is revoked.
 | ✅ RESOLVED    | Implementation         | Photo storage untracked              | Docs     | 1h     |
 | ✅ RESOLVED    | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |
 | ✅ RESOLVED    | Security               | Token rotation policy undefined      | Spec     | 1h     |
-| 🟡 **MINOR**   | Data completeness      | Phone number unjustified             | Spec     | 1h     |
+| ✅ RESOLVED    | Data completeness      | Phone number unjustified             | Spec     | 1h     |
 | 🟡 **MINOR**   | API contract           | Pagination strategy undefined        | Spec     | 1h     |
 | 🟡 **MINOR**   | Developer UX           | i18n key format undefined            | Docs     | 2h     |
 
