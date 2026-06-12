@@ -403,7 +403,22 @@ so that I can track what was transferred out-of-band.
 
 **Severity**: 🟡 **MINOR**  
 **Area**: Security assumption  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+Closed via the `decide-refresh-token-policy` OpenSpec change (archived `2026-06-12-decide-refresh-token-policy/`). The four-option ADR in `design.md` picked **sliding rotation + 30-day absolute per-token TTL + reuse detection + per-token logout** (industry standard per RFC 6819 §5.2.2.3 / OAuth 2.0 BCP §4.12; requires no schema change).
+
+**Specification surface, post-change:**
+
+- **`openspec/specs/identity/spec.md`** — requirement "Access tokens and refresh tokens" now spells out the absolute-TTL, sliding-rotation, reuse-detection, and per-token-logout rules. Four new scenarios cover rotation-on-use, absolute-expiry, reuse-triggers-full-revocation, and logout-revokes-only-presented. The `[OPEN]` marker is tightened from three deferrals to one (access-token TTL only).
+- **`docs/PRD.md` §10** — the Auth bullet now declares the full policy and cross-references the spec and the archived ADR.
+- **`docs/data-model.md` §3.3** — `JWT_REFRESH_TTL = 30d` is bound; `expiresAt` is now documented as never extended (rotation creates a new row); a four-item Invariants block names the rotation-atomicity, reuse-detection-cascade, logout-scope, and periodic-prune rules.
+- **`openspec/project.md` §8 / `docs/OPEN-DECISIONS.md` synopsis** — the `identity` row is reduced to "Access-token TTL" only, with the close attributed to `decide-refresh-token-policy`.
+
+The reviewer's specific recommended policy ("absolute 30-day TTL, rotated on use, new token issued and old one revoked") matches the chosen option C; the spec adds **reuse detection** beyond the reviewer's literal recommendation, since rotation without reuse detection makes a stolen token harder to spot.
+
+Two follow-ups are tracked in `tasks.md` §5 of the archived change: a periodic prune job for revoked-token rows older than 90 days, and a `refresh-token-reuse-detected` monitoring signal.
 
 #### The Problem
 
@@ -564,7 +579,7 @@ issued and the old one is revoked.
 | ✅ RESOLVED    | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
 | ✅ RESOLVED    | Implementation         | Photo storage untracked              | Docs     | 1h     |
 | ✅ RESOLVED    | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |
-| 🟡 **MINOR**   | Security               | Token rotation policy undefined      | Spec     | 1h     |
+| ✅ RESOLVED    | Security               | Token rotation policy undefined      | Spec     | 1h     |
 | 🟡 **MINOR**   | Data completeness      | Phone number unjustified             | Spec     | 1h     |
 | 🟡 **MINOR**   | API contract           | Pagination strategy undefined        | Spec     | 1h     |
 | 🟡 **MINOR**   | Developer UX           | i18n key format undefined            | Docs     | 2h     |
