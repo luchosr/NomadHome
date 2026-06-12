@@ -294,7 +294,19 @@ booking ID so the host can contact the guest.
 
 **Severity**: 🟡 **MINOR**  
 **Area**: Implementation blocker  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+The photo-storage decision is now tracked alongside the five other open decisions in a single canonical location with the four reviewer-requested columns (Owner / Blocks / Deadline / Tiebreaker), plus a discoverable `docs/`-side landing page.
+
+**`openspec/project.md` §8** — the canonical open-decisions table now has 7 columns (Capability / Open decision / Owner / Blocks change-id / Deadline / Tiebreaker / Source) covering all six deferred decisions. Every row names Luciano as owner and ties the deadline to a gate of the implementing change rather than a calendar date, so the system stays date-free until tickets are scheduled. Tiebreaker defaults are proposed for each decision so the implementing ticket has a concrete starting point — the photo-storage row defaults to Cloudflare R2 (zero egress fees suit an image-heavy app) with the override rule "document an operational reason in the change's `design.md`."
+
+`openspec/project.md` §8 now also includes §8.1 "Closing an open decision" and §8.2 "Adding a new open decision" — explicit playbooks so the workflow is unambiguous.
+
+**`docs/OPEN-DECISIONS.md`** — new docs/-side landing page that points at `openspec/project.md` §8 as canonical and carries a 3-column synopsis (Decision / Capability / Blocks change-id) for discoverability. **No duplication of decision rows** — the canonical 7-column table lives in `openspec/project.md` §8 only, so the two files cannot drift on owner, deadline, or tiebreaker.
+
+The "close in one PR" rule documented in both files ensures the workspace never enters a state where the inline `[OPEN]` marker in the spec, the canonical table, and the docs/-side landing page disagree.
 
 #### The Problem
 
@@ -538,7 +550,7 @@ issued and the old one is revoked.
 | ✅ RESOLVED    | Scope defense          | Post-MVP not enforced                | Spec     | 3h     |
 | ✅ RESOLVED    | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
 | ✅ RESOLVED    | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
-| 🟡 **MINOR**   | Implementation         | Photo storage untracked              | Docs     | 1h     |
+| ✅ RESOLVED    | Implementation         | Photo storage untracked              | Docs     | 1h     |
 | 🟠 **MAJOR**   | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |
 | 🟡 **MINOR**   | Security               | Token rotation policy undefined      | Spec     | 1h     |
 | 🟡 **MINOR**   | Data completeness      | Phone number unjustified             | Spec     | 1h     |
