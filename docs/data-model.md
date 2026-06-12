@@ -368,7 +368,7 @@ After insert, `ReviewService` recomputes `Listing.averageRating` and `Listing.re
 | `payoutId` | `uuid` | FK → `Payout.id`, ON DELETE CASCADE | |
 | `bookingId` | `uuid` | FK → `Booking.id`, UNIQUE | Booking can only be settled once |
 
-Composite PK `(payoutId, bookingId)`. The `bookingId` UNIQUE is the key invariant preventing double-settlement (US-5.2).
+Composite PK `(payoutId, bookingId)`. The `bookingId` UNIQUE is the key invariant preventing double-settlement (US-5.3).
 
 ### 3.18 `BookingFlag`
 
@@ -469,11 +469,11 @@ Beyond primary keys and the implicit indexes Prisma creates on foreign keys, the
 | `AvailabilityBlock` | EXCLUDE constraint (see §3.10) | DB-level overlap prevention |
 | `Booking` | `(guestId, status)` | "My bookings" (US-4.1 frontend) |
 | `Booking` | `(hostId, status, checkIn)` | Host upcoming bookings (US-7.1) |
-| `Booking` | `(listingId, status)` | Settlement query (US-5.2) |
+| `Booking` | `(listingId, status)` | Settlement query — amount-owed view (US-5.2) and payout-record submission (US-5.3) |
 | `RefreshToken` | `(userId)` | Bulk revoke on user disable |
 | `AuthAuditEvent` | `(userId, createdAt)` | Audit lookup |
 | `Review` | `(listingId, createdAt)` | Listing detail page reviews list |
-| `Payout` | `(hostId, paidAt)` | Payout history (US-5.2) |
+| `Payout` | `(hostId, paidAt)` | Payout history reads (US-5.2) and write path on record (US-5.3) |
 | `PayoutBooking` | `bookingId` UNIQUE | Prevents double-settlement |
 
 ---
@@ -493,7 +493,7 @@ These cross multiple tables and are enforced at the application layer inside DB 
    A single transaction may produce both `HOST_DISABLED` and `GUEST_DISABLED` rows when the disabled user is both a host and a guest with active bookings.
 5. **Cascade on listing disable** (US-8.2): in one transaction — set `Listing.status = DISABLED`, insert `BookingFlag(LISTING_DISABLED)` rows for that listing's future confirmed bookings.
 6. **One review per booking** (US-6.1): enforced by `Review.bookingId` UNIQUE + application-layer error mapping (`REVIEW_ALREADY_EXISTS` → 409). Average rating recompute is in the same transaction as the insert.
-7. **One settlement per booking** (US-5.2): enforced by `PayoutBooking.bookingId` UNIQUE. `PayoutService.recordPayout` reads eligible bookings inside a transaction and inserts `Payout` + `PayoutBooking` rows atomically.
+7. **One settlement per booking** (US-5.3): enforced by `PayoutBooking.bookingId` UNIQUE. `PayoutService.recordPayout` reads eligible bookings inside a transaction and inserts `Payout` + `PayoutBooking` rows atomically. A conflicting `bookingId` raises Postgres unique-violation (`23505`) which the application layer translates into `409 CONFLICT` per US-5.3's third Given/When/Then.
 8. **No orphan booking holds**: a periodic job (or webhook expiry handler) sweeps `Booking` rows where `status = PENDING_PAYMENT` and `createdAt < now() - 30 min`, sets them to `CANCELLED`, and removes the associated `BOOKING_HOLD`.
 
 ---
