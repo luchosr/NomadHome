@@ -25,15 +25,165 @@ Each capability has a canonical `openspec/specs/<capability>/spec.md`.
 
 ## 3. Scope boundaries
 
-### In MVP (do build)
+Every domain is split into three buckets. The distinction matters:
 
-Everything covered by §2 capabilities. The full table is `CLAUDE.md` §2.
+- ✅ **In MVP** — build this now. Tickets are welcome.
+- ⏸ **Post-MVP (deferred)** — do not build until explicitly promoted via the procedure in §3.3. Could legitimately become in-scope later. Mentioning the term in a proposal triggers Scope Defense (`CLAUDE.md` §9 Checkpoint F).
+- ❌ **Never** — out of this product line entirely. Building it would contradict a foundational MVP decision (e.g. we picked email for transactional notices, so SMS is Never; we picked Stripe Checkout, so card collection on our platform is Never). Mentioning the term in `tasks.md` is **blocked** by `scripts/check-mvp-scope.mjs` (§3.4).
 
-### Out of MVP — deferred (do not build until explicitly promoted)
+Anything not listed here is implicitly Never. If in doubt, propose first.
 
-PWA / offline; native mobile; i18n beyond the `t()` helper; OAuth / social login; in-app messaging; push notifications; calendar sync (iCal, Google Calendar); automated payouts; refund automation; invoices; multi-tier billing; community features (member directory, events, house rules); roommate matching; dynamic pricing; channel-manager integrations (Airbnb, Booking.com); analytics dashboards; dispute resolution; public partner API; multi-currency; ID verification / background checks; GDPR self-service tooling; host-to-guest reviews; group-booking as a first-class object; multi-listing cart; digital keys / smart-lock; loyalty.
+### 3.1 Per-domain scope table
 
-Promotion procedure: explicit user instruction "promote `<feature>` out of post-MVP," followed by an ADR documenting the decision in `openspec/changes/promote-<feature>/design.md`. Sub-agents must refuse to expand scope on their own.
+| Domain | ✅ In MVP | ⏸ Post-MVP (deferred) | ❌ Never |
+| --- | --- | --- | --- |
+| **Identity & Auth** | email/password registration, login, JWT + server-side refresh tokens, guest → host role escalation, basic auth audit log | OAuth (Google, Apple), social login, SSO, magic-link login, email-based passwordless | SIM swap auth, biometric-only auth, account sharing as a feature |
+| **Email** | registration verification, booking confirmation, cancellation notice, refund-pending notice, payout notice (to host), admin role-change notice | digest emails, stay reminders, post-stay nudges, marketing newsletters, upsell campaigns | SMS, push notifications, in-app inbox, WhatsApp / Telegram bots |
+| **Listings** | property and workspace listings, photos, amenities, nightly rate, draft/published lifecycle, host-managed availability | min/max stay rules per listing, calendar sync (iCal, Google Calendar), channel-manager integrations (Airbnb, Booking.com), photo storage with per-listing provider override | dynamic pricing, yield management, occupancy optimization, AI-generated listing copy |
+| **Search** | search by city + date range, filter by price / type / amenities / capacity, paginated results | geo search (radius from a point), map view, saved searches, alerts on new matches | recommendation engine, behavioral personalization |
+| **Booking** | instant booking, guest-side cancellation before check-in, fee snapshotting, single-listing-per-booking | host approval / application flow before booking, group / team-offsite booking as first-class object, multi-listing cart, multi-leg trips, dispute resolution workflow | non-refundable surcharges, hidden fees, dark patterns in cancellation flow |
+| **Payments** | Stripe Checkout for guest payment, platform-configured fee/commission with per-booking snapshot, admin-visible amounts owed per host, manual payout recording | automated payouts, refund automation, partial refunds, invoices, multi-tier billing, multi-currency, host KYC via Stripe Connect | card collection on our own platform (no Stripe Elements / custom forms), crypto, alternative payment methods that bypass Stripe |
+| **Reviews** | one guest review per completed booking (1–5 stars + text), listing-level aggregate rating | host-to-guest reviews, structured rubric (cleanliness / location / value), photo reviews, review responses by host | paid review removal, anonymous review-purchasing schemes |
+| **Host tooling** | minimal dashboard listing owned listings + upcoming bookings | host analytics dashboard, revenue forecasting, occupancy charts, host messaging UI, bulk listing management | host-side dark patterns (e.g. discriminatory booking rules) |
+| **Admin** | role-guarded disable/re-enable for users and listings | full admin moderation tooling, content moderation queues, fraud detection dashboards, dispute resolution workflows | hardcoded backdoor users, password recovery without identity proof |
+| **Community / Social** | _(nothing)_ | in-app messaging, community profiles, member directory, events, interest groups, house rules, roommate matching | LinkedIn-style endorsements, social graph features, public follow/friend graph |
+| **Platform / UX** | English-only web UI, mobile-responsive (down to 360 px), `t()` helper routing for all user-facing strings, Zod-validated REST contract | PWA / offline support, native iOS, native Android, full i18n via i18next, multi-currency display | desktop-only experience, separate marketing site forking the codebase |
+| **Analytics & Integrations** | basic server logs, auth event audit | public partner API, Segment / Mixpanel / PostHog instrumentation, third-party CRM integration | data brokerage, selling user data to third parties |
+| **Compliance** | bcrypt hashing (cost ≥ 10), HTTPS in production, append-only auth audit log | GDPR self-service data export, GDPR self-service deletion, government ID verification, background checks | storing plaintext passwords or PANs, transmitting credentials over plain HTTP, security-by-obscurity |
+
+### 3.2 Machine-readable denylist
+
+The fenced JSON block below is the **single source of truth** for `scripts/check-mvp-scope.mjs`. The script greps every `openspec/changes/*/tasks.md` (excluding `archive/`) for case-insensitive substring matches against the lists below.
+
+- `never` matches → script exits non-zero (the change is **blocked**)
+- `postMvp` matches → script prints a warning and exits zero (the change must hit Scope Defense before merging)
+
+Keep the table in §3.1 and this JSON aligned. Each entry in the JSON SHOULD correspond to a phrase that appears verbatim in §3.1.
+
+<!-- mvp-scope-denylist -->
+```json
+{
+  "never": [
+    "SMS",
+    "push notification",
+    "push notifications",
+    "WhatsApp",
+    "Telegram bot",
+    "in-app inbox",
+    "Stripe Elements",
+    "crypto payment",
+    "paid review removal",
+    "review-purchasing",
+    "discriminatory booking",
+    "social graph",
+    "public follow",
+    "LinkedIn-style endorsement",
+    "data brokerage",
+    "selling user data",
+    "plaintext password",
+    "biometric-only",
+    "SIM swap"
+  ],
+  "postMvp": [
+    "OAuth",
+    "social login",
+    "SSO",
+    "magic-link login",
+    "passwordless",
+    "digest email",
+    "stay reminder",
+    "marketing newsletter",
+    "upsell campaign",
+    "min stay rule",
+    "max stay rule",
+    "calendar sync",
+    "iCal",
+    "Google Calendar sync",
+    "Airbnb integration",
+    "Booking.com integration",
+    "channel manager",
+    "dynamic pricing",
+    "yield management",
+    "host approval",
+    "application flow",
+    "group booking",
+    "team-offsite booking",
+    "multi-listing cart",
+    "multi-leg trip",
+    "dispute resolution",
+    "automated payout",
+    "automated payouts",
+    "refund automation",
+    "partial refund",
+    "invoice generation",
+    "multi-tier billing",
+    "multi-currency",
+    "Stripe Connect",
+    "host KYC",
+    "host-to-guest review",
+    "review response",
+    "photo review",
+    "host analytics dashboard",
+    "revenue forecasting",
+    "occupancy chart",
+    "host messaging",
+    "bulk listing management",
+    "moderation queue",
+    "fraud detection",
+    "in-app messaging",
+    "community profile",
+    "member directory",
+    "interest group",
+    "house rules",
+    "roommate matching",
+    "PWA",
+    "offline support",
+    "service worker",
+    "native iOS",
+    "native Android",
+    "i18next",
+    "partner API",
+    "public API",
+    "Segment integration",
+    "Mixpanel",
+    "PostHog",
+    "CRM integration",
+    "GDPR export",
+    "GDPR self-service",
+    "government ID",
+    "background check"
+  ]
+}
+```
+
+### 3.3 Promotion procedure
+
+Explicit user instruction: "**promote `<feature>` out of post-MVP**." That instruction:
+
+1. Triggers an ADR in a new change folder: `openspec/changes/promote-<feature>/design.md` documenting the decision and the trade-off accepted.
+2. Updates §3.1 of this file moving `<feature>` from ⏸ Post-MVP to ✅ In MVP.
+3. Updates §3.2's JSON to remove the entry from `postMvp`.
+4. Lands as a normal OpenSpec change with proposal + delta spec for the relevant capability.
+
+Sub-agents MUST NOT expand scope on their own. The user is the only one who can authorize promotion.
+
+### 3.4 Enforcement script
+
+Run before opening any PR that touches `openspec/changes/`:
+
+```bash
+node scripts/check-mvp-scope.mjs
+```
+
+The script:
+
+- Loads `<repo>/openspec/project.md`, finds the JSON block marked `<!-- mvp-scope-denylist -->`, and parses it.
+- Walks `openspec/changes/*/tasks.md` (recursively, but **skipping `openspec/changes/archive/`** — archived history is preserved as-is).
+- For each task line, checks every `never` entry as a case-insensitive substring. Any match prints the offending file:line + matched term and the script exits with code 1.
+- After the `never` check, prints case-insensitive `postMvp` matches as warnings (does not affect exit code).
+- Exits 0 if no `never` matches.
+
+Wire this script into CI and a Husky pre-commit hook in a later change once `package.json` exists.
 
 ## 4. Tech stack (locked)
 
