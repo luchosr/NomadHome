@@ -95,18 +95,25 @@ Authoritative account record. Roles are kept as a `String[]` array so a single a
 
 ### 3.3 `RefreshToken`
 
-Server-side revocable refresh token (PRD §10).
+Server-side revocable refresh token (PRD §10). Rotation/TTL policy per `openspec/specs/identity/spec.md` requirement "Access tokens and refresh tokens": **30-day absolute TTL from issuance, sliding rotation on use, reuse detection via full revocation, per-token logout** (rationale in the archived `decide-refresh-token-policy` ADR).
 
 | Column | Type | Constraints | Notes |
 | ------ | ---- | ----------- | ----- |
 | `id` | `uuid` | PK | |
 | `userId` | `uuid` | FK → `User.id`, ON DELETE CASCADE | |
 | `tokenHash` | `string` | NOT NULL, UNIQUE | Store hash, never raw token |
-| `expiresAt` | `DateTime` | NOT NULL | TTL from `JWT_REFRESH_TTL` |
-| `revokedAt` | `DateTime?` | nullable | Set on logout, rotation, or user disable |
-| `createdAt` | `DateTime` | NOT NULL, default `now()` | |
-| `lastUsedAt` | `DateTime?` | nullable | Updated on each rotation |
+| `expiresAt` | `DateTime` | NOT NULL | `issuedAt + JWT_REFRESH_TTL` where `JWT_REFRESH_TTL = 30d`; never updated after insert (rotation creates a new row, it does not extend an existing TTL) |
+| `revokedAt` | `DateTime?` | nullable | Set on logout, rotation, user disable, or reuse-detection cascade |
+| `createdAt` | `DateTime` | NOT NULL, default `now()` | `issuedAt` for TTL purposes |
+| `lastUsedAt` | `DateTime?` | nullable | Updated on each successful refresh-endpoint call (before the row is marked revoked) for forensic context |
 | `userAgent` | `string?` | nullable | Captured at issue for forensic context |
+
+**Invariants** (enforced by `AuthService`):
+
+1. The refresh endpoint inserts a new `RefreshToken` row AND sets `revokedAt` on the presented row in a single transaction.
+2. When a row with `revokedAt IS NOT NULL` is presented to the refresh endpoint, every row matching `userId = <user> AND revokedAt IS NULL` is updated to set `revokedAt = now()` in a single transaction. An audit log entry `user.refresh_token_reuse_detected` is appended.
+3. Logout sets `revokedAt` on the presented row only; other rows for the same `userId` are not touched.
+4. A periodic prune job (out of scope for the policy ADR, tracked as a follow-up) hard-deletes rows where `revokedAt < now() - 90 days`. This bounds table growth without losing forensic data for recent incidents.
 
 ### 3.4 `EmailVerificationToken`
 
