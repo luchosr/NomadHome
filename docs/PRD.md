@@ -211,6 +211,12 @@ User stories follow the format: *As a [persona], I want [capability] so that [ou
 - **Then** I receive a paginated list of published listings in that city that have availability for the entire requested range
 - **And** the listing card shows photo, title, type, nightly rate, and computed total for the requested range
 
+Pagination contract (canonical spec: `openspec/specs/search/spec.md`):
+
+- Query parameters: `?page=<int ≥ 1>&pageSize=<int ∈ [1, 100]>`. Defaults: `page=1`, `pageSize=20`.
+- Response envelope: `{ data: ListingCard[], pagination: { total, page, pageSize, hasMore } }` — `total` is the count across all pages; `hasMore` is `page * pageSize < total`.
+- Out-of-range parameters return `400` with a structured Zod validation error; the controller is not invoked. Rationale: ADR archived under `openspec/changes/archive/<date>-decide-search-pagination/design.md`.
+
 **US-3.2** — As a guest, I want to filter search results so that I can narrow down candidates.
 
 - **Given** I have a result set
