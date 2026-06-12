@@ -256,15 +256,30 @@ Concrete examples of how to apply this:
 
 ## 8. Open decisions tracked in capability specs
 
-These are intentionally unresolved at the baseline and must be resolved by the first ticket that implements the relevant capability. Each is marked inline with `[OPEN]` inside the relevant `openspec/specs/<capability>/spec.md`:
+These are intentionally unresolved at the baseline and must be resolved by the first ticket that implements the relevant capability. Each is marked inline with `[OPEN]` inside the relevant `openspec/specs/<capability>/spec.md`. **This table is the canonical tracker** referenced from [`docs/OPEN-DECISIONS.md`](../docs/OPEN-DECISIONS.md).
 
-| Capability | Open decision | Source |
-| --- | --- | --- |
-| `identity` | Access-token TTL, refresh-token TTL, rotation policy (sliding vs. absolute) | Finding 9 of `docs/adversarial-review.md` |
-| `search` | Pagination strategy (offset vs. cursor), default + max page size | Finding 11 |
-| `platform` | `t(key)` naming convention, missing-key behavior, backend reuse | Finding 12 |
-| `payments` | Guest service fee % and host commission % | PRD §7 + §12 |
-| `booking` | Cancellation policy windows and refund tiers | PRD §12 |
-| `listings` | Photo storage backend (Cloudflare R2 vs. S3 vs. Supabase Storage) | PRD §12; `docs/data-model.md` §9 |
+| Capability | Open decision | Owner | Blocks change-id | Deadline | Tiebreaker | Source |
+| --- | --- | --- | --- | --- | --- | --- |
+| `identity` | Access-token TTL, refresh-token TTL, rotation policy (sliding vs. absolute) | Luciano | `add-identity` | Before Gate 2 of `add-identity` | Default: 15 min access + 30 day refresh, sliding rotation. Override only with a documented threat-model concern in the change's `design.md`. | Finding 9 of `docs/adversarial-review.md` |
+| `search` | Pagination strategy (offset vs. cursor), default + max page size | Luciano | `add-search` | Before Gate 2 of `add-search` | Default: offset pagination, page size 20, max 100. Cursor only if a perf concern is documented in the change's `design.md`. | Finding 11 |
+| `platform` | `t(key)` naming convention, missing-key behavior, backend reuse | Luciano | `add-platform-strings` (or the first feature ticket that adds user-facing strings) | Before any feature ticket commits hardcoded English copy | Default: dot-nested `<domain>.<context>.<specific>` keys (e.g. `auth.form.email_label`); missing key returns `<key-not-found:KEY>` and logs a warning; backend imports the same dictionary directly without a `t()` wrapper. | Finding 12 |
+| `payments` | Guest service fee % and host commission % | Luciano | `add-payments` | Before Gate 1 of `add-payments` (business decision, must precede spec) | Anchor: rates that produce an effective take-rate comparable to Airbnb's combined fees (~15% guest + ~3% host). Final call is Luciano's; values land in `PlatformFeeConfig` so they can change without code edits. | PRD §7 + §12 |
+| `booking` | Cancellation policy windows and refund tiers | Luciano | `add-booking` | Before Gate 1 of `add-booking` | Anchor: Airbnb-style 3-tier (flexible / moderate / strict) with simple day-based windows. Final tiers are Luciano's call; documented in the change's `design.md`. | PRD §12 |
+| `listings` | Photo storage backend (Cloudflare R2 vs. S3 vs. Supabase Storage) | Luciano | `add-listings` | Before Gate 2 of `add-listings` | Default recommendation: Cloudflare R2 (zero egress fees suit an image-heavy app). Override only with a documented operational reason in the change's `design.md`. | PRD §12; `docs/data-model.md` §9 |
 
-The first ticket to touch each capability MUST resolve its own `[OPEN]` (replacing the marker with the concrete decision and an ADR in the change's `design.md`) before merging.
+### 8.1 Closing an open decision
+
+The first ticket to touch each capability MUST resolve its own `[OPEN]` before merging by:
+
+1. Recording the decision and the trade-offs accepted in the change's `design.md` as a short ADR.
+2. Replacing the `[OPEN]` marker in `openspec/changes/<change-id>/specs/<capability>/spec.md` with the concrete value (e.g. "15 minutes" instead of "[OPEN] access-token TTL").
+3. Removing the corresponding row from this table in the same PR.
+4. Updating `docs/OPEN-DECISIONS.md`'s synopsis if its bullet list still references the closed decision.
+
+### 8.2 Adding a new open decision
+
+When a new decision surfaces mid-design that cannot be resolved within the current change's scope, the proposing change MUST:
+
+1. Add a row to this table with the columns Owner / Blocks change-id / Deadline / Tiebreaker / Source.
+2. Embed an `[OPEN]` marker at the relevant point in the delta `spec.md` so the deferral is visible to anyone reading the spec.
+3. Note the new entry in `docs/OPEN-DECISIONS.md` if it would help docs/-side discoverability.
