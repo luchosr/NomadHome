@@ -88,10 +88,11 @@ Authoritative account record. Roles are kept as a `String[]` array so a single a
 | ------ | ---- | ----------- | ----- |
 | `userId` | `uuid` | PK + FK → `User.id` UNIQUE | |
 | `displayName` | `string` | NOT NULL, min length 2 | |
-| `phone` | `string` | NOT NULL | E.164 validated at app layer |
 | `payoutEmail` | `string` | NOT NULL | Resend-format email |
 | `acceptedTermsVersion` | `string` | NOT NULL | Frozen at onboarding time |
 | `createdAt` | `DateTime` | NOT NULL, default `now()` | |
+
+> Phone collection is **deferred to Post-MVP**. The MVP host onboarding flow (US-1.3) does not consume a phone number — payouts are recorded manually via `payoutEmail` (US-5.3) and there is no SMS / WhatsApp channel (`openspec/project.md` §3.1 Email row lists SMS as ❌ Never). The natural triggers for phone collection — Stripe Connect KYC and identity verification — are both deferred per `docs/PRD.md` §3.2 Non-Goals. When promoted out of Post-MVP, phone should be added back via an OpenSpec change that motivates the column with a concrete user story.
 
 ### 3.3 `RefreshToken`
 
