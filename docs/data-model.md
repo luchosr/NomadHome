@@ -341,7 +341,7 @@ Composite PK `(payoutId, bookingId)`. The `bookingId` UNIQUE is the key invarian
 
 ### 3.18 `BookingFlag`
 
-Audit row written when an admin cascade affects a booking (US-8.1, US-8.2).
+Audit row written when an admin cascade affects a booking (US-8.1, US-8.2, US-8.3). The `reason` value identifies which cascade produced the flag: `HOST_DISABLED` for the host-side path of US-8.1, `GUEST_DISABLED` for US-8.3, and `LISTING_DISABLED` for US-8.2.
 
 | Column | Type | Constraints | Notes |
 | ------ | ---- | ----------- | ----- |
@@ -454,7 +454,12 @@ These cross multiple tables and are enforced at the application layer inside DB 
 1. **Atomic booking creation** ([docs/tasks.md](tasks.md) 4.1.8): inserting a `Booking (PENDING_PAYMENT)` and its `AvailabilityBlock (BOOKING_HOLD)` happens in one transaction. Either both succeed or both roll back; no orphan holds.
 2. **Fee snapshot immutability** (PRD §7): `Booking.guestServiceFeeBps`, `guestServiceFeeCents`, `hostCommissionBps`, `hostCommissionCents`, `nightlyRateCents`, `currency` are never UPDATEd after insert. Changing `PlatformFeeConfig` only affects future bookings.
 3. **Webhook idempotency** ([docs/tasks.md](tasks.md) 4.1.9): every Stripe webhook handler inserts into `StripeProcessedEvent` before performing side-effects; conflict → skip. Replaying the same event never duplicates emails or status transitions.
-4. **Cascade on user disable** (US-8.1): in one transaction — set `User.disabledAt`, set `Listing.status = DISABLED` for that host's listings, insert `BookingFlag` rows for affected confirmed bookings, revoke all `RefreshToken` rows for the user.
+4. **Cascade on user disable** (US-8.1, US-8.3): in one transaction —
+   - set `User.disabledAt`;
+   - if the user owns one or more `published` listings (host-side path of US-8.1): set `Listing.status = DISABLED` for each owned listing and insert `BookingFlag(HOST_DISABLED)` rows for each affected `confirmed` future booking on those listings;
+   - if the user has one or more `confirmed` future bookings as a guest (US-8.3): insert `BookingFlag(GUEST_DISABLED)` rows for each;
+   - revoke all `RefreshToken` rows for the user.
+   A single transaction may produce both `HOST_DISABLED` and `GUEST_DISABLED` rows when the disabled user is both a host and a guest with active bookings.
 5. **Cascade on listing disable** (US-8.2): in one transaction — set `Listing.status = DISABLED`, insert `BookingFlag(LISTING_DISABLED)` rows for that listing's future confirmed bookings.
 6. **One review per booking** (US-6.1): enforced by `Review.bookingId` UNIQUE + application-layer error mapping (`REVIEW_ALREADY_EXISTS` → 409). Average rating recompute is in the same transaction as the insert.
 7. **One settlement per booking** (US-5.2): enforced by `PayoutBooking.bookingId` UNIQUE. `PayoutService.recordPayout` reads eligible bookings inside a transaction and inserts `Payout` + `PayoutBooking` rows atomically.

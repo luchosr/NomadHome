@@ -208,7 +208,15 @@ Email:
 
 **Severity**: 🟡 **MINOR**  
 **Area**: Spec completeness  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+Took the reviewer's option (a): added **US-8.3** to `docs/PRD.md` §8.8, motivating the previously-orphaned `GUEST_DISABLED` enum value. US-8.3 specifies that disabling a user with confirmed future bookings as a guest produces `BookingFlag(GUEST_DISABLED)` rows for those bookings; bookings remain `confirmed` so the admin can choose to cancel/refund out-of-band consistent with US-4.2 and US-5.2.
+
+Tightened `docs/data-model.md` §3.18 to map each enum value to its motivating user story (`HOST_DISABLED` ← US-8.1, `GUEST_DISABLED` ← US-8.3, `LISTING_DISABLED` ← US-8.2). Rewrote `docs/data-model.md` §7 invariant 4 to split the cascade into a host-side path and a guest-side path; a single transaction may produce both flag reasons when the disabled user is both a host and a guest with active bookings.
+
+`openspec/specs/admin/spec.md` already specifies "Existing confirmed bookings tied to the disabled user (as guest or host) MUST be flagged for admin review" — so no spec change was needed. Adding a dedicated `GUEST_DISABLED` scenario to the admin spec is a coverage-tightening follow-up (would land via an `add-guest-disable-scenario` OpenSpec change), tracked outside this finding.
 
 #### The Problem
 
@@ -516,7 +524,7 @@ issued and the old one is revoked.
 | ✅ RESOLVED    | Spec-first workflow    | `openspec/specs/` missing            | Spec     | 6h     |
 | ✅ RESOLVED    | Single source of truth | Conflict resolution undefined        | Spec     | 2h     |
 | ✅ RESOLVED    | Scope defense          | Post-MVP not enforced                | Spec     | 3h     |
-| 🟡 **MINOR**   | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
+| ✅ RESOLVED    | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
 | 🟠 **MAJOR**   | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
 | 🟡 **MINOR**   | Implementation         | Photo storage untracked              | Docs     | 1h     |
 | 🟠 **MAJOR**   | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |

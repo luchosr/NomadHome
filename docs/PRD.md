@@ -265,6 +265,16 @@ User stories follow the format: *As a [persona], I want [capability] so that [ou
 - **When** I disable a listing
 - **Then** the listing is removed from search and cannot be booked; existing confirmed bookings remain visible to host and guest with a notice
 
+**US-8.3** — As an admin, I want disabling a user to cascade to their upcoming bookings as a guest so that affected hosts are aware and can react.
+
+- **Given** I am authenticated as an admin
+- **And** the target user has one or more `confirmed` future bookings as a guest
+- **When** I disable that user
+- **Then** each affected booking is flagged for admin review with reason `GUEST_DISABLED`
+- **And** the bookings remain in status `confirmed` — the admin decides whether to cancel and refund out-of-band, consistent with US-4.2 and US-5.2
+
+> Note: when the disabled user is also a host with active listings, the host-side cascade in US-8.1 still applies. A single admin "disable user" action can therefore produce both `HOST_DISABLED` and `GUEST_DISABLED` flag rows for different bookings of the same disabled user.
+
 ## 9. Customer Journey (MVP)
 
 The MVP supports a trimmed version of the 14-step journey in `product-description.md`. Steps not yet supported are noted.
