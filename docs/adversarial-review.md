@@ -342,7 +342,19 @@ But there is no **decision record** showing who will decide, by when, or what th
 
 **Severity**: 🟠 **MAJOR**  
 **Area**: Critical workflow  
-**Status**: ❌ FAIL
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+The manual-payout procedure is now specified end-to-end:
+
+**`docs/PRD.md` §8.5** — added **US-5.3** "Admin records a manual payout" with three Given/When/Then blocks: (1) view the amount owed to a selected host grouped by currency, (2) submit the payout record with `method` (`bank_transfer` / `wise` / `paypal`), `externalReference`, and the booking set, atomic across the `Payout` insert and every `PayoutBooking` insert, (3) conflict path returning `409 CONFLICT` when any booking is already linked to a `PayoutBooking`. Method strings match `docs/data-model.md` §3.16 `Payout.method` verbatim.
+
+**`docs/data-model.md`** — reattached four payout-related citations from US-5.2 (which is "see what is owed") to US-5.3 (which is "record the payout") where the citations actually belong: §3.17 PayoutBooking PK note, §6 "Settlement query" index, §6 "Payout history" index, §7.7 "One settlement per booking" invariant. The §7.7 invariant was tightened with the application-layer translation rule (Postgres `23505` unique-violation → `409 CONFLICT`).
+
+**`openspec/specs/payments/spec.md`** — already specifies both the amounts-owed view (requirement "Admin sees amounts owed per host") and the record-payout flow (requirement "Admin records a manual payout") with scenarios covering the happy path and the double-payout-rejected path. No spec change was needed for Finding 8 to be resolved.
+
+The result: the PRD now motivates US-5.3, the data model identifies which invariants belong to which story, and the OpenSpec source-of-truth already enforces both stories with scenarios.
 
 #### The Problem
 
@@ -551,7 +563,7 @@ issued and the old one is revoked.
 | ✅ RESOLVED    | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
 | ✅ RESOLVED    | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
 | ✅ RESOLVED    | Implementation         | Photo storage untracked              | Docs     | 1h     |
-| 🟠 **MAJOR**   | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |
+| ✅ RESOLVED    | Critical workflow      | Payout procedure missing (US-5.2)    | Spec     | 2h     |
 | 🟡 **MINOR**   | Security               | Token rotation policy undefined      | Spec     | 1h     |
 | 🟡 **MINOR**   | Data completeness      | Phone number unjustified             | Spec     | 1h     |
 | 🟡 **MINOR**   | API contract           | Pagination strategy undefined        | Spec     | 1h     |
