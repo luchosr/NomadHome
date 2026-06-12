@@ -247,6 +247,30 @@ User stories follow the format: *As a [persona], I want [capability] so that [ou
 - **When** I view the payouts page
 - **Then** I see, per host, the sum of confirmed-and-checked-out bookings minus the host commission, minus any payouts already recorded
 
+**US-5.3** — As an admin, I want to record a payout to a host so that I can mark the affected bookings as settled and track the out-of-band transfer.
+
+- **Given** I am authenticated as an admin
+- **And** the target host has at least one settled-but-unpaid booking — status `confirmed` with check-out date in the past, not yet linked to any `PayoutBooking`
+- **When** I open the payouts view and select that host
+- **Then** I see the total amount owed grouped by currency, computed as the sum of `booking.payoutCents` (i.e. `subtotalCents − hostCommissionCents`) over their eligible bookings
+
+- **Given** I am viewing the amount owed to a specific host
+- **When** I submit a payout record providing:
+  - **method** — one of `bank_transfer`, `wise`, `paypal` (matches the strings in `docs/data-model.md` §3.16 `Payout.method`)
+  - **external reference** — the transaction ID from the chosen method (recorded on `Payout.externalReference`)
+  - **the set of bookings** the payout covers (each must be one of the host's settled-and-unpaid bookings)
+- **Then** a `Payout` row is created with my user id as `recordedByAdminId`
+- **And** a `PayoutBooking` row links each covered booking to the new payout
+- **And** those bookings no longer appear in the amount-owed view for that host
+- **And** the operation is atomic — either every `PayoutBooking` insert succeeds and the `Payout` is created, or the entire request fails and no partial state is left behind
+
+- **Given** I attempt to record a payout whose booking set includes a booking already linked to an existing `PayoutBooking`
+- **When** I submit the request
+- **Then** the operation fails with `409 CONFLICT` referencing the conflicting `bookingId` (the `PayoutBooking.bookingId` UNIQUE constraint prevents double-settlement)
+- **And** no `Payout` row is created
+
+> Note: refund execution, partial refunds, and host-Stripe-Connect-based automated payouts are explicitly Post-MVP per `openspec/project.md` §3.1 row "Payments." Manual payout recording is the entire MVP money-out workflow.
+
 ### 8.6 Reviews
 
 **US-6.1** — As a guest, I want to review a listing after my stay so that I can share my experience.
