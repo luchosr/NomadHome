@@ -35,7 +35,20 @@ The documentation is **thorough and well-written for a learning vehicle**, but i
 
 **Severity**: 🔴 **BLOCKER**  
 **Area**: System readiness  
-**Status**: ❌ FAIL
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+The OpenSpec workspace is bootstrapped end-to-end:
+
+- `openspec/` exists with `specs/`, `changes/` (incl. `archive/`), `skills/`, and `config.yaml` (CLI-generated).
+- `openspec/AGENTS.md` exists at the openspec root with the OpenSpec-specific agent digest: source-of-truth ordering, four phases, delta grammar, workflow commands, and bright-line rules.
+- `openspec/project.md` exists at the openspec root with substantive content: capability map, MVP scope boundaries, locked tech stack, monorepo layout, conflict-resolution hierarchy (also closes Finding 3), and the `[OPEN]` decisions tracker.
+- The two misplaced 0-byte stubs at `openspec/specs/agents.md` and `openspec/specs/project.md` were removed.
+- `openspec/specs/` is populated with 10 canonical capability specs (materialized by Finding 2's archive on 2026-06-11).
+- `openspec validate --specs --strict` ✅ — 10 passed, 0 failed.
+
+`openspec/skills/` remains empty by design; populating it is a separate decision tied to `docs/base-standards.md §5` and is tracked outside this finding.
 
 #### The Problem
 
@@ -100,7 +113,11 @@ Bootstrapped via OpenSpec change `bootstrap-capability-specs` (PR #1, merged 202
 
 **Severity**: 🟠 **MAJOR**  
 **Area**: Single source of truth  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-12
+
+#### Resolution
+
+`openspec/project.md` §6 "Conflict resolution hierarchy" defines a 7-level ordering: approved OpenSpec delta / canonical capability spec → this file → `docs/data-model.md` → `packages/db/prisma/schema.prisma` → `docs/PRD.md` → `CLAUDE.md` → other `docs/*.md`. The section includes three concrete worked examples (including the fee percentage-vs.-basis-points drift this finding called out) so future agents have a precedent for how to apply the rule. The PR-review gate recommended by this finding (Zod schemas vs. `data-model.md` enum/type check) is **not** yet wired into CI and is tracked as a separate follow-up.
 
 #### The Problem
 
@@ -485,9 +502,9 @@ issued and the old one is revoked.
 
 | Severity       | Area                   | Finding                              | Fix Type | Effort |
 | -------------- | ---------------------- | ------------------------------------ | -------- | ------ |
-| 🔴 **BLOCKER** | System readiness       | `openspec/` folder missing           | Code     | 4h     |
+| ✅ RESOLVED    | System readiness       | `openspec/` folder missing           | Code     | 4h     |
 | ✅ RESOLVED    | Spec-first workflow    | `openspec/specs/` missing            | Spec     | 6h     |
-| 🟠 **MAJOR**   | Single source of truth | Conflict resolution undefined        | Spec     | 2h     |
+| ✅ RESOLVED    | Single source of truth | Conflict resolution undefined        | Spec     | 2h     |
 | 🟠 **MAJOR**   | Scope defense          | Post-MVP not enforced                | Spec     | 3h     |
 | 🟡 **MINOR**   | Spec completeness      | BookingFlagReason over-specified     | Spec     | 1h     |
 | 🟠 **MAJOR**   | Concurrent safety      | Availability blocking underspecified | Spec     | 1-4h   |
