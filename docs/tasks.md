@@ -149,10 +149,10 @@ All gates green; rotation invariant verified (old refresh token unusable after r
 **Enhanced — Implementation tasks:**
 
 ### DB
-- [ ] 1.3.1 Add `HostProfile` model: `userId (FK, unique)`, `displayName (string)`, `phone (string)`, `payoutEmail (string)`, `createdAt`.
+- [ ] 1.3.1 Add `HostProfile` model: `userId (FK, unique)`, `displayName (string)`, `payoutEmail (string)`, `acceptedTermsVersion (string)`, `createdAt`. (Phone is deferred to Post-MVP per `docs/data-model.md` §3.2.)
 
 ### Shared
-- [ ] 1.3.2 Add `BecomeHostSchema`: `displayName (min 2)`, `phone (E.164)`, `payoutEmail (email)`, `acceptedTermsVersion (string)`.
+- [ ] 1.3.2 Add `BecomeHostSchema`: `displayName (min 2)`, `payoutEmail (email)`, `acceptedTermsVersion (string)`.
 
 ### Backend
 - [ ] 1.3.3 Add `IdentityService.becomeHost({ userId, payload })`: idempotent — if already host, returns existing profile; else adds `"host"` to roles array, creates `HostProfile`, records `role_added` audit event.
@@ -717,7 +717,7 @@ These apply across all stories above. Each capability's specs must demonstrate c
 - **Performance**: API p95 < 300ms for read endpoints in MVP load (<100 concurrent users); search query < 200ms with the planned indexes.
 - **Observability**: structured logs with `requestId`, `userId`, `route`; auth audit events queryable; Stripe webhook events idempotent and traceable.
 - **Reliability**: every multi-row write inside a DB transaction; webhook handlers idempotent; no orphan `AvailabilityBlock` rows on failure paths.
-- **Privacy**: PII redacted in logs; guest contact info not exposed to hosts beyond first name + masked phone until a confirmed booking; refund/payout records retained.
+- **Privacy**: PII redacted in logs; guest contact info not exposed to hosts beyond first name until a confirmed booking; refund/payout records retained. (Phone exposure rules return when phone collection is promoted out of Post-MVP — `docs/data-model.md` §3.2.)
 - **Accessibility (frontend)**: shadcn primitives chosen for keyboard + ARIA support; forms label every input; color contrast ≥ WCAG AA.
 - **i18n readiness**: 100% of user-facing strings via `t()` (XC-2.2 lint rule enforces).
 - **Test coverage**: ≥80% on changed lines per [CLAUDE.md](../CLAUDE.md) §7 (target 90% per [docs/backend-standards.md](backend-standards.md)).
