@@ -18,13 +18,15 @@ However, a deep dive into the `admin` and `listings` specs against the `PRD.md` 
 ## Major Finding (Blocker)
 
 ### Finding 13: Missing scenario for Guest Disabled cascade (US-8.3)
-- **Status**: 🔴 OPEN
+- **Status**: ✅ RESOLVED — 2026-06-13
 - **Severity**: **Major (Blocker)**
 - **File**: `openspec/specs/admin/spec.md`
 - **Context**: `PRD.md` US-8.3 and `data-model.md` §7.4 describe the cascade for disabling a user. It explicitly requires that if a *guest* is disabled, their existing confirmed bookings MUST be flagged for admin review.
 - **Problem**: The `admin` spec's requirement "Admin can disable a user" mentions both guests and hosts in the text, but the only providing scenario is "Admin disables a host with active listings and bookings". There is NO scenario covering a guest-only user (bad actor guest) being disabled and the resulting flags on their bookings.
 - **Impact**: An implementer using only the `admin` spec for TDD will miss the requirement to flag bookings where the disabled user is the guest, leaving a security/ops gap for "bad actor" guests.
 - **Recommendation**: Add a dedicated scenario to `openspec/specs/admin/spec.md` titled "Admin disables a guest with active bookings".
+
+**Resolution**: Closed via OpenSpec change `add-guest-disable-scenario` (archived `openspec/changes/archive/2026-06-13-add-guest-disable-scenario/`). The change adds **two** scenarios rather than one — Gemini named the guest-only case, but `data-model.md` §7.4 invariant 4 already states "A single transaction may produce both `HOST_DISABLED` and `GUEST_DISABLED` rows when the disabled user is both a host and a guest with active bookings," so the dual-role case is now covered too. The `Admin can disable a user` requirement now has four scenarios (host cascade, guest cascade, dual-role cascade, re-enable) instead of two. No requirement-text change was needed — the text already said "as guest or host." `openspec validate --specs --strict` ✅ post-archive.
 
 ---
 
@@ -82,7 +84,7 @@ I have verified the following 12 resolutions from the previous adversarial revie
 
 The documentation is high-quality and implementation-ready for the most part. The "TBD Purpose" and "Phone in README" findings are minor hygiene issues. The "Overlap Conflict" ambiguity is a low-risk contract detail.
 
-**Blocking Action**: Finding 13 (Missing Guest Disabled scenario) must be addressed in `openspec/specs/admin/spec.md` before starting work on the `add-admin-tools` OpenSpec change.
+**Blocking Action**: ~~Finding 13 (Missing Guest Disabled scenario) must be addressed in `openspec/specs/admin/spec.md` before starting work on the `add-admin-tools` OpenSpec change.~~ ✅ Resolved 2026-06-13 — `add-admin-tools` is unblocked.
 
 ---
 **End of Adversarial Review**
