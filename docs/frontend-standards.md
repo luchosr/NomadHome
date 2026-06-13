@@ -156,7 +156,7 @@ export const FeedbackBanner: React.FC<FeedbackBannerProps> = ({ status, onAction
   return (
     <div className={`p-4 rounded-md ${status === 'success' ? 'bg-green-100' : 'bg-red-100'}`}>
       <p className="text-sm font-medium">
-        {status === 'success' ? t('banner.success_message') : t('banner.error_message')}
+        {status === 'success' ? t('common.banner.success_message') : t('common.banner.error_message')}
       </p>
       <Button onClick={onActionClose} variant="ghost" size="sm" className="mt-2">
         {t('common.close')}
@@ -258,7 +258,7 @@ export const ListingBasicsForm: React.FC<{
       </div>
 
       <div>
-        <label className="text-sm font-medium">{t('listings.form.nightlyRate')}</label>
+        <label className="text-sm font-medium">{t('listings.form.nightly_rate')}</label>
         <Input type="number" {...register('nightlyRateCents', { valueAsNumber: true })} className="mt-1" />
         {errors.nightlyRateCents && <p className="text-xs text-destructive mt-1">{errors.nightlyRateCents.message}</p>}
       </div>
@@ -307,17 +307,20 @@ export const en = {
     form: {
       title: 'Listing title',
       city: 'City',
-      nightlyRate: 'Nightly rate (USD cents)',
+      nightly_rate: 'Nightly rate (USD cents)',
     },
   },
   search: {
     empty: 'No listings match your search. Try widening the dates or removing filters.',
   },
-  bookings: {
+  booking: {
     notice: {
-      listingDisabled: 'This listing has been disabled by NomadHome. Your booking remains valid; contact support for questions.',
+      listing_disabled: 'This listing has been disabled by NomadHome. Your booking remains valid; contact support for questions.',
     },
   },
+  // Reserved top-level domains required by the platform spec:
+  error: { /* ... */ },
+  validation: { /* ... */ },
 } as const;
 
 // packages/shared/src/strings/index.ts
@@ -332,15 +335,20 @@ export type PathsToStringProps<T> = T extends string
 type Dot<T extends string, U extends string> = U extends '' ? T : `${T}.${U}`;
 type LocaleKeys = PathsToStringProps<typeof en>;
 
+// Key contract is fixed by openspec/specs/platform/spec.md (decide-i18n-key-format ADR):
+// snake_case-dot keys, reserved domains common/error/validation, missing key returns
+// "<key-not-found: KEY>" + warns. The backend imports `en` directly without this wrapper.
 export const t = (key: LocaleKeys): string => {
-  return (
-    key
-      .split('.')
-      .reduce(
-        (accumulator: any, currentKey) => accumulator?.[currentKey],
-        en,
-      ) || key
-  );
+  const resolved = key
+    .split('.')
+    .reduce<unknown>((node, segment) => {
+      return node && typeof node === 'object' ? (node as Record<string, unknown>)[segment] : undefined;
+    }, en);
+
+  if (typeof resolved === 'string') return resolved;
+
+  console.warn(`[i18n] key not found: ${key}`);
+  return `<key-not-found: ${key}>`;
 };
 ```
 

@@ -1,8 +1,5 @@
-# platform Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
-## Requirements
 ### Requirement: Web application is English-only and mobile-responsive
 
 The system SHALL deliver a web UI in English only for the MVP. The UI MUST render usably across desktop and mobile viewport widths down to 360 px. All user-facing strings MUST be routed through a `t(key)` helper backed by an English-only lookup table so that future internationalization can be added without locating untranslated literals across the codebase.
@@ -58,21 +55,3 @@ The system SHALL deliver a web UI in English only for the MVP. The UI MUST rende
 - **THEN** the code imports `en` from the shared package and accesses keys via `en.<domain>.<context>.<specific>`
 - **AND** the React-bound `t()` helper is NOT imported in `apps/api/` source
 - **AND** variable substitution uses a simple `{{var}}` interpolation pass on the resolved string
-
-### Requirement: REST API contract with Zod-validated request/response shapes
-
-The system SHALL expose a REST API. All request and response payloads MUST be validated against Zod schemas defined in the shared package, and those schemas MUST be the single source of truth used by both the backend (runtime validation) and the frontend (type inference and client-side validation).
-
-#### Scenario: Invalid request body is rejected at the API boundary
-
-- **GIVEN** any API endpoint with a Zod-validated request body
-- **WHEN** the client submits a body that fails the Zod schema
-- **THEN** the system returns HTTP 400 with a machine-readable validation error describing which field(s) failed
-- **AND** the controller handler is not invoked
-
-#### Scenario: Response shape matches the declared schema
-
-- **GIVEN** any successful API response
-- **WHEN** the response is generated
-- **THEN** the response body conforms to the declared Zod response schema for that endpoint
-
