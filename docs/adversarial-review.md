@@ -3,7 +3,33 @@
 **Date**: 27 May 2026  
 **Reviewer**: GitHub Copilot (Adversarial Review Skill)  
 **Scope**: README.md + docs/ folder  
-**Status**: FAIL — Blockers identified
+**Original status (2026-05-27)**: FAIL — Blockers identified  
+**Current status (2026-06-13)**: ✅ **ALL 12 FINDINGS RESOLVED** — implementation may proceed
+
+---
+
+## Resolution Snapshot (2026-06-13)
+
+All twelve findings have been closed across PRs #1–#13 on `main`:
+
+| # | Severity | Status | Resolved by |
+| --- | --- | --- | --- |
+| 1 | 🔴 BLOCKER | ✅ RESOLVED | PR #3 (`openspec/AGENTS.md`, `openspec/project.md`, skeleton complete) |
+| 2 | 🟠 MAJOR | ✅ RESOLVED | PRs #1–#2 (10 capability specs bootstrapped + archived) |
+| 3 | 🟠 MAJOR | ✅ RESOLVED | PR #3 (`openspec/project.md` §6 conflict-resolution hierarchy) |
+| 4 | 🟠 MAJOR | ✅ RESOLVED | PR #4 (structured per-domain scope table + `scripts/check-mvp-scope.mjs`) |
+| 5 | 🟡 MINOR | ✅ RESOLVED | PR #6 (US-8.3 + data-model cascade fix) |
+| 6 | 🟠 MAJOR | ✅ RESOLVED | PR #7 (overlap-conflict semantics + matrix) |
+| 7 | 🟡 MINOR | ✅ RESOLVED | PR #8 (open-decisions table with Owner/Blocks/Deadline/Tiebreaker + `docs/OPEN-DECISIONS.md`) |
+| 8 | 🟠 MAJOR | ✅ RESOLVED | PR #9 (US-5.3 + data-model citation realignment) |
+| 9 | 🟡 MINOR | ✅ RESOLVED | PR #10 (`decide-refresh-token-policy` OpenSpec change) |
+| 10 | 🟡 MINOR | ✅ RESOLVED | PR #11 (`HostProfile.phone` removed) |
+| 11 | 🟡 MINOR | ✅ RESOLVED | PR #12 (`decide-search-pagination` OpenSpec change) |
+| 12 | 🟡 MINOR | ✅ RESOLVED | PR #13 (`decide-i18n-key-format` OpenSpec change) |
+
+**Four open decisions remain tracked in [`openspec/project.md`](../openspec/project.md) §8** — each is bound to a specific future change-id and will close naturally when the implementing capability ticket runs: `identity` access-token TTL, `payments` fee %, `booking` cancellation policy, `listings` photo storage. These are not blockers; they are deferrals.
+
+The remainder of this document is the **original review as written on 2026-05-27**. Each finding section now carries an inline "Resolution" subsection added when it closed. The "Verdict" and "Critical Path to Unblock" sections at the bottom describe the state at time of writing and are kept as historical context.
 
 ---
 
@@ -11,7 +37,7 @@
 
 The documentation is **thorough and well-written for a learning vehicle**, but it is **not actionable as a specification**. Agents cannot begin implementation because the OpenSpec folder (the entire source-of-truth system) does not exist, capability specs are missing, and critical workflows lack user stories.
 
-**Verdict**: **FAIL** — Blocker findings must be resolved before implementation can proceed.
+**Verdict (2026-05-27)**: **FAIL** — Blocker findings must be resolved before implementation can proceed.
 
 ---
 
@@ -547,7 +573,20 @@ The chosen contract is portable: any future paginated endpoint (host dashboard b
 
 **Severity**: 🟡 **MINOR**  
 **Area**: Developer experience  
-**Status**: ⚠️ WARNING
+**Status**: ✅ RESOLVED — 2026-06-13
+
+#### Resolution
+
+Closed via the `decide-i18n-key-format` OpenSpec change (archived `archive/2026-06-12-decide-i18n-key-format/` — CLI uses UTC). The three-sub-decision ADR in `design.md` picked **snake_case keys + `<key-not-found: KEY>` fallback + backend direct dict import** — matching the reviewer's recommendations and adding the formal regex + reserved-domain rules.
+
+**Specification surface, post-change:**
+
+- **`openspec/specs/platform/spec.md`** — requirement "Web application is English-only and mobile-responsive" now spells out the key format (regex `^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$`), the three reserved top-level domains (`common`, `error`, `validation`), the missing-key fallback (warn + return `<key-not-found: KEY>`, never throw), and the backend-reuse rule (import `en` directly, no React-bound helper). Six total scenarios cover hardcoded-string ban, 360 px viewport, key regex, reserved domains, missing-key fallback, backend import. The `[OPEN]` marker is fully removed.
+- **`docs/frontend-standards.md`** — existing `t()` examples that violated the new contract were updated: `nightlyRate` → `nightly_rate`, `bookings.notice.listingDisabled` → `booking.notice.listing_disabled`, `banner.success_message` → `common.banner.success_message`. The `t()` implementation sketch now logs a warning and returns the marker string instead of `|| key`.
+- **`packages/shared/src/strings/README.md`** (new, at the reviewer's requested path) — discoverable docs for the engineer who'll implement the helper. The path is created ahead of the rest of the monorepo; the file will sit next to the eventual `index.ts` and `en.ts` when `init-monorepo` lands. The README is a digest of the spec, with an explicit "the spec wins" note pointing at `openspec/project.md` §6.
+- **`openspec/project.md` §8 / `docs/OPEN-DECISIONS.md` synopsis** — the `platform` row is removed entirely. §8 still has four open decisions tracked (identity access-token TTL, payments fee %, booking cancellation policy, listings photo storage) — each will close naturally when the implementing capability ticket runs.
+
+The chosen contract goes slightly beyond the reviewer's literal recommendation by adding the regex enforcement and the rule that capability domains must match `openspec/specs/<capability>/` folder names — both close drift gaps the reviewer didn't name explicitly.
 
 #### The Problem
 
@@ -605,13 +644,15 @@ The chosen contract is portable: any future paginated endpoint (host dashboard b
 | ✅ RESOLVED    | Security               | Token rotation policy undefined      | Spec     | 1h     |
 | ✅ RESOLVED    | Data completeness      | Phone number unjustified             | Spec     | 1h     |
 | ✅ RESOLVED    | API contract           | Pagination strategy undefined        | Spec     | 1h     |
-| 🟡 **MINOR**   | Developer UX           | i18n key format undefined            | Docs     | 2h     |
+| ✅ RESOLVED    | Developer UX           | i18n key format undefined            | Docs     | 2h     |
 
 ---
 
-## Verdict
+## Verdict (2026-05-27, historical)
 
 ### 🔴 FAIL
+
+> Each of the bullets below has since been resolved — see the "Resolution Snapshot" at the top of this document. This section is preserved as historical context, not a current status report.
 
 **The documentation is aspirational but not executable.**
 
