@@ -338,7 +338,6 @@ erDiagram
     HOST_PROFILE {
         uuid userId PK,FK "1:1 with USER"
         string displayName
-        string phone "E.164"
         string payoutEmail
         string acceptedTermsVersion
         datetime createdAt
@@ -738,14 +737,13 @@ The `bookingId UNIQUE` constraint is the key guarantee: a booking can be settled
 
 Lazy-created when a guest upgrades to host (US-1.3). Decouples host-specific contact info from the core identity record.
 
-| Attribute              | Type       | Constraints                            |
-| ---------------------- | ---------- | -------------------------------------- |
-| `userId`               | `uuid`     | **PK** + **FK** → `User.id`, UNIQUE    |
-| `displayName`          | `string`   | NOT NULL, min length 2                 |
-| `phone`                | `string`   | NOT NULL, E.164 validated at app layer |
-| `payoutEmail`          | `string`   | NOT NULL                               |
-| `acceptedTermsVersion` | `string`   | NOT NULL, frozen at onboarding         |
-| `createdAt`            | `DateTime` | default `now()`                        |
+| Attribute              | Type       | Constraints                         |
+| ---------------------- | ---------- | ----------------------------------- |
+| `userId`               | `uuid`     | **PK** + **FK** → `User.id`, UNIQUE |
+| `displayName`          | `string`   | NOT NULL, min length 2              |
+| `payoutEmail`          | `string`   | NOT NULL                            |
+| `acceptedTermsVersion` | `string`   | NOT NULL, frozen at onboarding      |
+| `createdAt`            | `DateTime` | default `now()`                     |
 
 ---
 

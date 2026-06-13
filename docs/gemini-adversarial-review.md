@@ -33,13 +33,15 @@ However, a deep dive into the `admin` and `listings` specs against the `PRD.md` 
 ## Minor Findings
 
 ### Finding 14: Stale "phone" references in README.md
-- **Status**: 🟡 OPEN
+- **Status**: ✅ RESOLVED — 2026-06-13
 - **Severity**: **Minor**
 - **File**: `README.md` (lines 341 and 745)
 - **Context**: Finding 10 in the previous review led to the removal of `phone` from `HostProfile` and `tasks.md` to avoid scope creep (deferred to Post-MVP).
 - **Problem**: `README.md` still lists `phone: string` in the mermaid diagram (L341) and the field table (L745).
 - **Impact**: Contradicts `docs/data-model.md` §3.2 and `docs/tasks.md` §1.3.1, causing confusion for new developers reading the README first.
 - **Recommendation**: Remove the `phone` references from `README.md` to match the data model.
+
+**Resolution**: Both stale references were removed in PR #15. README's HOST_PROFILE Mermaid entity and field table now match `docs/data-model.md` §3.2 and `docs/tasks.md` §1.3.1. `grep -n "phone" README.md` returns no results — no orphan references remain. Phone is still deferred to Post-MVP per the deferral note in `docs/data-model.md` §3.2.
 
 ### Finding 15: Vague overlap conflict in Listings Spec
 - **Status**: 🟡 OPEN
