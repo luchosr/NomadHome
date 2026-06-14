@@ -44,13 +44,23 @@ However, a deep dive into the `admin` and `listings` specs against the `PRD.md` 
 **Resolution**: Both stale references were removed in PR #15. README's HOST_PROFILE Mermaid entity and field table now match `docs/data-model.md` §3.2 and `docs/tasks.md` §1.3.1. `grep -n "phone" README.md` returns no results — no orphan references remain. Phone is still deferred to Post-MVP per the deferral note in `docs/data-model.md` §3.2.
 
 ### Finding 15: Vague overlap conflict in Listings Spec
-- **Status**: 🟡 OPEN
+- **Status**: ✅ RESOLVED — 2026-06-13
 - **Severity**: **Minor**
 - **File**: `openspec/specs/listings/spec.md`
 - **Context**: `data-model.md` §3.10 and §7.1 specify that when a host attempts to block a range that overlaps a booking, the system returns an `overlap-conflict` error including the `bookingId`.
 - **Problem**: The scenario "Host attempts to block a range overlapping a confirmed booking" in the listings spec says "the conflicting booking reference is returned". It does not explicitly state it is a `bookingId`, nor does it distinguish between conflicting with a `BOOKING_HOLD` (which has a `bookingId`) vs another `HOST_BLOCK` (which doesn't).
 - **Impact**: Slight ambiguity in the API response contract for overlap conflicts.
 - **Recommendation**: Tighten the scenario to specify `bookingId` for booking-related conflicts.
+
+**Resolution**: Closed via OpenSpec change `tighten-host-block-conflict-scenarios` (archived `openspec/changes/archive/2026-06-13-tighten-host-block-conflict-scenarios/`). The "Host manages listing availability" requirement now has three scenarios instead of two:
+
+1. *(preserved)* Host blocks an unbooked date range → success.
+2. **NEW**: Host attempts to block a range overlapping a `BOOKING_HOLD` → response body specifies `conflict.source = "BOOKING_HOLD"`, `conflict.blockId`, AND `conflict.bookingId` so the host can identify and contact the affected guest. Covers both backing `PENDING_PAYMENT` and `CONFIRMED` cases (identical API response).
+3. **NEW**: Host attempts to block a range overlapping their own existing `HOST_BLOCK` → response body specifies `conflict.source = "HOST_BLOCK"` and `conflict.blockId` only; `conflict.bookingId` is explicitly absent (HOST_BLOCK rows have no associated booking per data-model §3.10 column note).
+
+The requirement prose was also tightened to be block-source-agnostic ("any existing `AvailabilityBlock` regardless of `source`") to deduplicate the booking-status vs. block check that `data-model.md` §3.11 invariant already resolves.
+
+`ADMIN_BLOCK` overlap scenarios are not added — admin-block insertion is out of MVP. `openspec validate --specs --strict` ✅ post-archive.
 
 ### Finding 16: TBD Purpose sections in Capability Specs
 - **Status**: 🔵 OPEN
