@@ -1,7 +1,9 @@
 # search Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Guest-facing discovery of published listings by city, date range, and filters (price, type, amenities, capacity). Returns a paginated offset/limit envelope with `{ data, pagination: { total, page, pageSize, hasMore } }` per `decide-search-pagination`. Read-only over the `Listing` and `AvailabilityBlock` aggregates owned by the `listings` capability.
+
 ## Requirements
 ### Requirement: Guest can search listings by city and date range
 

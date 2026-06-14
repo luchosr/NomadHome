@@ -1,7 +1,9 @@
 # host-tooling Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Minimal host-facing dashboard: a list of listings the host owns (regardless of status) and a list of upcoming `confirmed` bookings on those listings sorted by check-in date ascending. Read-only over aggregates owned by `identity`, `listings`, and `booking` — the host-tooling capability adds no new persisted state. Richer host tooling (analytics, revenue forecasts, bulk listing management) is Post-MVP per `openspec/project.md` §3.1.
+
 ## Requirements
 ### Requirement: Host dashboard lists owned listings
 

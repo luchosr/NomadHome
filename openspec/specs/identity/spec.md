@@ -1,7 +1,9 @@
 # identity Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Authentication and authorization for the NomadHome marketplace: email/password registration, login, JWT access tokens paired with server-side revocable refresh tokens (per `decide-refresh-token-policy`), role escalation from `guest` to `host`, and the auth-event audit trail. Owns the `User`, `HostProfile`, `RefreshToken`, `EmailVerificationToken`, and `AuthAuditEvent` aggregates.
+
 ## Requirements
 ### Requirement: Email and password registration
 

@@ -3,7 +3,8 @@
 **Date**: 13 June 2026  
 **Reviewer**: Gemini CLI (interactive agent)  
 **Scope**: `docs/` folder + `openspec/` capability specs + `README.md`  
-**Verdict**: 🟡 PASS WITH GAPS — One Major Finding (Blocker) and three Minor Findings.
+**Original verdict (2026-06-13)**: 🟡 PASS WITH GAPS — One Major Finding (Blocker) and three Minor Findings.  
+**Current status (2026-06-14)**: ✅ **ALL 4 FINDINGS RESOLVED** — PR #14 (Finding 13), PR #15 (Finding 14), PR #16 (Finding 15), PR #17 (Findings 16). All blockers cleared.
 
 ---
 
@@ -63,12 +64,16 @@ The requirement prose was also tightened to be block-source-agnostic ("any exist
 `ADMIN_BLOCK` overlap scenarios are not added — admin-block insertion is out of MVP. `openspec validate --specs --strict` ✅ post-archive.
 
 ### Finding 16: TBD Purpose sections in Capability Specs
-- **Status**: 🔵 OPEN
+- **Status**: ✅ RESOLVED — 2026-06-14
 - **Severity**: **Minor (Doc Hygiene)**
 - **Files**: `openspec/specs/*.md` (most files)
 - **Problem**: Every capability spec currently has "## Purpose: TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive."
 - **Impact**: While the requirements are detailed, the high-level purpose and domain boundary for each capability remain technically "TBD".
 - **Recommendation**: Replace the placeholder text with a one-sentence summary of the capability's domain (e.g., "Manages the lifecycle of user accounts, roles, and session security" for `identity`).
+
+**Resolution**: All ten Purpose sections replaced with paragraph-length capability summaries naming what each capability owns, which aggregates it controls, how it relates to adjacent capabilities, and which decisions are deferred (e.g. host-to-guest reviews in `reviews`, richer host tooling in `host-tooling`). `grep "TBD - created by archiving" openspec/specs/*/spec.md` returns no results.
+
+The Purpose section is descriptive metadata, not delta-grammar Requirements/Scenarios, so CLAUDE.md §1's "modify openspec/specs/ directly" anti-directive does not apply. `openspec validate --specs --strict` still passes — 10/10. No OpenSpec change was needed for this.
 
 ---
 
@@ -90,13 +95,26 @@ I have verified the following 12 resolutions from the previous adversarial revie
 
 ---
 
-## Final Verdict
+## Final Verdict (2026-06-13, historical)
 
 **Status**: 🟢 **PASS WITH GAPS**
 
 The documentation is high-quality and implementation-ready for the most part. The "TBD Purpose" and "Phone in README" findings are minor hygiene issues. The "Overlap Conflict" ambiguity is a low-risk contract detail.
 
 **Blocking Action**: ~~Finding 13 (Missing Guest Disabled scenario) must be addressed in `openspec/specs/admin/spec.md` before starting work on the `add-admin-tools` OpenSpec change.~~ ✅ Resolved 2026-06-13 — `add-admin-tools` is unblocked.
+
+## Final Status (2026-06-14)
+
+**Status**: ✅ **ALL FINDINGS CLOSED**
+
+| # | Severity | Resolved by |
+| --- | --- | --- |
+| 13 | Major (Blocker) | PR #14 — `add-guest-disable-scenario` |
+| 14 | Minor | PR #15 — README phone cleanup |
+| 15 | Minor | PR #16 — `tighten-host-block-conflict-scenarios` |
+| 16 | Minor (Doc Hygiene) | PR #17 — Purpose sections filled across all 10 specs |
+
+Four `[OPEN]` decisions remain tracked in `openspec/project.md` §8 — none are blockers; each closes naturally when the implementing capability ticket runs.
 
 ---
 **End of Adversarial Review**
