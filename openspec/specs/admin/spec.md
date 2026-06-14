@@ -1,7 +1,9 @@
 # admin Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Role-guarded marketplace moderation behind `admin` routes in `apps/web/`: disable/re-enable users (with the three-flavor cascade — `HOST_DISABLED` for affected listings' bookings, `GUEST_DISABLED` for the disabled user's guest bookings, both in one transaction for dual-role users) and disable listings (with `LISTING_DISABLED` cascade). All admin endpoints require the `admin` role. Owns the `BookingFlag` aggregate.
+
 ## Requirements
 ### Requirement: Admin can disable a user
 

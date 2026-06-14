@@ -1,7 +1,9 @@
 # payments Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Money-in via Stripe Checkout (no card data on the platform) and money-out via admin-recorded manual payouts. Snapshots platform fee and host commission onto each `Booking` at confirmation time so config changes never alter prior bookings. Owns the `PlatformFeeConfig`, `StripeProcessedEvent`, `RefundRequest`, `Payout`, and `PayoutBooking` aggregates; the `PayoutBooking.bookingId` UNIQUE constraint enforces one-settlement-per-booking.
+
 ## Requirements
 ### Requirement: Guest pays through Stripe Checkout
 

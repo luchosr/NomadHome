@@ -1,7 +1,9 @@
 # booking Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Instant-booking reservations for guests against published listings. Covers atomic booking creation (Booking + `BOOKING_HOLD` row inserted together per `docs/data-model.md` §7.1), per-booking fee snapshotting, the single-listing-per-booking invariant, and guest-side cancellation before check-in. Owns the `Booking` aggregate; the `BOOKING_HOLD` row in `AvailabilityBlock` is managed jointly with the `listings` capability (lifecycle tied to booking status per `docs/data-model.md` §4).
+
 ## Requirements
 ### Requirement: Guest can instant-book a listing
 

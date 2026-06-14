@@ -1,7 +1,9 @@
 # listings Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Host-owned bookable inventory — properties for co-living stays and workspaces for desks/meeting rooms. Covers the listing lifecycle (`draft` → `published` → `disabled`), photos, amenities, nightly rate, and host-managed availability (with `AvailabilityBlock` overlap-conflict semantics defined in `docs/data-model.md` §3.10). Owns the `Listing`, `ListingPhoto`, `ListingAmenity`, `Amenity`, and `AvailabilityBlock` aggregates.
+
 ## Requirements
 ### Requirement: Host can create a listing in draft status
 

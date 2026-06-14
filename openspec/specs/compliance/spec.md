@@ -1,7 +1,9 @@
 # compliance Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+Security and audit foundations that every other capability inherits: bcrypt password hashing at cost ≥ 10, HTTPS in production, and the append-only authentication audit log (`user.registered` / `user.login_succeeded` / `user.login_failed` / `user.role_added` / `user.disabled` / `user.reenabled` / `user.refresh_token_reuse_detected`). Co-owns the `AuthAuditEvent` aggregate with `identity`; broader compliance scope (GDPR self-service, ID verification, background checks) is Post-MVP per `openspec/project.md` §3.1.
+
 ## Requirements
 ### Requirement: Passwords are stored as bcrypt hashes
 

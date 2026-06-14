@@ -1,7 +1,9 @@
 # reviews Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-capability-specs. Update Purpose after archive.
+
+One guest review per completed booking (1–5 stars + free text), aggregated per listing for display on the listing detail page. Owns the `Review` aggregate; the `Review.bookingId` UNIQUE constraint enforces the one-review-per-booking invariant (`docs/data-model.md` §7.6). Host-to-guest reviews are Post-MVP per `openspec/project.md` §3.1.
+
 ## Requirements
 ### Requirement: Guest can review a completed booking
 
