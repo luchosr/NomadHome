@@ -536,7 +536,6 @@ Map 1:1 to [docs/PRD.md](PRD.md) §12. None of these unblock the `init-monorepo`
 | 2 | Exact fee percentages (`guestServiceFeeBps`, `hostCommissionBps`) | `add-booking-and-payments` |
 | 3 | Cancellation policy tiers — do they live as code constants or as a `CancellationPolicy` table? Default: code constants in MVP. | `add-booking-and-payments` |
 | 4 | Multi-currency: USD-only assumption confirmed? If yes, `currency` columns stay but never vary in MVP. | `add-booking-and-payments` |
-| 5 | Min/max stay rules per listing — add `minNights`/`maxNights` columns on `Listing` or defer to Post-MVP? | `add-listings` |
 
 ---
 

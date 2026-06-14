@@ -366,7 +366,7 @@ Each item below blocks or shapes a downstream OpenSpec change. Resolve before th
 
 - **[OPEN]** Exact guest service fee % and host commission % — needed before US-5.1.
 - **[OPEN]** Cancellation policy windows and refund tiers — needed before US-4.2.
-- **[OPEN]** Minimum and maximum stay rules per listing — assumed Post-MVP unless flagged otherwise.
+- **Post-MVP**: Minimum and maximum stay rules per listing. Confirmed deferred per `openspec/project.md` §3.1 row "Listings" (⏸ Post-MVP); promotion follows §3.3 procedure.
 - **[OPEN]** Photo storage backend (S3, Cloudflare R2, Supabase) — needed before US-2.1.
 - **[OPEN]** Initial pilot recruitment plan for hosts and guests — owned by Product, not Engineering.
 - **[ASSUMPTION]** USD-only pricing for MVP. Multi-currency is Post-MVP.
