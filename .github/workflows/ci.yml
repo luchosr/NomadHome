@@ -17,16 +17,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Node is set up before pnpm so that pnpm/action-setup self-installs the
-      # pinned pnpm (which requires Node >= 22.13) on a compatible runtime.
-      # Node 22 satisfies the project's >= 20.19 engine floor.
+      # Node 22 satisfies both the project's >= 20.19 engine floor and pnpm
+      # 11.1.2's own >= 22.13 requirement. Corepack (bundled with Node) provides
+      # pnpm from the `packageManager` field, running it on this Node — unlike
+      # pnpm/action-setup, whose self-installer uses the runner's default Node.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
