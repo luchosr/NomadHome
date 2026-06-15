@@ -1,0 +1,10 @@
+{
+  "extends": "@nomadhome/config/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["prisma"]
+}

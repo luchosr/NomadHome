@@ -1,0 +1,15 @@
+// NomadHome Prisma schema.
+//
+// Scaffold only: a configured datasource and generator, no domain models.
+// Capability tickets (add-identity, add-listings, ...) add their own models
+// and migrations. `docs/data-model.md` is authoritative for schema details
+// until those models land (openspec/project.md §6).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
