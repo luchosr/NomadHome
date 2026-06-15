@@ -17,13 +17,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # CI runs on the project's documented Node floor (project.md §4). Corepack
-      # (bundled with Node) provides pnpm from the `packageManager` field; pnpm 9
-      # runs on Node 20.19 and builds dependency scripts without an approval gate.
+      # Node 20.20.0: above the project's >= 20.19 floor (project.md §4) and the
+      # lowest 20.x the OpenSpec CLI's deps accept (posthog-node needs ^20.20.0).
+      # Corepack provides pnpm from the `packageManager` field; pnpm 9 builds
+      # dependency scripts without an approval gate.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.19.0
+          node-version: 20.20.0
 
       - name: Enable Corepack
         run: corepack enable
