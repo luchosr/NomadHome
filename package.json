@@ -25,5 +25,13 @@
     "lint-staged": "^15.3.0",
     "prettier": "^3.4.2",
     "turbo": "^2.3.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
   }
 }
