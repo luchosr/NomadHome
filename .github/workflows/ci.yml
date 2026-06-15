@@ -17,14 +17,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Node 22 satisfies both the project's >= 20.19 engine floor and pnpm
-      # 11.1.2's own >= 22.13 requirement. Corepack (bundled with Node) provides
-      # pnpm from the `packageManager` field, running it on this Node — unlike
-      # pnpm/action-setup, whose self-installer uses the runner's default Node.
+      # CI runs on the project's documented Node floor (project.md §4). Corepack
+      # (bundled with Node) provides pnpm from the `packageManager` field; pnpm 9
+      # runs on Node 20.19 and builds dependency scripts without an approval gate.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20.19.0
 
       - name: Enable Corepack
         run: corepack enable
