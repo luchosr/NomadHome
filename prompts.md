@@ -71,3 +71,23 @@ How can we solve it?
 # Github Copilot (Claude Haiku 4.5)
 
 9. can you do an adversarial review of the docs and the readme.md?
+
+# Claude Opus 4.7
+
+10. Can you check adversarial-review.md and resolve the findings? one pr per each finding, and one commit for each logical change.
+
+# Gemini 3 flash preview
+
+11. Can you make an adversarial review of the docs? please make an inform with the findings in gemini-adversarial-review.md
+
+# Claude Opus 4.7
+
+12. There's a file named gemini-adversarial-review.md, can we resolve the findings? One pr per each finding, and one commit for each logical change.
+
+# Gemini 3 flash preview
+
+13. Can you re check if all the findings in gemini-adversarial-review.md where solved correctly?
+
+# Claude Opus 4.7
+
+14. Can you check gemini-adversarial-review.md and resolve all the findings that left, in one PR?
