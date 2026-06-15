@@ -95,12 +95,12 @@ The system SHALL run a Husky `pre-commit` hook that (a) runs `lint-staged` to ap
 
 ### Requirement: CI pipeline enforces the full quality gate
 
-The system SHALL provide a GitHub Actions workflow at `.github/workflows/ci.yml` that, on pull requests, runs the quality gate in order: `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `openspec validate --strict`, and `node scripts/check-mvp-scope.mjs`. Any step failing MUST fail the workflow.
+The system SHALL provide a GitHub Actions workflow at `.github/workflows/ci.yml` that, on pull requests, runs the quality gate in order: `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `openspec validate --all --strict`, and `node scripts/check-mvp-scope.mjs`. Any step failing MUST fail the workflow.
 
 #### Scenario: Workflow defines the gate steps in order
 
 - **WHEN** `.github/workflows/ci.yml` is read
-- **THEN** it runs install with `--frozen-lockfile`, then lint, typecheck, test, build, `openspec validate --strict`, and the MVP-scope guard
+- **THEN** it runs install with `--frozen-lockfile`, then lint, typecheck, test, build, `openspec validate --all --strict`, and the MVP-scope guard
 - **AND** the steps are ordered so a failure in any step fails the job
 
 ### Requirement: Scaffolded apps and packages build and run clean
