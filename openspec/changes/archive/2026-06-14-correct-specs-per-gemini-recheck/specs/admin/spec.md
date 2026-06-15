@@ -1,9 +1,5 @@
-# admin Specification
+## MODIFIED Requirements
 
-## Purpose
-
-Role-guarded marketplace moderation behind `admin` routes in `apps/web/`: disable/re-enable users (with the three-flavor cascade — `HOST_DISABLED` for affected listings' bookings, `GUEST_DISABLED` for the disabled user's guest bookings, both in one transaction for dual-role users) and disable listings (with `LISTING_DISABLED` cascade). All admin endpoints require the `admin` role. Owns the `BookingFlag` aggregate.
-## Requirements
 ### Requirement: Admin can disable a user
 
 The system SHALL allow an authenticated admin to disable any user account. A disabled user MUST NOT be able to log in. Any listings owned by a disabled host MUST be transitioned to `Listing.status = DISABLED` (per `docs/data-model.md` §7.4 invariant 4), hiding them from guest-facing search and making them unbookable. Existing confirmed bookings tied to the disabled user (as guest or host) MUST be flagged for admin review.
@@ -52,29 +48,3 @@ Disabling MUST be reversible by an admin (re-enable). On re-enable, the user's l
 - **AND** those listings do NOT appear in guest-facing search until the host manually re-publishes them
 - **AND** listings that were already in `DRAFT` at the time of disable remain in `DRAFT` (the cascade transitioned only the non-DRAFT listings)
 - **AND** `BookingFlag` rows produced by the original disable cascade are NOT auto-resolved by re-enable — the admin must explicitly resolve them (`BookingFlag.resolvedAt` set)
-
-### Requirement: Admin can disable a listing
-
-The system SHALL allow an authenticated admin to disable any listing. A disabled listing MUST NOT appear in search results and MUST NOT be bookable. Existing confirmed bookings on a disabled listing MUST remain visible to the affected host and guest with a notice and MUST be flagged for admin review.
-
-#### Scenario: Admin disables a listing with future confirmed bookings
-
-- **GIVEN** an authenticated admin
-- **AND** a target listing in status `published` with at least one `confirmed` future booking
-- **WHEN** the admin disables the listing
-- **THEN** the listing no longer appears in guest-facing search
-- **AND** new booking attempts against the listing are rejected
-- **AND** existing confirmed bookings remain visible to the host and the guest with a notice that the listing was disabled
-- **AND** those bookings are flagged for admin review with reason `LISTING_DISABLED`
-
-### Requirement: Admin actions require the admin role
-
-The system SHALL ensure that every admin operation (disable user, re-enable user, disable listing, record payout, view payouts dashboard, view flagged bookings) is reachable only to authenticated users with the `admin` role.
-
-#### Scenario: Non-admin user attempts an admin operation
-
-- **GIVEN** an authenticated user without the `admin` role
-- **WHEN** the user calls any admin endpoint
-- **THEN** the system returns HTTP 403
-- **AND** no state change occurs
-
