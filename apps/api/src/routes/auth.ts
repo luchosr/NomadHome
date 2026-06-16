@@ -1,0 +1,18 @@
+import { Router } from "express";
+import { AuthController } from "../controllers/auth.controller.js";
+import { AuthService } from "../services/auth.service.js";
+import { LoggingEmailService } from "../services/email.service.js";
+import { UserRepository } from "../repositories/user.repository.js";
+
+/** Wire the auth router with the default production dependencies. */
+export function createAuthRouter(): Router {
+  const controller = new AuthController(
+    new AuthService(new UserRepository(), new LoggingEmailService()),
+  );
+
+  const router = Router();
+  router.post("/register", controller.register);
+  return router;
+}
+
+export const authRouter = createAuthRouter();
