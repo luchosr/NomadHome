@@ -36,3 +36,17 @@ export const RefreshTokenSchema = z.object({
 });
 
 export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
+
+/**
+ * Host onboarding form. The terms version is stamped server-side; the client
+ * only acknowledges acceptance, so `acceptedTerms` must be exactly `true`.
+ */
+export const BecomeHostSchema = z.object({
+  displayName: z.string().min(2, t("validation.required.field")),
+  payoutEmail: z.string().email(t("validation.email.invalid")),
+  acceptedTerms: z.literal(true, {
+    errorMap: () => ({ message: t("identity.become_host.terms_required") }),
+  }),
+});
+
+export type BecomeHostInput = z.infer<typeof BecomeHostSchema>;

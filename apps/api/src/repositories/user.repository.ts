@@ -28,6 +28,13 @@ export interface CreateRefreshToken {
   userAgent?: string;
 }
 
+export interface CreateHostProfile {
+  userId: string;
+  displayName: string;
+  payoutEmail: string;
+  acceptedTermsVersion: string;
+}
+
 /** Persistence for the identity aggregate (User + its verification tokens + audit log). */
 export class UserRepository {
   findByEmail(email: string): Promise<User | null> {
@@ -36,6 +43,25 @@ export class UserRepository {
 
   findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } });
+  }
+
+  /** Create the host profile and add the `host` role in a single transaction. */
+  async createHostProfileAndAddRole(input: CreateHostProfile): Promise<User> {
+    const [, user] = await prisma.$transaction([
+      prisma.hostProfile.create({
+        data: {
+          userId: input.userId,
+          displayName: input.displayName,
+          payoutEmail: input.payoutEmail,
+          acceptedTermsVersion: input.acceptedTermsVersion,
+        },
+      }),
+      prisma.user.update({
+        where: { id: input.userId },
+        data: { roles: { push: "host" } },
+      }),
+    ]);
+    return user;
   }
 
   createRefreshToken(input: CreateRefreshToken): Promise<unknown> {

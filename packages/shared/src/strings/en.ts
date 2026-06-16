@@ -41,6 +41,10 @@ export const en = {
     login: {
       invalid_credentials: "Invalid email or password.",
     },
+    become_host: {
+      terms_required: "You must accept the host terms to continue.",
+      already_host: "You're already set up as a host.",
+    },
   },
 } as const;
 
