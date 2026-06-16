@@ -422,6 +422,7 @@ enum AuthAuditEventType {
   registration_failed
   login_succeeded
   login_failed
+  refresh_token_reuse_detected
   password_reset_requested
   role_added
   user_disabled
