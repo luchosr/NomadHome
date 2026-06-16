@@ -1,5 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
+// Re-export generated Prisma types and enums so apps depend on @nomadhome/db only.
+export * from "@prisma/client";
+
 /**
  * The single shared Prisma client for the whole workspace.
  *

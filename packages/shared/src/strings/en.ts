@@ -25,6 +25,19 @@ export const en = {
     required: {
       field: "This field is required.",
     },
+    email: {
+      invalid: "Enter a valid email address.",
+    },
+    password: {
+      too_short: "Password must be at least 10 characters.",
+      needs_letter: "Password must include at least one letter.",
+      needs_digit: "Password must include at least one number.",
+    },
+  },
+  identity: {
+    register: {
+      failed: "We couldn't complete your registration. Please try again.",
+    },
   },
 } as const;
 

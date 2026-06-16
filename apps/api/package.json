@@ -12,11 +12,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@nomadhome/db": "workspace:*",
     "@nomadhome/shared": "workspace:*",
+    "bcryptjs": "^2.4.3",
     "express": "^4.21.2"
   },
   "devDependencies": {
     "@nomadhome/config": "workspace:*",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.2",
     "@types/supertest": "^6.0.2",
