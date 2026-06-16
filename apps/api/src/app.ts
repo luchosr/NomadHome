@@ -3,6 +3,7 @@ import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { usersRouter } from "./routes/users.js";
 import { listingsRouter } from "./routes/listings.js";
+import { listingPhotosRouter } from "./routes/listing-photos.js";
 
 /**
  * Build the Express application.
@@ -18,5 +19,6 @@ export function createApp(): Express {
   app.use("/auth", authRouter);
   app.use("/users", usersRouter);
   app.use("/listings", listingsRouter);
+  app.use("/listings", listingPhotosRouter);
   return app;
 }
