@@ -1,8 +1,10 @@
-import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
-import type { RegisterInput } from "@nomadhome/shared";
+import { createHash, randomBytes } from "node:crypto";
+import type { LoginInput, RegisterInput } from "@nomadhome/shared";
+import type { User } from "@nomadhome/db";
 import type { UserRepository } from "../repositories/user.repository.js";
 import type { EmailService } from "./email.service.js";
+import { tokenService, type TokenService } from "./token.service.js";
 
 /** bcrypt cost — above the project floor of 10 (see design.md). */
 const BCRYPT_COST = 12;
@@ -13,6 +15,16 @@ export interface RegisterCommand extends RegisterInput {
   userAgent?: string;
 }
 
+export interface LoginCommand extends LoginInput {
+  ipAddress: string;
+  userAgent?: string;
+}
+
+export interface SessionTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 /** Thrown when an email is already registered. Mapped to a generic error at the edge. */
 export class DuplicateEmailError extends Error {
   constructor() {
@@ -21,10 +33,19 @@ export class DuplicateEmailError extends Error {
   }
 }
 
+/** Thrown for any failed login (unknown email, wrong password, disabled account). */
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super("invalid_credentials");
+    this.name = "InvalidCredentialsError";
+  }
+}
+
 export class AuthService {
   constructor(
     private readonly users: UserRepository,
     private readonly email: EmailService,
+    private readonly tokens: TokenService = tokenService,
   ) {}
 
   /**
@@ -65,5 +86,46 @@ export class AuthService {
     await this.email.sendVerificationEmail(cmd.email, rawToken);
 
     return { userId: user.id };
+  }
+
+  /**
+   * Authenticate credentials and issue a session. Unknown email, wrong password,
+   * and disabled accounts all fail with the same generic error (no enumeration).
+   */
+  async login(cmd: LoginCommand): Promise<SessionTokens> {
+    const user = await this.users.findByEmail(cmd.email);
+    const passwordOk = user ? await bcrypt.compare(cmd.password, user.passwordHash) : false;
+
+    if (!user || user.disabledAt || !passwordOk) {
+      await this.users.recordAuditEvent({
+        userId: user?.id,
+        event: "login_failed",
+        ipAddress: cmd.ipAddress,
+        userAgent: cmd.userAgent,
+      });
+      throw new InvalidCredentialsError();
+    }
+
+    const accessToken = this.tokens.signAccessToken(user.id, user.roles);
+    const refresh = this.tokens.mintRefreshToken();
+    await this.users.createRefreshToken({
+      userId: user.id,
+      tokenHash: refresh.tokenHash,
+      expiresAt: refresh.expiresAt,
+      userAgent: cmd.userAgent,
+    });
+
+    await this.users.recordAuditEvent({
+      userId: user.id,
+      event: "login_succeeded",
+      ipAddress: cmd.ipAddress,
+      userAgent: cmd.userAgent,
+    });
+
+    return { accessToken, refreshToken: refresh.raw };
+  }
+
+  getProfile(userId: string): Promise<User | null> {
+    return this.users.findById(userId);
   }
 }

@@ -38,6 +38,9 @@ export const en = {
     register: {
       failed: "We couldn't complete your registration. Please try again.",
     },
+    login: {
+      invalid_credentials: "Invalid email or password.",
+    },
   },
 } as const;
 
