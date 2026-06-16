@@ -13,13 +13,12 @@ There is **no duplication of decision rows**. The synopsis below names the decis
 
 ## Synopsis of currently-open decisions
 
-Three decisions are deferred from the MVP baseline. Each blocks a specific future change-id; each is owned by **Luciano** (product owner) with the tiebreaker defaults proposed in the canonical table. (The access-token TTL decision was resolved to 15 minutes by `add-identity-login`.)
+Two decisions remain open. Each blocks a specific future change-id; each is owned by **Luciano** (product owner) with the tiebreaker defaults proposed in the canonical table. (The access-token TTL was resolved to 15 minutes by `add-identity-login`; the photo storage backend was resolved to Cloudflare R2 by `add-listing-photos`.)
 
-| Decision                                                          | Capability | Blocks change-id |
-| ----------------------------------------------------------------- | ---------- | ---------------- |
-| Guest service fee % and host commission %                         | `payments` | `add-payments`   |
-| Cancellation policy windows and refund tiers                      | `booking`  | `add-booking`    |
-| Photo storage backend (Cloudflare R2 vs. S3 vs. Supabase Storage) | `listings` | `add-listings`   |
+| Decision                                     | Capability | Blocks change-id |
+| -------------------------------------------- | ---------- | ---------------- |
+| Guest service fee % and host commission %    | `payments` | `add-payments`   |
+| Cancellation policy windows and refund tiers | `booking`  | `add-booking`    |
 
 For owners, deadlines, tiebreaker defaults, and source citations, see [`openspec/project.md` §8](../openspec/project.md).
 

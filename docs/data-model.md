@@ -536,12 +536,12 @@ Seed data ([`packages/db/seed.ts`](../packages/db/seed.ts)):
 
 Map 1:1 to [docs/PRD.md](PRD.md) §12. None of these unblock the `init-monorepo` change, but each blocks the listed downstream change.
 
-| #   | Question                                                                                                                                                    | Blocks                     |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| 1   | Photo storage backend (Cloudflare R2 vs S3 vs Supabase Storage) — does `ListingPhoto` need a `storageProvider` column? Default: single provider, no column. | `add-listings`             |
-| 2   | Exact fee percentages (`guestServiceFeeBps`, `hostCommissionBps`)                                                                                           | `add-booking-and-payments` |
-| 3   | Cancellation policy tiers — do they live as code constants or as a `CancellationPolicy` table? Default: code constants in MVP.                              | `add-booking-and-payments` |
-| 4   | Multi-currency: USD-only assumption confirmed? If yes, `currency` columns stay but never vary in MVP.                                                       | `add-booking-and-payments` |
+| #     | Question                                                                                                                       | Blocks                     |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| ~~1~~ | ~~Photo storage backend~~ — **Resolved (NH-010)**: Cloudflare R2, single provider, no `storageProvider` column.                | ~~`add-listings`~~         |
+| 2     | Exact fee percentages (`guestServiceFeeBps`, `hostCommissionBps`)                                                              | `add-booking-and-payments` |
+| 3     | Cancellation policy tiers — do they live as code constants or as a `CancellationPolicy` table? Default: code constants in MVP. | `add-booking-and-payments` |
+| 4     | Multi-currency: USD-only assumption confirmed? If yes, `currency` columns stay but never vary in MVP.                          | `add-booking-and-payments` |
 
 ---
 
