@@ -14,3 +14,5 @@ export type {
   RefreshTokenInput,
   BecomeHostInput,
 } from "./schemas/auth.js";
+export { CreateListingSchema, UpdateListingSchema, LISTING_TYPES } from "./schemas/listing.js";
+export type { CreateListingInput, UpdateListingInput } from "./schemas/listing.js";
