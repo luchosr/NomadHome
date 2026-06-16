@@ -5,14 +5,15 @@
 Host-owned bookable inventory — properties for co-living stays and workspaces for desks/meeting rooms. Covers the listing lifecycle (`draft` → `published` → `disabled`), photos, amenities, nightly rate, and host-managed availability (with `AvailabilityBlock` overlap-conflict semantics defined in `docs/data-model.md` §3.10). Owns the `Listing`, `ListingPhoto`, `ListingAmenity`, `Amenity`, and `AvailabilityBlock` aggregates.
 
 ## Requirements
+
 ### Requirement: Host can create a listing in draft status
 
-The system SHALL allow an authenticated user with the `host` role to create a listing. A listing MUST have a title, description, type (`property` or `workspace`), city, capacity, nightly rate, at least one photo, and at least one amenity. Newly created listings SHALL be in `draft` status and visible only to their owner until published.
+The system SHALL allow an authenticated user with the `host` role to create a listing. A listing MUST have a title, description, type (`property` or `workspace`), city, capacity, nightly rate, and at least one amenity. A photo is NOT required to create a draft; the ≥1-photo requirement is a publish-time gate (see "Host can publish and unpublish a listing" and `docs/data-model.md` §3.6). Newly created listings SHALL be in `draft` status and visible only to their owner until published. The system SHALL allow a host to edit the fields of a listing they own.
 
 #### Scenario: Host submits a complete listing
 
 - **GIVEN** an authenticated user with role `host`
-- **AND** valid values for title, description, type, city, capacity, nightly rate, at least one photo, and at least one amenity
+- **AND** valid values for title, description, type, city, capacity, nightly rate, and at least one amenity
 - **WHEN** the host submits the listing creation form
 - **THEN** the listing is created with status `draft` and owner set to the host
 - **AND** the listing is not returned by guest-facing search
@@ -21,9 +22,24 @@ The system SHALL allow an authenticated user with the `host` role to create a li
 #### Scenario: Listing creation is rejected for missing required fields
 
 - **GIVEN** an authenticated host
-- **AND** a submission missing one or more of: title, description, type, city, capacity, nightly rate, ≥1 photo, ≥1 amenity
+- **AND** a submission missing one or more of: title, description, type, city, capacity, nightly rate, ≥1 amenity
 - **WHEN** the host submits the form
 - **THEN** the system returns a validation error identifying the missing field(s)
+- **AND** no listing is created
+
+#### Scenario: Listing creation is rejected for an unknown amenity
+
+- **GIVEN** an authenticated host
+- **AND** a submission referencing an amenity code that does not exist
+- **WHEN** the host submits the form
+- **THEN** the system returns a validation error
+- **AND** no listing is created
+
+#### Scenario: A non-host cannot create a listing
+
+- **GIVEN** an authenticated user without the `host` role
+- **WHEN** the user submits the listing creation form
+- **THEN** the system returns HTTP 403
 - **AND** no listing is created
 
 ### Requirement: Host can publish and unpublish a listing
@@ -64,10 +80,10 @@ The system MUST NOT allow a host to block a date range that overlaps any existin
 - **WHEN** the host attempts to block any range overlapping `[D1, D2)`
 - **THEN** the system returns HTTP `409 OVERLAP_CONFLICT`
 - **AND** the response body matches the shape defined in `docs/data-model.md` §3.10, populated with:
-   - `conflict.source = "BOOKING_HOLD"`
-   - `conflict.blockId` = the existing `AvailabilityBlock.id`
-   - `conflict.bookingId` = the backing `Booking.id` so the host can identify and contact the affected guest
-   - `conflict.startDate` and `conflict.endDate` echoing the existing block's range
+  - `conflict.source = "BOOKING_HOLD"`
+  - `conflict.blockId` = the existing `AvailabilityBlock.id`
+  - `conflict.bookingId` = the backing `Booking.id` so the host can identify and contact the affected guest
+  - `conflict.startDate` and `conflict.endDate` echoing the existing block's range
 - **AND** the existing `AvailabilityBlock` and its backing `Booking` are left unchanged
 - **AND** no new `HOST_BLOCK` row is inserted
 
@@ -77,9 +93,9 @@ The system MUST NOT allow a host to block a date range that overlaps any existin
 - **WHEN** the host attempts to block any range overlapping `[D1, D2)`
 - **THEN** the system returns HTTP `409 OVERLAP_CONFLICT`
 - **AND** the response body matches the shape defined in `docs/data-model.md` §3.10, populated with:
-   - `conflict.source = "HOST_BLOCK"`
-   - `conflict.blockId` = the existing `AvailabilityBlock.id`
-   - `conflict.startDate` and `conflict.endDate` echoing the existing block's range
+  - `conflict.source = "HOST_BLOCK"`
+  - `conflict.blockId` = the existing `AvailabilityBlock.id`
+  - `conflict.startDate` and `conflict.endDate` echoing the existing block's range
 - **AND** `conflict.bookingId` is **absent** from the response body (the `HOST_BLOCK` row has no associated booking, per `docs/data-model.md` §3.10 column note: `bookingId` is nullable and is NOT NULL only when `source = BOOKING_HOLD`)
 - **AND** the existing `HOST_BLOCK` row is left unchanged
 - **AND** no new `HOST_BLOCK` row is inserted
@@ -94,4 +110,3 @@ The system SHALL ensure that only the host who owns a listing (or an admin) can 
 - **WHEN** host A attempts to edit, publish, unpublish, or modify availability for the listing
 - **THEN** the system returns HTTP 403
 - **AND** the listing is not modified
-
