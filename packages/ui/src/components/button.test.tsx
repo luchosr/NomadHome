@@ -7,4 +7,21 @@ describe("Button", () => {
     render(<Button>Click me</Button>);
     expect(screen.getByRole("button", { name: "Click me" })).toBeInTheDocument();
   });
+
+  it("defaults to the forest-filled primary variant", () => {
+    render(<Button>Book this stay</Button>);
+    expect(screen.getByRole("button")).toHaveClass("bg-forest-700");
+  });
+
+  it("renders a bordered, transparent secondary variant", () => {
+    render(<Button variant="secondary">Cancel</Button>);
+    const btn = screen.getByRole("button");
+    expect(btn).toHaveClass("border-forest-700");
+    expect(btn).not.toHaveClass("bg-forest-700");
+  });
+
+  it("renders the destructive variant in terracotta", () => {
+    render(<Button variant="destructive">Delete</Button>);
+    expect(screen.getByRole("button")).toHaveClass("bg-terracotta-500");
+  });
 });
