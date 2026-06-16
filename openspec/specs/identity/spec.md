@@ -100,6 +100,8 @@ Access tokens SHALL have a TTL of 15 minutes from issuance. The access token SHA
 
 Each refresh token SHALL have an absolute TTL of 30 days from its issuance time (`expiresAt = issuedAt + 30 days`). The TTL of an individual token SHALL NOT be extended on use; rotation produces a brand-new token row instead.
 
+The token-refresh endpoint SHALL be `POST /auth/refresh` and the logout endpoint SHALL be `POST /auth/logout`; both accept the refresh token in the request body. The refresh token is presented as an opaque value and matched server-side by its stored hash.
+
 The system SHALL rotate refresh tokens on use: when a valid (non-revoked, non-expired) refresh token is presented to the token-refresh endpoint, the system SHALL issue a new access token AND a new refresh token (also 30-day TTL from issuance) AND revoke the presented refresh token. A user's session can be extended indefinitely through rotation; no individual token survives beyond 30 days of its own issuance.
 
 The system SHALL detect refresh-token reuse: when a refresh token whose `revokedAt` is already set (i.e., it was previously rotated, explicitly logged out, or revoked by an admin) is presented to the token-refresh endpoint, the system SHALL revoke every currently-active refresh token belonging to the same user and SHALL return HTTP 401. This treats a revoked-token presentation as a theft signal.
