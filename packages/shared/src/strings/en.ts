@@ -46,6 +46,20 @@ export const en = {
       already_host: "You're already set up as a host.",
     },
   },
+  listings: {
+    create: {
+      invalid_type: "Choose either a property or a workspace.",
+      invalid_country: "Enter a valid country code.",
+      invalid_capacity: "Capacity must be at least 1.",
+      invalid_rate: "Nightly rate must be greater than 0.",
+      amenities_required: "Select at least one amenity.",
+      unknown_amenity: "One or more selected amenities don't exist.",
+    },
+    error: {
+      not_found: "Listing not found.",
+      forbidden: "You can only manage your own listings.",
+    },
+  },
 } as const;
 
 export type Dictionary = typeof en;
