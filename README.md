@@ -89,7 +89,25 @@ The MVP delivers ten capabilities, each scoped to the minimum that proves the en
 
 ### **1.4. Installation Instructions:**
 
-> Document precisely the instructions to install and run the project locally (libraries, backend, frontend, server, database, migrations and data seeds, etc.)
+**Prerequisites**: Node.js ≥ 20.19.0 and pnpm. The repo pins its pnpm version via the `packageManager` field — run `corepack enable` once and pnpm will use the pinned version automatically.
+
+```bash
+# 1. Install dependencies (whole workspace)
+pnpm install
+
+# 2. Run the app in dev mode
+pnpm dev            # builds shared/ui first, then starts api + web together
+pnpm dev:api        # backend only (apps/api) — still builds its deps first
+pnpm dev:web        # frontend only (apps/web)
+```
+
+The `dev` scripts go through Turbo, which builds each app's workspace dependencies (`@nomadhome/shared`, `@nomadhome/ui`) **before** starting the dev server — so you never hit a "module not found: `@nomadhome/shared/dist/...`" error from an unbuilt package. The API serves on port 3000; check it with `curl localhost:3000/health`.
+
+> Do **not** use `pnpm dev --filter=<app>` to run a single app — pnpm treats `--filter` as its own flag and runs the app's `dev` script directly, bypassing the dependency build. Use the `dev:api` / `dev:web` scripts instead.
+
+**Other workspace commands**: `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`.
+
+> Database setup, migrations, and seeds will be documented here once the `packages/db` schema lands (it is an empty scaffold today).
 
 ---
 
@@ -816,7 +834,7 @@ paths:
                   description: Min 10 chars, at least one letter and one number.
                   example: correct horse battery 9
       responses:
-        '201':
+        "201":
           description: Account created. Verification email queued.
           content:
             application/json:
@@ -832,29 +850,29 @@ paths:
               example:
                 success: true
                 data:
-                  userId: '0190a5b9-7e9e-7a4a-a98c-3b8a6e7f1d20'
-                  email: 'jane@example.com'
-        '400':
+                  userId: "0190a5b9-7e9e-7a4a-a98c-3b8a6e7f1d20"
+                  email: "jane@example.com"
+        "400":
           description: Validation failed.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Error' }
+              schema: { $ref: "#/components/schemas/Error" }
               example:
                 success: false
                 error:
-                  message: 'password must be at least 10 characters'
+                  message: "password must be at least 10 characters"
                   code: VALIDATION_ERROR
-        '409':
+        "409":
           description: Email already registered.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Error' }
+              schema: { $ref: "#/components/schemas/Error" }
               example:
                 success: false
                 error:
-                  message: 'Email already registered'
+                  message: "Email already registered"
                   code: EMAIL_ALREADY_REGISTERED
-        '429':
+        "429":
           description: Rate limit exceeded (5 req/min/IP).
 
   # =====================================================================
@@ -880,16 +898,15 @@ paths:
           in: query
           required: true
           schema: { type: string, format: date }
-          example: '2026-07-01'
+          example: "2026-07-01"
         - name: checkOut
           in: query
           required: true
           schema: { type: string, format: date }
-          example: '2026-07-15'
+          example: "2026-07-15"
         - name: type
           in: query
-          schema:
-            { type: string, enum: [property, workspace, any], default: any }
+          schema: { type: string, enum: [property, workspace, any], default: any }
         - name: minPriceCents
           in: query
           schema: { type: integer, minimum: 0 }
@@ -913,18 +930,18 @@ paths:
           in: query
           schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
-        '200':
+        "200":
           description: Paginated search results.
           content:
             application/json:
               example:
                 success: true
                 data:
-                  - id: '0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31'
-                    title: 'Sunny co-living loft in Príncipe Real'
+                  - id: "0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31"
+                    title: "Sunny co-living loft in Príncipe Real"
                     type: PROPERTY
                     city: Lisbon
-                    coverPhotoUrl: 'https://cdn.nomadhome.local/lst/0190a5d4/cover.jpg'
+                    coverPhotoUrl: "https://cdn.nomadhome.local/lst/0190a5d4/cover.jpg"
                     nightlyRateCents: 7500
                     currency: USD
                     nights: 14
@@ -934,11 +951,11 @@ paths:
                   pageSize: 20
                   totalItems: 1
                   totalPages: 1
-        '400':
+        "400":
           description: Invalid query (e.g., `checkOut <= checkIn`).
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Error' }
+              schema: { $ref: "#/components/schemas/Error" }
 
   # =====================================================================
   # 3) Start a booking checkout — US-4.1
@@ -970,34 +987,34 @@ paths:
                 checkIn: { type: string, format: date }
                 checkOut: { type: string, format: date }
             example:
-              listingId: '0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31'
-              checkIn: '2026-07-01'
-              checkOut: '2026-07-15'
+              listingId: "0190a5d4-1b6a-7c20-89d5-c1bf7e2c9a31"
+              checkIn: "2026-07-01"
+              checkOut: "2026-07-15"
       responses:
-        '200':
+        "200":
           description: Checkout session created. Booking is `PENDING_PAYMENT`.
           content:
             application/json:
               example:
                 success: true
                 data:
-                  bookingId: '0190a5e1-44b8-7f00-9a12-2c1f3d8a9b4c'
-                  checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_a1B2c3...'
-        '401':
+                  bookingId: "0190a5e1-44b8-7f00-9a12-2c1f3d8a9b4c"
+                  checkoutUrl: "https://checkout.stripe.com/c/pay/cs_test_a1B2c3..."
+        "401":
           description: Missing or invalid JWT.
-        '403':
+        "403":
           description: Account email not verified.
-        '404':
+        "404":
           description: Listing not found or not published.
-        '409':
+        "409":
           description: Dates not available (concurrent booking won the race).
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Error' }
+              schema: { $ref: "#/components/schemas/Error" }
               example:
                 success: false
                 error:
-                  message: 'Selected dates are no longer available'
+                  message: "Selected dates are no longer available"
                   code: OVERLAP_CONFLICT
 ```
 
