@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { RegisterSchema, LoginSchema } from "./auth.js";
+import { RegisterSchema, LoginSchema, RefreshTokenSchema } from "./auth.js";
 
 describe("RegisterSchema", () => {
   it("accepts a valid email and compliant password", () => {
@@ -44,5 +44,16 @@ describe("LoginSchema", () => {
 
   it("rejects an empty password", () => {
     expect(LoginSchema.safeParse({ email: "a@b.com", password: "" }).success).toBe(false);
+  });
+});
+
+describe("RefreshTokenSchema", () => {
+  it("accepts a non-empty refresh token", () => {
+    expect(RefreshTokenSchema.safeParse({ refreshToken: "abc" }).success).toBe(true);
+  });
+
+  it("rejects an empty or missing refresh token", () => {
+    expect(RefreshTokenSchema.safeParse({ refreshToken: "" }).success).toBe(false);
+    expect(RefreshTokenSchema.safeParse({}).success).toBe(false);
   });
 });

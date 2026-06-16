@@ -20,6 +20,12 @@ export interface LoginCommand extends LoginInput {
   userAgent?: string;
 }
 
+export interface RefreshCommand {
+  refreshToken: string;
+  ipAddress: string;
+  userAgent?: string;
+}
+
 export interface SessionTokens {
   accessToken: string;
   refreshToken: string;
@@ -38,6 +44,14 @@ export class InvalidCredentialsError extends Error {
   constructor() {
     super("invalid_credentials");
     this.name = "InvalidCredentialsError";
+  }
+}
+
+/** Thrown when a refresh token is unknown, revoked, expired, or reused. */
+export class InvalidRefreshTokenError extends Error {
+  constructor() {
+    super("invalid_refresh_token");
+    this.name = "InvalidRefreshTokenError";
   }
 }
 
@@ -123,6 +137,64 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken: refresh.raw };
+  }
+
+  /**
+   * Rotate a refresh token: issue a fresh access + refresh token and revoke the
+   * presented one. A revoked token presented again is treated as theft — every
+   * active token for that user is revoked. Unknown/expired tokens are rejected.
+   */
+  async refresh(cmd: RefreshCommand): Promise<SessionTokens> {
+    const tokenHash = this.tokens.hashRefreshToken(cmd.refreshToken);
+    const presented = await this.users.findRefreshTokenByHash(tokenHash);
+
+    if (!presented) {
+      throw new InvalidRefreshTokenError();
+    }
+
+    if (presented.revokedAt) {
+      // Reuse of an already-revoked token — revoke the whole family.
+      await this.users.revokeAllActiveForUser(presented.userId);
+      await this.users.recordAuditEvent({
+        userId: presented.userId,
+        event: "refresh_token_reuse_detected",
+        ipAddress: cmd.ipAddress,
+        userAgent: cmd.userAgent,
+      });
+      throw new InvalidRefreshTokenError();
+    }
+
+    if (presented.expiresAt.getTime() <= Date.now()) {
+      throw new InvalidRefreshTokenError();
+    }
+
+    const user = await this.users.findById(presented.userId);
+    if (!user || user.disabledAt) {
+      throw new InvalidRefreshTokenError();
+    }
+
+    const next = this.tokens.mintRefreshToken();
+    await this.users.rotateRefreshToken(presented.id, {
+      userId: user.id,
+      tokenHash: next.tokenHash,
+      expiresAt: next.expiresAt,
+      userAgent: cmd.userAgent,
+    });
+
+    return {
+      accessToken: this.tokens.signAccessToken(user.id, user.roles),
+      refreshToken: next.raw,
+    };
+  }
+
+  /** Revoke only the presented refresh token. Idempotent and existence-blind. */
+  async logout(refreshToken: string): Promise<void> {
+    const presented = await this.users.findRefreshTokenByHash(
+      this.tokens.hashRefreshToken(refreshToken),
+    );
+    if (presented && !presented.revokedAt) {
+      await this.users.revokeRefreshToken(presented.id);
+    }
   }
 
   getProfile(userId: string): Promise<User | null> {

@@ -36,8 +36,20 @@ export class TokenService {
   /** Raw token is returned once (to the client); only its hash is persisted. */
   mintRefreshToken(): MintedRefreshToken {
     const raw = randomBytes(32).toString("hex");
-    const tokenHash = createHash("sha256").update(raw).digest("hex");
-    return { raw, tokenHash, expiresAt: new Date(Date.now() + REFRESH_TTL_MS) };
+    return {
+      raw,
+      tokenHash: this.hashRefreshToken(raw),
+      expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+    };
+  }
+
+  /** Hash a presented raw refresh token for server-side lookup. */
+  hashRefreshToken(raw: string): string {
+    return createHash("sha256").update(raw).digest("hex");
+  }
+
+  get refreshTtlMs(): number {
+    return REFRESH_TTL_MS;
   }
 }
 

@@ -29,3 +29,10 @@ export const LoginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof LoginSchema>;
+
+/** Request shape for the refresh and logout endpoints — carries the opaque refresh token. */
+export const RefreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, t("validation.required.field")),
+});
+
+export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
