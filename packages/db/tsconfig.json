@@ -3,8 +3,9 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "types": ["node"],
-    "noEmit": true
+    "outDir": "dist",
+    "types": ["node"]
   },
-  "include": ["prisma"]
+  "include": ["src", "prisma"],
+  "exclude": ["dist", "node_modules", "**/*.test.ts"]
 }

@@ -1,0 +1,21 @@
+# Local development database. Matches packages/db/.env.example.
+# Start with: docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: nomadhome
+      POSTGRES_PASSWORD: nomadhome
+      POSTGRES_DB: nomadhome
+    ports:
+      - "5432:5432"
+    volumes:
+      - nomadhome-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nomadhome"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  nomadhome-pg:

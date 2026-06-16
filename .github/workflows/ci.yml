@@ -13,6 +13,22 @@ jobs:
   quality:
     name: Quality gate
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nomadhome
+          POSTGRES_PASSWORD: nomadhome
+          POSTGRES_DB: nomadhome
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nomadhome"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://nomadhome:nomadhome@localhost:5432/nomadhome?schema=public
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,6 +53,13 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      # Generate the client and apply migrations against the service DB before
+      # tests. `migrate deploy` is a no-op until capability tickets add migrations.
+      - name: Prepare database
+        run: |
+          pnpm --filter @nomadhome/db exec prisma generate
+          pnpm --filter @nomadhome/db exec prisma migrate deploy
 
       - name: Test
         run: pnpm test
