@@ -107,7 +107,15 @@ The `dev` scripts go through Turbo, which builds each app's workspace dependenci
 
 **Other workspace commands**: `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`.
 
-> Database setup, migrations, and seeds will be documented here once the `packages/db` schema lands (it is an empty scaffold today).
+**Local database.** A `docker-compose.yml` provides a Postgres matching `packages/db/.env.example`:
+
+```bash
+cp packages/db/.env.example packages/db/.env   # first time only
+docker compose up -d                            # start Postgres on localhost:5432
+pnpm --filter @nomadhome/db db:deploy           # apply migrations (no-op until models land)
+```
+
+Integration tests run against this database when `DATABASE_URL` is set; without it they are skipped, so `pnpm test` stays green offline. Domain models, migrations, and seeds arrive with each capability ticket — the schema is an empty scaffold today.
 
 ---
 
