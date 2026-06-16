@@ -8,6 +8,9 @@
     "node": ">=20.19.0"
   },
   "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@nomadhome/api",
+    "dev:web": "turbo run dev --filter=@nomadhome/web",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
