@@ -1,3 +1,55 @@
+/* NomadHome brand fonts — Google Fonts substitutions, swap when real fonts are licensed. */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Design-token CSS custom properties — semantic roles consumed by the Tailwind preset. */
+:root {
+  --bg-app: #f5f0e8; /* sand-100 */
+  --bg-elevated: #ffffff;
+  --bg-inset: #ece4d5; /* sand-200 */
+  --bg-inverse: #1a1a1a; /* ink-900 */
+
+  --fg-1: #1a1a1a;
+  --fg-2: #3d3a35;
+  --fg-3: #6b665e;
+  --fg-muted: #a39e92;
+  --fg-inverse: #fbf8f2;
+
+  --border-1: #ddd2be; /* on cream */
+  --border-2: #d8d3c7; /* on white */
+  --border-strong: #1a1a1a;
+
+  --brand-primary: #2e4a3f; /* forest-700 */
+  --brand-primary-hover: #1c2e27; /* forest-900 */
+  --brand-accent: #d97757; /* terracotta-500 */
+  --brand-accent-hover: #b85a36; /* terracotta-700 */
+}
+
+@layer base {
+  /* The canvas is always sand — never pure white. */
+  body {
+    @apply bg-app font-sans text-base text-fg-1;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Editorial serif headings. */
+  h1 {
+    @apply font-serif text-3xl font-normal leading-tight tracking-snug;
+  }
+  h2 {
+    @apply font-serif text-2xl font-normal leading-snug;
+  }
+  h3 {
+    @apply font-sans text-lg font-semibold leading-snug tracking-snug;
+  }
+
+  /* Never remove focus rings — 2px forest-500 ring, offset 2px. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-forest-500 ring-offset-2 ring-offset-sand-100;
+  }
+}

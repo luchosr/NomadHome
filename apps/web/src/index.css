@@ -1,3 +1,2 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Consume the shared NomadHome foundation: fonts, token CSS vars, base styles + @tailwind layers. */
+@import "@nomadhome/ui/styles/globals.css";
