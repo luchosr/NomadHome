@@ -17,3 +17,15 @@ export const RegisterSchema = z.object({
 });
 
 export type RegisterInput = z.infer<typeof RegisterSchema>;
+
+/**
+ * Login request shape. Only presence is validated here — the password policy is
+ * not re-checked at login (an existing account may predate a policy change), and
+ * credential correctness is verified server-side.
+ */
+export const LoginSchema = z.object({
+  email: z.string().email(t("validation.email.invalid")),
+  password: z.string().min(1, t("validation.required.field")),
+});
+
+export type LoginInput = z.infer<typeof LoginSchema>;

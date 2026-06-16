@@ -33,6 +33,24 @@ model User {
 
   emailVerificationTokens EmailVerificationToken[]
   authAuditEvents         AuthAuditEvent[]
+  refreshTokens           RefreshToken[]
+}
+
+/// Server-side revocable refresh token (docs/data-model.md §3.3). 30-day
+/// absolute TTL from issuance; only the hash is stored, never the raw token.
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  userAgent  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// Single-use token issued at registration to verify email ownership.

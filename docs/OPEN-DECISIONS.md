@@ -13,14 +13,13 @@ There is **no duplication of decision rows**. The synopsis below names the decis
 
 ## Synopsis of currently-open decisions
 
-Six decisions are deferred from the MVP baseline. Each blocks a specific future change-id; each is owned by **Luciano** (product owner) with the tiebreaker defaults proposed in the canonical table.
+Three decisions are deferred from the MVP baseline. Each blocks a specific future change-id; each is owned by **Luciano** (product owner) with the tiebreaker defaults proposed in the canonical table. (The access-token TTL decision was resolved to 15 minutes by `add-identity-login`.)
 
-| Decision | Capability | Blocks change-id |
-| --- | --- | --- |
-| Access-token TTL | `identity` | `add-identity` |
-| Guest service fee % and host commission % | `payments` | `add-payments` |
-| Cancellation policy windows and refund tiers | `booking` | `add-booking` |
-| Photo storage backend (Cloudflare R2 vs. S3 vs. Supabase Storage) | `listings` | `add-listings` |
+| Decision                                                          | Capability | Blocks change-id |
+| ----------------------------------------------------------------- | ---------- | ---------------- |
+| Guest service fee % and host commission %                         | `payments` | `add-payments`   |
+| Cancellation policy windows and refund tiers                      | `booking`  | `add-booking`    |
+| Photo storage backend (Cloudflare R2 vs. S3 vs. Supabase Storage) | `listings` | `add-listings`   |
 
 For owners, deadlines, tiebreaker defaults, and source citations, see [`openspec/project.md` §8](../openspec/project.md).
 
@@ -41,7 +40,7 @@ All four steps land in the **same PR** so the workspace never enters a state whe
 
 ## What this file is NOT
 
-- **Not a release backlog.** A decision being open does not block the workspace; it blocks the *implementing change*. Other changes proceed freely.
+- **Not a release backlog.** A decision being open does not block the workspace; it blocks the _implementing change_. Other changes proceed freely.
 - **Not a product roadmap.** Roadmap concerns live in `docs/PRD.md` §13 (Rollout).
 - **Not a tech-debt register.** Tech debt is something we built and want to revisit; open decisions are something we deliberately deferred and have a plan to resolve.
 

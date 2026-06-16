@@ -15,10 +15,32 @@ export interface AuthAuditEventInput {
   metadata?: Prisma.InputJsonValue;
 }
 
+export interface CreateRefreshToken {
+  userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+  userAgent?: string;
+}
+
 /** Persistence for the identity aggregate (User + its verification tokens + audit log). */
 export class UserRepository {
   findByEmail(email: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { email } });
+  }
+
+  findById(id: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { id } });
+  }
+
+  createRefreshToken(input: CreateRefreshToken): Promise<unknown> {
+    return prisma.refreshToken.create({
+      data: {
+        userId: input.userId,
+        tokenHash: input.tokenHash,
+        expiresAt: input.expiresAt,
+        userAgent: input.userAgent,
+      },
+    });
   }
 
   /** Create a guest account and its single-use verification token atomically. */
