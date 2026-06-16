@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "node:crypto";
-import type { LoginInput, RegisterInput } from "@nomadhome/shared";
+import type { BecomeHostInput, LoginInput, RegisterInput } from "@nomadhome/shared";
 import type { User } from "@nomadhome/db";
 import type { UserRepository } from "../repositories/user.repository.js";
 import type { EmailService } from "./email.service.js";
@@ -9,6 +9,8 @@ import { tokenService, type TokenService } from "./token.service.js";
 /** bcrypt cost — above the project floor of 10 (see design.md). */
 const BCRYPT_COST = 12;
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+/** Stamped into HostProfile at onboarding; the client cannot set it. */
+const CURRENT_TERMS_VERSION = "2026-01-01";
 
 export interface RegisterCommand extends RegisterInput {
   ipAddress: string;
@@ -22,6 +24,12 @@ export interface LoginCommand extends LoginInput {
 
 export interface RefreshCommand {
   refreshToken: string;
+  ipAddress: string;
+  userAgent?: string;
+}
+
+export interface BecomeHostCommand extends BecomeHostInput {
+  userId: string;
   ipAddress: string;
   userAgent?: string;
 }
@@ -52,6 +60,14 @@ export class InvalidRefreshTokenError extends Error {
   constructor() {
     super("invalid_refresh_token");
     this.name = "InvalidRefreshTokenError";
+  }
+}
+
+/** Thrown when a user who is already a host tries to onboard again. */
+export class AlreadyHostError extends Error {
+  constructor() {
+    super("already_host");
+    this.name = "AlreadyHostError";
   }
 }
 
@@ -195,6 +211,41 @@ export class AuthService {
     if (presented && !presented.revokedAt) {
       await this.users.revokeRefreshToken(presented.id);
     }
+  }
+
+  /**
+   * Upgrade an authenticated guest to host: create the host profile, add the
+   * `host` role atomically, audit it, and return a fresh access token carrying
+   * the new roles so host routes are reachable immediately. 409 if already host.
+   */
+  async becomeHost(cmd: BecomeHostCommand): Promise<{ accessToken: string; roles: string[] }> {
+    const user = await this.users.findById(cmd.userId);
+    if (!user) {
+      throw new InvalidCredentialsError();
+    }
+    if (user.roles.includes("host")) {
+      throw new AlreadyHostError();
+    }
+
+    const updated = await this.users.createHostProfileAndAddRole({
+      userId: user.id,
+      displayName: cmd.displayName,
+      payoutEmail: cmd.payoutEmail,
+      acceptedTermsVersion: CURRENT_TERMS_VERSION,
+    });
+
+    await this.users.recordAuditEvent({
+      userId: user.id,
+      event: "role_added",
+      ipAddress: cmd.ipAddress,
+      userAgent: cmd.userAgent,
+      metadata: { role: "host" },
+    });
+
+    return {
+      accessToken: this.tokens.signAccessToken(updated.id, updated.roles),
+      roles: updated.roles,
+    };
   }
 
   getProfile(userId: string): Promise<User | null> {

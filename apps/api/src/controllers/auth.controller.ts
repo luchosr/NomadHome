@@ -1,6 +1,13 @@
 import type { Request, Response } from "express";
-import { LoginSchema, RefreshTokenSchema, RegisterSchema, t } from "@nomadhome/shared";
 import {
+  BecomeHostSchema,
+  LoginSchema,
+  RefreshTokenSchema,
+  RegisterSchema,
+  t,
+} from "@nomadhome/shared";
+import {
+  AlreadyHostError,
   AuthService,
   DuplicateEmailError,
   InvalidCredentialsError,
@@ -109,5 +116,34 @@ export class AuthController {
     }
     await this.auth.logout(parsed.data.refreshToken);
     res.status(204).send();
+  };
+
+  becomeHost = async (req: Request, res: Response): Promise<void> => {
+    const { user: authed } = req as AuthedRequest;
+    if (!authed) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const parsed = BecomeHostSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "validation", issues: parsed.error.flatten() });
+      return;
+    }
+
+    try {
+      const result = await this.auth.becomeHost({
+        ...parsed.data,
+        userId: authed.id,
+        ipAddress: req.ip ?? "unknown",
+        userAgent: req.get("user-agent") ?? undefined,
+      });
+      res.status(201).json(result);
+    } catch (err) {
+      if (err instanceof AlreadyHostError) {
+        res.status(409).json({ error: t("identity.become_host.already_host") });
+        return;
+      }
+      throw err;
+    }
   };
 }

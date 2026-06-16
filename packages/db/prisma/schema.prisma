@@ -34,6 +34,18 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   authAuditEvents         AuthAuditEvent[]
   refreshTokens           RefreshToken[]
+  hostProfile             HostProfile?
+}
+
+/// 1:1 with User, created when a guest upgrades to host (docs/data-model.md §3.2).
+model HostProfile {
+  userId               String   @id
+  displayName          String
+  payoutEmail          String
+  acceptedTermsVersion String
+  createdAt            DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 /// Server-side revocable refresh token (docs/data-model.md §3.3). 30-day

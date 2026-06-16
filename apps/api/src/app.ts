@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
+import { usersRouter } from "./routes/users.js";
 
 /**
  * Build the Express application.
@@ -14,5 +15,6 @@ export function createApp(): Express {
   app.use(express.json());
   app.use("/health", healthRouter);
   app.use("/auth", authRouter);
+  app.use("/users", usersRouter);
   return app;
 }

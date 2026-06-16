@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { RegisterSchema, LoginSchema, RefreshTokenSchema } from "./auth.js";
+import { RegisterSchema, LoginSchema, RefreshTokenSchema, BecomeHostSchema } from "./auth.js";
 
 describe("RegisterSchema", () => {
   it("accepts a valid email and compliant password", () => {
@@ -55,5 +55,25 @@ describe("RefreshTokenSchema", () => {
   it("rejects an empty or missing refresh token", () => {
     expect(RefreshTokenSchema.safeParse({ refreshToken: "" }).success).toBe(false);
     expect(RefreshTokenSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe("BecomeHostSchema", () => {
+  const valid = { displayName: "Lucia", payoutEmail: "pay@example.com", acceptedTerms: true };
+
+  it("accepts a complete, valid onboarding form", () => {
+    expect(BecomeHostSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects a too-short display name", () => {
+    expect(BecomeHostSchema.safeParse({ ...valid, displayName: "L" }).success).toBe(false);
+  });
+
+  it("rejects an invalid payout email", () => {
+    expect(BecomeHostSchema.safeParse({ ...valid, payoutEmail: "nope" }).success).toBe(false);
+  });
+
+  it("rejects when terms are not accepted", () => {
+    expect(BecomeHostSchema.safeParse({ ...valid, acceptedTerms: false }).success).toBe(false);
   });
 });
