@@ -30,6 +30,17 @@ async function main(): Promise<void> {
     });
   }
   console.warn(`[db:seed] Upserted ${AMENITIES.length} amenities.`);
+
+  // Seed initial PlatformFeeConfig if none exists yet.
+  // Values are placeholders (15% guest fee, 3% host commission in basis points).
+  // NH-014 inserts a row with the final agreed values.
+  const feeCount = await prisma.platformFeeConfig.count();
+  if (feeCount === 0) {
+    await prisma.platformFeeConfig.create({
+      data: { guestServiceFeeBps: 1500, hostCommissionBps: 300, createdBy: "system" },
+    });
+    console.warn("[db:seed] Created initial PlatformFeeConfig (1500 bps / 300 bps).");
+  }
 }
 
 main()
