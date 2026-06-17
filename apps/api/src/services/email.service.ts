@@ -8,10 +8,21 @@ export interface CancellationEmailPayload {
   bookingId: string;
 }
 
+export interface BookingConfirmationPayload {
+  guestEmail: string;
+  hostEmail: string;
+  hostName: string;
+  listingTitle: string;
+  checkIn: string;
+  checkOut: string;
+  bookingId: string;
+}
+
 /** Transactional email port. The real Resend adapter is a separate infra ticket. */
 export interface EmailService {
   sendVerificationEmail(to: string, rawToken: string): Promise<void>;
   sendCancellationToHost(payload: CancellationEmailPayload): Promise<void>;
+  sendBookingConfirmation(payload: BookingConfirmationPayload): Promise<void>;
 }
 
 /**
@@ -28,6 +39,12 @@ export class LoggingEmailService implements EmailService {
   async sendCancellationToHost(payload: CancellationEmailPayload): Promise<void> {
     console.info(
       `[email] cancellation notice queued for host ${payload.hostEmail} (booking ${payload.bookingId})`,
+    );
+  }
+
+  async sendBookingConfirmation(payload: BookingConfirmationPayload): Promise<void> {
+    console.info(
+      `[email] booking confirmation queued for guest ${payload.guestEmail} and host ${payload.hostEmail} (booking ${payload.bookingId})`,
     );
   }
 }
