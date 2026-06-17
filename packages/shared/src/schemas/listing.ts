@@ -43,3 +43,16 @@ export const UpdatePhotoPositionSchema = z.object({
   position: z.number().int().min(0, t("listings.photo.invalid_position")),
 });
 export type UpdatePhotoPositionInput = z.infer<typeof UpdatePhotoPositionSchema>;
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, t("listings.availability.invalid_date"));
+
+export const BlockDateRangeSchema = z
+  .object({
+    startDate: isoDate,
+    endDate: isoDate,
+  })
+  .refine((d) => d.endDate > d.startDate, {
+    message: t("listings.availability.end_before_start"),
+    path: ["endDate"],
+  });
+export type BlockDateRangeInput = z.infer<typeof BlockDateRangeSchema>;
