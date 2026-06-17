@@ -65,6 +65,12 @@ export class BookingController {
     res.json(result);
   };
 
+  listHostUpcoming = async (req: Request, res: Response): Promise<void> => {
+    const hostId = this.userId(req);
+    const bookings = await this.service.listHostUpcoming(hostId);
+    res.json(bookings);
+  };
+
   cancel = async (req: Request, res: Response): Promise<void> => {
     const parsed = CancelBookingSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -103,14 +109,12 @@ export class BookingController {
       return;
     }
     if (err instanceof BookingNotCancellableError) {
-      res
-        .status(422)
-        .json({
-          error: err.code,
-          message: t(
-            `booking.error.${err.code === "CHECKIN_ALREADY_PASSED" ? "checkin_passed" : "not_cancellable"}`,
-          ),
-        });
+      res.status(422).json({
+        error: err.code,
+        message: t(
+          `booking.error.${err.code === "CHECKIN_ALREADY_PASSED" ? "checkin_passed" : "not_cancellable"}`,
+        ),
+      });
       return;
     }
     if (err instanceof NoFeeConfigError) {
