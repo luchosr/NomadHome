@@ -6,6 +6,7 @@ import { listingsRouter } from "./routes/listings.js";
 import { listingPhotosRouter } from "./routes/listing-photos.js";
 import { availabilityRouter } from "./routes/availability.js";
 import { searchRouter } from "./routes/search.js";
+import { bookingsRouter } from "./routes/bookings.js";
 
 /**
  * Build the Express application.
@@ -24,5 +25,6 @@ export function createApp(): Express {
   app.use("/listings", listingPhotosRouter);
   app.use("/listings", availabilityRouter);
   app.use("/search", searchRouter);
+  app.use("/bookings", bookingsRouter);
   return app;
 }
