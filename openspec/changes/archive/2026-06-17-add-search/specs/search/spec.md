@@ -1,6 +1,6 @@
 # search — Delta for add-search
 
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Guest can search listings by city and date range
 

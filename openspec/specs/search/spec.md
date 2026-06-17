@@ -3,12 +3,19 @@
 ## Purpose
 
 Guest-facing discovery of published listings by city, date range, and filters (price, type, amenities, capacity). Returns a paginated offset/limit envelope with `{ data, pagination: { total, page, pageSize, hasMore } }` per `decide-search-pagination`. Read-only over the `Listing` and `AvailabilityBlock` aggregates owned by the `listings` capability.
+
 ## Requirements
+
 ### Requirement: Guest can search listings by city and date range
 
-The system SHALL allow any visitor (authenticated or not) to search listings by city, check-in date, and check-out date. Results MUST include only `published` listings located in the requested city that have availability for the entire requested range.
+The system SHALL allow any visitor (authenticated or not) to search listings by
+city, check-in date, and check-out date. Results MUST include only `published`
+listings located in the requested city that have availability for the entire
+requested range.
 
-Each result item MUST include the listing's primary photo, title, type (`property` or `workspace`), nightly rate, and the computed total for the requested range (nightly rate × number of nights, before fees).
+Each result item MUST include the listing's primary photo, title, type
+(`property` or `workspace`), nightly rate, and the computed total for the
+requested range (nightly rate × number of nights, before fees).
 
 #### Scenario: Visitor searches a city with available listings
 
@@ -31,7 +38,9 @@ Each result item MUST include the listing's primary photo, title, type (`propert
 
 ### Requirement: Guest can filter search results
 
-The system SHALL allow guests to narrow a result set by price range, type, amenities, and capacity. Filters MUST be combinable (AND semantics) and MUST only apply to the current result set.
+The system SHALL allow guests to narrow a result set by price range, type,
+amenities, and capacity. Filters MUST be combinable (AND semantics) and MUST
+only apply to the current result set.
 
 #### Scenario: Guest applies multiple filters
 
@@ -42,7 +51,10 @@ The system SHALL allow guests to narrow a result set by price range, type, ameni
 
 ### Requirement: Search results are paginated
 
-The system SHALL paginate search responses using **offset / limit pagination**. The response envelope MUST expose both the page of results and pagination metadata sufficient for the client to request subsequent pages and to render a "showing X–Y of N" summary.
+The system SHALL paginate search responses using **offset / limit pagination**.
+The response envelope MUST expose both the page of results and pagination
+metadata sufficient for the client to request subsequent pages and to render a
+"showing X–Y of N" summary.
 
 Query parameters:
 
@@ -53,12 +65,14 @@ Response envelope:
 
 ```json
 {
-  "data": [ /* page of result items */ ],
+  "data": [
+    /* page of result items */
+  ],
   "pagination": {
-    "total": <integer ≥ 0>,
-    "page": <integer ≥ 1>,
-    "pageSize": <integer in [1, 100]>,
-    "hasMore": <boolean>
+    "total": "<integer ≥ 0>",
+    "page": "<integer ≥ 1>",
+    "pageSize": "<integer in [1, 100]>",
+    "hasMore": "<boolean>"
   }
 }
 ```
@@ -67,7 +81,10 @@ Response envelope:
 - `page` and `pageSize` SHALL echo the resolved values used to compute the response (after defaults are applied).
 - `hasMore` SHALL be `true` iff `page * pageSize < total`. It is redundant with `total` but exposed for client convenience.
 
-Out-of-range parameters (`page < 1`, `pageSize < 1`, `pageSize > 100`, or non-integer values) SHALL fail Zod validation at the platform-spec REST boundary and return HTTP `400` with a structured error identifying the offending field. The controller handler SHALL NOT be invoked for invalid pagination input.
+Out-of-range parameters (`page < 1`, `pageSize < 1`, `pageSize > 100`, or
+non-integer values) SHALL fail Zod validation at the platform-spec REST
+boundary and return HTTP `400` with a structured error identifying the offending
+field. The controller handler SHALL NOT be invoked for invalid pagination input.
 
 #### Scenario: First page of a multi-page result set
 
@@ -113,9 +130,16 @@ Out-of-range parameters (`page < 1`, `pageSize < 1`, `pageSize > 100`, or non-in
 
 ### Requirement: Search results have a deterministic default sort order
 
-The system SHALL return search results ordered by `Listing.createdAt` descending (newest published listings first), with `Listing.id` ascending as a tiebreaker when two listings share the same `createdAt`. This default order is required for pagination to be deterministic — under offset pagination, an undefined order can cause consecutive pages to repeat or skip items as the underlying row ordering shifts.
+The system SHALL return search results ordered by `Listing.createdAt`
+descending (newest published listings first), with `Listing.id` ascending as a
+tiebreaker when two listings share the same `createdAt`. This default order is
+required for pagination to be deterministic — under offset pagination, an
+undefined order can cause consecutive pages to repeat or skip items as the
+underlying row ordering shifts.
 
-This is the only sort order supported in MVP. A client-provided `?sort` query parameter is OUT of scope for MVP; any such parameter SHALL be ignored (no error, no behavior change).
+This is the only sort order supported in MVP. A client-provided `?sort` query
+parameter is OUT of scope for MVP; any such parameter SHALL be ignored (no
+error, no behavior change).
 
 #### Scenario: Default sort is applied when no sort parameter is provided
 
@@ -148,4 +172,3 @@ This is the only sort order supported in MVP. A client-provided `?sort` query pa
 - **WHEN** the request is submitted
 - **THEN** the response is unchanged from a request without the parameter
 - **AND** no error is returned
-
