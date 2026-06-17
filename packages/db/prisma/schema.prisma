@@ -12,7 +12,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [citext]
+  extensions = [citext, btree_gist]
 }
 
 // ---------------------------------------------------------------------------
@@ -76,9 +76,10 @@ model Listing {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  host      User             @relation(fields: [hostId], references: [id])
-  amenities ListingAmenity[]
-  photos    ListingPhoto[]
+  host               User                @relation(fields: [hostId], references: [id])
+  amenities          ListingAmenity[]
+  photos             ListingPhoto[]
+  availabilityBlocks AvailabilityBlock[]
 
   @@index([hostId])
 }
@@ -126,6 +127,29 @@ enum ListingStatus {
   DRAFT
   PUBLISHED
   DISABLED
+}
+
+/// Blocks a date range on a listing. The EXCLUDE constraint (added manually in the
+/// migration) prevents overlapping blocks at the DB level (Postgres error 23P01).
+/// bookingId is NOT NULL when source = BOOKING_HOLD; FK to Booking added in booking ticket.
+model AvailabilityBlock {
+  id        String                  @id @default(uuid())
+  listingId String
+  startDate DateTime                @db.Date
+  endDate   DateTime                @db.Date
+  source    AvailabilityBlockSource
+  bookingId String?
+  createdAt DateTime                @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+}
+
+enum AvailabilityBlockSource {
+  HOST_BLOCK
+  BOOKING_HOLD
+  ADMIN_BLOCK
 }
 
 /// Server-side revocable refresh token (docs/data-model.md §3.3). 30-day
