@@ -1,26 +1,47 @@
 import { Router } from "express";
+import Stripe from "stripe";
 import { BookingController } from "../controllers/booking.controller.js";
+import { PaymentController } from "../controllers/payment.controller.js";
 import { BookingService } from "../services/booking.service.js";
+import { PaymentService } from "../services/payment.service.js";
 import { BookingRepository } from "../repositories/booking.repository.js";
+import { PaymentRepository } from "../repositories/payment.repository.js";
 import { ListingRepository } from "../repositories/listing.repository.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import { LoggingEmailService } from "../services/email.service.js";
 import { requireAuth } from "../middleware/require-auth.js";
 
-const controller = new BookingController(
+const emailService = new LoggingEmailService();
+const stripe = new Stripe(process.env["STRIPE_SECRET_KEY"] ?? "sk_test_placeholder");
+
+const bookingController = new BookingController(
   new BookingService(
     new BookingRepository(),
     new ListingRepository(),
     new UserRepository(),
-    new LoggingEmailService(),
+    emailService,
+  ),
+);
+
+const paymentController = new PaymentController(
+  new PaymentService(
+    new PaymentRepository(),
+    new BookingRepository(),
+    new ListingRepository(),
+    new UserRepository(),
+    emailService,
+    stripe,
+    process.env["STRIPE_SUCCESS_URL"] ?? "http://localhost:5173/booking/success",
+    process.env["STRIPE_CANCEL_URL"] ?? "http://localhost:5173/listings",
   ),
 );
 
 const router = Router();
 router.use(requireAuth);
-router.post("/", controller.create);
-router.get("/me", controller.listMine);
-router.get("/:id", controller.getById);
-router.post("/:id/cancel", controller.cancel);
+router.post("/", bookingController.create);
+router.get("/me", bookingController.listMine);
+router.get("/:id", bookingController.getById);
+router.post("/:id/cancel", bookingController.cancel);
+router.post("/:id/checkout", paymentController.createCheckoutSession);
 
 export const bookingsRouter = router;
