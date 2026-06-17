@@ -9,6 +9,7 @@ import { searchRouter } from "./routes/search.js";
 import { bookingsRouter } from "./routes/bookings.js";
 import { stripeRouter } from "./routes/stripe.js";
 import { adminRouter } from "./routes/admin.js";
+import { reviewsRouter } from "./routes/reviews.js";
 
 /**
  * Build the Express application.
@@ -28,6 +29,7 @@ export function createApp(): Express {
   app.use("/health", healthRouter);
   app.use("/auth", authRouter);
   app.use("/users", usersRouter);
+  app.use("/listings", reviewsRouter);
   app.use("/listings", listingsRouter);
   app.use("/listings", listingPhotosRouter);
   app.use("/listings", availabilityRouter);
