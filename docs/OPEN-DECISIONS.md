@@ -13,14 +13,9 @@ There is **no duplication of decision rows**. The synopsis below names the decis
 
 ## Synopsis of currently-open decisions
 
-Two decisions remain open. Each blocks a specific future change-id; each is owned by **Luciano** (product owner) with the tiebreaker defaults proposed in the canonical table. (The access-token TTL was resolved to 15 minutes by `add-identity-login`; the photo storage backend was resolved to Cloudflare R2 by `add-listing-photos`.)
+All baseline open decisions are now closed. The access-token TTL was resolved by `add-identity-login`, the photo storage backend by `add-listing-photos`, the cancellation policy by `add-booking`, and the guest service fee / host commission rates by `add-payments` (guestServiceFeeBps=1500, hostCommissionBps=300, seeded in `PlatformFeeConfig`).
 
-| Decision                                     | Capability | Blocks change-id |
-| -------------------------------------------- | ---------- | ---------------- |
-| Guest service fee % and host commission %    | `payments` | `add-payments`   |
-| Cancellation policy windows and refund tiers | `booking`  | `add-booking`    |
-
-For owners, deadlines, tiebreaker defaults, and source citations, see [`openspec/project.md` §8](../openspec/project.md).
+See [`openspec/project.md` §8](../openspec/project.md) for the (now-empty) canonical tracker.
 
 For the actual deferral marker in the spec, see the `[OPEN]` annotation inside the corresponding `openspec/specs/<capability>/spec.md`.
 
