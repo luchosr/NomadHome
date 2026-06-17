@@ -92,14 +92,43 @@ describe.skipIf(!hasDatabase)("listing availability", () => {
   it("returns 409 OVERLAP_CONFLICT with bookingId when overlapping a BOOKING_HOLD", async () => {
     const token = await tokenFor("host@example.com", { host: true });
     const listing = await createListing(token);
-    const fakeBookingId = "00000000-0000-0000-0000-000000000001";
+
+    // Create a real guest and booking so the FK constraint is satisfied
+    const guest = await prisma.user.create({
+      data: {
+        email: "guest-hold@example.com",
+        passwordHash: await bcrypt.hash("password123", 12),
+        emailVerifiedAt: new Date(),
+        roles: ["guest"],
+      },
+    });
+    const booking = await prisma.booking.create({
+      data: {
+        listingId: listing.id,
+        guestId: guest.id,
+        hostId: listing.hostId,
+        checkIn: new Date("2026-09-01"),
+        checkOut: new Date("2026-09-10"),
+        nights: 9,
+        nightlyRateCents: 5000,
+        subtotalCents: 45000,
+        guestServiceFeeBps: 1500,
+        guestServiceFeeCents: 6750,
+        hostCommissionBps: 300,
+        hostCommissionCents: 1350,
+        currency: "USD",
+        totalChargedCents: 51750,
+        payoutCents: 43650,
+        status: "CONFIRMED",
+      },
+    });
     await prisma.availabilityBlock.create({
       data: {
         listingId: listing.id,
         startDate: new Date("2026-09-01"),
         endDate: new Date("2026-09-10"),
         source: "BOOKING_HOLD",
-        bookingId: fakeBookingId,
+        bookingId: booking.id,
       },
     });
 
@@ -111,7 +140,7 @@ describe.skipIf(!hasDatabase)("listing availability", () => {
     expect(res.status).toBe(409);
     expect(res.body.error).toBe("OVERLAP_CONFLICT");
     expect(res.body.conflict.source).toBe("BOOKING_HOLD");
-    expect(res.body.conflict.bookingId).toBe(fakeBookingId);
+    expect(res.body.conflict.bookingId).toBe(booking.id);
     expect(await prisma.availabilityBlock.count()).toBe(1);
   });
 

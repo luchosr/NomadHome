@@ -36,6 +36,8 @@ model User {
   refreshTokens           RefreshToken[]
   hostProfile             HostProfile?
   listings                Listing[]
+  guestBookings           Booking[]                @relation("GuestBookings")
+  hostBookings            Booking[]                @relation("HostBookings")
 }
 
 /// 1:1 with User, created when a guest upgrades to host (docs/data-model.md §3.2).
@@ -80,6 +82,7 @@ model Listing {
   amenities          ListingAmenity[]
   photos             ListingPhoto[]
   availabilityBlocks AvailabilityBlock[]
+  bookings           Booking[]
 
   @@index([hostId])
 }
@@ -131,17 +134,18 @@ enum ListingStatus {
 
 /// Blocks a date range on a listing. The EXCLUDE constraint (added manually in the
 /// migration) prevents overlapping blocks at the DB level (Postgres error 23P01).
-/// bookingId is NOT NULL when source = BOOKING_HOLD; FK to Booking added in booking ticket.
+/// bookingId references Booking when source = BOOKING_HOLD.
 model AvailabilityBlock {
   id        String                  @id @default(uuid())
   listingId String
   startDate DateTime                @db.Date
   endDate   DateTime                @db.Date
   source    AvailabilityBlockSource
-  bookingId String?
-  createdAt DateTime                @default(now())
+  bookingId String?  @unique
+  createdAt DateTime @default(now())
 
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listing Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
 
   @@index([listingId])
 }
@@ -206,4 +210,79 @@ enum AuthAuditEventType {
   password_reset_requested
   role_added
   user_disabled
+}
+
+// ---------------------------------------------------------------------------
+// Booking context (docs/data-model.md §3.11–3.14)
+// ---------------------------------------------------------------------------
+
+/// Reservation aggregate root. Fee fields are snapshotted at creation and never updated.
+model Booking {
+  id                     String        @id @default(uuid())
+  listingId              String
+  guestId                String
+  hostId                 String
+  checkIn                DateTime      @db.Date
+  checkOut               DateTime      @db.Date
+  nights                 Int
+  nightlyRateCents       Int
+  subtotalCents          Int
+  guestServiceFeeBps     Int
+  guestServiceFeeCents   Int
+  hostCommissionBps      Int
+  hostCommissionCents    Int
+  currency               String
+  totalChargedCents      Int
+  payoutCents            Int
+  status                 BookingStatus @default(PENDING_PAYMENT)
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId  String?
+  confirmedAt            DateTime?
+  cancelledAt            DateTime?
+  cancellationReason     String?
+  createdAt              DateTime      @default(now())
+
+  listing          Listing            @relation(fields: [listingId], references: [id])
+  guest            User               @relation("GuestBookings", fields: [guestId], references: [id])
+  host             User               @relation("HostBookings", fields: [hostId], references: [id])
+  availabilityHold AvailabilityBlock?
+  refundRequest    RefundRequest?
+
+  @@index([guestId, status])
+  @@index([hostId, status, checkIn])
+  @@index([listingId, status])
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+/// Active platform fee configuration. Latest row by createdAt is authoritative.
+model PlatformFeeConfig {
+  id                 String   @id @default(uuid())
+  guestServiceFeeBps Int
+  hostCommissionBps  Int
+  createdAt          DateTime @default(now())
+  createdBy          String
+}
+
+/// Refund record created on cancellation; admin executes the actual refund.
+model RefundRequest {
+  id          String              @id @default(uuid())
+  bookingId   String              @unique
+  amountCents Int
+  currency    String
+  status      RefundRequestStatus @default(PENDING_ADMIN)
+  reason      String?
+  createdAt   DateTime            @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+}
+
+enum RefundRequestStatus {
+  PENDING_ADMIN
+  PROCESSED
 }

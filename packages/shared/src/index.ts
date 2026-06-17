@@ -37,3 +37,13 @@ export {
   SearchResponseSchema,
 } from "./schemas/search.js";
 export type { SearchQuery, SearchResultItem, SearchResponse } from "./schemas/search.js";
+export {
+  CreateBookingSchema,
+  CancelBookingSchema,
+  BookingListQuerySchema,
+} from "./schemas/booking.js";
+export type {
+  CreateBookingInput,
+  CancelBookingInput,
+  BookingListQuery,
+} from "./schemas/booking.js";

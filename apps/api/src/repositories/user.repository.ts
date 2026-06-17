@@ -1,6 +1,7 @@
 import {
   prisma,
   type AuthAuditEventType,
+  type HostProfile,
   type Prisma,
   type RefreshToken,
   type User,
@@ -124,6 +125,10 @@ export class UserRepository {
         },
       },
     });
+  }
+
+  findHostProfile(userId: string): Promise<HostProfile | null> {
+    return prisma.hostProfile.findUnique({ where: { userId } });
   }
 
   recordAuditEvent(input: AuthAuditEventInput): Promise<unknown> {
