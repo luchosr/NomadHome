@@ -53,8 +53,8 @@ model HostProfile {
 // Listings context (docs/data-model.md §3.6–3.9)
 // ---------------------------------------------------------------------------
 
-/// Host-owned bookable inventory. Aggregate root for amenities (and, later, photos
-/// and availability). Lat/long stay null until geocoding lands.
+/// Host-owned bookable inventory. Aggregate root for amenities, photos, and
+/// availability. Lat/long stay null until geocoding lands.
 model Listing {
   id               String        @id @default(uuid())
   hostId           String
@@ -78,8 +78,24 @@ model Listing {
 
   host      User             @relation(fields: [hostId], references: [id])
   amenities ListingAmenity[]
+  photos    ListingPhoto[]
 
   @@index([hostId])
+}
+
+/// Ordered photo for a listing. Position is unique per listing (enforced by DB).
+/// Object deletion from storage is handled at the storage layer, not by the API.
+model ListingPhoto {
+  id        String   @id @default(uuid())
+  listingId String
+  url       String
+  position  Int
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, position])
+  @@index([listingId])
 }
 
 /// Amenity lookup, seeded by seed.ts.

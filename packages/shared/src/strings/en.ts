@@ -55,6 +55,12 @@ export const en = {
       amenities_required: "Select at least one amenity.",
       unknown_amenity: "One or more selected amenities don't exist.",
     },
+    photo: {
+      invalid_position: "Position must be a non-negative integer.",
+      not_found: "Photo not found.",
+      position_conflict: "A photo already exists at that position.",
+      forbidden: "You can only manage photos on your own listings.",
+    },
     error: {
       not_found: "Listing not found.",
       forbidden: "You can only manage your own listings.",

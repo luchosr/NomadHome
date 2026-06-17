@@ -27,3 +27,19 @@ export type CreateListingInput = z.infer<typeof CreateListingSchema>;
 export const UpdateListingSchema = CreateListingSchema.partial();
 
 export type UpdateListingInput = z.infer<typeof UpdateListingSchema>;
+
+export const UploadUrlRequestSchema = z.object({
+  contentType: z.string().min(1, t("validation.required.field")),
+});
+export type UploadUrlRequestInput = z.infer<typeof UploadUrlRequestSchema>;
+
+export const RegisterPhotoSchema = z.object({
+  key: z.string().min(1, t("validation.required.field")),
+  position: z.number().int().min(0, t("listings.photo.invalid_position")),
+});
+export type RegisterPhotoInput = z.infer<typeof RegisterPhotoSchema>;
+
+export const UpdatePhotoPositionSchema = z.object({
+  position: z.number().int().min(0, t("listings.photo.invalid_position")),
+});
+export type UpdatePhotoPositionInput = z.infer<typeof UpdatePhotoPositionSchema>;
