@@ -49,3 +49,5 @@ export type {
 } from "./schemas/booking.js";
 export { RecordPayoutSchema } from "./schemas/payment.js";
 export type { RecordPayoutInput } from "./schemas/payment.js";
+export { CreateReviewSchema } from "./schemas/review.js";
+export type { CreateReviewInput } from "./schemas/review.js";
