@@ -1,4 +1,4 @@
-import { prisma, type Listing, type ListingType } from "@nomadhome/db";
+import { prisma, type Listing, type ListingType, type ListingStatus } from "@nomadhome/db";
 
 export interface ListingFields {
   title: string;
@@ -48,6 +48,14 @@ export class ListingRepository {
       include: withAmenities,
       orderBy: { createdAt: "desc" },
     });
+  }
+
+  photoCount(id: string): Promise<number> {
+    return prisma.listingPhoto.count({ where: { listingId: id } });
+  }
+
+  updateStatus(id: string, status: ListingStatus): Promise<ListingWithAmenities> {
+    return prisma.listing.update({ where: { id }, data: { status }, include: withAmenities });
   }
 
   /** Update scalar fields; when amenityCodes is given, replace the amenity set. */

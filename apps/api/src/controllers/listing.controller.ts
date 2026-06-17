@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { CreateListingSchema, UpdateListingSchema, t } from "@nomadhome/shared";
 import {
   ListingForbiddenError,
+  ListingNoPhotoError,
   ListingNotFoundError,
   ListingService,
   UnknownAmenityError,
@@ -54,6 +55,26 @@ export class ListingController {
     }
     try {
       res.json(await this.listings.update(this.hostId(req), req.params.id ?? "", parsed.data));
+    } catch (err) {
+      this.mapError(err, res);
+    }
+  };
+
+  publish = async (req: Request, res: Response): Promise<void> => {
+    try {
+      res.json(await this.listings.publish(this.hostId(req), req.params.id ?? ""));
+    } catch (err) {
+      if (err instanceof ListingNoPhotoError) {
+        res.status(422).json({ error: t("listings.publish.no_photo") });
+        return;
+      }
+      this.mapError(err, res);
+    }
+  };
+
+  unpublish = async (req: Request, res: Response): Promise<void> => {
+    try {
+      res.json(await this.listings.unpublish(this.hostId(req), req.params.id ?? ""));
     } catch (err) {
       this.mapError(err, res);
     }
