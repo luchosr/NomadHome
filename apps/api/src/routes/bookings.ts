@@ -2,12 +2,15 @@ import { Router } from "express";
 import Stripe from "stripe";
 import { BookingController } from "../controllers/booking.controller.js";
 import { PaymentController } from "../controllers/payment.controller.js";
+import { ReviewController } from "../controllers/review.controller.js";
 import { BookingService } from "../services/booking.service.js";
 import { PaymentService } from "../services/payment.service.js";
+import { ReviewService } from "../services/review.service.js";
 import { BookingRepository } from "../repositories/booking.repository.js";
 import { PaymentRepository } from "../repositories/payment.repository.js";
 import { ListingRepository } from "../repositories/listing.repository.js";
 import { UserRepository } from "../repositories/user.repository.js";
+import { ReviewRepository } from "../repositories/review.repository.js";
 import { LoggingEmailService } from "../services/email.service.js";
 import { requireAuth } from "../middleware/require-auth.js";
 
@@ -36,6 +39,10 @@ const paymentController = new PaymentController(
   ),
 );
 
+const reviewController = new ReviewController(
+  new ReviewService(new ReviewRepository(), new BookingRepository(), new ListingRepository()),
+);
+
 const router = Router();
 router.use(requireAuth);
 router.post("/", bookingController.create);
@@ -43,5 +50,6 @@ router.get("/me", bookingController.listMine);
 router.get("/:id", bookingController.getById);
 router.post("/:id/cancel", bookingController.cancel);
 router.post("/:id/checkout", paymentController.createCheckoutSession);
+router.post("/:id/review", reviewController.create);
 
 export const bookingsRouter = router;

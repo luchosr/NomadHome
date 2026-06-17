@@ -39,6 +39,7 @@ model User {
   guestBookings           Booking[]                @relation("GuestBookings")
   hostBookings            Booking[]                @relation("HostBookings")
   payouts                 Payout[]
+  reviews                 Review[]
 }
 
 /// 1:1 with User, created when a guest upgrades to host (docs/data-model.md §3.2).
@@ -84,6 +85,7 @@ model Listing {
   photos             ListingPhoto[]
   availabilityBlocks AvailabilityBlock[]
   bookings           Booking[]
+  reviews            Review[]
 
   @@index([hostId])
 }
@@ -249,6 +251,7 @@ model Booking {
   availabilityHold AvailabilityBlock?
   refundRequest    RefundRequest?
   payoutBooking    PayoutBooking?
+  review           Review?
 
   @@index([guestId, status])
   @@index([hostId, status, checkIn])
@@ -331,4 +334,27 @@ model PayoutBooking {
   booking Booking @relation(fields: [bookingId], references: [id])
 
   @@index([payoutId])
+}
+
+// ---------------------------------------------------------------------------
+// Reviews context (docs/data-model.md §3.18)
+// ---------------------------------------------------------------------------
+
+/// One guest review per completed booking. bookingId @unique enforces the
+/// one-review-per-booking invariant at the DB level.
+model Review {
+  id        String   @id @default(uuid())
+  bookingId String   @unique
+  listingId String
+  guestId   String
+  rating    Int
+  text      String?
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+  guest   User    @relation(fields: [guestId], references: [id])
+
+  @@index([listingId])
+  @@index([guestId])
 }

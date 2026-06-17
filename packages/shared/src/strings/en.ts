@@ -104,6 +104,14 @@ export const en = {
       double_payout: "One or more bookings are already settled.",
     },
   },
+  reviews: {
+    error: {
+      booking_not_found: "Booking not found.",
+      booking_not_confirmed: "Only confirmed bookings can be reviewed.",
+      checkout_not_passed: "Reviews can only be submitted after check-out.",
+      already_exists: "You have already reviewed this booking.",
+    },
+  },
 } as const;
 
 export type Dictionary = typeof en;
