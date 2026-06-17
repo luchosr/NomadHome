@@ -25,6 +25,13 @@ export class UnknownAmenityError extends Error {
   }
 }
 
+export class ListingNoPhotoError extends Error {
+  constructor() {
+    super("listing_no_photo");
+    this.name = "ListingNoPhotoError";
+  }
+}
+
 export class ListingService {
   constructor(private readonly listings: ListingRepository) {}
 
@@ -55,6 +62,17 @@ export class ListingService {
     const { amenityCodes, ...fields } = input;
     if (amenityCodes) await this.assertAmenitiesExist(amenityCodes);
     return this.listings.update(id, fields, amenityCodes);
+  }
+
+  async publish(hostId: string, id: string): Promise<ListingWithAmenities> {
+    await this.getOwned(hostId, id);
+    if ((await this.listings.photoCount(id)) === 0) throw new ListingNoPhotoError();
+    return this.listings.updateStatus(id, "PUBLISHED");
+  }
+
+  async unpublish(hostId: string, id: string): Promise<ListingWithAmenities> {
+    await this.getOwned(hostId, id);
+    return this.listings.updateStatus(id, "DRAFT");
   }
 
   private async assertAmenitiesExist(codes: string[]): Promise<void> {

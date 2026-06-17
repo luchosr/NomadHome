@@ -21,6 +21,7 @@ export {
   UploadUrlRequestSchema,
   RegisterPhotoSchema,
   UpdatePhotoPositionSchema,
+  BlockDateRangeSchema,
 } from "./schemas/listing.js";
 export type {
   CreateListingInput,
@@ -28,4 +29,5 @@ export type {
   UploadUrlRequestInput,
   RegisterPhotoInput,
   UpdatePhotoPositionInput,
+  BlockDateRangeInput,
 } from "./schemas/listing.js";

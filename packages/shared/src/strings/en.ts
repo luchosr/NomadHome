@@ -61,6 +61,16 @@ export const en = {
       position_conflict: "A photo already exists at that position.",
       forbidden: "You can only manage photos on your own listings.",
     },
+    publish: {
+      no_photo: "Add at least one photo before publishing.",
+    },
+    availability: {
+      invalid_date: "Date must be in YYYY-MM-DD format.",
+      end_before_start: "End date must be after start date.",
+      not_found: "Availability block not found.",
+      forbidden: "You can only manage availability on your own listings.",
+      overlap: "This date range overlaps an existing block.",
+    },
     error: {
       not_found: "Listing not found.",
       forbidden: "You can only manage your own listings.",

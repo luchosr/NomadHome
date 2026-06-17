@@ -15,6 +15,8 @@ export function createListingsRouter(): Router {
   router.get("/mine", controller.listMine);
   router.get("/:id", controller.getOne);
   router.patch("/:id", controller.update);
+  router.patch("/:id/publish", controller.publish);
+  router.patch("/:id/unpublish", controller.unpublish);
   return router;
 }
 
