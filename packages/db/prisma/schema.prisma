@@ -38,6 +38,7 @@ model User {
   listings                Listing[]
   guestBookings           Booking[]                @relation("GuestBookings")
   hostBookings            Booking[]                @relation("HostBookings")
+  payouts                 Payout[]
 }
 
 /// 1:1 with User, created when a guest upgrades to host (docs/data-model.md §3.2).
@@ -247,6 +248,7 @@ model Booking {
   host             User               @relation("HostBookings", fields: [hostId], references: [id])
   availabilityHold AvailabilityBlock?
   refundRequest    RefundRequest?
+  payoutBooking    PayoutBooking?
 
   @@index([guestId, status])
   @@index([hostId, status, checkIn])
@@ -285,4 +287,48 @@ model RefundRequest {
 enum RefundRequestStatus {
   PENDING_ADMIN
   PROCESSED
+}
+
+// ---------------------------------------------------------------------------
+// Payments context (docs/data-model.md §3.15–3.17)
+// ---------------------------------------------------------------------------
+
+/// Idempotency ledger for Stripe webhook events. Prevents double-processing
+/// on Stripe retries (at-least-once delivery).
+model StripeProcessedEvent {
+  id            String   @id @default(uuid())
+  stripeEventId String   @unique
+  eventType     String
+  bookingId     String?
+  processedAt   DateTime @default(now())
+}
+
+/// Admin-recorded manual payout to a host (bank transfer, Wise, etc.).
+model Payout {
+  id                String         @id @default(uuid())
+  hostId            String
+  amountCents       Int
+  currency          String
+  method            String
+  externalReference String
+  createdAt         DateTime       @default(now())
+  createdBy         String
+
+  host          User           @relation(fields: [hostId], references: [id])
+  payoutBookings PayoutBooking[]
+
+  @@index([hostId])
+}
+
+/// Join between a Payout and the Bookings it covers. bookingId @unique
+/// enforces one-settlement-per-booking at the DB level.
+model PayoutBooking {
+  id        String @id @default(uuid())
+  payoutId  String
+  bookingId String @unique
+
+  payout  Payout  @relation(fields: [payoutId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([payoutId])
 }

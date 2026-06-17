@@ -259,10 +259,10 @@ Concrete examples of how to apply this:
 
 These are intentionally unresolved at the baseline and must be resolved by the first ticket that implements the relevant capability. Each is marked inline with `[OPEN]` inside the relevant `openspec/specs/<capability>/spec.md`. **This table is the canonical tracker** referenced from [`docs/OPEN-DECISIONS.md`](../docs/OPEN-DECISIONS.md).
 
-| Capability | Open decision                                | Owner   | Blocks change-id | Deadline                                                               | Tiebreaker                                                                                                                                                                                                         | Source       |
-| ---------- | -------------------------------------------- | ------- | ---------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
-| `payments` | Guest service fee % and host commission %    | Luciano | `add-payments`   | Before Gate 1 of `add-payments` (business decision, must precede spec) | Anchor: rates that produce an effective take-rate comparable to Airbnb's combined fees (~15% guest + ~3% host). Final call is Luciano's; values land in `PlatformFeeConfig` so they can change without code edits. | PRD §7 + §12 |
-| `booking`  | Cancellation policy windows and refund tiers | Luciano | `add-booking`    | Before Gate 1 of `add-booking`                                         | Anchor: Airbnb-style 3-tier (flexible / moderate / strict) with simple day-based windows. Final tiers are Luciano's call; documented in the change's `design.md`.                                                  | PRD §12      |
+| Capability | Open decision | Owner | Blocks change-id | Deadline | Tiebreaker | Source |
+| ---------- | ------------- | ----- | ---------------- | -------- | ---------- | ------ |
+
+_No open decisions remain. All resolved decisions are recorded in their respective change's `design.md`._
 
 ### 8.1 Closing an open decision
 

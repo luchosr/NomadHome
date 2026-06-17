@@ -18,7 +18,8 @@
     "@nomadhome/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "stripe": "^22.2.1"
   },
   "devDependencies": {
     "@nomadhome/config": "workspace:*",

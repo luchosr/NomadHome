@@ -47,3 +47,5 @@ export type {
   CancelBookingInput,
   BookingListQuery,
 } from "./schemas/booking.js";
+export { RecordPayoutSchema } from "./schemas/payment.js";
+export type { RecordPayoutInput } from "./schemas/payment.js";

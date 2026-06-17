@@ -95,6 +95,15 @@ export const en = {
       no_fee_config: "Platform fee configuration is missing. Contact support.",
     },
   },
+  payments: {
+    error: {
+      booking_not_pending: "Payment can only be initiated for a pending booking.",
+      booking_not_found: "Booking not found.",
+      stripe_key_missing: "Stripe is not configured.",
+      webhook_invalid_signature: "Invalid webhook signature.",
+      double_payout: "One or more bookings are already settled.",
+    },
+  },
 } as const;
 
 export type Dictionary = typeof en;
