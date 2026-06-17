@@ -43,7 +43,7 @@
   - Pagination — invalid pageSize (pageSize=200): HTTP 400, `pageSize` identified in error
   - Sort — createdAt DESC: newest listing appears first
   - Sort — tiebreaker: A.id < B.id → A before B when createdAt equal
-  - Sort — ?sort param ignored: response identical with and without `?sort=nightlyRate`
+  - Sort — ?sort param ignored: response is the same with and without `?sort=nightlyRate`
   - No auth required: unauthenticated request succeeds (200)
 
 ## 4. Verify
