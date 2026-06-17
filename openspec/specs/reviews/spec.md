@@ -5,46 +5,74 @@
 One guest review per completed booking (1–5 stars + free text), aggregated per listing for display on the listing detail page. Owns the `Review` aggregate; the `Review.bookingId` UNIQUE constraint enforces the one-review-per-booking invariant (`docs/data-model.md` §7.6). Host-to-guest reviews are Post-MVP per `openspec/project.md` §3.1.
 
 ## Requirements
+
 ### Requirement: Guest can review a completed booking
 
-The system SHALL allow an authenticated guest who owns a booking with status `confirmed` and check-out date in the past to submit a review for the booked listing. The review MUST consist of a rating from 1 to 5 (integer) and optional free text. The system MUST allow at most one review per booking.
+The system SHALL allow an authenticated guest who owns a booking with status `CONFIRMED` and `checkOut` strictly in the past (`checkOut < today`) to submit a review via `POST /bookings/:id/review`. The review MUST consist of a `rating` integer in [1, 5] and an optional `text` string (max 2000 characters). The system MUST allow at most one review per booking, enforced by a `Review.bookingId UNIQUE` constraint at the database level.
+
+On successful creation the system SHALL atomically update `Listing.averageRating` (arithmetic mean of all rating values for that listing, rounded to 2 decimal places) and `Listing.reviewCount` within the same database transaction.
 
 Host-to-guest reviews are out of scope for MVP.
 
 #### Scenario: Guest submits a review after check-out
 
-- **GIVEN** an authenticated guest who owns a booking with status `confirmed` and check-out date strictly in the past
-- **WHEN** the guest submits a review with rating `R ∈ [1, 5]` and optional text
-- **THEN** the review is persisted and linked to the booking and to the listing
-- **AND** the review is visible on the listing's detail page
+- **Given** an authenticated guest who owns a booking with status `CONFIRMED`
+- **And** `checkOut` is strictly in the past (`checkOut < today`)
+- **When** the guest submits `POST /bookings/:id/review` with `{ rating: R, text: "..." }` where `R ∈ [1, 5]`
+- **Then** the system responds `201 Created` with the review record
+- **And** the review is linked to the booking and to the listing
+- **And** `Listing.averageRating` and `Listing.reviewCount` are updated to reflect the new review
 
 #### Scenario: Second review on the same booking is rejected
 
-- **GIVEN** an authenticated guest with an existing review on a booking
-- **WHEN** the guest submits another review for the same booking
-- **THEN** the operation is rejected
-- **AND** the existing review is left unchanged
+- **Given** an authenticated guest with an existing review on a booking
+- **When** the guest submits `POST /bookings/:id/review` a second time
+- **Then** the system responds `409 Conflict` with error code `REVIEW_ALREADY_EXISTS`
+- **And** the existing review is unchanged
 
-#### Scenario: Review is rejected before check-out
+#### Scenario: Review is rejected when check-out has not passed
 
-- **GIVEN** an authenticated guest with a `confirmed` booking whose check-out date is in the future or equal to today
-- **WHEN** the guest attempts to submit a review
-- **THEN** the operation is rejected
+- **Given** an authenticated guest who owns a `CONFIRMED` booking
+- **And** `checkOut` is today or in the future
+- **When** the guest submits `POST /bookings/:id/review`
+- **Then** the system responds `422 Unprocessable Entity` with error code `CHECKOUT_NOT_PASSED`
+- **And** no review is created
 
-#### Scenario: Review is rejected for a non-owner
+#### Scenario: Review is rejected for a booking not owned by the guest
 
-- **GIVEN** an authenticated user who is not the guest associated with a given booking
-- **WHEN** the user attempts to submit a review for that booking
-- **THEN** the operation is rejected with HTTP 403
+- **Given** an authenticated guest
+- **And** a booking owned by a different guest
+- **When** the guest submits `POST /bookings/:id/review`
+- **Then** the system responds `404 Not Found`
+- **And** no review is created
+
+#### Scenario: Review is rejected for a non-CONFIRMED booking
+
+- **Given** an authenticated guest who owns a booking with status `PENDING_PAYMENT` or `CANCELLED`
+- **When** the guest submits `POST /bookings/:id/review`
+- **Then** the system responds `422 Unprocessable Entity` with error code `BOOKING_NOT_CONFIRMED`
+- **And** no review is created
+
+#### Scenario: Review is rejected when rating is out of range
+
+- **Given** an authenticated guest with a reviewable booking
+- **When** the guest submits `POST /bookings/:id/review` with `rating` outside [1, 5]
+- **Then** the system responds `422 Unprocessable Entity` with a validation error
+- **And** no review is created
 
 ### Requirement: Listing detail aggregates reviews
 
-The system SHALL display all reviews for a listing on its detail page, including each review's rating and text. The listing detail SHALL also expose the average rating and the count of reviews.
+The system SHALL expose all reviews for a listing via `GET /listings/:id/reviews` (public, no authentication required). The response SHALL include a paginated list of reviews and the listing-level aggregate: `averageRating` and `reviewCount` as stored on the `Listing` record.
 
-#### Scenario: Listing detail shows aggregate rating
+#### Scenario: Listing reviews endpoint returns reviews and aggregate
 
-- **GIVEN** a listing with one or more reviews
-- **WHEN** any user requests the listing detail
-- **THEN** the response includes the list of reviews
-- **AND** the response includes the count of reviews and their arithmetic mean rating
+- **Given** a listing with one or more reviews
+- **When** any client submits `GET /listings/:id/reviews`
+- **Then** the system responds `200 OK` with `{ reviews: [...], averageRating, reviewCount }`
+- **And** each review includes `id`, `guestId`, `rating`, `text`, and `createdAt`
 
+#### Scenario: Listing with no reviews returns empty list and zero aggregate
+
+- **Given** a listing with no reviews
+- **When** any client submits `GET /listings/:id/reviews`
+- **Then** the system responds `200 OK` with `{ reviews: [], averageRating: null, reviewCount: 0 }`
