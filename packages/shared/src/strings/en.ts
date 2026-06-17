@@ -84,6 +84,17 @@ export const en = {
       invalid_page_size: "Page size must be an integer between 1 and 100.",
     },
   },
+  booking: {
+    error: {
+      not_found: "Booking not found.",
+      listing_not_found: "Listing not found or not available for booking.",
+      self_booking: "You cannot book your own listing.",
+      overlap: "These dates are no longer available.",
+      not_cancellable: "This booking cannot be cancelled.",
+      checkin_passed: "Check-in date has already passed.",
+      no_fee_config: "Platform fee configuration is missing. Contact support.",
+    },
+  },
 } as const;
 
 export type Dictionary = typeof en;
