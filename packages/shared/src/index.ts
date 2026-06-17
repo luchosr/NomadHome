@@ -31,3 +31,9 @@ export type {
   UpdatePhotoPositionInput,
   BlockDateRangeInput,
 } from "./schemas/listing.js";
+export {
+  SearchQuerySchema,
+  SearchResultItemSchema,
+  SearchResponseSchema,
+} from "./schemas/search.js";
+export type { SearchQuery, SearchResultItem, SearchResponse } from "./schemas/search.js";
