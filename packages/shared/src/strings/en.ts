@@ -76,6 +76,14 @@ export const en = {
       forbidden: "You can only manage your own listings.",
     },
   },
+  search: {
+    error: {
+      end_before_start: "Check-out must be after check-in.",
+      invalid_dates: "Invalid date format. Use YYYY-MM-DD.",
+      invalid_page: "Page must be an integer greater than or equal to 1.",
+      invalid_page_size: "Page size must be an integer between 1 and 100.",
+    },
+  },
 } as const;
 
 export type Dictionary = typeof en;
