@@ -14,6 +14,43 @@ export const en = {
     },
     action: {
       close: "Close",
+      submit: "Submit",
+      cancel: "Cancel",
+      save: "Save",
+    },
+  },
+  nav: {
+    login: "Log in",
+    logout: "Log out",
+    register: "Sign up",
+    my_bookings: "My Bookings",
+    host_dashboard: "Host Dashboard",
+    admin: "Admin",
+  },
+  auth: {
+    login: {
+      title: "Welcome back",
+      subtitle: "Sign in to your NomadHome account",
+      email_label: "Email",
+      password_label: "Password",
+      submit: "Log in",
+      no_account: "Don't have an account?",
+      sign_up_link: "Sign up",
+      error: "Invalid email or password.",
+    },
+    register: {
+      title: "Create your account",
+      subtitle: "Start finding co-living spaces and workspaces",
+      email_label: "Email",
+      password_label: "Password",
+      submit: "Create account",
+      have_account: "Already have an account?",
+      login_link: "Log in",
+      error: "Registration failed. Please try again.",
+    },
+    forbidden: {
+      title: "Access denied",
+      message: "You don't have permission to view this page.",
     },
   },
   error: {
