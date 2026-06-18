@@ -86,7 +86,7 @@ describe("BookingFormPage", () => {
 
     expect(await screen.findByText("Ocean View Suite")).toBeInTheDocument();
     // 2 nights × €100.00 = €200.00
-    expect(screen.getByText(/2/)).toBeInTheDocument();
+    expect(screen.getByText(/nights/i)).toBeInTheDocument();
     expect(screen.getAllByText(/200/).length).toBeGreaterThan(0);
   });
 

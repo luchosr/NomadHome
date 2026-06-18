@@ -26,6 +26,8 @@ export function BookingFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
+  const hasDates = checkIn.length > 0 && checkOut.length > 0;
+
   const {
     data: listing,
     isLoading,
@@ -33,14 +35,12 @@ export function BookingFormPage() {
   } = useQuery({
     queryKey: ["listing", id],
     queryFn: () => listingsApi.getDetail(id!),
-    enabled: !!id,
+    enabled: !!id && hasDates,
     retry: (failCount, err) => {
       if (err instanceof ApiError && err.status === 404) return false;
       return failCount < 2;
     },
   });
-
-  const hasDates = checkIn.length > 0 && checkOut.length > 0;
 
   if (!hasDates) {
     return (
