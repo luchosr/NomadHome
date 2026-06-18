@@ -252,6 +252,7 @@ model Booking {
   refundRequest    RefundRequest?
   payoutBooking    PayoutBooking?
   review           Review?
+  flags            BookingFlag[]
 
   @@index([guestId, status])
   @@index([hostId, status, checkIn])
@@ -334,6 +335,28 @@ model PayoutBooking {
   booking Booking @relation(fields: [bookingId], references: [id])
 
   @@index([payoutId])
+}
+
+// ---------------------------------------------------------------------------
+// Admin moderation context (docs/data-model.md §3.19)
+// ---------------------------------------------------------------------------
+
+/// Admin-created flag on a booking when a user or listing is disabled.
+model BookingFlag {
+  id        String            @id @default(uuid())
+  bookingId String
+  reason    BookingFlagReason
+  adminId   String
+  createdAt DateTime          @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+}
+
+enum BookingFlagReason {
+  HOST_DISABLED
+  GUEST_DISABLED
 }
 
 // ---------------------------------------------------------------------------
