@@ -14,6 +14,9 @@ function formatRate(cents: number, currency: string): string {
 export function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isLoading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [checkIn, setCheckIn] = useState(searchParams.get("checkIn") ?? "");
+  const [checkOut, setCheckOut] = useState(searchParams.get("checkOut") ?? "");
 
   const {
     data: listing,
@@ -50,11 +53,6 @@ export function ListingDetailPage() {
   const thumbnails = sortedPhotos.slice(1);
 
   const isGuest = user?.roles.includes("guest");
-
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [checkIn, setCheckIn] = useState(searchParams.get("checkIn") ?? "");
-  const [checkOut, setCheckOut] = useState(searchParams.get("checkOut") ?? "");
-
   const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;
 
   return (
@@ -97,7 +95,7 @@ export function ListingDetailPage() {
           </p>
           <p className="text-sm text-slate-400">{listing.addressLine}</p>
 
-          <p className="mt-4 text-slate-700 leading-relaxed">{listing.description}</p>
+          <p className="mt-4 leading-relaxed text-slate-700">{listing.description}</p>
 
           {listing.amenities.length > 0 && (
             <div className="mt-6">
