@@ -16,6 +16,10 @@ const listingController = new ListingController(new ListingService(new ListingRe
 const router = Router();
 // Public — no auth required
 router.get("/:id/reviews", reviewController.listForListing);
-router.get("/:id", listingController.getPublic);
+// ponytail: UUID constraint prevents shadowing /listings/mine in listingsRouter
+router.get(
+  "/:id([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})",
+  listingController.getPublic,
+);
 
 export const reviewsRouter = router;
