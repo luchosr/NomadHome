@@ -12,11 +12,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@nomadhome/shared": "workspace:*",
     "@nomadhome/ui": "workspace:*",
     "@tanstack/react-query": "^5.62.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.79.0",
     "react-router-dom": "^7.1.1",
     "zustand": "^5.0.2"
   },
@@ -24,6 +26,7 @@
     "@nomadhome/config": "workspace:*",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
