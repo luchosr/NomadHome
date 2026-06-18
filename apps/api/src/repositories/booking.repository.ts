@@ -80,6 +80,19 @@ export class BookingRepository {
     });
   }
 
+  findHostUpcoming(hostId: string) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    return prisma.booking.findMany({
+      where: { hostId, status: "CONFIRMED", checkIn: { gte: today } },
+      orderBy: { checkIn: "asc" },
+      include: {
+        listing: { select: { title: true } },
+        guest: { select: { email: true } },
+      },
+    });
+  }
+
   latestFeeConfig(): Promise<PlatformFeeConfig | null> {
     return prisma.platformFeeConfig.findFirst({ orderBy: { createdAt: "desc" } });
   }

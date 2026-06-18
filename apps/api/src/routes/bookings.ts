@@ -13,6 +13,7 @@ import { UserRepository } from "../repositories/user.repository.js";
 import { ReviewRepository } from "../repositories/review.repository.js";
 import { LoggingEmailService } from "../services/email.service.js";
 import { requireAuth } from "../middleware/require-auth.js";
+import { requireRole } from "../middleware/require-role.js";
 
 const emailService = new LoggingEmailService();
 const stripe = new Stripe(process.env["STRIPE_SECRET_KEY"] ?? "sk_test_placeholder");
@@ -45,6 +46,7 @@ const reviewController = new ReviewController(
 
 const router = Router();
 router.use(requireAuth);
+router.get("/host-upcoming", requireRole("host"), bookingController.listHostUpcoming);
 router.post("/", bookingController.create);
 router.get("/me", bookingController.listMine);
 router.get("/:id", bookingController.getById);
