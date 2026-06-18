@@ -26,10 +26,10 @@ function makeQueryClient() {
   });
 }
 
-function renderDetail(listingId = "listing-1") {
+function renderDetail(listingId = "listing-1", search = "") {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
-      <MemoryRouter initialEntries={[`/listings/${listingId}`]}>
+      <MemoryRouter initialEntries={[`/listings/${listingId}${search}`]}>
         <Routes>
           <Route path="/listings/:id" element={<ListingDetailPage />} />
         </Routes>
@@ -95,7 +95,7 @@ describe("ListingDetailPage", () => {
       user: { id: "u1", email: "guest@test.com", roles: ["guest"] },
       isLoading: false,
     });
-    renderDetail();
+    renderDetail("listing-1", "?checkIn=2026-07-10&checkOut=2026-07-12");
 
     expect(await screen.findByRole("link", { name: /book now/i })).toBeInTheDocument();
   });

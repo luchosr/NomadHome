@@ -1,7 +1,8 @@
-import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button } from "@nomadhome/ui";
+import { Button, Input } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
@@ -49,7 +50,12 @@ export function ListingDetailPage() {
   const thumbnails = sortedPhotos.slice(1);
 
   const isGuest = user?.roles.includes("guest");
-  const isHostOrAdmin = user?.roles.includes("host") || user?.roles.includes("admin");
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [checkIn, setCheckIn] = useState(searchParams.get("checkIn") ?? "");
+  const [checkOut, setCheckOut] = useState(searchParams.get("checkOut") ?? "");
+
+  const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -140,21 +146,77 @@ export function ListingDetailPage() {
               <span className="text-base font-normal text-slate-500"> {t("search.per_night")}</span>
             </p>
 
-            {!authLoading && (
-              <div className="mt-4">
-                {isGuest && (
-                  <Link to={`/bookings/new?listingId=${listing.id}`}>
+            {isGuest && (
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label
+                    htmlFor="sidebar-checkin"
+                    className="mb-1 block text-sm font-medium text-slate-700"
+                  >
+                    {t("booking.ui.checkin_label")}
+                  </label>
+                  <Input
+                    id="sidebar-checkin"
+                    type="date"
+                    value={checkIn}
+                    onChange={(e) => {
+                      setCheckIn(e.target.value);
+                      setSearchParams(
+                        (prev) => {
+                          const next = new URLSearchParams(prev);
+                          next.set("checkIn", e.target.value);
+                          return next;
+                        },
+                        { replace: true },
+                      );
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="sidebar-checkout"
+                    className="mb-1 block text-sm font-medium text-slate-700"
+                  >
+                    {t("booking.ui.checkout_label")}
+                  </label>
+                  <Input
+                    id="sidebar-checkout"
+                    type="date"
+                    value={checkOut}
+                    onChange={(e) => {
+                      setCheckOut(e.target.value);
+                      setSearchParams(
+                        (prev) => {
+                          const next = new URLSearchParams(prev);
+                          next.set("checkOut", e.target.value);
+                          return next;
+                        },
+                        { replace: true },
+                      );
+                    }}
+                  />
+                </div>
+
+                {datesValid ? (
+                  <Link to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}>
                     <Button className="w-full">{t("listings.detail.book_now")}</Button>
                   </Link>
+                ) : (
+                  <Button className="w-full" disabled>
+                    {t("listings.detail.book_now")}
+                  </Button>
                 )}
-                {!user && (
-                  <Link to="/login">
-                    <Button variant="secondary" className="w-full">
-                      {t("listings.detail.login_to_book")}
-                    </Button>
-                  </Link>
-                )}
-                {isHostOrAdmin && null}
+              </div>
+            )}
+
+            {!authLoading && !user && (
+              <div className="mt-4">
+                <Link to="/login">
+                  <Button variant="secondary" className="w-full">
+                    {t("listings.detail.login_to_book")}
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
