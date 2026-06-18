@@ -112,6 +112,17 @@ export const en = {
       not_found: "Listing not found.",
       forbidden: "You can only manage your own listings.",
     },
+    detail: {
+      amenities: "Amenities",
+      reviews: "Reviews",
+      no_reviews: "No reviews yet.",
+      rating: "Rating",
+      book_now: "Book now",
+      login_to_book: "Log in to book",
+      capacity: "Capacity",
+      not_found: "Listing not found.",
+      guests: "guests",
+    },
   },
   search: {
     error: {
@@ -120,6 +131,15 @@ export const en = {
       invalid_page: "Page must be an integer greater than or equal to 1.",
       invalid_page_size: "Page size must be an integer between 1 and 100.",
     },
+    page_title: "Find your next stay",
+    city_label: "City",
+    city_placeholder: "e.g. Lisbon",
+    checkin_label: "Check-in",
+    checkout_label: "Check-out",
+    submit: "Search",
+    no_results: "No listings found for your search.",
+    nightly_rate: "/ night",
+    per_night: "per night",
   },
   booking: {
     error: {

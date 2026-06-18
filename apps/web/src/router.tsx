@@ -6,6 +6,8 @@ import { HomePage } from "./pages/HomePage.js";
 import { LoginPage } from "./pages/LoginPage.js";
 import { RegisterPage } from "./pages/RegisterPage.js";
 import { NotFoundPage } from "./pages/NotFoundPage.js";
+import { SearchPage } from "./pages/SearchPage.js";
+import { ListingDetailPage } from "./pages/ListingDetailPage.js";
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +16,8 @@ export const router = createBrowserRouter([
       { path: "/", element: <HomePage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
+      { path: "/search", element: <SearchPage /> },
+      { path: "/listings/:id", element: <ListingDetailPage /> },
       {
         path: "/host/*",
         element: (

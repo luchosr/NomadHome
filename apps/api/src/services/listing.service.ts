@@ -1,6 +1,7 @@
 import type { CreateListingInput, UpdateListingInput } from "@nomadhome/shared";
 import {
   ListingRepository,
+  type ListingPublicDetail,
   type ListingWithAmenities,
 } from "../repositories/listing.repository.js";
 
@@ -73,6 +74,20 @@ export class ListingService {
   async unpublish(hostId: string, id: string): Promise<ListingWithAmenities> {
     await this.getOwned(hostId, id);
     return this.listings.updateStatus(id, "DRAFT");
+  }
+
+  async getPublic(
+    id: string,
+  ): Promise<Omit<ListingPublicDetail, "reviews"> & { avgRating: number | null }> {
+    const listing = await this.listings.findPublished(id);
+    if (!listing) throw new ListingNotFoundError();
+    const avgRating =
+      listing.reviews.length > 0
+        ? listing.reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
+          listing.reviews.length
+        : null;
+    const { reviews: _reviews, ...rest } = listing;
+    return { ...rest, avgRating };
   }
 
   private async assertAmenitiesExist(codes: string[]): Promise<void> {

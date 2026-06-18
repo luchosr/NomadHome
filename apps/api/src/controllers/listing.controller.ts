@@ -47,6 +47,15 @@ export class ListingController {
     }
   };
 
+  /** Public endpoint — no auth required. Returns a PUBLISHED listing's full detail. */
+  getPublic = async (req: Request, res: Response): Promise<void> => {
+    try {
+      res.json(await this.listings.getPublic(req.params.id ?? ""));
+    } catch (err) {
+      this.mapError(err, res);
+    }
+  };
+
   update = async (req: Request, res: Response): Promise<void> => {
     const parsed = UpdateListingSchema.safeParse(req.body);
     if (!parsed.success) {
