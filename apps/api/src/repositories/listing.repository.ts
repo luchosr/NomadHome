@@ -1,4 +1,10 @@
-import { prisma, type Listing, type ListingType, type ListingStatus } from "@nomadhome/db";
+import {
+  prisma,
+  type Listing,
+  type ListingPhoto,
+  type ListingType,
+  type ListingStatus,
+} from "@nomadhome/db";
 
 export interface ListingFields {
   title: string;
@@ -13,6 +19,13 @@ export interface ListingFields {
 }
 
 export type ListingWithAmenities = Listing & { amenities: { amenityCode: string }[] };
+
+export type ListingPublicDetail = Listing & {
+  amenities: { amenityCode: string }[];
+  photos: Pick<ListingPhoto, "id" | "url" | "position">[];
+  _count: { reviews: number };
+  reviews: { rating: number }[];
+};
 
 const withAmenities = { amenities: { select: { amenityCode: true } } } as const;
 
@@ -40,6 +53,18 @@ export class ListingRepository {
 
   findById(id: string): Promise<ListingWithAmenities | null> {
     return prisma.listing.findUnique({ where: { id }, include: withAmenities });
+  }
+
+  findPublished(id: string): Promise<ListingPublicDetail | null> {
+    return prisma.listing.findFirst({
+      where: { id, status: "PUBLISHED" },
+      include: {
+        amenities: { select: { amenityCode: true } },
+        photos: { select: { id: true, url: true, position: true }, orderBy: { position: "asc" } },
+        _count: { select: { reviews: true } },
+        reviews: { select: { rating: true } },
+      },
+    });
   }
 
   listByHost(hostId: string): Promise<ListingWithAmenities[]> {
