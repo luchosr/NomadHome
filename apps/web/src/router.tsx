@@ -1,14 +1,48 @@
 import { createBrowserRouter } from "react-router-dom";
-import { App } from "./App.js";
+import { Layout } from "./components/Layout.js";
+import { ProtectedRoute } from "./components/ProtectedRoute.js";
+import { RoleGuard } from "./components/RoleGuard.js";
+import { HomePage } from "./pages/HomePage.js";
+import { LoginPage } from "./pages/LoginPage.js";
+import { RegisterPage } from "./pages/RegisterPage.js";
+import { NotFoundPage } from "./pages/NotFoundPage.js";
 
-/**
- * Route table. Role-guarded groups (`/host`, `/admin`) are placeholders here;
- * capability tickets attach real guards and pages. Admin lives behind guarded
- * routes in `apps/web` — there is no separate admin app for the MVP
- * (openspec/project.md §5).
- */
 export const router = createBrowserRouter([
-  { path: "/", element: <App /> },
-  { path: "/host/*", element: <App /> },
-  { path: "/admin/*", element: <App /> },
+  {
+    element: <Layout />,
+    children: [
+      { path: "/", element: <HomePage /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+      {
+        path: "/host/*",
+        element: (
+          <ProtectedRoute>
+            <RoleGuard role="host">
+              <div>Host dashboard — coming soon</div>
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/admin/*",
+        element: (
+          <ProtectedRoute>
+            <RoleGuard role="admin">
+              <div>Admin dashboard — coming soon</div>
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/bookings",
+        element: (
+          <ProtectedRoute>
+            <div>My bookings — coming soon</div>
+          </ProtectedRoute>
+        ),
+      },
+      { path: "*", element: <NotFoundPage /> },
+    ],
+  },
 ]);
