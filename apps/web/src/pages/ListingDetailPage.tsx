@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
@@ -157,7 +157,7 @@ export function ListingDetailPage() {
                     id="sidebar-checkin"
                     type="date"
                     value={checkIn}
-                    onChange={(e) => {
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
                       setCheckIn(e.target.value);
                       setSearchParams(
                         (prev) => {
@@ -182,7 +182,7 @@ export function ListingDetailPage() {
                     id="sidebar-checkout"
                     type="date"
                     value={checkOut}
-                    onChange={(e) => {
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
                       setCheckOut(e.target.value);
                       setSearchParams(
                         (prev) => {
