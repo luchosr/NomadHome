@@ -83,7 +83,8 @@ export class ListingService {
     if (!listing) throw new ListingNotFoundError();
     const avgRating =
       listing.reviews.length > 0
-        ? listing.reviews.reduce((sum, r) => sum + r.rating, 0) / listing.reviews.length
+        ? listing.reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
+          listing.reviews.length
         : null;
     const { reviews: _reviews, ...rest } = listing;
     return { ...rest, avgRating };
