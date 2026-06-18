@@ -1,7 +1,8 @@
-import { Link, useParams } from "react-router-dom";
+import { useState, type ChangeEvent } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button } from "@nomadhome/ui";
+import { Button, Input } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
@@ -13,6 +14,9 @@ function formatRate(cents: number, currency: string): string {
 export function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isLoading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [checkIn, setCheckIn] = useState(searchParams.get("checkIn") ?? "");
+  const [checkOut, setCheckOut] = useState(searchParams.get("checkOut") ?? "");
 
   const {
     data: listing,
@@ -49,7 +53,7 @@ export function ListingDetailPage() {
   const thumbnails = sortedPhotos.slice(1);
 
   const isGuest = user?.roles.includes("guest");
-  const isHostOrAdmin = user?.roles.includes("host") || user?.roles.includes("admin");
+  const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -91,7 +95,7 @@ export function ListingDetailPage() {
           </p>
           <p className="text-sm text-slate-400">{listing.addressLine}</p>
 
-          <p className="mt-4 text-slate-700 leading-relaxed">{listing.description}</p>
+          <p className="mt-4 leading-relaxed text-slate-700">{listing.description}</p>
 
           {listing.amenities.length > 0 && (
             <div className="mt-6">
@@ -140,21 +144,77 @@ export function ListingDetailPage() {
               <span className="text-base font-normal text-slate-500"> {t("search.per_night")}</span>
             </p>
 
-            {!authLoading && (
-              <div className="mt-4">
-                {isGuest && (
-                  <Link to={`/bookings/new?listingId=${listing.id}`}>
+            {isGuest && (
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label
+                    htmlFor="sidebar-checkin"
+                    className="mb-1 block text-sm font-medium text-slate-700"
+                  >
+                    {t("booking.ui.checkin_label")}
+                  </label>
+                  <Input
+                    id="sidebar-checkin"
+                    type="date"
+                    value={checkIn}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      setCheckIn(e.target.value);
+                      setSearchParams(
+                        (prev) => {
+                          const next = new URLSearchParams(prev);
+                          next.set("checkIn", e.target.value);
+                          return next;
+                        },
+                        { replace: true },
+                      );
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="sidebar-checkout"
+                    className="mb-1 block text-sm font-medium text-slate-700"
+                  >
+                    {t("booking.ui.checkout_label")}
+                  </label>
+                  <Input
+                    id="sidebar-checkout"
+                    type="date"
+                    value={checkOut}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      setCheckOut(e.target.value);
+                      setSearchParams(
+                        (prev) => {
+                          const next = new URLSearchParams(prev);
+                          next.set("checkOut", e.target.value);
+                          return next;
+                        },
+                        { replace: true },
+                      );
+                    }}
+                  />
+                </div>
+
+                {datesValid ? (
+                  <Link to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}>
                     <Button className="w-full">{t("listings.detail.book_now")}</Button>
                   </Link>
+                ) : (
+                  <Button className="w-full" disabled>
+                    {t("listings.detail.book_now")}
+                  </Button>
                 )}
-                {!user && (
-                  <Link to="/login">
-                    <Button variant="secondary" className="w-full">
-                      {t("listings.detail.login_to_book")}
-                    </Button>
-                  </Link>
-                )}
-                {isHostOrAdmin && null}
+              </div>
+            )}
+
+            {!authLoading && !user && (
+              <div className="mt-4">
+                <Link to="/login">
+                  <Button variant="secondary" className="w-full">
+                    {t("listings.detail.login_to_book")}
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
