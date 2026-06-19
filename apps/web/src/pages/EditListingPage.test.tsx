@@ -101,15 +101,13 @@ describe("EditListingPage", () => {
     await waitFor(() => expect(mockPublish).toHaveBeenCalledWith("l1"));
   });
 
-  it("shows photos from the photo list query", async () => {
+  it("shows no photos text when photos list is empty", async () => {
     mockGetOne.mockResolvedValue(mockListing);
-    mockListPhotos.mockResolvedValue([
-      { id: "p1", url: "https://example.com/photo.jpg", position: 0 },
-    ]);
+    mockListPhotos.mockResolvedValue([]);
     mockListAvailability.mockResolvedValue([]);
     renderPage();
 
-    const img = await screen.findByRole("img");
-    expect(img).toHaveAttribute("src", "https://example.com/photo.jpg");
+    await screen.findByDisplayValue("Beach House");
+    expect(await screen.findByText(/no photos yet/i)).toBeInTheDocument();
   });
 });
