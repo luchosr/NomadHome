@@ -1,4 +1,10 @@
-import { prisma, type Booking, type PlatformFeeConfig, type RefundRequest } from "@nomadhome/db";
+import {
+  prisma,
+  type Booking,
+  type Listing,
+  type PlatformFeeConfig,
+  type RefundRequest,
+} from "@nomadhome/db";
 
 export class BookingRepository {
   create(data: {
@@ -41,7 +47,7 @@ export class BookingRepository {
     guestId: string,
     page: number,
     limit: number,
-  ): Promise<{ data: Booking[]; total: number }> {
+  ): Promise<{ data: (Booking & { listing: Pick<Listing, "title"> })[]; total: number }> {
     return prisma.$transaction(async (tx) => {
       const [data, total] = await Promise.all([
         tx.booking.findMany({
@@ -49,6 +55,7 @@ export class BookingRepository {
           orderBy: { createdAt: "desc" },
           skip: (page - 1) * limit,
           take: limit,
+          include: { listing: { select: { title: true } } },
         }),
         tx.booking.count({ where: { guestId } }),
       ]);

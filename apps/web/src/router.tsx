@@ -11,6 +11,7 @@ import { ListingDetailPage } from "./pages/ListingDetailPage.js";
 import { BookingFormPage } from "./pages/BookingFormPage.js";
 import { BookingSuccessPage } from "./pages/BookingSuccessPage.js";
 import { BookingCancelPage } from "./pages/BookingCancelPage.js";
+import { MyBookingsPage } from "./pages/MyBookingsPage.js";
 
 export const router = createBrowserRouter([
   {
@@ -55,7 +56,7 @@ export const router = createBrowserRouter([
         path: "/bookings",
         element: (
           <ProtectedRoute>
-            <div>My bookings — coming soon</div>
+            <MyBookingsPage />
           </ProtectedRoute>
         ),
       },
