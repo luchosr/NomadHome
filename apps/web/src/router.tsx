@@ -12,6 +12,10 @@ import { BookingFormPage } from "./pages/BookingFormPage.js";
 import { BookingSuccessPage } from "./pages/BookingSuccessPage.js";
 import { BookingCancelPage } from "./pages/BookingCancelPage.js";
 import { MyBookingsPage } from "./pages/MyBookingsPage.js";
+import { HostListingsPage } from "./pages/HostListingsPage.js";
+import { CreateListingPage } from "./pages/CreateListingPage.js";
+import { EditListingPage } from "./pages/EditListingPage.js";
+import { HostUpcomingPage } from "./pages/HostUpcomingPage.js";
 
 export const router = createBrowserRouter([
   {
@@ -33,11 +37,41 @@ export const router = createBrowserRouter([
       { path: "/booking/success", element: <BookingSuccessPage /> },
       { path: "/booking/cancel", element: <BookingCancelPage /> },
       {
-        path: "/host/*",
+        path: "/host/listings",
         element: (
           <ProtectedRoute>
             <RoleGuard role="host">
-              <div>Host dashboard — coming soon</div>
+              <HostListingsPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/host/listings/new",
+        element: (
+          <ProtectedRoute>
+            <RoleGuard role="host">
+              <CreateListingPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/host/listings/:id/edit",
+        element: (
+          <ProtectedRoute>
+            <RoleGuard role="host">
+              <EditListingPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/host/upcoming",
+        element: (
+          <ProtectedRoute>
+            <RoleGuard role="host">
+              <HostUpcomingPage />
             </RoleGuard>
           </ProtectedRoute>
         ),
