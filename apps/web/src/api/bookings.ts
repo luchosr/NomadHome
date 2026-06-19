@@ -31,6 +31,14 @@ export interface BookingsPage {
   limit: number;
 }
 
+export interface HostUpcomingBooking {
+  id: string;
+  checkIn: string;
+  checkOut: string;
+  listing: { title: string };
+  guest: { email: string };
+}
+
 export const bookingsApi = {
   create(input: { listingId: string; checkIn: string; checkOut: string }): Promise<BookingCreated> {
     return apiFetch("/bookings", { method: "POST", body: JSON.stringify(input) });
@@ -52,5 +60,8 @@ export const bookingsApi = {
       method: "POST",
       body: JSON.stringify(input),
     });
+  },
+  hostUpcoming(): Promise<HostUpcomingBooking[]> {
+    return apiFetch("/bookings/host-upcoming");
   },
 };
