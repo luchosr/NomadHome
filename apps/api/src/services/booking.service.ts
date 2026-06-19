@@ -1,4 +1,4 @@
-import { type Booking } from "@nomadhome/db";
+import { type Booking, type Listing } from "@nomadhome/db";
 import { t } from "@nomadhome/shared";
 import { BookingRepository } from "../repositories/booking.repository.js";
 import { ListingRepository } from "../repositories/listing.repository.js";
@@ -131,7 +131,12 @@ export class BookingService {
     guestId: string,
     page: number,
     limit: number,
-  ): Promise<{ data: Booking[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    data: (Booking & { listing: Pick<Listing, "title"> })[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const { data, total } = await this.bookings.findByGuest(guestId, page, limit);
     return { data, total, page, limit };
   }
