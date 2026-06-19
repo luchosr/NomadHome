@@ -264,6 +264,32 @@ export const en = {
       checkout_col: "Check-out",
     },
   },
+  admin: {
+    users: {
+      title: "Users",
+      email_col: "Email",
+      roles_col: "Roles",
+      status_col: "Status",
+      actions_col: "Actions",
+      active: "Active",
+      disabled: "Disabled",
+      disable: "Disable",
+      enable: "Re-enable",
+      no_users: "No users found.",
+    },
+    listings: {
+      title: "Listings",
+      title_col: "Title",
+      type_col: "Type",
+      city_col: "City",
+      host_col: "Host",
+      status_col: "Status",
+      actions_col: "Actions",
+      disable: "Disable",
+      enable: "Re-enable",
+      no_listings: "No listings found.",
+    },
+  },
 } as const;
 
 export type Dictionary = typeof en;
