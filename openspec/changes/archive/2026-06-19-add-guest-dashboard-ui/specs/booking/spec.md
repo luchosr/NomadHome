@@ -24,7 +24,7 @@ The web app SHALL provide a `/bookings` page where an authenticated guest can vi
 - **When** the guest clicks "Leave a review", selects a star rating, and submits
 - **Then** `POST /bookings/:id/review` is called with rating and optional text; the "Leave a review" button is hidden on success
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: booking list response includes listing title
 

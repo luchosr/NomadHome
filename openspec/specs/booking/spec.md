@@ -215,3 +215,13 @@ The web app SHALL provide a `/booking/cancel` page shown when a guest abandons S
 - **Given** Stripe redirects to `/booking/cancel?listingId=<id>`
 - **When** the page loads
 - **Then** the page shows a "Payment cancelled" message and a link back to the listing detail page
+
+### Requirement: booking list response includes listing title
+
+The `GET /bookings/me` response SHALL include `listing: { title: string }` on each booking row so the guest dashboard can display the property name without additional round-trips.
+
+#### Scenario: listing title present in bookings list
+
+- **Given** a guest has at least one booking
+- **When** they call `GET /bookings/me`
+- **Then** each item in `data` includes a `listing` object with a `title` string
