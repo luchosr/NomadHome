@@ -67,4 +67,42 @@ export class AdminRepository {
       data: { status: "PUBLISHED", disabledAt: null },
     });
   }
+
+  listUsers(page: number, limit: number) {
+    return prisma.$transaction(async (tx) => {
+      const [data, total] = await Promise.all([
+        tx.user.findMany({
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * limit,
+          take: limit,
+          select: { id: true, email: true, roles: true, disabledAt: true, createdAt: true },
+        }),
+        tx.user.count(),
+      ]);
+      return { data, total };
+    });
+  }
+
+  listListings(page: number, limit: number) {
+    return prisma.$transaction(async (tx) => {
+      const [data, total] = await Promise.all([
+        tx.listing.findMany({
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * limit,
+          take: limit,
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            city: true,
+            status: true,
+            createdAt: true,
+            host: { select: { email: true } },
+          },
+        }),
+        tx.listing.count(),
+      ]);
+      return { data, total };
+    });
+  }
 }
