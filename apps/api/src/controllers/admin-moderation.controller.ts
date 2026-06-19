@@ -60,4 +60,24 @@ export class AdminModerationController {
       throw err;
     }
   };
+
+  listUsers = async (req: Request, res: Response): Promise<void> => {
+    const page = Math.max(1, parseInt(String(req.query["page"] ?? "1"), 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(String(req.query["limit"] ?? "50"), 10) || 50),
+    );
+    const result = await this.service.listUsers(page, limit);
+    res.json({ ...result, page, limit });
+  };
+
+  listListings = async (req: Request, res: Response): Promise<void> => {
+    const page = Math.max(1, parseInt(String(req.query["page"] ?? "1"), 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(String(req.query["limit"] ?? "50"), 10) || 50),
+    );
+    const result = await this.service.listListings(page, limit);
+    res.json({ ...result, page, limit });
+  };
 }
