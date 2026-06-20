@@ -16,6 +16,8 @@ import { HostListingsPage } from "./pages/HostListingsPage.js";
 import { CreateListingPage } from "./pages/CreateListingPage.js";
 import { EditListingPage } from "./pages/EditListingPage.js";
 import { HostUpcomingPage } from "./pages/HostUpcomingPage.js";
+import { AdminUsersPage } from "./pages/AdminUsersPage.js";
+import { AdminListingsPage } from "./pages/AdminListingsPage.js";
 
 export const router = createBrowserRouter([
   {
@@ -77,11 +79,21 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/admin/*",
+        path: "/admin/users",
         element: (
           <ProtectedRoute>
             <RoleGuard role="admin">
-              <div>Admin dashboard — coming soon</div>
+              <AdminUsersPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/admin/listings",
+        element: (
+          <ProtectedRoute>
+            <RoleGuard role="admin">
+              <AdminListingsPage />
             </RoleGuard>
           </ProtectedRoute>
         ),

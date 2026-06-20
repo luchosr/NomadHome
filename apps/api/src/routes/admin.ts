@@ -32,6 +32,8 @@ const moderationController = new AdminModerationController(new AdminService(new 
 
 const router = Router();
 router.use(requireAuth, requireRole("admin"));
+router.get("/users", moderationController.listUsers);
+router.get("/listings", moderationController.listListings);
 router.get("/payouts", paymentController.getPayoutSummary);
 router.post("/payouts", paymentController.recordPayout);
 router.patch("/users/:id/disable", moderationController.disableUser);

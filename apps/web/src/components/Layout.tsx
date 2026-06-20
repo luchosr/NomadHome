@@ -31,7 +31,7 @@ export function Layout() {
                     </Link>
                   )}
                   {user.roles.includes("admin") && (
-                    <Link to="/admin" className="text-sm text-slate-700 hover:text-slate-900">
+                    <Link to="/admin/users" className="text-sm text-slate-700 hover:text-slate-900">
                       {t("nav.admin")}
                     </Link>
                   )}

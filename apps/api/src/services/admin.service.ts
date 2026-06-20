@@ -45,6 +45,14 @@ export class AdminService {
       throw err;
     }
   }
+
+  listUsers(page: number, limit: number) {
+    return this.repo.listUsers(page, limit);
+  }
+
+  listListings(page: number, limit: number) {
+    return this.repo.listListings(page, limit);
+  }
 }
 
 function isPrismaNotFound(err: unknown): boolean {
