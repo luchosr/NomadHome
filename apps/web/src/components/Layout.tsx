@@ -25,11 +25,18 @@ export function Layout() {
               {user ? (
                 <>
                   <span className="text-sm text-slate-600">{user.email}</span>
-                  {user.roles.includes("host") && (
-                    <Link to="/host" className="text-sm text-slate-700 hover:text-slate-900">
+                  {user.roles.includes("host") ? (
+                    <Link
+                      to="/host/listings"
+                      className="text-sm text-slate-700 hover:text-slate-900"
+                    >
                       {t("nav.host_dashboard")}
                     </Link>
-                  )}
+                  ) : !user.roles.includes("admin") ? (
+                    <Link to="/become-host" className="text-sm text-slate-700 hover:text-slate-900">
+                      {t("nav.become_host")}
+                    </Link>
+                  ) : null}
                   {user.roles.includes("admin") && (
                     <Link to="/admin/users" className="text-sm text-slate-700 hover:text-slate-900">
                       {t("nav.admin")}

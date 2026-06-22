@@ -38,4 +38,10 @@ export const authApi = {
     }),
 
   me: () => apiFetch<AuthUser>("/auth/me"),
+
+  becomeHost: (data: { displayName: string; payoutEmail: string; acceptedTerms: true }) =>
+    apiFetch<{ accessToken: string; roles: string[] }>("/users/me/become-host", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

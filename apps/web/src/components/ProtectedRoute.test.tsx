@@ -16,6 +16,7 @@ function renderProtected(userValue: { user: unknown; isLoading: boolean }) {
     login: vi.fn(),
     register: vi.fn(),
     logout: vi.fn(),
+    becomeHost: vi.fn(),
   } as ReturnType<typeof useAuth>);
 
   return render(

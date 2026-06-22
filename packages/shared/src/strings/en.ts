@@ -25,6 +25,7 @@ export const en = {
     register: "Sign up",
     my_bookings: "My Bookings",
     host_dashboard: "Host Dashboard",
+    become_host: "Become a host",
     admin: "Admin",
   },
   auth: {
@@ -79,6 +80,12 @@ export const en = {
       invalid_credentials: "Invalid email or password.",
     },
     become_host: {
+      title: "Become a host",
+      subtitle: "Set up your host profile to start listing properties and workspaces.",
+      display_name_label: "Display name",
+      payout_email_label: "Payout email",
+      terms_label: "I accept the host terms and conditions",
+      submit: "Become a host",
       terms_required: "You must accept the host terms to continue.",
       already_host: "You're already set up as a host.",
     },
