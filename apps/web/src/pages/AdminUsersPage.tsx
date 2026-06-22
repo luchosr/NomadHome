@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { Badge, Button } from "@nomadhome/ui";
 import { adminApi, type AdminUser } from "../api/admin.js";
+import { PageWrapper } from "../components/PageWrapper.js";
 
 function userStatusTone(disabledAt: string | null): "success" | "danger" {
   return disabledAt === null ? "success" : "danger";
@@ -40,7 +41,7 @@ export function AdminUsersPage() {
   }
 
   return (
-    <div>
+    <PageWrapper>
       <h1 className="mb-6 text-2xl font-bold text-slate-900">{t("admin.users.title")}</h1>
 
       {data.data.length === 0 ? (
@@ -83,6 +84,6 @@ export function AdminUsersPage() {
           </table>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

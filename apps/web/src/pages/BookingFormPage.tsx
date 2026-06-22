@@ -109,7 +109,7 @@ export function BookingFormPage() {
   };
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-lg px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("booking.ui.form_title")}</h1>
 
       <div className="space-y-4 rounded-xl border border-subtle bg-elevated p-6 shadow-sm">

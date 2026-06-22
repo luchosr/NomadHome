@@ -8,6 +8,7 @@ import { t } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import { searchApi, type SearchParams } from "../api/search.js";
 import { ListingCard } from "../components/ListingCard.js";
+import { PageWrapper } from "../components/PageWrapper.js";
 
 const SearchFormSchema = z.object({
   city: z.string().min(1, t("validation.required.field")),
@@ -64,7 +65,7 @@ export function SearchPage() {
   };
 
   return (
-    <div>
+    <PageWrapper>
       <h1 className="mb-6 text-2xl font-bold text-slate-900">{t("search.page_title")}</h1>
 
       <form
@@ -144,6 +145,6 @@ export function SearchPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

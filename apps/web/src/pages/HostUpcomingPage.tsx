@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { bookingsApi } from "../api/bookings.js";
+import { PageWrapper } from "../components/PageWrapper.js";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -26,7 +27,7 @@ export function HostUpcomingPage() {
   }
 
   return (
-    <div>
+    <PageWrapper>
       <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("host.upcoming.title")}</h1>
 
       {data.length === 0 ? (
@@ -55,6 +56,6 @@ export function HostUpcomingPage() {
           </table>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

@@ -5,6 +5,7 @@ import { Badge, Button, Card } from "@nomadhome/ui";
 import { bookingsApi, type BookingWithListing } from "../api/bookings.js";
 import { CancelBookingModal } from "../components/CancelBookingModal.js";
 import { ReviewModal } from "../components/ReviewModal.js";
+import { PageWrapper } from "../components/PageWrapper.js";
 
 function statusTone(
   status: BookingWithListing["status"],
@@ -79,7 +80,7 @@ export function MyBookingsPage() {
   }
 
   return (
-    <div>
+    <PageWrapper>
       <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("booking.dashboard.title")}</h1>
 
       {data.data.length === 0 ? (
@@ -141,6 +142,6 @@ export function MyBookingsPage() {
           onClose={() => setReviewBookingId(null)}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

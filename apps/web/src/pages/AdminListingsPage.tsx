@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { Badge, Button } from "@nomadhome/ui";
 import { adminApi, type AdminListing } from "../api/admin.js";
+import { PageWrapper } from "../components/PageWrapper.js";
 
 function listingStatusTone(status: AdminListing["status"]): "success" | "neutral" | "danger" {
   switch (status) {
@@ -43,7 +44,7 @@ export function AdminListingsPage() {
   }
 
   return (
-    <div>
+    <PageWrapper>
       <h1 className="mb-6 text-2xl font-bold text-slate-900">{t("admin.listings.title")}</h1>
 
       {data.data.length === 0 ? (
@@ -88,6 +89,6 @@ export function AdminListingsPage() {
           </table>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

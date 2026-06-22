@@ -56,7 +56,7 @@ export function ListingDetailPage() {
   const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Photo gallery */}
       {primaryPhoto ? (
         <div className="mb-4">
