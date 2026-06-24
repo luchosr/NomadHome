@@ -33,7 +33,7 @@ export const hostApi = {
     return apiFetch("/listings/mine");
   },
   getOne(id: string): Promise<HostListing> {
-    return apiFetch(`/listings/${id}`);
+    return apiFetch(`/listings/${id}/manage`);
   },
   create(input: CreateListingInput): Promise<HostListing> {
     return apiFetch("/listings", { method: "POST", body: JSON.stringify(input) });

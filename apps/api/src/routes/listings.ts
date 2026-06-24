@@ -13,6 +13,7 @@ export function createListingsRouter(): Router {
   router.use(requireAuth, requireRole("host"));
   router.post("/", controller.create);
   router.get("/mine", controller.listMine);
+  router.get("/:id/manage", controller.getOne);
   router.get("/:id", controller.getOne);
   router.patch("/:id", controller.update);
   router.patch("/:id/publish", controller.publish);
