@@ -36,7 +36,6 @@ A Co-living and Workspace platform
 ### 0.5. Repository URL or Compressed Archive
 
 - https://github.com/luchosr/NomadHome
-  > You can host it publicly or privately. If private, share access securely. You can send them to [alvaro@lidr.co](mailto:alvaro@lidr.co) using a service like [onetimesecret](https://onetimesecret.com/). You can also share the content by email as a zip file
 
 ---
 
