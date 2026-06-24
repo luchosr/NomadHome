@@ -241,7 +241,7 @@ export const en = {
       field_country: "Country (2-letter code)",
       field_address: "Address",
       field_capacity: "Capacity (guests)",
-      field_rate: "Nightly rate (cents)",
+      field_rate: "Nightly rate",
       field_currency: "Currency",
       field_amenities: "Amenities",
       type_property: "Property",
