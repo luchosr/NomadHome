@@ -16,19 +16,23 @@ export class SearchRepository {
       pageSize,
     } = params;
 
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
-    const nights = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000);
+    const checkInDate = checkIn ? new Date(checkIn) : null;
+    const checkOutDate = checkOut ? new Date(checkOut) : null;
+    const nights =
+      checkInDate && checkOutDate
+        ? Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000)
+        : 1;
 
     const where = {
       status: "PUBLISHED" as const,
       city: { equals: city, mode: "insensitive" as const },
-      availabilityBlocks: {
-        none: {
-          startDate: { lt: checkOutDate },
-          endDate: { gt: checkInDate },
-        },
-      },
+      ...(checkInDate && checkOutDate
+        ? {
+            availabilityBlocks: {
+              none: { startDate: { lt: checkOutDate }, endDate: { gt: checkInDate } },
+            },
+          }
+        : {}),
       ...(type ? { type } : {}),
       ...(minPrice !== undefined || maxPrice !== undefined
         ? {

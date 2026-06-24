@@ -4,8 +4,8 @@ import { t } from "../t.js";
 export const SearchQuerySchema = z
   .object({
     city: z.string().min(1),
-    checkIn: z.string().date(),
-    checkOut: z.string().date(),
+    checkIn: z.string().date().optional(),
+    checkOut: z.string().date().optional(),
     type: z.enum(["PROPERTY", "WORKSPACE"]).optional(),
     amenities: z
       .string()
@@ -24,7 +24,7 @@ export const SearchQuerySchema = z
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(100).default(20),
   })
-  .refine((d) => d.checkOut > d.checkIn, {
+  .refine((d) => !d.checkIn || !d.checkOut || d.checkOut > d.checkIn, {
     message: t("search.error.end_before_start"),
     path: ["checkOut"],
   });

@@ -10,30 +10,34 @@ import { searchApi, type SearchParams } from "../api/search.js";
 import { ListingCard } from "../components/ListingCard.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 
-const SearchFormSchema = z.object({
-  city: z.string().min(1, t("validation.required.field")),
-  checkIn: z.string().date("Invalid date format."),
-  checkOut: z.string().date("Invalid date format."),
-});
+const SearchFormSchema = z
+  .object({
+    city: z.string().min(1, t("validation.required.field")),
+    checkIn: z.string().optional(),
+    checkOut: z.string().optional(),
+  })
+  .refine((d) => !d.checkIn || !d.checkOut || d.checkOut > d.checkIn, {
+    message: t("search.error.end_before_start"),
+    path: ["checkOut"],
+  });
 
 type SearchFormInput = z.infer<typeof SearchFormSchema>;
+
+const today = new Date().toISOString().slice(0, 10);
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSearch, setActiveSearch] = useState<SearchParams | null>(() => {
     const city = searchParams.get("city");
-    const checkIn = searchParams.get("checkIn");
-    const checkOut = searchParams.get("checkOut");
-    if (city && checkIn && checkOut) {
-      return { city, checkIn, checkOut };
-    }
-    return null;
+    if (!city) return null;
+    const checkIn = searchParams.get("checkIn") ?? undefined;
+    const checkOut = searchParams.get("checkOut") ?? undefined;
+    return { city, checkIn, checkOut };
   });
 
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<SearchFormInput>({
     resolver: zodResolver(SearchFormSchema),
@@ -51,16 +55,15 @@ export function SearchPage() {
   });
 
   const onSubmit = (values: SearchFormInput) => {
-    if (values.checkOut <= values.checkIn) {
-      setError("checkOut", { message: t("search.error.end_before_start") });
-      return;
-    }
     const params: SearchParams = {
       city: values.city,
-      checkIn: values.checkIn,
-      checkOut: values.checkOut,
+      checkIn: values.checkIn || undefined,
+      checkOut: values.checkOut || undefined,
     };
-    setSearchParams({ city: values.city, checkIn: values.checkIn, checkOut: values.checkOut });
+    const sp: Record<string, string> = { city: values.city };
+    if (params.checkIn) sp.checkIn = params.checkIn;
+    if (params.checkOut) sp.checkOut = params.checkOut;
+    setSearchParams(sp);
     setActiveSearch(params);
   };
 
@@ -93,6 +96,7 @@ export function SearchPage() {
           <Input
             id="checkIn"
             type="date"
+            min={today}
             aria-invalid={!!errors.checkIn}
             {...register("checkIn")}
           />
@@ -106,6 +110,7 @@ export function SearchPage() {
           <Input
             id="checkOut"
             type="date"
+            min={today}
             aria-invalid={!!errors.checkOut}
             {...register("checkOut")}
           />
