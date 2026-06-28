@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -50,20 +51,24 @@ describe("CreateListingPage", () => {
   });
 
   it("calls hostApi.create and navigates to edit page on submit", async () => {
+    const user = userEvent.setup();
     mockCreate.mockResolvedValue({ id: "new-l1", title: "Test" });
     renderPage();
 
-    fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value: "Test Listing" } });
-    fireEvent.change(screen.getByLabelText(/^description$/i), {
-      target: { value: "A description" },
-    });
-    fireEvent.change(screen.getByLabelText(/^city$/i), { target: { value: "Lisbon" } });
-    fireEvent.change(screen.getByLabelText(/^country/i), { target: { value: "PT" } });
-    fireEvent.change(screen.getByLabelText(/^address/i), { target: { value: "1 Main St" } });
-    fireEvent.change(screen.getByLabelText(/^capacity/i), { target: { value: "2" } });
-    fireEvent.change(screen.getByLabelText(/^nightly rate/i), { target: { value: "10000" } });
+    await user.type(screen.getByLabelText(/^title$/i), "Test Listing");
+    await user.type(
+      screen.getByLabelText(/^description$/i),
+      "A long enough description for the listing",
+    );
+    await user.type(screen.getByLabelText(/^city$/i), "Lisbon");
+    await user.selectOptions(screen.getByLabelText(/^country/i), "PT");
+    await user.type(screen.getByLabelText(/^address/i), "1 Main St");
+    await user.clear(screen.getByLabelText(/^capacity/i));
+    await user.type(screen.getByLabelText(/^capacity/i), "2");
+    await user.clear(screen.getByLabelText(/^nightly rate/i));
+    await user.type(screen.getByLabelText(/^nightly rate/i), "100");
 
-    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    await user.click(screen.getByRole("button", { name: /create/i }));
 
     await waitFor(() => expect(mockCreate).toHaveBeenCalledOnce());
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/host/listings/new-l1/edit"));

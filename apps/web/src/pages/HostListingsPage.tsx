@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { Badge, Button, Card } from "@nomadhome/ui";
 import { hostApi, type HostListing } from "../api/host.js";
+import { PageWrapper } from "../components/PageWrapper.js";
 
 function statusTone(status: HostListing["status"]): "neutral" | "success" | "danger" {
   switch (status) {
@@ -43,7 +44,7 @@ export function HostListingsPage() {
   }
 
   return (
-    <div>
+    <PageWrapper>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-fg-1">{t("host.listings.title")}</h1>
         <Link to="/host/listings/new">
@@ -79,6 +80,6 @@ export function HostListingsPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

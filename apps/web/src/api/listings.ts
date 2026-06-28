@@ -17,8 +17,16 @@ export interface ListingDetail {
   avgRating: number | null;
 }
 
+export interface BlockedRange {
+  startDate: string;
+  endDate: string;
+}
+
 export const listingsApi = {
   getDetail(id: string): Promise<ListingDetail> {
     return apiFetch(`/listings/${id}`);
+  },
+  getBlockedDates(id: string): Promise<BlockedRange[]> {
+    return apiFetch(`/listings/${id}/blocked-dates`);
   },
 };

@@ -1,4 +1,6 @@
 import express, { type Express } from "express";
+import fs from "node:fs";
+import path from "node:path";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { usersRouter } from "./routes/users.js";
@@ -25,6 +27,18 @@ export function createApp(): Express {
   const app = express();
   // Stripe webhook needs raw body — mount before express.json()
   app.use("/stripe", stripeRouter);
+
+  // Local dev file uploads (active only when R2 env vars are absent)
+  if (!process.env["R2_ACCOUNT_ID"]) {
+    const uploadsDir = path.join(process.cwd(), "uploads");
+    app.put("/dev-upload/:key", express.raw({ type: "*/*", limit: "20mb" }), (req, res) => {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadsDir, req.params.key!), req.body as Buffer);
+      res.status(200).send();
+    });
+    app.use("/uploads", express.static(uploadsDir));
+  }
+
   app.use(express.json());
   app.use("/health", healthRouter);
   app.use("/auth", authRouter);

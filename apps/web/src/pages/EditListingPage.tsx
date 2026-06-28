@@ -206,7 +206,7 @@ export function EditListingPage() {
     );
 
   return (
-    <div className="mx-auto max-w-2xl space-y-10">
+    <div className="mx-auto max-w-2xl space-y-10 px-4 py-8">
       <h1 className="text-2xl font-bold text-fg-1">{t("host.listings.edit_title")}</h1>
 
       {/* Status + Publish/Unpublish */}

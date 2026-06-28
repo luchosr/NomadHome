@@ -1,9 +1,10 @@
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button, Input } from "@nomadhome/ui";
+import { Button } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
+import { DateRangePicker } from "../components/DateRangePicker.js";
 import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
 
@@ -32,6 +33,12 @@ export function ListingDetailPage() {
     },
   });
 
+  const { data: blockedRanges = [] } = useQuery({
+    queryKey: ["listing", id, "blocked-dates"],
+    queryFn: () => listingsApi.getBlockedDates(id!),
+    enabled: !!id,
+  });
+
   if (isLoading) {
     return <p>Loading...</p>;
   }
@@ -56,7 +63,7 @@ export function ListingDetailPage() {
   const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Photo gallery */}
       {primaryPhoto ? (
         <div className="mb-4">
@@ -137,7 +144,7 @@ export function ListingDetailPage() {
         </div>
 
         {/* Booking sidebar */}
-        <div className="md:w-72">
+        <div className="md:w-96">
           <div className="rounded-xl border border-slate-200 p-6 shadow-sm">
             <p className="text-2xl font-bold text-slate-900">
               {formatRate(listing.nightlyRateCents, listing.currency)}
@@ -146,55 +153,26 @@ export function ListingDetailPage() {
 
             {isGuest && (
               <div className="mt-4 space-y-3">
-                <div>
-                  <label
-                    htmlFor="sidebar-checkin"
-                    className="mb-1 block text-sm font-medium text-slate-700"
-                  >
-                    {t("booking.ui.checkin_label")}
-                  </label>
-                  <Input
-                    id="sidebar-checkin"
-                    type="date"
-                    value={checkIn}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                      setCheckIn(e.target.value);
-                      setSearchParams(
-                        (prev) => {
-                          const next = new URLSearchParams(prev);
-                          next.set("checkIn", e.target.value);
-                          return next;
-                        },
-                        { replace: true },
-                      );
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="sidebar-checkout"
-                    className="mb-1 block text-sm font-medium text-slate-700"
-                  >
-                    {t("booking.ui.checkout_label")}
-                  </label>
-                  <Input
-                    id="sidebar-checkout"
-                    type="date"
-                    value={checkOut}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                      setCheckOut(e.target.value);
-                      setSearchParams(
-                        (prev) => {
-                          const next = new URLSearchParams(prev);
-                          next.set("checkOut", e.target.value);
-                          return next;
-                        },
-                        { replace: true },
-                      );
-                    }}
-                  />
-                </div>
+                <DateRangePicker
+                  checkIn={checkIn}
+                  checkOut={checkOut}
+                  blockedRanges={blockedRanges}
+                  onChange={(newIn, newOut) => {
+                    setCheckIn(newIn);
+                    setCheckOut(newOut);
+                    setSearchParams(
+                      (prev) => {
+                        const next = new URLSearchParams(prev);
+                        if (newIn) next.set("checkIn", newIn);
+                        else next.delete("checkIn");
+                        if (newOut) next.set("checkOut", newOut);
+                        else next.delete("checkOut");
+                        return next;
+                      },
+                      { replace: true },
+                    );
+                  }}
+                />
 
                 {datesValid ? (
                   <Link to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}>

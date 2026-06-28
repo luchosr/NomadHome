@@ -37,6 +37,7 @@ export interface BecomeHostCommand extends BecomeHostInput {
 export interface SessionTokens {
   accessToken: string;
   refreshToken: string;
+  user: { id: string; email: string; roles: string[] };
 }
 
 /** Thrown when an email is already registered. Mapped to a generic error at the edge. */
@@ -152,7 +153,11 @@ export class AuthService {
       userAgent: cmd.userAgent,
     });
 
-    return { accessToken, refreshToken: refresh.raw };
+    return {
+      accessToken,
+      refreshToken: refresh.raw,
+      user: { id: user.id, email: user.email, roles: user.roles },
+    };
   }
 
   /**
@@ -200,6 +205,7 @@ export class AuthService {
     return {
       accessToken: this.tokens.signAccessToken(user.id, user.roles),
       refreshToken: next.raw,
+      user: { id: user.id, email: user.email, roles: user.roles },
     };
   }
 

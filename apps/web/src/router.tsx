@@ -18,6 +18,7 @@ import { EditListingPage } from "./pages/EditListingPage.js";
 import { HostUpcomingPage } from "./pages/HostUpcomingPage.js";
 import { AdminUsersPage } from "./pages/AdminUsersPage.js";
 import { AdminListingsPage } from "./pages/AdminListingsPage.js";
+import { BecomeHostPage } from "./pages/BecomeHostPage.js";
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,14 @@ export const router = createBrowserRouter([
       { path: "/", element: <HomePage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
+      {
+        path: "/become-host",
+        element: (
+          <ProtectedRoute>
+            <BecomeHostPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: "/search", element: <SearchPage /> },
       { path: "/listings/:id", element: <ListingDetailPage /> },
       {
