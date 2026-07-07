@@ -28,7 +28,7 @@ RUN pnpm --filter @nomadhome/db build
 RUN pnpm --filter @nomadhome/api build
 
 # Create a lean production bundle for the API
-RUN pnpm deploy --filter=@nomadhome/api --prod /prod/api
+RUN pnpm deploy --filter=@nomadhome/api --prod --ignore-scripts /prod/api
 
 # ---- Runtime image ----
 FROM node:20-alpine AS runner
