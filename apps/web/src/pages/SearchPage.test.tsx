@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -77,13 +77,14 @@ describe("SearchPage", () => {
     renderSearch();
 
     await userEvent.type(screen.getByLabelText(/city/i), "Lisbon");
-    await userEvent.type(screen.getByLabelText(/check-in/i), "2026-07-01");
-    await userEvent.type(screen.getByLabelText(/check-out/i), "2026-07-07");
+    // userEvent.type does not work for <input type="date"> in jsdom; use fireEvent.change
+    fireEvent.change(screen.getByLabelText(/check-in/i), { target: { value: "2027-01-01" } });
+    fireEvent.change(screen.getByLabelText(/check-out/i), { target: { value: "2027-01-07" } });
     await userEvent.click(screen.getByRole("button", { name: /search/i }));
 
     await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(1));
     expect(mockSearch).toHaveBeenCalledWith(
-      expect.objectContaining({ city: "Lisbon", checkIn: "2026-07-01", checkOut: "2026-07-07" }),
+      expect.objectContaining({ city: "Lisbon", checkIn: "2027-01-01", checkOut: "2027-01-07" }),
     );
     expect(await screen.findByText("Lisbon Studio")).toBeInTheDocument();
   });
@@ -96,8 +97,8 @@ describe("SearchPage", () => {
     renderSearch();
 
     await userEvent.type(screen.getByLabelText(/city/i), "Nowhere");
-    await userEvent.type(screen.getByLabelText(/check-in/i), "2026-07-01");
-    await userEvent.type(screen.getByLabelText(/check-out/i), "2026-07-07");
+    fireEvent.change(screen.getByLabelText(/check-in/i), { target: { value: "2027-01-01" } });
+    fireEvent.change(screen.getByLabelText(/check-out/i), { target: { value: "2027-01-07" } });
     await userEvent.click(screen.getByRole("button", { name: /search/i }));
 
     expect(await screen.findByText(/no listings found/i)).toBeInTheDocument();
