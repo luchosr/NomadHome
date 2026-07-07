@@ -12,7 +12,11 @@ COPY packages/ui/package.json      ./packages/ui/
 COPY apps/api/package.json         ./apps/api/
 COPY apps/web/package.json         ./apps/web/
 
-RUN pnpm install --frozen-lockfile
+# Prisma schema must exist before pnpm install so the db postinstall can run
+COPY packages/db/prisma ./packages/db/prisma
+
+# HUSKY=0 prevents the prepare script from failing without a .git directory
+RUN HUSKY=0 pnpm install --frozen-lockfile
 
 # Copy source and build dependency packages + the API
 COPY packages/ ./packages/
