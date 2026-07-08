@@ -2,7 +2,7 @@ import {
   prisma,
   type AuthAuditEventType,
   type HostProfile,
-  type Prisma,
+  type PrismaNamespace as Prisma,
   type RefreshToken,
   type User,
 } from "@nomadhome/db";
