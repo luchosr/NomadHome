@@ -2,8 +2,10 @@ import pkg from "@prisma/client";
 const { PrismaClient } = pkg;
 // Re-export generated Prisma types and enums so apps depend on @nomadhome/db only.
 export * from "@prisma/client";
-export type * as Prisma from "@prisma/client";
-/**
+
+import * as PrismaNamespace from "@prisma/client";
+export const Prisma = PrismaNamespace;
+export type Prisma = typeof PrismaNamespace; /**
  * The single shared Prisma client for the whole workspace.
  *
  * Apps and packages import this instance rather than constructing their own,
