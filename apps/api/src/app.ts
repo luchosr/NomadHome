@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import fs from "node:fs";
 import path from "node:path";
+import cors from "cors";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { usersRouter } from "./routes/users.js";
@@ -25,6 +26,13 @@ import { reviewsRouter } from "./routes/reviews.js";
  */
 export function createApp(): Express {
   const app = express();
+
+  app.use(
+    cors({
+      origin: "https://nomad-home-web.vercel.app",
+      optionsSuccessStatus: 200,
+    }),
+  );
   // Stripe webhook needs raw body — mount before express.json()
   app.use("/stripe", stripeRouter);
 
