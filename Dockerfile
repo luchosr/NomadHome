@@ -27,15 +27,10 @@ RUN pnpm --filter @nomadhome/db exec prisma generate
 RUN pnpm --filter @nomadhome/db build
 RUN pnpm --filter @nomadhome/api build
 
-# Create a lean production bundle for the API
-RUN pnpm deploy --filter=@nomadhome/api --prod --ignore-scripts /prod/api
-
-# prisma generate writes generated files into @prisma/client inside the virtual store.
-# pnpm deploy re-installs from the content-addressable store (pre-generate originals),
-# so the generated client is missing. Copy it from the builder's virtual store.
-RUN src=$(find /app/node_modules/.pnpm -maxdepth 1 -name '@prisma+client@*' -type d | head -1) \
- && dst=$(find /prod/api/node_modules/.pnpm -maxdepth 1 -name '@prisma+client@*' -type d | head -1) \
- && cp -rL "$src/node_modules/@prisma/client/." "$dst/node_modules/@prisma/client/"
+# Create a lean production bundle for the API.
+# prisma is now a production dependency of @nomadhome/db so the postinstall
+# (prisma generate) runs correctly here without --ignore-scripts.
+RUN pnpm deploy --filter=@nomadhome/api --prod /prod/api
 
 # ---- Runtime image ----
 FROM node:20-alpine AS runner

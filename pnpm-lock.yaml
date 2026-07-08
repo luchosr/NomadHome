@@ -208,6 +208,9 @@ importers:
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
+      prisma:
+        specifier: ^6.1.0
+        version: 6.19.3(typescript@5.9.3)
     devDependencies:
       '@nomadhome/config':
         specifier: workspace:*
@@ -221,9 +224,6 @@ importers:
       eslint:
         specifier: ^9.17.0
         version: 9.39.4(jiti@2.7.0)
-      prisma:
-        specifier: ^6.1.0
-        version: 6.19.3(typescript@5.9.3)
       tsx:
         specifier: ^4.19.2
         version: 4.22.4
