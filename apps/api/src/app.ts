@@ -29,8 +29,9 @@ export function createApp(): Express {
 
   app.use(
     cors({
-      origin: "https://nomad-home-web.vercel.app",
-      optionsSuccessStatus: 200,
+      origin: ["https://nomad-home-web.vercel.app", "http://localhost:5173"], // Añade tu URL de Vercel
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      credentials: true,
     }),
   );
   // Stripe webhook needs raw body — mount before express.json()
