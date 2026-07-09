@@ -29,7 +29,9 @@ export function createApp(): Express {
 
   app.use(
     cors({
-      origin: ["https://nomad-home-web.vercel.app", "http://localhost:5173"], // Añade tu URL de Vercel
+      origin: process.env["CORS_ORIGIN"]?.split(",").map((o) => o.trim()) ?? [
+        "http://localhost:5173",
+      ],
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       credentials: true,
     }),
