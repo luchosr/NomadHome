@@ -41,6 +41,15 @@ async function main(): Promise<void> {
       console.warn(`[db:seed] Created test user: ${u.email}`);
     }
   }
+
+  for (const amenity of AMENITIES) {
+    await prisma.amenity.upsert({
+      where: { code: amenity.code },
+      update: { label: amenity.label },
+      create: amenity,
+    });
+  }
+
   // Ensure host profile exists for host@nomadhome.test
   const hostUser = await prisma.user.findUnique({ where: { email: "host@nomadhome.test" } });
   if (hostUser) {
@@ -130,13 +139,6 @@ async function main(): Promise<void> {
     }
   }
 
-  for (const amenity of AMENITIES) {
-    await prisma.amenity.upsert({
-      where: { code: amenity.code },
-      update: { label: amenity.label },
-      create: amenity,
-    });
-  }
   console.warn(`[db:seed] Upserted ${AMENITIES.length} amenities.`);
 
   // Seed initial PlatformFeeConfig if none exists yet.
