@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "apps/api/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
 
 env:
   AWS_REGION: eu-south-2
