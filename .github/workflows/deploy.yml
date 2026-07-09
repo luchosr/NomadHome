@@ -67,3 +67,29 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      - name: Get ECS Task Public IP
+        id: get-ip
+        run: |
+          TASK_ARN=$(aws ecs list-tasks --cluster nomadhome-cluster --service nomadhome-service --query "taskArns[0]" --output text)
+
+          ENI_ID=$(aws ecs describe-tasks --cluster nomadhome-cluster --tasks $TASK_ARN --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
+
+          PUBLIC_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $ENI_ID --query "NetworkInterfaces[0].Association.PublicIp" --output text)
+
+          echo "The new Public IP is: $PUBLIC_IP"
+          echo "ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
+
+      - name: Update Vercel Env Var and Redeploy
+        run: |
+          NEW_URL="http://${{ steps.get-ip.outputs.ip }}:3000"
+
+          curl -X PATCH "https://api.vercel.com/v10/projects/${{ secrets.VERCEL_PROJECT_ID }}/env/VITE_API_URL" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"value\": \"$NEW_URL\", \"target\": [\"production\", \"preview\"]}"
+
+          curl -X POST "https://api.vercel.com/v1/deployments" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"name\": \"nomadhome\", \"project\": \"${{ secrets.VERCEL_PROJECT_ID }}\", \"deploymentDataSource\": \"github\"}"
