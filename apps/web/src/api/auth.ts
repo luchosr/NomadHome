@@ -39,6 +39,9 @@ export const authApi = {
 
   me: () => apiFetch<AuthUser>("/auth/me"),
 
+  verifyEmail: (token: string) =>
+    apiFetch<{ status: string }>(`/auth/verify?token=${encodeURIComponent(token)}`),
+
   becomeHost: (data: { displayName: string; payoutEmail: string; acceptedTerms: true }) =>
     apiFetch<{ accessToken: string; roles: string[] }>("/users/me/become-host", {
       method: "POST",

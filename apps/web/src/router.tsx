@@ -19,6 +19,7 @@ import { HostUpcomingPage } from "./pages/HostUpcomingPage.js";
 import { AdminUsersPage } from "./pages/AdminUsersPage.js";
 import { AdminListingsPage } from "./pages/AdminListingsPage.js";
 import { BecomeHostPage } from "./pages/BecomeHostPage.js";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage.js";
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "/", element: <HomePage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
+      { path: "/verify", element: <VerifyEmailPage /> },
       {
         path: "/become-host",
         element: (
