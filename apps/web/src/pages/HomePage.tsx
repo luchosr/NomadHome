@@ -63,13 +63,13 @@ export function HomePage() {
           </svg>
 
           {/* Search bar */}
-          <div className="mt-10 flex max-w-[860px] overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-md">
+          <div className="mt-10 flex max-w-[860px] overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-md transition-shadow focus-within:border-forest-700 focus-within:shadow-lg">
             <div className="flex flex-1 flex-col gap-1 border-r border-ink-100 px-6 py-[18px]">
               <span className="text-[11px] font-medium uppercase tracking-widest text-ink-500">
                 Where
               </span>
               <input
-                className="bg-transparent text-base text-ink-900 outline-none placeholder:text-ink-300"
+                className="bg-transparent text-base text-ink-900 outline-none ring-0 focus:outline-none placeholder:text-ink-300"
                 placeholder="City or destination"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
