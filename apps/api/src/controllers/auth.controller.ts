@@ -12,12 +12,31 @@ import {
   DuplicateEmailError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
+  InvalidVerificationTokenError,
 } from "../services/auth.service.js";
 import type { AuthedRequest } from "../middleware/require-auth.js";
 
 /** HTTP edge for auth: validate input, extract request context, map errors. */
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
+
+  verifyEmail = async (req: Request, res: Response): Promise<void> => {
+    const token = req.query["token"];
+    if (typeof token !== "string" || !token) {
+      res.status(400).json({ error: "missing_token" });
+      return;
+    }
+    try {
+      await this.auth.verifyEmail(token);
+      res.status(200).json({ status: "verified" });
+    } catch (err) {
+      if (err instanceof InvalidVerificationTokenError) {
+        res.status(400).json({ error: "invalid_or_expired_token" });
+        return;
+      }
+      throw err;
+    }
+  };
 
   register = async (req: Request, res: Response): Promise<void> => {
     const parsed = RegisterSchema.safeParse(req.body);

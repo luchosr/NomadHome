@@ -14,6 +14,7 @@ export function createAuthRouter(): Router {
   const controller = new AuthController(new AuthService(new UserRepository(), emailService));
 
   const router = Router();
+  router.get("/verify", controller.verifyEmail);
   router.post("/register", controller.register);
   router.post("/login", controller.login);
   router.post("/refresh", controller.refresh);

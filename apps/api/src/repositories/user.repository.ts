@@ -127,6 +127,20 @@ export class UserRepository {
     });
   }
 
+  findVerificationToken(tokenHash: string) {
+    return prisma.emailVerificationToken.findUnique({ where: { tokenHash } });
+  }
+
+  markEmailVerified(userId: string, tokenId: string): Promise<unknown> {
+    return prisma.$transaction([
+      prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } }),
+      prisma.emailVerificationToken.update({
+        where: { id: tokenId },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+  }
+
   findHostProfile(userId: string): Promise<HostProfile | null> {
     return prisma.hostProfile.findUnique({ where: { userId } });
   }

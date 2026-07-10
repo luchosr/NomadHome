@@ -64,6 +64,14 @@ export class InvalidRefreshTokenError extends Error {
   }
 }
 
+/** Thrown when a verification token is invalid, expired, or already used. */
+export class InvalidVerificationTokenError extends Error {
+  constructor() {
+    super("invalid_verification_token");
+    this.name = "InvalidVerificationTokenError";
+  }
+}
+
 /** Thrown when a user who is already a host tries to onboard again. */
 export class AlreadyHostError extends Error {
   constructor() {
@@ -78,6 +86,15 @@ export class AuthService {
     private readonly email: EmailService,
     private readonly tokens: TokenService = tokenService,
   ) {}
+
+  async verifyEmail(rawToken: string): Promise<void> {
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    const record = await this.users.findVerificationToken(tokenHash);
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      throw new InvalidVerificationTokenError();
+    }
+    await this.users.markEmailVerified(record.userId, record.id);
+  }
 
   /**
    * Register a new guest account. Rejects duplicate emails without leaking
