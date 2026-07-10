@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { useAuth } from "../contexts/auth.js";
@@ -35,11 +36,15 @@ const navLink =
 export function Layout() {
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
+    setMenuOpen(false);
     await logout();
     navigate("/login");
   };
+
+  const close = () => setMenuOpen(false);
 
   return (
     <div className="min-h-screen bg-sand-100">
@@ -58,52 +63,126 @@ export function Layout() {
           <Logo />
 
           {!isLoading && (
-            <div className="flex items-center gap-6">
-              {user ? (
-                <>
-                  <span className="hidden text-sm font-medium text-forest-700 sm:block">
-                    {user.email}
-                  </span>
-                  {user.roles.includes("host") ? (
-                    <Link to="/host/listings" className={navLink}>
-                      {t("nav.host_dashboard")}
+            <>
+              {/* Desktop nav */}
+              <div className="hidden items-center gap-6 md:flex">
+                {user ? (
+                  <>
+                    <span className="text-sm font-medium text-forest-700">{user.email}</span>
+                    {user.roles.includes("host") ? (
+                      <Link to="/host/listings" className={navLink}>
+                        {t("nav.host_dashboard")}
+                      </Link>
+                    ) : !user.roles.includes("admin") ? (
+                      <Link to="/become-host" className={navLink}>
+                        {t("nav.become_host")}
+                      </Link>
+                    ) : null}
+                    {user.roles.includes("admin") && (
+                      <Link to="/admin/users" className={navLink}>
+                        {t("nav.admin")}
+                      </Link>
+                    )}
+                    <Link to="/bookings" className={navLink}>
+                      {t("nav.my_bookings")}
                     </Link>
-                  ) : !user.roles.includes("admin") ? (
-                    <Link to="/become-host" className={navLink}>
-                      {t("nav.become_host")}
+                    <button
+                      onClick={() => void handleLogout()}
+                      className="rounded-xl border border-forest-700 px-4 py-2 text-sm font-medium text-forest-700 transition-colors hover:bg-sand-200"
+                    >
+                      {t("nav.logout")}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className={navLink}>
+                      {t("nav.login")}
                     </Link>
-                  ) : null}
-                  {user.roles.includes("admin") && (
-                    <Link to="/admin/users" className={navLink}>
-                      {t("nav.admin")}
+                    <Link
+                      to="/register"
+                      className="rounded-xl bg-forest-700 px-4 py-2 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
+                    >
+                      {t("nav.register")}
                     </Link>
-                  )}
-                  <Link to="/bookings" className={navLink}>
-                    {t("nav.my_bookings")}
-                  </Link>
+                  </>
+                )}
+              </div>
+
+              {/* Mobile: logged-out links stay inline; logged-in gets hamburger */}
+              <div className="flex items-center gap-3 md:hidden">
+                {user ? (
                   <button
-                    onClick={() => void handleLogout()}
-                    className="rounded-xl border border-forest-700 px-4 py-2 text-sm font-medium text-forest-700 transition-colors hover:bg-sand-200"
+                    onClick={() => setMenuOpen((o) => !o)}
+                    aria-label="Toggle menu"
+                    className="rounded-lg p-2 text-ink-700 hover:bg-sand-200"
                   >
-                    {t("nav.logout")}
+                    {menuOpen ? (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                          fillRule="evenodd"
+                          d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
                   </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className={navLink}>
-                    {t("nav.login")}
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="rounded-xl bg-forest-700 px-4 py-2 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
-                  >
-                    {t("nav.register")}
-                  </Link>
-                </>
-              )}
-            </div>
+                ) : (
+                  <>
+                    <Link to="/login" className={navLink}>
+                      {t("nav.login")}
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="rounded-xl bg-forest-700 px-4 py-2 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
+                    >
+                      {t("nav.register")}
+                    </Link>
+                  </>
+                )}
+              </div>
+            </>
           )}
         </div>
+
+        {/* Mobile dropdown menu (logged-in only) */}
+        {menuOpen && user && (
+          <div className="border-t border-sand-300 px-6 py-4 md:hidden">
+            <p className="mb-3 text-xs font-medium text-forest-700">{user.email}</p>
+            <nav className="flex flex-col gap-1">
+              {user.roles.includes("host") ? (
+                <Link to="/host/listings" className={`${navLink} py-2`} onClick={close}>
+                  {t("nav.host_dashboard")}
+                </Link>
+              ) : !user.roles.includes("admin") ? (
+                <Link to="/become-host" className={`${navLink} py-2`} onClick={close}>
+                  {t("nav.become_host")}
+                </Link>
+              ) : null}
+              {user.roles.includes("admin") && (
+                <Link to="/admin/users" className={`${navLink} py-2`} onClick={close}>
+                  {t("nav.admin")}
+                </Link>
+              )}
+              <Link to="/bookings" className={`${navLink} py-2`} onClick={close}>
+                {t("nav.my_bookings")}
+              </Link>
+              <button
+                onClick={() => void handleLogout()}
+                className="mt-2 w-full rounded-xl border border-forest-700 px-4 py-2 text-sm font-medium text-forest-700 transition-colors hover:bg-sand-200"
+              >
+                {t("nav.logout")}
+              </button>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="w-full">
