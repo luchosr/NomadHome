@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const isLocalDev = !process.env["R2_ACCOUNT_ID"];
+const isLocalDev = !process.env["CLOUDFLARE_R2_ACCOUNT_ID"];
 const API_BASE = (process.env["API_BASE_URL"] ?? "http://localhost:3000").replace(/\/$/, "");
 
 export class StorageService {
@@ -13,14 +13,14 @@ export class StorageService {
     if (!isLocalDev) {
       this.client = new S3Client({
         region: "auto",
-        endpoint: `https://${process.env["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com`,
+        endpoint: process.env["CLOUDFLARE_R2_ENDPOINT"] ?? "",
         credentials: {
-          accessKeyId: process.env["R2_ACCESS_KEY_ID"] ?? "",
-          secretAccessKey: process.env["R2_SECRET_ACCESS_KEY"] ?? "",
+          accessKeyId: process.env["CLOUDFLARE_R2_ACCESS_KEY_ID"] ?? "",
+          secretAccessKey: process.env["CLOUDFLARE_R2_SECRET_ACCESS_KEY"] ?? "",
         },
       });
-      this.bucket = process.env["R2_BUCKET_NAME"] ?? "";
-      this.publicUrl = (process.env["R2_PUBLIC_URL"] ?? "").replace(/\/$/, "");
+      this.bucket = process.env["CLOUDFLARE_R2_BUCKET_NAME"] ?? "";
+      this.publicUrl = (process.env["CLOUDFLARE_R2_PUBLIC_URL"] ?? "").replace(/\/$/, "");
     }
   }
 
