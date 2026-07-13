@@ -42,14 +42,15 @@ describe("RegisterPage", () => {
   it("renders email, password fields and submit button", () => {
     renderRegister();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /create account/i })).toBeInTheDocument();
   });
 
   it("shows password validation error for short password", async () => {
     renderRegister();
     await userEvent.type(screen.getByLabelText(/email/i), "user@test.com");
-    await userEvent.type(screen.getByLabelText(/password/i), "short");
+    await userEvent.type(screen.getByLabelText(/^password$/i), "short");
     await userEvent.click(screen.getByRole("button", { name: /create account/i }));
     expect(await screen.findByText(/at least 10/i)).toBeInTheDocument();
     expect(mockRegister).not.toHaveBeenCalled();
@@ -60,7 +61,8 @@ describe("RegisterPage", () => {
     renderRegister();
 
     await userEvent.type(screen.getByLabelText(/email/i), "newuser@test.com");
-    await userEvent.type(screen.getByLabelText(/password/i), "validpass123");
+    await userEvent.type(screen.getByLabelText(/^password$/i), "validpass123");
+    await userEvent.type(screen.getByLabelText(/confirm password/i), "validpass123");
     await userEvent.click(screen.getByRole("button", { name: /create account/i }));
 
     await waitFor(() =>
