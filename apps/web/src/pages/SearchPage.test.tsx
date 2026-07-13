@@ -103,4 +103,67 @@ describe("SearchPage", () => {
 
     expect(await screen.findByText(/no listings found/i)).toBeInTheDocument();
   });
+
+  it("renders filter panel with type, price, capacity inputs", () => {
+    renderSearch();
+    expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/min price/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/max price/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/min guests/i)).toBeInTheDocument();
+  });
+
+  it("passes type filter to API when workspace is selected", async () => {
+    mockSearch.mockResolvedValue(mockSearchResult);
+    renderSearch();
+
+    await userEvent.type(screen.getByLabelText(/city/i), "Lisbon");
+    await userEvent.selectOptions(screen.getByLabelText(/type/i), "WORKSPACE");
+    await userEvent.click(screen.getByRole("button", { name: /search/i }));
+
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(1));
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ type: "WORKSPACE" }));
+  });
+
+  it("converts price inputs from dollars to cents before calling API", async () => {
+    mockSearch.mockResolvedValue(mockSearchResult);
+    renderSearch();
+
+    await userEvent.type(screen.getByLabelText(/city/i), "Lisbon");
+    await userEvent.type(screen.getByLabelText(/min price/i), "50");
+    await userEvent.type(screen.getByLabelText(/max price/i), "150");
+    await userEvent.click(screen.getByRole("button", { name: /search/i }));
+
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(1));
+    expect(mockSearch).toHaveBeenCalledWith(
+      expect.objectContaining({ minPrice: 5000, maxPrice: 15000 }),
+    );
+  });
+
+  it("passes capacity filter to API", async () => {
+    mockSearch.mockResolvedValue(mockSearchResult);
+    renderSearch();
+
+    await userEvent.type(screen.getByLabelText(/city/i), "Lisbon");
+    await userEvent.type(screen.getByLabelText(/min guests/i), "2");
+    await userEvent.click(screen.getByRole("button", { name: /search/i }));
+
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(1));
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ capacity: 2 }));
+  });
+
+  it("restores filter state from URL query params on load", async () => {
+    mockSearch.mockResolvedValue(mockSearchResult);
+    renderSearch(["/search?city=Lisbon&type=WORKSPACE&minPrice=50&maxPrice=150&capacity=2"]);
+
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(1));
+    expect(mockSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        city: "Lisbon",
+        type: "WORKSPACE",
+        minPrice: 5000,
+        maxPrice: 15000,
+        capacity: 2,
+      }),
+    );
+  });
 });

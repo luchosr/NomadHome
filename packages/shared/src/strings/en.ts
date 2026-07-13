@@ -149,6 +149,16 @@ export const en = {
     no_results: "No listings found for your search.",
     nightly_rate: "/ night",
     per_night: "per night",
+    filter_title: "Filters",
+    filter_type_label: "Type",
+    filter_type_all: "All types",
+    filter_type_property: "Property",
+    filter_type_workspace: "Workspace",
+    filter_amenities_label: "Amenities",
+    filter_min_price_label: "Min price ($/night)",
+    filter_max_price_label: "Max price ($/night)",
+    filter_capacity_label: "Min guests",
+    filter_reset: "Reset filters",
   },
   booking: {
     error: {
