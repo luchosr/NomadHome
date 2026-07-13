@@ -44,6 +44,8 @@ export const en = {
       subtitle: "Start finding co-living spaces and workspaces",
       email_label: "Email",
       password_label: "Password",
+      confirm_password_label: "Confirm password",
+      passwords_mismatch: "Passwords do not match.",
       submit: "Create account",
       have_account: "Already have an account?",
       login_link: "Log in",
