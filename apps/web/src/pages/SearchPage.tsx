@@ -204,7 +204,7 @@ export function SearchPage() {
             <button
               type="button"
               onClick={() => setFiltersOpen((o) => !o)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto"
+              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-white px-[22px] py-[14px] text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
