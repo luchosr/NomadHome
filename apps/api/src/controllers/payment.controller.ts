@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import Stripe from "stripe";
 import { RecordPayoutSchema, t } from "@nomadhome/shared";
 import {
   PaymentService,
@@ -31,6 +32,10 @@ export class PaymentController {
         res
           .status(422)
           .json({ error: "BOOKING_NOT_PENDING", message: t("payments.error.booking_not_pending") });
+        return;
+      }
+      if (err instanceof Stripe.errors.StripeError) {
+        res.status(502).json({ error: "payment_provider_error" });
         return;
       }
       throw err;
