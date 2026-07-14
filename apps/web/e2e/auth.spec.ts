@@ -1,21 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
-
-const API = "http://localhost:3000";
-
-async function mockAuthenticatedSession(page: Page) {
-  await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
-  await page.route(`${API}/auth/refresh`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        accessToken: "test-access",
-        refreshToken: "test-token-2",
-        user: { id: "u1", email: "guest@test.com", roles: ["guest"] },
-      }),
-    }),
-  );
-}
+import { test, expect } from "@playwright/test";
+import { mockSession } from "./helpers/auth.js";
 
 test.describe("Login", () => {
   test("renders email, password fields and submit button", async ({ page }) => {
@@ -26,7 +10,7 @@ test.describe("Login", () => {
   });
 
   test("shows error message on invalid credentials", async ({ page }) => {
-    await page.route(`${API}/auth/login`, (route) =>
+    await page.route("**/auth/login", (route) =>
       route.fulfill({
         status: 401,
         contentType: "application/json",
@@ -41,14 +25,14 @@ test.describe("Login", () => {
   });
 
   test("redirects to home on successful login", async ({ page }) => {
-    await page.route(`${API}/auth/login`, (route) =>
+    await page.route("**/auth/login", (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          accessToken: "test-access",
-          refreshToken: "test-refresh",
-          user: { id: "u1", email: "guest@test.com", roles: ["guest"] },
+          accessToken: crypto.randomUUID(),
+          refreshToken: crypto.randomUUID(),
+          user: { id: crypto.randomUUID(), email: "guest@test.com", roles: ["guest"] },
         }),
       }),
     );
@@ -67,8 +51,8 @@ test.describe("Protected routes", () => {
   });
 
   test("renders /bookings when authenticated", async ({ page }) => {
-    await mockAuthenticatedSession(page);
-    await page.route(`${API}/bookings/me*`, (route) =>
+    await mockSession(page, { email: "guest@test.com", roles: ["guest"] });
+    await page.route("**/bookings/me*", (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
