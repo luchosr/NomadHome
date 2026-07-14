@@ -49,8 +49,27 @@ test.describe("US-2.1 — Host creates a listing", () => {
       route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ id: "listing-1", title: "My Space", status: "DRAFT" }),
+        body: JSON.stringify({
+          id: "listing-1",
+          title: "My Space",
+          description: "A great space",
+          type: "PROPERTY",
+          city: "Lisbon",
+          country: "PT",
+          addressLine: "Rua do Ouro 123",
+          capacity: 4,
+          nightlyRateCents: 7500,
+          currency: "EUR",
+          status: "DRAFT",
+          amenities: [],
+        }),
       }),
+    );
+    await page.route(`${API}/listings/listing-1/photos`, (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+    );
+    await page.route(`${API}/listings/listing-1/availability`, (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
     );
     await page.goto("/host/listings/new");
     await page.getByLabel(/title/i).fill("My Lovely Space");
