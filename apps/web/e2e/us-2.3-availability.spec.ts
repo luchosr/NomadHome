@@ -1,6 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const API = "http://localhost:3000";
 const LISTING_ID = "listing-1";
 
 const LISTING = {
@@ -20,7 +19,7 @@ const LISTING = {
 
 async function mockHostSession(page: Page) {
   await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
-  await page.route(`${API}/auth/refresh`, (route) =>
+  await page.route("**/auth/refresh", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -31,30 +30,30 @@ async function mockHostSession(page: Page) {
       }),
     }),
   );
-  await page.route(`${API}/listings/${LISTING_ID}/manage`, (route) =>
+  await page.route(`**/listings/${LISTING_ID}/manage`, (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(LISTING) }),
   );
-  await page.route(`${API}/listings/${LISTING_ID}/photos`, (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([]) }),
+  await page.route(`**/listings/${LISTING_ID}/photos`, (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
 }
 
 test.describe("US-2.3 — Host manages availability blocks", () => {
   test("shows start and end date inputs and block button", async ({ page }) => {
     await mockHostSession(page);
-    await page.route(`${API}/listings/${LISTING_ID}/availability`, (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([]) }),
+    await page.route(`**/listings/${LISTING_ID}/availability`, (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
     );
     await page.goto(`/host/listings/${LISTING_ID}/edit`);
-    await expect(page.locator('input[type="date"]').first()).toBeVisible();
-    await expect(page.locator('input[type="date"]').nth(1)).toBeVisible();
+    await expect(page.getByLabel(/start date/i)).toBeVisible();
+    await expect(page.getByLabel(/end date/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /block dates/i })).toBeVisible();
   });
 
   test("adds a block and shows it in the list", async ({ page }) => {
     await mockHostSession(page);
     let blocks: object[] = [];
-    await page.route(`${API}/listings/${LISTING_ID}/availability`, (route) => {
+    await page.route(`**/listings/${LISTING_ID}/availability`, (route) => {
       if (route.request().method() === "POST") {
         blocks = [{ id: "b1", startDate: "2026-08-01", endDate: "2026-08-07" }];
         return route.fulfill({
@@ -70,28 +69,31 @@ test.describe("US-2.3 — Host manages availability blocks", () => {
       });
     });
     await page.goto(`/host/listings/${LISTING_ID}/edit`);
-    await page.locator('input[type="date"]').first().fill("2026-08-01");
-    await page.locator('input[type="date"]').nth(1).fill("2026-08-07");
+    await page.getByLabel(/start date/i).fill("2026-08-01");
+    await page.getByLabel(/end date/i).fill("2026-08-07");
     await page.getByRole("button", { name: /block dates/i }).click();
     await expect(page.getByText("2026-08-01")).toBeVisible();
   });
 
   test("shows overlap error when block conflicts", async ({ page }) => {
     await mockHostSession(page);
-    await page.route(`${API}/listings/${LISTING_ID}/availability`, (route) => {
+    await page.route(`**/listings/${LISTING_ID}/availability`, (route) => {
       if (route.request().method() === "POST") {
         return route.fulfill({
           status: 409,
           contentType: "application/json",
-          body: JSON.stringify({ error: "overlap" }),
+          body: JSON.stringify({
+            error: "OVERLAP_CONFLICT",
+            conflict: { startDate: "2026-08-01", endDate: "2026-08-07" },
+          }),
         });
       }
       return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     });
     await page.goto(`/host/listings/${LISTING_ID}/edit`);
-    await page.locator('input[type="date"]').first().fill("2026-08-01");
-    await page.locator('input[type="date"]').nth(1).fill("2026-08-07");
+    await page.getByLabel(/start date/i).fill("2026-08-01");
+    await page.getByLabel(/end date/i).fill("2026-08-07");
     await page.getByRole("button", { name: /block dates/i }).click();
-    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.getByRole("alert")).toContainText("OVERLAP_CONFLICT");
   });
 });

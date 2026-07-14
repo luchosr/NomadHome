@@ -415,16 +415,26 @@ export function EditListingPage() {
         )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div>
-            <label className="mb-1 block text-sm font-medium text-fg-2">
+            <label htmlFor="avail-start" className="mb-1 block text-sm font-medium text-fg-2">
               {t("host.availability.start_label")}
             </label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Input
+              id="avail-start"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-fg-2">
+            <label htmlFor="avail-end" className="mb-1 block text-sm font-medium text-fg-2">
               {t("host.availability.end_label")}
             </label>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <Input
+              id="avail-end"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
           </div>
           <Button onClick={handleBlock} disabled={!startDate || !endDate}>
             {t("host.availability.block")}
