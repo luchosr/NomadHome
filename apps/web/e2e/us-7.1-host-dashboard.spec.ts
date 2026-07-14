@@ -1,26 +1,10 @@
-import { test, expect, type Page } from "@playwright/test";
-
-const API = "http://localhost:3000";
-
-async function mockHostSession(page: Page) {
-  await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
-  await page.route(`${API}/auth/refresh`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        accessToken: "test-access",
-        refreshToken: "test-token-2",
-        user: { id: "u1", email: "host@test.com", roles: ["guest", "host"] },
-      }),
-    }),
-  );
-}
+import { test, expect } from "@playwright/test";
+import { mockSession } from "./helpers/auth.js";
 
 test.describe("US-7.1 — Host views upcoming bookings dashboard", () => {
   test("shows Upcoming bookings heading", async ({ page }) => {
-    await mockHostSession(page);
-    await page.route(`${API}/bookings/host-upcoming`, (route) =>
+    await mockSession(page, { email: "host@test.com", roles: ["guest", "host"] });
+    await page.route("**/bookings/host-upcoming*", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
     );
     await page.goto("/host/upcoming");
@@ -28,8 +12,8 @@ test.describe("US-7.1 — Host views upcoming bookings dashboard", () => {
   });
 
   test("shows empty state when no upcoming bookings", async ({ page }) => {
-    await mockHostSession(page);
-    await page.route(`${API}/bookings/host-upcoming`, (route) =>
+    await mockSession(page, { email: "host@test.com", roles: ["guest", "host"] });
+    await page.route("**/bookings/host-upcoming*", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
     );
     await page.goto("/host/upcoming");
@@ -37,8 +21,8 @@ test.describe("US-7.1 — Host views upcoming bookings dashboard", () => {
   });
 
   test("shows booking rows when bookings exist", async ({ page }) => {
-    await mockHostSession(page);
-    await page.route(`${API}/bookings/host-upcoming`, (route) =>
+    await mockSession(page, { email: "host@test.com", roles: ["guest", "host"] });
+    await page.route("**/bookings/host-upcoming*", (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
