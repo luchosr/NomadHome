@@ -1,6 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const API = "http://localhost:3000";
 const LISTING_ID = "listing-1";
 
 const DRAFT_LISTING = {
@@ -20,7 +19,7 @@ const DRAFT_LISTING = {
 
 async function mockHostSession(page: Page) {
   await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
-  await page.route(`${API}/auth/refresh`, (route) =>
+  await page.route("**/auth/refresh", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -31,18 +30,18 @@ async function mockHostSession(page: Page) {
       }),
     }),
   );
-  await page.route(`${API}/listings/${LISTING_ID}/photos`, (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([]) }),
+  await page.route(`**/listings/${LISTING_ID}/photos`, (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
-  await page.route(`${API}/listings/${LISTING_ID}/availability`, (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([]) }),
+  await page.route(`**/listings/${LISTING_ID}/availability`, (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
 }
 
 test.describe("US-2.2 — Host publishes a listing", () => {
   test("shows Draft badge and Publish button for a draft listing", async ({ page }) => {
     await mockHostSession(page);
-    await page.route(`${API}/listings/${LISTING_ID}/manage`, (route) =>
+    await page.route(`**/listings/${LISTING_ID}/manage`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -57,16 +56,20 @@ test.describe("US-2.2 — Host publishes a listing", () => {
   test("shows Published badge after publishing", async ({ page }) => {
     await mockHostSession(page);
     let published = false;
-    await page.route(`${API}/listings/${LISTING_ID}/manage`, (route) =>
+    await page.route(`**/listings/${LISTING_ID}/manage`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(published ? { ...DRAFT_LISTING, status: "PUBLISHED" } : DRAFT_LISTING),
       }),
     );
-    await page.route(`${API}/listings/${LISTING_ID}/publish`, (route) => {
+    await page.route(`**/listings/${LISTING_ID}/publish`, (route) => {
       published = true;
-      return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ...DRAFT_LISTING, status: "PUBLISHED" }),
+      });
     });
     await page.goto(`/host/listings/${LISTING_ID}/edit`);
     await page.getByRole("button", { name: /publish/i }).click();
@@ -75,7 +78,7 @@ test.describe("US-2.2 — Host publishes a listing", () => {
 
   test("shows Unpublish button for a published listing", async ({ page }) => {
     await mockHostSession(page);
-    await page.route(`${API}/listings/${LISTING_ID}/manage`, (route) =>
+    await page.route(`**/listings/${LISTING_ID}/manage`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
