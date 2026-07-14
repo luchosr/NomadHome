@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { authApi, type AuthUser } from "../api/auth.js";
 import { setAccessToken } from "../api/client.js";
 
@@ -22,8 +30,14 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // ponytail: guards against React 18 StrictMode double-invoking the effect,
+  // which would present the same refresh token twice and trigger theft detection.
+  const refreshStarted = useRef(false);
 
   useEffect(() => {
+    if (refreshStarted.current) return;
+    refreshStarted.current = true;
+
     const storedRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
     if (!storedRefresh) {
       setIsLoading(false);
