@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { Badge, Button, Card } from "@nomadhome/ui";
@@ -107,7 +108,12 @@ export function MyBookingsPage() {
               <Card key={booking.id}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex-1">
-                    <p className="font-semibold text-fg-1">{booking.listing.title}</p>
+                    <Link
+                      to={`/listings/${booking.listingId}`}
+                      className="font-semibold text-fg-1 hover:underline"
+                    >
+                      {booking.listing.title}
+                    </Link>
                     <p className="mt-1 text-sm text-fg-2">
                       {formatDate(booking.checkIn)} – {formatDate(booking.checkOut)}{" "}
                       <span className="text-fg-muted">
