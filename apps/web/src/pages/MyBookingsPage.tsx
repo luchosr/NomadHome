@@ -55,6 +55,17 @@ export function MyBookingsPage() {
   const queryClient = useQueryClient();
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
   const [reviewBookingId, setReviewBookingId] = useState<string | null>(null);
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+
+  const handleCompletePayment = async (bookingId: string) => {
+    setCheckingOut(bookingId);
+    try {
+      const { url } = await bookingsApi.checkout(bookingId);
+      window.location.href = url;
+    } finally {
+      setCheckingOut(null);
+    }
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["bookings", "me"],
@@ -110,6 +121,16 @@ export function MyBookingsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge tone={statusTone(booking.status)}>{statusLabel(booking.status)}</Badge>
+                    {booking.status === "PENDING_PAYMENT" && (
+                      <Button
+                        onClick={() => void handleCompletePayment(booking.id)}
+                        disabled={checkingOut === booking.id}
+                      >
+                        {checkingOut === booking.id
+                          ? "…"
+                          : t("booking.dashboard.complete_payment_button")}
+                      </Button>
+                    )}
                     {isCancellable && (
                       <Button variant="destructive" onClick={() => setCancelBookingId(booking.id)}>
                         {t("booking.dashboard.cancel_button")}

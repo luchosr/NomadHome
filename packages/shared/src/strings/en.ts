@@ -195,6 +195,7 @@ export const en = {
       status_confirmed: "Confirmed",
       status_cancelled: "Cancelled",
       status_completed: "Completed",
+      complete_payment_button: "Complete payment",
       cancel_button: "Cancel",
       cancel_modal_title: "Cancel booking",
       cancel_modal_body: "Are you sure you want to cancel this booking?",
