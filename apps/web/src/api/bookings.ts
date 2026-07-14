@@ -61,6 +61,9 @@ export const bookingsApi = {
       body: JSON.stringify(input),
     });
   },
+  getById(bookingId: string): Promise<BookingWithListing> {
+    return apiFetch(`/bookings/${bookingId}`);
+  },
   hostUpcoming(): Promise<HostUpcomingBooking[]> {
     return apiFetch("/bookings/host-upcoming");
   },
