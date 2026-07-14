@@ -1,26 +1,32 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const API = "http://localhost:3000";
 const LISTING_ID = "listing-1";
 const BOOKING_ID = "booking-1";
+const NIGHTLY_RATE_CENTS = 7500;
 
 const LISTING = {
   id: LISTING_ID,
   title: "Sunny Loft in Lisbon",
-  nightlyRateCents: 7500,
+  nightlyRateCents: NIGHTLY_RATE_CENTS,
   currency: "EUR",
 };
 
 async function mockGuestSession(page: Page) {
-  await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
-  await page.route(`${API}/auth/refresh`, (route) =>
+  const refreshToken = crypto.randomUUID();
+  const accessToken = crypto.randomUUID();
+  const nextRefreshToken = crypto.randomUUID();
+  await page.addInitScript(
+    (token) => localStorage.setItem("nh_refresh_token", token),
+    refreshToken,
+  );
+  await page.route("**/auth/refresh", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        accessToken: "test-access",
-        refreshToken: "test-token-2",
-        user: { id: "u1", email: "guest@test.com", roles: ["guest"] },
+        accessToken,
+        refreshToken: nextRefreshToken,
+        user: { id: crypto.randomUUID(), email: "guest@test.com", roles: ["guest"] },
       }),
     }),
   );
@@ -35,7 +41,7 @@ test.describe("US-4.1 — Guest books a listing", () => {
 
   test("shows price breakdown when dates are provided", async ({ page }) => {
     await mockGuestSession(page);
-    await page.route(`${API}/listings/${LISTING_ID}`, (route) =>
+    await page.route(`**/listings/${LISTING_ID}`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -49,33 +55,33 @@ test.describe("US-4.1 — Guest books a listing", () => {
     await expect(page.getByRole("button", { name: /pay now/i })).toBeVisible();
   });
 
-  test("creates booking and redirects to Stripe checkout on Pay now", async ({ page }) => {
+  test("creates booking and shows success page after payment", async ({ page }) => {
     await mockGuestSession(page);
-    await page.route(`${API}/listings/${LISTING_ID}`, (route) =>
+    await page.route(`**/listings/${LISTING_ID}`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(LISTING),
       }),
     );
-    await page.route(`${API}/bookings`, (route) =>
+    await page.route("**/bookings", (route) =>
       route.fulfill({
         status: 201,
         contentType: "application/json",
         body: JSON.stringify({ id: BOOKING_ID, status: "PENDING_PAYMENT" }),
       }),
     );
-    await page.route(`${API}/bookings/${BOOKING_ID}/checkout`, (route) =>
+    await page.route(`**/bookings/${BOOKING_ID}/checkout`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          url: "http://localhost:5173/booking/success?session_id=cs_test&booking_id=booking-1",
-          sessionId: "cs_test",
+          url: `http://localhost:5173/booking/success?bookingId=${BOOKING_ID}`,
+          sessionId: crypto.randomUUID(),
         }),
       }),
     );
-    await page.route(`${API}/bookings/${BOOKING_ID}`, (route) =>
+    await page.route(`**/bookings/${BOOKING_ID}`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -85,5 +91,6 @@ test.describe("US-4.1 — Guest books a listing", () => {
     await page.goto(`/listings/${LISTING_ID}/book?checkIn=2026-08-01&checkOut=2026-08-04`);
     await page.getByRole("button", { name: /pay now/i }).click();
     await expect(page).toHaveURL(/booking\/success/, { timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /booking confirmed/i })).toBeVisible();
   });
 });
