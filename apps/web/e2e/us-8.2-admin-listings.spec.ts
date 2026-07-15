@@ -76,6 +76,6 @@ test.describe("US-8.2 — Admin disables listings", () => {
     });
     await page.goto("/admin/listings");
     await page.getByRole("button", { name: /disable/i }).click();
-    await expect(page.getByText("Disabled")).toBeVisible();
+    await expect(page.getByRole("button", { name: /re-enable/i })).toBeVisible();
   });
 });
