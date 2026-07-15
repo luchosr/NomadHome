@@ -8,6 +8,7 @@ const ACTIVE_USER = {
   email: "user@test.com",
   roles: ["guest"],
   disabledAt: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
 };
 
 async function mockAdminSession(page: Page) {
