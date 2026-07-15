@@ -2,6 +2,9 @@ import { test, expect, type Page } from "@playwright/test";
 
 const API = "http://localhost:3000";
 const LISTING_ID = "listing-1";
+const HTTP_OK = 200;
+const PAGE = 1;
+const PAGE_LIMIT = 50;
 
 const ACTIVE_LISTING = {
   id: LISTING_ID,
@@ -17,7 +20,7 @@ async function mockAdminSession(page: Page) {
   await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
   await page.route(`${API}/auth/refresh`, (route) =>
     route.fulfill({
-      status: 200,
+      status: HTTP_OK,
       contentType: "application/json",
       body: JSON.stringify({
         accessToken: "test-access",
@@ -35,7 +38,7 @@ test.describe("US-8.2 — Admin disables listings", () => {
       route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ data: [ACTIVE_LISTING], total: 1, page: 1, limit: 50 }),
+        body: JSON.stringify({ data: [ACTIVE_LISTING], total: 1, page: PAGE, limit: PAGE_LIMIT }),
       }),
     );
     await page.goto("/admin/listings");
@@ -58,15 +61,15 @@ test.describe("US-8.2 — Admin disables listings", () => {
         body: JSON.stringify({
           data: [disabled ? DISABLED_LISTING : ACTIVE_LISTING],
           total: 1,
-          page: 1,
-          limit: 50,
+          page: PAGE,
+          limit: PAGE_LIMIT,
         }),
       }),
     );
     await page.route(`${API}/admin/listings/${LISTING_ID}/disable`, (route) => {
       disabled = true;
       return route.fulfill({
-        status: 200,
+        status: HTTP_OK,
         contentType: "application/json",
         body: JSON.stringify(DISABLED_LISTING),
       });
