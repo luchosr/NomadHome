@@ -12,18 +12,22 @@ const ACTIVE_USER = {
 };
 
 async function mockAdminSession(page: Page) {
-  await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
-  await page.route(`${API}/auth/refresh`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        accessToken: "test-access",
-        refreshToken: "test-token-2",
-        user: { id: "admin-1", email: "admin@test.com", roles: ["admin"] },
+  try {
+    await page.addInitScript(() => localStorage.setItem("nh_refresh_token", "test-token"));
+    await page.route(`${API}/auth/refresh`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          accessToken: "test-access",
+          refreshToken: "test-token-2",
+          user: { id: "admin-1", email: "admin@test.com", roles: ["admin"] },
+        }),
       }),
-    }),
-  );
+    );
+  } catch (err) {
+    throw new Error(`mockAdminSession setup failed: ${String(err)}`);
+  }
 }
 
 test.describe("US-8.1 — Admin manages users", () => {
