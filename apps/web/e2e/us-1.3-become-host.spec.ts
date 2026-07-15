@@ -39,7 +39,7 @@ test.describe("US-1.3 — Guest upgrades to host", () => {
         }),
       }),
     );
-    await page.route(`${API}/listings/host*`, (route) =>
+    await page.route(`${API}/listings/mine`, (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
