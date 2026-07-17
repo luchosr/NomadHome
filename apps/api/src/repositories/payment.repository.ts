@@ -103,6 +103,13 @@ export class PaymentRepository {
     createdBy: string;
   }): Promise<Payout & { payoutBookings: PayoutBooking[] }> {
     return prisma.$transaction(async (tx) => {
+      const validCount = await tx.booking.count({
+        where: { id: { in: data.bookingIds }, hostId: data.hostId },
+      });
+      if (validCount !== data.bookingIds.length) {
+        throw new Error("booking_not_owned");
+      }
+
       const payout = await tx.payout.create({
         data: {
           hostId: data.hostId,
