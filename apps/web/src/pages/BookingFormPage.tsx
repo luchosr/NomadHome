@@ -14,6 +14,7 @@ function formatRate(cents: number, currency: string): string {
 function computeNights(checkIn: string, checkOut: string): number {
   const msPerDay = 1000 * 60 * 60 * 24;
   const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime();
+  if (isNaN(diff)) return 0;
   return Math.max(0, Math.round(diff / msPerDay));
 }
 
