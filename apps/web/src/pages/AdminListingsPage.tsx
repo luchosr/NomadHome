@@ -15,6 +15,17 @@ function listingStatusTone(status: AdminListing["status"]): "success" | "neutral
   }
 }
 
+function listingStatusLabel(status: AdminListing["status"]): string {
+  switch (status) {
+    case "PUBLISHED":
+      return t("host.listings.status_published");
+    case "DRAFT":
+      return t("host.listings.status_draft");
+    case "DISABLED":
+      return t("host.listings.status_disabled");
+  }
+}
+
 export function AdminListingsPage() {
   const queryClient = useQueryClient();
 
@@ -33,7 +44,7 @@ export function AdminListingsPage() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
   };
 
-  if (isLoading) return <p className="text-slate-500">Loading...</p>;
+  if (isLoading) return <p className="text-slate-500">{t("common.action.loading")}</p>;
 
   if (error || !data) {
     return (
@@ -70,7 +81,9 @@ export function AdminListingsPage() {
                   <td className="py-3 pr-4 text-slate-600">{listing.city}</td>
                   <td className="py-3 pr-4 text-slate-600">{listing.host.email}</td>
                   <td className="py-3 pr-4">
-                    <Badge tone={listingStatusTone(listing.status)}>{listing.status}</Badge>
+                    <Badge tone={listingStatusTone(listing.status)}>
+                      {listingStatusLabel(listing.status)}
+                    </Badge>
                   </td>
                   <td className="py-3">
                     {listing.status !== "DISABLED" ? (
