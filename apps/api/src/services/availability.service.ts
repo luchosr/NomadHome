@@ -85,6 +85,7 @@ export class AvailabilityService {
     await this.assertOwnership(hostId, listingId);
     const block = await this.availability.findById(blockId);
     if (!block || block.listingId !== listingId) throw new BlockNotFoundError();
+    if (block.source !== "HOST_BLOCK") throw new BlockForbiddenError();
     await this.availability.delete(blockId);
   }
 
