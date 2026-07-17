@@ -1,46 +1,28 @@
-import { useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button } from "@nomadhome/ui";
-import { listingsApi } from "../api/listings.js";
-import { DateRangePicker } from "../components/DateRangePicker.js";
-import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
-
-function formatRate(cents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
-}
+import { useListingDetail } from "../hooks/useListingDetail.js";
+import { ListingGallery } from "../components/ListingGallery.js";
+import { BookingSidebar } from "../components/BookingSidebar.js";
 
 export function ListingDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const { user, isLoading: authLoading } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [checkIn, setCheckIn] = useState(searchParams.get("checkIn") ?? "");
-  const [checkOut, setCheckOut] = useState(searchParams.get("checkOut") ?? "");
-
   const {
-    data: listing,
+    listing,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["listing", id],
-    queryFn: () => listingsApi.getDetail(id!),
-    enabled: !!id,
-    retry: (failCount, err) => {
-      if (err instanceof ApiError && err.status === 404) return false;
-      return failCount < 2;
-    },
-  });
-
-  const { data: blockedRanges = [] } = useQuery({
-    queryKey: ["listing", id, "blocked-dates"],
-    queryFn: () => listingsApi.getBlockedDates(id!),
-    enabled: !!id,
-  });
+    authLoading,
+    user,
+    isGuest,
+    checkIn,
+    checkOut,
+    blockedRanges,
+    datesValid,
+    handleDateChange,
+    primaryPhoto,
+    thumbnails,
+  } = useListingDetail();
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <p>{t("common.action.loading")}</p>;
   }
 
   if (error instanceof ApiError && error.status === 404) {
@@ -55,46 +37,16 @@ export function ListingDetailPage() {
     );
   }
 
-  const sortedPhotos = [...listing.photos].sort((a, b) => a.position - b.position);
-  const primaryPhoto = sortedPhotos[0];
-  const thumbnails = sortedPhotos.slice(1);
-
-  const isGuest = user?.roles.includes("guest");
-  const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;
-
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      {/* Photo gallery */}
-      {primaryPhoto ? (
-        <div className="mb-4">
-          <img
-            src={primaryPhoto.url}
-            alt={listing.title}
-            className="w-full rounded-xl object-cover"
-            style={{ maxHeight: "480px" }}
-          />
-          {thumbnails.length > 0 && (
-            <div className="mt-2 flex gap-2 overflow-x-auto">
-              {thumbnails.map((photo) => (
-                <img
-                  key={photo.id}
-                  src={photo.url}
-                  alt={listing.title}
-                  className="h-20 w-32 flex-shrink-0 rounded-lg object-cover"
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="mb-4 h-64 w-full rounded-xl bg-slate-100" />
-      )}
+      <ListingGallery primaryPhoto={primaryPhoto} thumbnails={thumbnails} title={listing.title} />
 
       <div className="flex flex-col gap-8 md:flex-row">
-        {/* Main content */}
         <div className="flex-1">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {listing.type === "PROPERTY" ? "Property" : "Workspace"}
+            {listing.type === "PROPERTY"
+              ? t("host.listings.type_property")
+              : t("host.listings.type_workspace")}
           </span>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">{listing.title}</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -143,60 +95,17 @@ export function ListingDetailPage() {
           </div>
         </div>
 
-        {/* Booking sidebar */}
-        <div className="md:w-96">
-          <div className="rounded-xl border border-slate-200 p-6 shadow-sm">
-            <p className="text-2xl font-bold text-slate-900">
-              {formatRate(listing.nightlyRateCents, listing.currency)}
-              <span className="text-base font-normal text-slate-500"> {t("search.per_night")}</span>
-            </p>
-
-            {isGuest && (
-              <div className="mt-4 space-y-3">
-                <DateRangePicker
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  blockedRanges={blockedRanges}
-                  onChange={(newIn, newOut) => {
-                    setCheckIn(newIn);
-                    setCheckOut(newOut);
-                    setSearchParams(
-                      (prev) => {
-                        const next = new URLSearchParams(prev);
-                        if (newIn) next.set("checkIn", newIn);
-                        else next.delete("checkIn");
-                        if (newOut) next.set("checkOut", newOut);
-                        else next.delete("checkOut");
-                        return next;
-                      },
-                      { replace: true },
-                    );
-                  }}
-                />
-
-                {datesValid ? (
-                  <Link to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}>
-                    <Button className="w-full">{t("listings.detail.book_now")}</Button>
-                  </Link>
-                ) : (
-                  <Button className="w-full" disabled>
-                    {t("listings.detail.book_now")}
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {!authLoading && !user && (
-              <div className="mt-4">
-                <Link to="/login">
-                  <Button variant="secondary" className="w-full">
-                    {t("listings.detail.login_to_book")}
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
+        <BookingSidebar
+          listing={listing}
+          checkIn={checkIn}
+          checkOut={checkOut}
+          blockedRanges={blockedRanges}
+          datesValid={datesValid}
+          isGuest={isGuest}
+          authLoading={authLoading}
+          user={user}
+          onDateChange={handleDateChange}
+        />
       </div>
     </div>
   );
