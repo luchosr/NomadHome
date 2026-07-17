@@ -20,6 +20,17 @@ export class ApiError extends Error {
   }
 }
 
+/** Narrows an unknown ApiError body to its `error` string, if present. */
+export function extractApiMessage(err: unknown): string | null {
+  if (!(err instanceof ApiError)) return null;
+  const body = err.body;
+  if (typeof body === "object" && body !== null && "error" in body) {
+    const { error } = body as { error: unknown };
+    if (typeof error === "string") return error;
+  }
+  return null;
+}
+
 export async function apiFetch<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
