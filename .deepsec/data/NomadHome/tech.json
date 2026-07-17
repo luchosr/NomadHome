@@ -1,0 +1,6 @@
+{
+  "tags": ["docker", "github-actions", "node"],
+  "sentinels": ["Dockerfile", "package.json"],
+  "detectedAt": "2026-07-17T09:38:10.583Z",
+  "rootPath": "/Users/luciano/Documents/IA4devs/NomadHome"
+}

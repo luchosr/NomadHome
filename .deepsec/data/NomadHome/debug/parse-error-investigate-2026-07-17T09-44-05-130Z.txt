@@ -1,0 +1,13 @@
+# deepsec parse-failure debug dump
+# phase: investigate
+# agentType: claude-agent-sdk
+# timestamp: 2026-07-17T09:44:05.130Z
+# error: Error: Agent produced output that wasn't a parseable JSON findings array: Unexpected token 'Y', "You've hit"... is not valid JSON. Tolerant jsonrepair failed: Unexpected character "'" at position 3. First 400 chars: You've hit your session limit · resets 4:10pm (Europe/Madrid)
+# batch (5 files):
+  - apps/web/src/components/Layout.tsx
+  - apps/web/src/components/CancelBookingModal.tsx
+  - apps/web/src/components/RoleGuard.tsx
+  - packages/db/.env
+  - packages/shared/src/t.ts
+# --- raw agent output begins on next line ---
+You've hit your session limit · resets 4:10pm (Europe/Madrid)
