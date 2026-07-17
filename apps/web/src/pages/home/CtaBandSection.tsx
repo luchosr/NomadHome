@@ -17,18 +17,17 @@ export function CtaBandSection() {
             }}
           />
           <p className="eyebrow relative mb-4 text-xs font-medium uppercase tracking-widest text-terracotta-200">
-            Your next home is one search away
+            {t("home.cta.eyebrow")}
           </p>
           <h2
             className="relative m-0 font-serif font-normal leading-tight tracking-tight text-sand-50"
             style={{ fontSize: "clamp(38px, 5.5vw, 68px)" }}
           >
-            Pick a city. We&apos;ll save{" "}
-            <em className="not-italic text-terracotta-200">the rest</em>.
+            {t("home.cta.headline_pre")}{" "}
+            <em className="not-italic text-terracotta-200">{t("home.cta.headline_em")}</em>.
           </h2>
           <p className="relative mx-auto mt-5 max-w-[52ch] text-lg text-forest-200">
-            Three rooms left in Oaxaca this month, and new houses opening in Cape Town and Buenos
-            Aires this summer.
+            {t("home.cta.body")}
           </p>
           <div className="relative mt-9 flex flex-wrap justify-center gap-3.5">
             <Link

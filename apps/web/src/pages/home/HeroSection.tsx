@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { t } from "@nomadhome/shared";
 import { WRAP, STAR_RATING } from "./constants.js";
 
 export function HeroSection() {
@@ -22,18 +23,18 @@ export function HeroSection() {
       />
       <div className={WRAP}>
         <p className="eyebrow mb-6 text-xs font-medium uppercase tracking-widest text-ink-500">
-          Co-living &amp; workspaces · 9 cities
+          {t("home.hero.eyebrow")}
         </p>
         <h1
           className="m-0 max-w-[14ch] font-serif font-normal leading-[0.98] tracking-tight text-ink-900"
           style={{ fontSize: "clamp(52px, 8vw, 100px)" }}
         >
-          Find a place to <em className="not-italic text-terracotta-500">land</em>, and people to
-          land with.
+          {t("home.hero.headline_pre")}{" "}
+          <em className="not-italic text-terracotta-500">{t("home.hero.headline_em")}</em>
+          {t("home.hero.headline_post")}
         </h1>
         <p className="mt-7 max-w-[56ch] text-xl leading-relaxed text-ink-700">
-          Private rooms in beautiful shared homes, a desk waiting in every city, and a community
-          that turns a stay into a circle of friends.
+          {t("home.hero.subheadline")}
         </p>
 
         <svg className="mt-7 w-52" viewBox="0 0 200 12">
@@ -58,12 +59,12 @@ export function HeroSection() {
               htmlFor="city-search"
               className="text-[11px] font-medium uppercase tracking-widest text-ink-500"
             >
-              Where
+              {t("home.hero.search_label")}
             </label>
             <input
               id="city-search"
               className="bg-transparent text-base text-ink-900 outline-none ring-0 focus:outline-none placeholder:text-ink-300"
-              placeholder="City or destination"
+              placeholder={t("home.hero.search_placeholder")}
               value={city}
               onChange={(e) => setCity(e.target.value)}
             />
@@ -72,7 +73,7 @@ export function HeroSection() {
             <button
               type="submit"
               className="flex h-14 w-14 items-center justify-center rounded-xl bg-forest-700 text-sand-50 transition-colors hover:bg-forest-900"
-              aria-label="Search"
+              aria-label={t("home.hero.search_aria")}
             >
               <svg
                 className="h-6 w-6"
@@ -97,9 +98,9 @@ export function HeroSection() {
               </svg>
             ))}
           </span>
-          <span>4.9 from 1,200+ members</span>
+          <span>{t("home.hero.trust_rating")}</span>
           <span>·</span>
-          <span>NPS +62 · 92% would stay again</span>
+          <span>{t("home.hero.trust_nps")}</span>
         </div>
       </div>
     </section>

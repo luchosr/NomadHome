@@ -1,10 +1,5 @@
-import { WRAP } from "./constants.js";
-
-const NAV_COLS = [
-  { h: "Stay", links: ["Find a home", "Locations", "Workspaces", "Long stays"] },
-  { h: "Company", links: ["About us", "Become a host", "Community", "Careers"] },
-  { h: "Support", links: ["Help center", "House rules", "Contact"] },
-] as const;
+import { t } from "@nomadhome/shared";
+import { WRAP, FOOTER_NAV_COLS } from "./constants.js";
 
 export function HomeFooter() {
   return (
@@ -35,13 +30,13 @@ export function HomeFooter() {
               <span className="font-serif text-2xl text-ink-900">NomadHome</span>
             </div>
             <p className="mt-3.5 max-w-[30ch] text-sm leading-relaxed text-ink-500">
-              Co-living and workspaces for people who'd rather live in a few places than visit many.
+              {t("home.footer.tagline")}
             </p>
           </div>
-          {NAV_COLS.map((col) => (
-            <div key={col.h}>
+          {FOOTER_NAV_COLS.map((col) => (
+            <div key={col.hKey}>
               <h4 className="mb-4 text-xs font-medium uppercase tracking-widest text-ink-500">
-                {col.h}
+                {t(col.hKey)}
               </h4>
               {col.links.map((l) => (
                 <a
@@ -49,23 +44,23 @@ export function HomeFooter() {
                   href="#"
                   className="mb-2.5 block text-sm text-ink-700 no-underline transition-colors hover:text-forest-700"
                 >
-                  {l}
+                  {t(l)}
                 </a>
               ))}
             </div>
           ))}
         </div>
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-sand-300 pt-6 text-xs text-ink-500">
-          <span>© 2026 NomadHome · Una red de casas y espacios de trabajo</span>
+          <span>{t("home.footer.copyright")}</span>
           <span className="flex gap-4">
             <a href="#" className="text-ink-500 no-underline hover:text-ink-900">
-              Privacy
+              {t("home.footer.privacy")}
             </a>
             <a href="#" className="text-ink-500 no-underline hover:text-ink-900">
-              Terms
+              {t("home.footer.terms")}
             </a>
             <a href="#" className="text-ink-500 no-underline hover:text-ink-900">
-              Cookies
+              {t("home.footer.cookies")}
             </a>
           </span>
         </div>

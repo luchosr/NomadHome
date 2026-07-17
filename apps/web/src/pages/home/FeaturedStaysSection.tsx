@@ -1,33 +1,6 @@
 import { Link } from "react-router-dom";
-import { WRAP, GRADIENTS } from "./constants.js";
-
-const CARDS = [
-  {
-    grad: "twilight",
-    city: "Oaxaca · MX",
-    title: "Casa del Fig",
-    meta: "6 rooms · coworking · courtyard with a fig tree",
-    price: "MX$ 18,500 / mo",
-    tag: "Featured",
-    left: "3 rooms left",
-  },
-  {
-    grad: "forest",
-    city: "Lisboa · PT",
-    title: "A Quinta",
-    meta: "4 rooms · garden · 10 min from the beach",
-    price: "€ 1,250 / mo",
-    left: "4 rooms left",
-  },
-  {
-    grad: "morning",
-    city: "Medellín · CO",
-    title: "El Poblado",
-    meta: "8 rooms · big coworking · rooftop pool",
-    price: "COP 3.2M / mo",
-    left: "Waitlist",
-  },
-] as const;
+import { t } from "@nomadhome/shared";
+import { WRAP, GRADIENTS, FEATURED_CARDS } from "./constants.js";
 
 export function FeaturedStaysSection() {
   return (
@@ -36,18 +9,19 @@ export function FeaturedStaysSection() {
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
             <p className="eyebrow mb-2 text-xs font-medium uppercase tracking-widest text-ink-500">
-              Featured · this month
+              {t("home.featured.eyebrow")}
             </p>
             <h2 className="m-0 font-serif text-4xl font-normal leading-tight tracking-tight text-ink-900 md:text-5xl">
-              Houses we&apos;d <em className="not-italic text-terracotta-500">recommend</em> right
-              now.
+              {t("home.featured.headline_pre")}{" "}
+              <em className="not-italic text-terracotta-500">{t("home.featured.headline_em")}</em>{" "}
+              {t("home.featured.headline_post")}
             </h2>
           </div>
           <Link
             to="/search"
             className="flex shrink-0 items-center gap-2 text-sm font-medium text-forest-700 hover:text-forest-900"
           >
-            See all stays
+            {t("home.featured.see_all")}
             <svg
               className="h-4 w-4"
               viewBox="0 0 24 24"
@@ -62,7 +36,7 @@ export function FeaturedStaysSection() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {CARDS.map((card) => (
+          {FEATURED_CARDS.map((card) => (
             <article
               key={card.title}
               className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
