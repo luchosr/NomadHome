@@ -2,19 +2,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { t } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import type { ListingFormValues } from "../hooks/useEditListing.js";
-
-const AMENITIES = [
-  { code: "wifi", label: "Wi-Fi" },
-  { code: "kitchen", label: "Kitchen" },
-  { code: "workspace_desk", label: "Dedicated desk" },
-  { code: "meeting_room", label: "Meeting room" },
-  { code: "phone_booth", label: "Phone booth" },
-  { code: "laundry", label: "Laundry" },
-  { code: "air_conditioning", label: "Air conditioning" },
-  { code: "heating", label: "Heating" },
-  { code: "parking", label: "Parking" },
-  { code: "coffee", label: "Coffee" },
-] as const;
+import { AMENITIES } from "../lib/listingData.js";
 
 interface Props {
   form: UseFormReturn<ListingFormValues>;
@@ -110,7 +98,7 @@ export function ListingDetailsForm({
           {t("host.listings.field_amenities")}
         </legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {AMENITIES.map(({ code, label }) => (
+          {AMENITIES.map(({ code, labelKey }) => (
             <label key={code} className="flex items-center gap-2 text-sm text-fg-2">
               <input
                 type="checkbox"
@@ -118,7 +106,7 @@ export function ListingDetailsForm({
                 onChange={() => toggleAmenity(code)}
                 className="h-4 w-4 rounded border-muted accent-forest-700"
               />
-              {label}
+              {t(labelKey)}
             </label>
           ))}
         </div>
