@@ -1,5 +1,7 @@
 import { prisma, type Review } from "@nomadhome/db";
 
+export type PublicReview = Pick<Review, "id" | "listingId" | "rating" | "text" | "createdAt">;
+
 export class ReviewRepository {
   /**
    * Insert a review and atomically recompute the listing's averageRating
@@ -33,10 +35,11 @@ export class ReviewRepository {
     });
   }
 
-  findByListing(listingId: string): Promise<Review[]> {
+  findByListing(listingId: string): Promise<PublicReview[]> {
     return prisma.review.findMany({
       where: { listingId },
       orderBy: { createdAt: "desc" },
+      select: { id: true, listingId: true, rating: true, text: true, createdAt: true },
     });
   }
 }
