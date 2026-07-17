@@ -329,7 +329,129 @@ nomadhome/
 
 ### **2.4. Infrastructure and Deployment**
 
-> Detail the project's infrastructure, including a diagram in the format you deem appropriate, and explain the deployment process followed
+#### Infrastructure Overview
+
+NomadHome runs across three environments: **local development**, **CI**, and **production**. The diagram below shows the full runtime topology and the flow from a developer commit to a live deployment.
+
+```mermaid
+flowchart TD
+    subgraph dev["Local Development"]
+        D[Developer machine]
+        DC[(docker-compose\nPostgres :5432)]
+        D -- pnpm dev --> API_DEV[API :3000]
+        D -- pnpm dev --> WEB_DEV[Web :5173]
+        API_DEV -- DATABASE_URL --> DC
+        API_DEV -- no R2 creds → local fallback --> UPLOADS[/uploads dir/]
+    end
+
+    subgraph gh["GitHub"]
+        PR[Pull Request]
+        MAIN[main branch]
+    end
+
+    subgraph ci["GitHub Actions CI"]
+        GATE["Quality gate job\npnpm install --frozen-lockfile\npnpm lint\npnpm typecheck\nprisma migrate deploy\npnpm test --coverage ≥80%\npnpm build\nopenspec validate --strict"]
+        E2E["E2E job\nPlaywright headless Chromium\npnpm test:e2e"]
+        GEMINI["Gemini AI Code Review\ngemini-1.5-flash via REST API\nposts comment to PR"]
+    end
+
+    subgraph prod["Production"]
+        subgraph vercel["Vercel (Frontend)"]
+            WEB_PROD[Web SPA\nstatic + CDN edge]
+        end
+        subgraph api_host["API Host (Docker)"]
+            API_PROD[API container\nnode:20.20.0-alpine\nnon-root user: app]
+        end
+        subgraph data["Data & Storage"]
+            PG[(PostgreSQL\nmanaged)]
+            R2[(Cloudflare R2\nphoto storage)]
+        end
+        subgraph ext["External SaaS"]
+            STRIPE[Stripe Checkout\n+ Webhooks]
+            RESEND[Resend\ntransactional email]
+        end
+    end
+
+    D -- git push --> PR
+    PR -- triggers --> GATE
+    PR -- triggers --> E2E
+    PR -- triggers --> GEMINI
+    PR -- human review + CI green --> MAIN
+    MAIN -- deploy.yml: POST Vercel API --> WEB_PROD
+    MAIN -- Docker build + push --> API_PROD
+    API_PROD -- DATABASE_URL --> PG
+    API_PROD -- CLOUDFLARE_R2_* --> R2
+    API_PROD -- STRIPE_SECRET_KEY --> STRIPE
+    API_PROD -- RESEND_API_KEY --> RESEND
+    WEB_PROD -- HTTPS/JWT --> API_PROD
+    WEB_PROD -- signed PUT --> R2
+    WEB_PROD -- redirect --> STRIPE
+```
+
+#### Environments
+
+| Environment    | Web                       | API                                      | Database                                  | Photo Storage                                                             |
+| -------------- | ------------------------- | ---------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------- |
+| **Local dev**  | Vite dev server `:5173`   | Express `:3000`                          | docker-compose Postgres `:5432`           | Local `uploads/` dir (fallback when `CLOUDFLARE_R2_ACCOUNT_ID` is absent) |
+| **CI**         | Vite build                | Express build + Vitest                   | GitHub Actions Postgres service container | Not exercised                                                             |
+| **Production** | Vercel (CDN edge, static) | Docker container (`node:20.20.0-alpine`) | Managed PostgreSQL                        | Cloudflare R2                                                             |
+
+#### CI Pipeline
+
+Every pull request runs two parallel jobs defined in `.github/workflows/ci.yml`:
+
+**Quality gate** (blocks merge if red):
+
+1. `pnpm install --frozen-lockfile` — reproducible install from lockfile
+2. `pnpm lint` — ESLint, zero warnings
+3. `pnpm typecheck` — TypeScript strict mode, zero errors
+4. `prisma generate` + `prisma migrate deploy` — schema applied against a fresh Postgres service container
+5. `pnpm test` — Vitest unit + integration, ≥80% coverage on changed lines
+6. `pnpm build` — all workspace packages compile
+7. `openspec validate --all --strict` — every active OpenSpec change is spec-compliant
+
+**E2E** (blocks merge if red):
+
+- Playwright against headless Chromium; all API calls mocked via `page.route()` so tests are fast and network-independent.
+
+**Gemini AI Code Review** (informational, non-blocking):
+
+- Triggers on `opened`/`synchronize` events for changes in `apps/**` or `packages/**`.
+- Calls the Gemini REST API directly (`generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent`) — no SDK dependency.
+- Posts a structured review comment (bugs, architecture, optimization suggestions) to the PR.
+
+Branch protection on `main` requires all CI jobs green + at least one human approval before merge.
+
+#### Deployment Process
+
+**Frontend (Vercel) — automatic:**
+
+1. A PR is merged to `main` with changes in `apps/api/**`, `packages/**`, or `pnpm-lock.yaml`.
+2. `.github/workflows/deploy.yml` fires and calls the Vercel Deploy API via `curl`.
+3. Vercel pulls the latest `main`, runs `vite build` for `apps/web`, and deploys the resulting static bundle to its CDN edge network globally.
+4. The deployed URL is posted back to the PR as a Vercel preview comment.
+
+**API (Docker) — manual / platform-specific:**
+
+1. The `Dockerfile` at repo root performs a **multi-stage build**:
+   - **Builder stage** (`node:20.20.0-alpine`): installs all dependencies (with `HUSKY=0` to skip Git hooks), builds `@nomadhome/shared`, `@nomadhome/db` (including `prisma generate`), and `@nomadhome/api`; then runs `pnpm deploy --prod` to produce a lean production bundle at `/prod/api`.
+   - **Runner stage** (`node:20.20.0-alpine`): copies only the production bundle, creates a non-root system user (`app:app`), sets `USER app`, exposes port `3000`, and starts with `node dist/index.js`.
+2. The image is built and pushed to a container registry, then deployed to the API host.
+3. Prisma migrations (`prisma migrate deploy`) run as a pre-start step against the production `DATABASE_URL`.
+
+**Key environment variables required in production:**
+
+| Variable                          | Purpose                                                   |
+| --------------------------------- | --------------------------------------------------------- |
+| `DATABASE_URL`                    | PostgreSQL connection string                              |
+| `JWT_SECRET`                      | Signs/verifies HS256 access tokens                        |
+| `STRIPE_SECRET_KEY`               | Stripe API key                                            |
+| `STRIPE_WEBHOOK_SECRET`           | Validates incoming Stripe webhook signatures              |
+| `RESEND_API_KEY`                  | Transactional email delivery                              |
+| `CLOUDFLARE_R2_ACCOUNT_ID`        | Enables R2 photo storage (dev fallback disabled when set) |
+| `CLOUDFLARE_R2_ACCESS_KEY_ID`     | R2 credentials                                            |
+| `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | R2 credentials                                            |
+| `CORS_ORIGIN`                     | Comma-separated allowed origins (Vercel deployment URL)   |
 
 ### **2.5. Security**
 
