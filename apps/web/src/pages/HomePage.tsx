@@ -1,11 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { t } from "@nomadhome/shared";
 import { useAuth } from "../contexts/auth.js";
 
 const WRAP = "mx-auto w-full max-w-[1280px] px-6 md:px-12";
 
-const gradients: Record<string, string> = {
+const GRADIENTS: Record<string, string> = {
   twilight: "bg-gradient-to-br from-[#D97757] via-[#8C3E20] to-[#2E4A3F]",
   forest: "bg-gradient-to-br from-[#B8C9C1] via-[#4A6F61] to-[#1C2E27]",
   morning: "bg-gradient-to-b from-[#F2C9B5] via-[#FBF8F2] to-[#B8C9C1]",
@@ -13,6 +14,8 @@ const gradients: Record<string, string> = {
   sand: "bg-gradient-to-br from-[#FBF8F2] via-[#DDD2BE] to-[#C4B59B]",
   terracotta: "bg-gradient-to-br from-[#F2C9B5] via-[#D97757] to-[#8C3E20]",
 };
+
+const STAR_RATING = Array.from({ length: 5 }, (_, i) => i);
 
 export function HomePage() {
   const { user } = useAuth();
@@ -26,9 +29,7 @@ export function HomePage() {
 
   return (
     <div className="w-full">
-      {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-sand-100 pb-16 pt-20">
-        {/* warm blob */}
         <div
           className="pointer-events-none absolute -right-60 -top-40 h-[720px] w-[720px] rounded-full"
           style={{
@@ -51,7 +52,6 @@ export function HomePage() {
             that turns a stay into a circle of friends.
           </p>
 
-          {/* squiggle */}
           <svg className="mt-7 w-52" viewBox="0 0 200 12">
             <path
               d="M2 6 Q 25 1, 50 6 T 100 6 T 150 6 T 198 6"
@@ -62,23 +62,31 @@ export function HomePage() {
             />
           </svg>
 
-          {/* Search bar */}
-          <div className="mt-10 flex max-w-[860px] overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-md transition-shadow focus-within:border-forest-700 focus-within:shadow-lg">
+          <form
+            className="mt-10 flex max-w-[860px] overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-md transition-shadow focus-within:border-forest-700 focus-within:shadow-lg"
+            onSubmit={(e: FormEvent<HTMLFormElement>) => {
+              e.preventDefault();
+              handleSearch();
+            }}
+          >
             <div className="flex flex-1 flex-col gap-1 border-r border-ink-100 px-6 py-[18px]">
-              <span className="text-[11px] font-medium uppercase tracking-widest text-ink-500">
+              <label
+                htmlFor="city-search"
+                className="text-[11px] font-medium uppercase tracking-widest text-ink-500"
+              >
                 Where
-              </span>
+              </label>
               <input
+                id="city-search"
                 className="bg-transparent text-base text-ink-900 outline-none ring-0 focus:outline-none placeholder:text-ink-300"
                 placeholder="City or destination"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
             <div className="flex items-center px-4">
               <button
-                onClick={handleSearch}
+                type="submit"
                 className="flex h-14 w-14 items-center justify-center rounded-xl bg-forest-700 text-sand-50 transition-colors hover:bg-forest-900"
                 aria-label="Search"
               >
@@ -95,12 +103,11 @@ export function HomePage() {
                 </svg>
               </button>
             </div>
-          </div>
+          </form>
 
-          {/* Trust line */}
           <div className="mt-5 flex flex-wrap items-center gap-5 text-sm text-ink-500">
             <span className="flex gap-0.5 text-terracotta-500">
-              {[...Array(5)].map((_, i) => (
+              {STAR_RATING.map((i) => (
                 <svg key={i} className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" />
                 </svg>
@@ -113,7 +120,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── Featured stays ── */}
       <section className="py-20">
         <div className={WRAP}>
           <div className="mb-10 flex items-end justify-between gap-6">
@@ -174,46 +180,46 @@ export function HomePage() {
             ].map((card) => (
               <article
                 key={card.title}
-                onClick={() => navigate("/search")}
-                className="cursor-pointer overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
+                className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
               >
-                <div className={`relative aspect-[4/3] ${gradients[card.grad]}`}>
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.18), transparent 52%)",
-                    }}
-                  />
-                  <div className="absolute left-3.5 top-3.5 flex gap-1.5">
-                    <span
-                      className="rounded-full px-3 py-1 text-xs font-medium text-sand-50"
-                      style={{ background: "rgba(28,46,39,0.82)", backdropFilter: "blur(8px)" }}
-                    >
-                      {card.city}
-                    </span>
-                    {card.tag && (
-                      <span className="rounded-full bg-terracotta-50 px-3 py-1 text-xs font-medium text-terracotta-900">
-                        {card.tag}
+                <Link to="/search" className="block no-underline">
+                  <div className={`relative aspect-[4/3] ${GRADIENTS[card.grad]}`}>
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.18), transparent 52%)",
+                      }}
+                    />
+                    <div className="absolute left-3.5 top-3.5 flex gap-1.5">
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-medium text-sand-50"
+                        style={{ background: "rgba(28,46,39,0.82)", backdropFilter: "blur(8px)" }}
+                      >
+                        {card.city}
                       </span>
-                    )}
+                      {card.tag && (
+                        <span className="rounded-full bg-terracotta-50 px-3 py-1 text-xs font-medium text-terracotta-900">
+                          {card.tag}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="px-[18px] pb-[18px] pt-4">
-                  <p className="font-serif text-2xl leading-tight text-ink-900">{card.title}</p>
-                  <p className="mt-1 text-sm text-ink-500">{card.meta}</p>
-                  <div className="mt-3.5 flex items-baseline justify-between">
-                    <span className="text-base font-medium text-ink-900">{card.price}</span>
-                    <span className="text-sm font-medium text-terracotta-700">{card.left}</span>
+                  <div className="px-[18px] pb-[18px] pt-4">
+                    <p className="font-serif text-2xl leading-tight text-ink-900">{card.title}</p>
+                    <p className="mt-1 text-sm text-ink-500">{card.meta}</p>
+                    <div className="mt-3.5 flex items-baseline justify-between">
+                      <span className="text-base font-medium text-ink-900">{card.price}</span>
+                      <span className="text-sm font-medium text-terracotta-700">{card.left}</span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── How it works ── */}
       <section className="border-y border-sand-300 bg-sand-50 py-20">
         <div className={WRAP}>
           <div className="mb-10">
@@ -252,7 +258,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── Value prop: Co-living ── */}
       <section className="py-20">
         <div className={`${WRAP} grid grid-cols-1 items-center gap-14 lg:grid-cols-2`}>
           <div>
@@ -292,7 +297,7 @@ export function HomePage() {
             </ul>
           </div>
           <div
-            className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg ${gradients.night}`}
+            className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg ${GRADIENTS.night}`}
           >
             <div
               className="absolute inset-0"
@@ -313,11 +318,10 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── Value prop: Workspace ── */}
       <section className="py-0 pb-20">
         <div className={`${WRAP} grid grid-cols-1 items-center gap-14 lg:grid-cols-2`}>
           <div
-            className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg lg:order-first ${gradients.sand}`}
+            className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg lg:order-first ${GRADIENTS.sand}`}
           >
             <div
               className="absolute inset-0"
@@ -374,7 +378,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── Locations ── */}
       <section className="border-y border-sand-300 bg-sand-50 py-20">
         <div className={WRAP}>
           <div className="mb-10 flex items-end justify-between gap-6">
@@ -413,7 +416,7 @@ export function HomePage() {
             ].map((loc) => (
               <div
                 key={loc.city}
-                className={`group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-2xl ${gradients[loc.grad]}`}
+                className={`group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-2xl ${GRADIENTS[loc.grad]}`}
               >
                 <div
                   className="absolute inset-0"
@@ -440,7 +443,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── Stats ── */}
       <section className="py-20">
         <div className={`${WRAP} grid grid-cols-2 gap-8 sm:grid-cols-4`}>
           {[
@@ -469,7 +471,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── Testimonial ── */}
       <section className="py-10 pb-20">
         <div className={`${WRAP} mx-auto max-w-4xl text-center`}>
           <p
@@ -501,7 +502,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA band ── */}
       <section className="pb-20">
         <div className={WRAP}>
           <div className="relative overflow-hidden rounded-3xl bg-forest-700 px-8 py-16 text-center md:px-16 md:py-[72px]">
@@ -546,7 +546,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
       <footer className="border-t border-sand-300 bg-sand-50 pb-10 pt-16">
         <div className={WRAP}>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:gap-10">
