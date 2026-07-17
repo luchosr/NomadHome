@@ -40,10 +40,7 @@ export function CreateListingForm({
           {t("host.listings.field_title")}
         </label>
         <Input id="title" {...register("title")} aria-invalid={!!errors.title} />
-        <FieldHint
-          error={errors.title?.message}
-          hint="Give your space a clear, catchy name (min 5 characters)."
-        />
+        <FieldHint error={errors.title?.message} hint={t("host.listings.hint_title")} />
       </div>
 
       <div>
@@ -57,10 +54,7 @@ export function CreateListingForm({
           aria-invalid={!!errors.description}
           className="w-full rounded-md border border-muted bg-elevated px-4 py-3 text-base text-fg-1 placeholder:text-fg-muted transition-colors duration-fast ease-out focus-visible:border-forest-500 focus-visible:outline-none"
         />
-        <FieldHint
-          error={errors.description?.message}
-          hint="Describe amenities, vibe, and what makes your space unique (min 20 characters)."
-        />
+        <FieldHint error={errors.description?.message} hint={t("host.listings.hint_description")} />
       </div>
 
       <div>
@@ -71,10 +65,7 @@ export function CreateListingForm({
           <option value="PROPERTY">{t("host.listings.type_property")}</option>
           <option value="WORKSPACE">{t("host.listings.type_workspace")}</option>
         </select>
-        <FieldHint
-          error={errors.type?.message}
-          hint="Property = a place to sleep and live. Workspace = a desk or office."
-        />
+        <FieldHint error={errors.type?.message} hint={t("host.listings.hint_type")} />
       </div>
 
       <div>
@@ -82,10 +73,7 @@ export function CreateListingForm({
           {t("host.listings.field_city")}
         </label>
         <Input id="city" {...register("city")} aria-invalid={!!errors.city} />
-        <FieldHint
-          error={errors.city?.message}
-          hint="The city where guests will stay (e.g. Madrid, Lisbon)."
-        />
+        <FieldHint error={errors.city?.message} hint={t("host.listings.hint_city")} />
       </div>
 
       <div>
@@ -98,12 +86,9 @@ export function CreateListingForm({
           aria-invalid={!!errors.country}
           className={SELECT_CLASS}
           groups={COUNTRIES}
-          placeholder="Select a country…"
+          placeholder={t("host.listings.country_placeholder")}
         />
-        <FieldHint
-          error={errors.country?.message}
-          hint="Select the country where your listing is located."
-        />
+        <FieldHint error={errors.country?.message} hint={t("host.listings.hint_country")} />
       </div>
 
       <div>
@@ -111,10 +96,7 @@ export function CreateListingForm({
           {t("host.listings.field_address")}
         </label>
         <Input id="addressLine" {...register("addressLine")} aria-invalid={!!errors.addressLine} />
-        <FieldHint
-          error={errors.addressLine?.message}
-          hint="Street name and number (e.g. Calle del Pez 12, Malasaña)."
-        />
+        <FieldHint error={errors.addressLine?.message} hint={t("host.listings.hint_address")} />
       </div>
 
       <div>
@@ -128,10 +110,7 @@ export function CreateListingForm({
           {...register("capacity")}
           aria-invalid={!!errors.capacity}
         />
-        <FieldHint
-          error={errors.capacity?.message}
-          hint="Maximum number of guests the space can accommodate."
-        />
+        <FieldHint error={errors.capacity?.message} hint={t("host.listings.hint_capacity")} />
       </div>
 
       <div>
@@ -146,10 +125,7 @@ export function CreateListingForm({
           {...register("nightlyRate")}
           aria-invalid={!!errors.nightlyRate}
         />
-        <FieldHint
-          error={errors.nightlyRate?.message}
-          hint="Price per night in the selected currency (e.g. 75 for €75.00)."
-        />
+        <FieldHint error={errors.nightlyRate?.message} hint={t("host.listings.hint_rate")} />
       </div>
 
       <div>
@@ -163,19 +139,14 @@ export function CreateListingForm({
           className={SELECT_CLASS}
           groups={CURRENCIES}
         />
-        <FieldHint
-          error={errors.currency?.message}
-          hint="Select the currency you want to charge guests in."
-        />
+        <FieldHint error={errors.currency?.message} hint={t("host.listings.hint_currency")} />
       </div>
 
       <fieldset>
         <legend className="mb-1 text-sm font-medium text-fg-2">
           {t("host.listings.field_amenities")}
         </legend>
-        <p className="mb-2 text-xs text-fg-3">
-          Select all that apply — guests can filter by these.
-        </p>
+        <p className="mb-2 text-xs text-fg-3">{t("host.listings.hint_amenities")}</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {AMENITIES.map(({ code, label }) => (
             <label key={code} className="flex items-center gap-2 text-sm text-fg-2">
@@ -198,7 +169,7 @@ export function CreateListingForm({
       )}
 
       <Button type="submit" disabled={isSubmitting || !isValid}>
-        {isSubmitting ? "Creating…" : t("host.listings.create_title")}
+        {isSubmitting ? t("host.listings.creating") : t("host.listings.create_title")}
       </Button>
     </form>
   );
