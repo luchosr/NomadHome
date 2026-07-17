@@ -160,6 +160,13 @@ export const en = {
     filter_max_price_label: "Max price ($/night)",
     filter_capacity_label: "Min guests",
     filter_reset: "Reset filters",
+    filter_any: "Any",
+    filter_amenity_wifi: "Wi-Fi",
+    filter_amenity_parking: "Parking",
+    filter_amenity_pool: "Pool",
+    filter_amenity_gym: "Gym",
+    filter_amenity_kitchen: "Kitchen",
+    filter_amenity_ac: "A/C",
   },
   booking: {
     error: {

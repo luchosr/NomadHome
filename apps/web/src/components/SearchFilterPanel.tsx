@@ -2,15 +2,7 @@ import type { UseFormRegister, FieldErrors } from "react-hook-form";
 import { t } from "@nomadhome/shared";
 import { Input } from "@nomadhome/ui";
 import type { SearchFormValues } from "../hooks/useSearchPage.js";
-
-const AMENITY_OPTIONS = [
-  { code: "wifi", label: "WiFi" },
-  { code: "parking", label: "Parking" },
-  { code: "pool", label: "Pool" },
-  { code: "gym", label: "Gym" },
-  { code: "kitchen", label: "Kitchen" },
-  { code: "ac", label: "A/C" },
-] as const;
+import { AMENITY_OPTIONS } from "../lib/searchData.js";
 
 interface Props {
   register: UseFormRegister<SearchFormValues>;
@@ -47,13 +39,25 @@ export function SearchFilterPanel({ register, errors, onReset }: Props) {
           <label htmlFor="maxPrice" className="mb-1 block text-sm font-medium text-slate-700">
             {t("search.filter_max_price_label")}
           </label>
-          <Input id="maxPrice" type="number" min="0" placeholder="Any" {...register("maxPrice")} />
+          <Input
+            id="maxPrice"
+            type="number"
+            min="0"
+            placeholder={t("search.filter_any")}
+            {...register("maxPrice")}
+          />
         </div>
         <div>
           <label htmlFor="capacity" className="mb-1 block text-sm font-medium text-slate-700">
             {t("search.filter_capacity_label")}
           </label>
-          <Input id="capacity" type="number" min="1" placeholder="Any" {...register("capacity")} />
+          <Input
+            id="capacity"
+            type="number"
+            min="1"
+            placeholder={t("search.filter_any")}
+            {...register("capacity")}
+          />
         </div>
       </div>
 
@@ -62,7 +66,7 @@ export function SearchFilterPanel({ register, errors, onReset }: Props) {
           {t("search.filter_amenities_label")}
         </p>
         <div className="flex flex-wrap gap-3">
-          {AMENITY_OPTIONS.map(({ code, label }) => (
+          {AMENITY_OPTIONS.map(({ code, labelKey }) => (
             <label
               key={code}
               className="flex cursor-pointer items-center gap-1.5 text-sm text-slate-600"
@@ -73,7 +77,7 @@ export function SearchFilterPanel({ register, errors, onReset }: Props) {
                 {...register("amenities")}
                 className="accent-forest-600"
               />
-              {label}
+              {t(labelKey)}
             </label>
           ))}
         </div>
