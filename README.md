@@ -455,7 +455,181 @@ Branch protection on `main` requires all CI jobs green + at least one human appr
 
 ### **2.5. Security**
 
-> List and describe the main security practices implemented in the project, adding examples if applicable
+NomadHome applies defense-in-depth across identity, transport, data, payments, and infrastructure. The practices below are all implemented in the current codebase.
+
+#### 1. Password Hashing — bcrypt (cost 12)
+
+Passwords are hashed with bcrypt at a fixed cost factor of 12 before persistence. The raw password is never stored or logged, and `passwordHash` is never included in any API response.
+
+```ts
+// apps/api/src/services/auth.service.ts
+const BCRYPT_COST = 12;
+const passwordHash = await bcrypt.hash(cmd.password, BCRYPT_COST);
+```
+
+#### 2. JWT Algorithm Pinning
+
+Access tokens are verified with an explicit `algorithms` allowlist, preventing algorithm-confusion attacks (e.g., an attacker forging tokens with `"alg": "none"`).
+
+```ts
+// apps/api/src/services/token.service.ts
+const payload = jwt.verify(token, this.secret(), { algorithms: ["HS256"] }) as jwt.JwtPayload;
+```
+
+#### 3. Refresh Tokens Stored as Hashes
+
+The raw refresh token is returned to the client exactly once. Only its SHA-256 hash is stored in the `RefreshToken` table. A database breach does not expose any valid tokens.
+
+```ts
+// apps/api/src/services/auth.service.ts
+const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+```
+
+#### 4. Token Revocation on Logout and Account Disable
+
+- **Logout**: the presented refresh token's `revokedAt` is set immediately; subsequent use of the same token is rejected.
+- **Admin disable user**: all active refresh tokens for the user (`revokedAt IS NULL`) are revoked **in the same Prisma transaction** that sets `User.disabledAt` and writes the `user_disabled` audit event — no active session survives a disable action.
+
+```ts
+// apps/api/src/repositories/admin.repository.ts — inside tx
+await tx.refreshToken.updateMany({
+  where: { userId, revokedAt: null },
+  data: { revokedAt: new Date() },
+});
+await tx.authAuditEvent.create({
+  data: { userId, event: "user_disabled", ipAddress: "system", metadata: { adminId } },
+});
+```
+
+#### 5. Authentication and Role-Based Access Control (RBAC)
+
+Two middleware layers guard every protected route:
+
+- **`requireAuth`** — extracts and verifies the `Bearer` access token; rejects missing, expired, or tampered tokens (`401`). Users with `disabledAt` set are rejected even with a valid token.
+- **`requireRole(...roles)`** — checks the `roles` claim from the token against the required roles for the endpoint; returns `403 forbidden` on mismatch.
+
+```ts
+// apps/api/src/routes/listings.ts (example)
+router.post("/", requireAuth, requireRole("host"), createListing);
+```
+
+#### 6. Auth Audit Log
+
+Every identity event is written to the `AuthAuditEvent` table with the user ID, event type, IP address, and timestamp. Covered events: `registered`, `login_succeeded`, `login_failed`, `role_added`, `user_disabled`. The log is append-only and serves as the baseline compliance trail.
+
+#### 7. Email Verification Gate
+
+`User.emailVerifiedAt` must be non-null before a user can become a host or initiate a booking. The check is enforced in the service layer, not just in the frontend, and returns a distinct `403` error code with a user-facing message via the `t()` helper.
+
+```ts
+// apps/api/src/services/auth.service.ts — becomeHost
+if (!user.emailVerifiedAt) throw new EmailNotVerifiedError();
+```
+
+#### 8. CORS Allowlist
+
+The API accepts cross-origin requests only from explicitly listed origins configured via the `CORS_ORIGIN` environment variable. In production this is set to the Vercel deployment URL; the development fallback (`http://localhost:5173`) is never used in production.
+
+```ts
+// apps/api/src/app.ts
+cors({
+  origin: process.env["CORS_ORIGIN"]?.split(",").map((o) => o.trim()) ?? ["http://localhost:5173"],
+  credentials: true,
+});
+```
+
+#### 9. Stripe Webhook Signature Verification
+
+The Stripe webhook route is mounted **before** `express.json()` so it receives the raw request body. Stripe's HMAC signature in the `stripe-signature` header is verified against the `STRIPE_WEBHOOK_SECRET` env var before any side effects run. Any mismatch returns `400` and discards the event.
+
+```ts
+// apps/api/src/controllers/stripe-webhook.controller.ts
+event = this.stripe.webhooks.constructEvent(req.body as Buffer, sig, this.webhookSecret);
+```
+
+#### 10. Webhook Idempotency — Replay Protection
+
+Before any side effect (status update, email), the webhook handler inserts a `StripeProcessedEvent` row keyed by Stripe's `eventId` (unique by PK). A duplicate delivery hits the unique constraint, returns `null`, and the handler exits without re-firing — no duplicate emails, no double status flips.
+
+```ts
+// apps/api/src/repositories/payment.repository.ts — inside tx
+await tx.stripeProcessedEvent.create({
+  data: { stripeEventId, eventType: "checkout.session.completed" },
+});
+// unique constraint violation → catch block returns null (already processed)
+```
+
+#### 11. Double-Booking Prevention at the Database Level
+
+Booking availability is guaranteed by a Postgres `EXCLUDE USING gist` constraint on the `AvailabilityBlock` table — not by application-level checks that could be bypassed under concurrent requests. Two transactions inserting overlapping date ranges for the same listing cannot both succeed; the loser gets a `409 OVERLAP_CONFLICT` response.
+
+```sql
+EXCLUDE USING gist (
+  "listingId" WITH =,
+  daterange("startDate", "endDate", '[)') WITH &&
+)
+```
+
+#### 12. Payout Ownership Validation
+
+Before recording a manual payout, the repository validates that every booking in the submitted `bookingIds` list belongs to the target `hostId`. A mismatch — which would indicate a cross-host settlement attempt — throws `booking_not_owned` and rolls back the entire transaction.
+
+```ts
+// apps/api/src/repositories/payment.repository.ts — inside tx
+const validCount = await tx.booking.count({
+  where: { id: { in: data.bookingIds }, hostId: data.hostId },
+});
+if (validCount !== data.bookingIds.length) throw new Error("booking_not_owned");
+```
+
+#### 13. Temporal Booking Validation
+
+Bookings with a check-in date in the past are rejected before the availability check, preventing retroactive holds from polluting the calendar.
+
+```ts
+// apps/api/src/services/booking.service.ts
+const today = new Date();
+today.setUTCHours(0, 0, 0, 0);
+if (checkIn < today) throw new PastCheckInError();
+```
+
+#### 14. Semantic Date Validation in Schemas
+
+The shared `isoDate` Zod schema applies both a format regex and a calendar-validity `refine`, rejecting strings like `"2024-13-99"` that match the regex but do not represent real calendar dates.
+
+```ts
+// packages/shared/src/schemas/listing.ts
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, t("listings.availability.invalid_date"))
+  .refine((s) => !isNaN(new Date(s).getTime()), t("listings.availability.invalid_date"));
+```
+
+#### 15. PII Minimization on Public Endpoints
+
+Review responses for public listing pages are typed as `PublicReview`, a `Pick` that excludes `guestId` and `bookingId`, preventing guest identity leakage on a publicly accessible surface.
+
+```ts
+// apps/api/src/repositories/review.repository.ts
+export type PublicReview = Pick<Review, "id" | "listingId" | "rating" | "text" | "createdAt">;
+```
+
+The host-facing booking list further minimizes guest PII by exposing first name + last initial only.
+
+#### 16. Non-Root Docker Container
+
+The production Docker image runs the API process as a non-root system user (`app:app`), limiting the blast radius if the process is compromised.
+
+```dockerfile
+# Dockerfile — runner stage
+RUN addgroup -S app && adduser -S app -G app
+RUN chown -R app:app /app
+USER app
+```
+
+#### 17. Secrets via Environment Variables Only
+
+No credentials or secrets appear in the codebase. All sensitive values (`JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `DATABASE_URL`, `RESEND_API_KEY`, R2 credentials) are injected via environment variables at runtime. CI uses GitHub Actions encrypted secrets; production deployments consume secrets from the hosting platform's secret store.
 
 ### **2.6. Tests**
 
