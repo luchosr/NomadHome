@@ -28,9 +28,6 @@ jobs:
           python-network: true
           python-version: "3.10"
 
-      - name: Install Google Generative AI SDK
-        run: pip install google-generativeai
-
       - name: Generate Code Review with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -38,37 +35,42 @@ jobs:
         run: |
           git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
 
-          python -c '
-          import os
-          import google.generativeai as genai
+          python3 << 'PYEOF'
+          import os, json, urllib.request, urllib.error
 
-          with open("pr_diff.txt", "r") as f:
-              diff = f.read()
+          with open("pr_diff.txt") as f:
+              diff = f.read()[:30000]  # truncate to avoid token limits
 
-          prompt = """Act as a Principal Software Engineer and expert in Domain-Driven Design (DDD).
-          Analyze the changes in this Pull Request within the NomadHome monorepo and provide a critical review.
+          prompt = (
+              "Act as a Principal Software Engineer and expert in Domain-Driven Design (DDD).\n"
+              "Analyze the changes in this Pull Request within the NomadHome monorepo and provide a critical review.\n\n"
+              "Pay special attention to:\n"
+              "1. **DDD Architecture (apps/api)**: Ensure layers respect their boundaries. The Domain layer MUST have zero external dependencies.\n"
+              "2. **Immutability and Types**: Verify monetary calculations use integer types in cents, never floats.\n"
+              "3. **Frontend (apps/web)**: Check strict separation of state (TanStack Query for server state, Zustand for ephemeral UI).\n"
+              "4. **Database Invariants**: Validate critical Prisma constraints are not broken.\n\n"
+              "Write your response in English. Be concise, direct, and polite. Structure into:\n"
+              "- Bugs or Critical Errors (if any)\n"
+              "- Architecture and Code Standards\n"
+              "- Optimization Suggestions\n\n"
+              "Git diff:\n" + diff
+          )
 
-          Pay special attention to:
-          1. **DDD Architecture (apps/api)**: Ensure that layers (Presentation, Application, Domain, Infrastructure) respect their boundaries. The Domain layer MUST have zero external dependencies.
-          2. **Immutability and Types**: Verify that monetary calculations use integer types in cents (Money value objects) and never floating-point numbers.
-          3. **Frontend (apps/web)**: Check for strict separation of state (TanStack Query for server state, URL params for filters/search, and Zustand exclusively for ephemeral UI).
-          4. **Database Invariants**: If there are changes to Prisma or migrations, validate that critical constraints are not broken (such as the exclusion constraint for overlapping dates in AvailabilityBlock or the immutability of fee snapshots).
+          api_key = os.environ["GEMINI_API_KEY"]
+          url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+          body = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode()
+          req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
 
-          Write your response in English. Be concise, direct, and polite. Structure your comments into:
-          - 🚨 **Bugs or Critical Errors** (If any)
-          - 📐 **Architecture and Code Standards**
-          - 💡 **Optimization Suggestions**
-
-          Here is the git diff:
-          """ + diff
-
-          genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-          model = genai.GenerativeModel("gemini-1.5-flash")
-          response = model.generate_content(prompt)
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  data = json.loads(resp.read())
+              text = data["candidates"][0]["content"]["parts"][0]["text"]
+          except urllib.error.HTTPError as e:
+              text = f"Gemini API error {e.code}: {e.read().decode()}"
 
           with open("review_result.txt", "w") as f:
-              f.write("### Gemini AI Code Review\n\n" + response.text)
-          '
+              f.write("### Gemini AI Code Review\n\n" + text)
+          PYEOF
 
       - name: Post Comment to PR
         uses: peter-evans/create-or-update-comment@v4
