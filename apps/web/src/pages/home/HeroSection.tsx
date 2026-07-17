@@ -1,25 +1,16 @@
-import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { WRAP, STAR_RATING } from "./constants.js";
+import { useHomeSearch } from "./useHomeSearch.js";
 
 export function HeroSection() {
-  const navigate = useNavigate();
-  const [city, setCity] = useState("");
-
-  const handleSearch = () => {
-    if (city.trim()) navigate(`/search?city=${encodeURIComponent(city.trim())}`);
-    else navigate("/search");
-  };
+  const { city, setCity, submit } = useHomeSearch();
 
   return (
     <section className="relative overflow-hidden bg-sand-100 pb-16 pt-20">
       <div
         className="pointer-events-none absolute -right-60 -top-40 h-[720px] w-[720px] rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(217,119,87,0.18) 0%, transparent 62%)",
-        }}
+        style={{ background: "radial-gradient(circle, rgba(217,119,87,0.18) 0%, transparent 62%)" }}
       />
       <div className={WRAP}>
         <p className="eyebrow mb-6 text-xs font-medium uppercase tracking-widest text-ink-500">
@@ -49,9 +40,9 @@ export function HeroSection() {
 
         <form
           className="mt-10 flex max-w-[860px] overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-md transition-shadow focus-within:border-forest-700 focus-within:shadow-lg"
-          onSubmit={(e: FormEvent<HTMLFormElement>) => {
+          onSubmit={(e: FormEvent) => {
             e.preventDefault();
-            handleSearch();
+            submit();
           }}
         >
           <div className="flex flex-1 flex-col gap-1 border-r border-ink-100 px-6 py-[18px]">
