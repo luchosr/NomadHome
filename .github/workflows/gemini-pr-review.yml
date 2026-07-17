@@ -24,13 +24,14 @@ jobs:
           fetch-depth: 0
 
       - name: Gemini AI Code Review
-        uses: petarzarkov/gemini-ai-code-review-action@v1.2.0
+        # Updated to a valid and active Marketplace action repository
+        uses: sshnaidm/gemini-code-review-action@v2
         with:
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          # Using gemini-2.5-flash: the fastest free-tier model with a massive context window for monorepos
-          gemini_model: "gemini-2.5-flash"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Personalized prompt aligned with your strict backend and frontend standards
+          # This action requires the key parameter named exactly as 'gemini-key'
+          gemini-key: ${{ secrets.GEMINI_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          model: "gemini-2.5-flash"
+          # Personalized prompt aligned with your NomadHome strict backend and frontend standards
           prompt: |
             Act as a Principal Software Engineer and expert in Domain-Driven Design (DDD). 
             Analyze the changes in this Pull Request within the NomadHome monorepo and provide a critical review.
