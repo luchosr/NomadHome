@@ -30,7 +30,7 @@ jobs:
           # This action requires the key parameter named exactly as 'gemini-key'
           gemini-key: ${{ secrets.GEMINI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          gemini-model: "gemini-2.5-flash"
+          model: "gemini-2.5-flash"
           # Personalized prompt aligned with your NomadHome strict backend and frontend standards
           prompt: |
             Act as a Principal Software Engineer and expert in Domain-Driven Design (DDD). 
