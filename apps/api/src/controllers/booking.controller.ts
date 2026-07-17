@@ -11,6 +11,7 @@ import {
   BookingNotCancellableError,
   BookingOverlapError,
   ListingNotAvailableError,
+  PastCheckInError,
   SelfBookingError,
   NoFeeConfigError,
 } from "../services/booking.service.js";
@@ -90,6 +91,10 @@ export class BookingController {
   };
 
   private mapError(err: unknown, res: Response): void {
+    if (err instanceof PastCheckInError) {
+      res.status(422).json({ error: "PAST_CHECKIN", message: t("booking.error.checkin_passed") });
+      return;
+    }
     if (err instanceof BookingNotFoundError) {
       res.status(404).json({ error: t("booking.error.not_found") });
       return;
