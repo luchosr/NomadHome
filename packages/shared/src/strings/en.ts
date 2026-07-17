@@ -90,6 +90,7 @@ export const en = {
       submit: "Become a host",
       terms_required: "You must accept the host terms to continue.",
       already_host: "You're already set up as a host.",
+      email_not_verified: "Please verify your email address before becoming a host.",
     },
   },
   listings: {
