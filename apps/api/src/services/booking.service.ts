@@ -33,6 +33,13 @@ export class BookingNotCancellableError extends Error {
   }
 }
 
+export class PastCheckInError extends Error {
+  constructor() {
+    super("PAST_CHECKIN");
+    this.name = "PastCheckInError";
+  }
+}
+
 export interface OverlapConflictPayload {
   blockId: string;
   source: string;
@@ -80,6 +87,10 @@ export class BookingService {
     checkIn: Date,
     checkOut: Date,
   ): Promise<Booking> {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (checkIn < today) throw new PastCheckInError();
+
     const listing = await this.listings.findById(listingId);
     if (!listing || listing.status !== "PUBLISHED") throw new ListingNotAvailableError();
     if (listing.hostId === guestId) throw new SelfBookingError();

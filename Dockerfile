@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:20.20.0-alpine AS builder
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
@@ -33,11 +33,16 @@ RUN pnpm --filter @nomadhome/api build
 RUN pnpm deploy --filter=@nomadhome/api --prod /prod/api
 
 # ---- Runtime image ----
-FROM node:20-alpine AS runner
+FROM node:20.20.0-alpine AS runner
 WORKDIR /app
+
+RUN addgroup -S app && adduser -S app -G app
 
 COPY --from=builder /prod/api .
 COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
+
+RUN chown -R app:app /app
+USER app
 
 ENV NODE_ENV=production
 EXPOSE 3000

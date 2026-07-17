@@ -10,6 +10,15 @@ export class AdminRepository {
         data: { disabledAt: new Date() },
       });
 
+      await tx.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+
+      await tx.authAuditEvent.create({
+        data: { userId, event: "user_disabled", ipAddress: "system", metadata: { adminId } },
+      });
+
       await tx.listing.updateMany({
         where: { hostId: userId, status: { in: ["PUBLISHED", "DRAFT"] } },
         data: { status: "DISABLED", disabledAt: new Date() },
@@ -64,7 +73,7 @@ export class AdminRepository {
   enableListing(listingId: string) {
     return prisma.listing.update({
       where: { id: listingId },
-      data: { status: "PUBLISHED", disabledAt: null },
+      data: { status: "DRAFT", disabledAt: null },
     });
   }
 

@@ -29,7 +29,7 @@ export class TokenService {
   }
 
   verifyAccessToken(token: string): AccessClaims {
-    const payload = jwt.verify(token, this.secret()) as jwt.JwtPayload;
+    const payload = jwt.verify(token, this.secret(), { algorithms: ["HS256"] }) as jwt.JwtPayload;
     return { sub: String(payload.sub), roles: (payload.roles as string[]) ?? [] };
   }
 

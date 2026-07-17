@@ -80,6 +80,14 @@ export class AlreadyHostError extends Error {
   }
 }
 
+/** Thrown when a user tries to become a host without verifying their email. */
+export class EmailNotVerifiedError extends Error {
+  constructor() {
+    super("email_not_verified");
+    this.name = "EmailNotVerifiedError";
+  }
+}
+
 export class AuthService {
   constructor(
     private readonly users: UserRepository,
@@ -245,6 +253,9 @@ export class AuthService {
     const user = await this.users.findById(cmd.userId);
     if (!user) {
       throw new InvalidCredentialsError();
+    }
+    if (!user.emailVerifiedAt) {
+      throw new EmailNotVerifiedError();
     }
     if (user.roles.includes("host")) {
       throw new AlreadyHostError();

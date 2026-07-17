@@ -1,0 +1,80 @@
+name: Gemini AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "eslint.config.js"
+      - "tsconfig.base.json"
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-network: true
+          python-version: "3.10"
+
+      - name: Generate Code Review with Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
+
+          python3 << 'PYEOF'
+          import os, json, urllib.request, urllib.error
+
+          with open("pr_diff.txt") as f:
+              diff = f.read()[:30000]  # truncate to avoid token limits
+
+          prompt = (
+              "Act as a Principal Software Engineer and expert in Domain-Driven Design (DDD).\n"
+              "Analyze the changes in this Pull Request within the NomadHome monorepo and provide a critical review.\n\n"
+              "Pay special attention to:\n"
+              "1. **DDD Architecture (apps/api)**: Ensure layers respect their boundaries. The Domain layer MUST have zero external dependencies.\n"
+              "2. **Immutability and Types**: Verify monetary calculations use integer types in cents, never floats.\n"
+              "3. **Frontend (apps/web)**: Check strict separation of state (TanStack Query for server state, Zustand for ephemeral UI).\n"
+              "4. **Database Invariants**: Validate critical Prisma constraints are not broken.\n\n"
+              "Write your response in English. Be concise, direct, and polite. Structure into:\n"
+              "- Bugs or Critical Errors (if any)\n"
+              "- Architecture and Code Standards\n"
+              "- Optimization Suggestions\n\n"
+              "Git diff:\n" + diff
+          )
+
+          api_key = os.environ["GEMINI_API_KEY"]
+          url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+          body = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode()
+          req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  data = json.loads(resp.read())
+              text = data["candidates"][0]["content"]["parts"][0]["text"]
+          except urllib.error.HTTPError as e:
+              text = f"Gemini API error {e.code}: {e.read().decode()}"
+
+          with open("review_result.txt", "w") as f:
+              f.write("### Gemini AI Code Review\n\n" + text)
+          PYEOF
+
+      - name: Post Comment to PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-file: review_result.txt

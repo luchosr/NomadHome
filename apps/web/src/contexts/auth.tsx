@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { authApi, type AuthUser } from "../api/auth.js";
-import { setAccessToken } from "../api/client.js";
+import { setAccessToken, ApiError } from "../api/client.js";
 
 const REFRESH_TOKEN_KEY = "nh_refresh_token";
 
@@ -50,8 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
         setUser(u);
       })
-      .catch(() => {
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
+      .catch((err: unknown) => {
+        // Only clear the stored token on explicit auth rejections (401/403).
+        // Transient errors (network, 500) should not force logout.
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
+        }
       })
       .finally(() => setIsLoading(false));
   }, []);

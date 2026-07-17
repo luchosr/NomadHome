@@ -1,5 +1,5 @@
 import { type Review } from "@nomadhome/db";
-import { ReviewRepository } from "../repositories/review.repository.js";
+import { ReviewRepository, type PublicReview } from "../repositories/review.repository.js";
 import { BookingRepository } from "../repositories/booking.repository.js";
 import { ListingRepository } from "../repositories/listing.repository.js";
 
@@ -72,7 +72,7 @@ export class ReviewService {
 
   async listForListing(
     listingId: string,
-  ): Promise<{ reviews: Review[]; averageRating: number | null; reviewCount: number }> {
+  ): Promise<{ reviews: PublicReview[]; averageRating: number | null; reviewCount: number }> {
     const listing = await this.listings.findById(listingId);
     const reviews = await this.reviews.findByListing(listingId);
     return {

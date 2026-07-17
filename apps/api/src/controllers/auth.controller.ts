@@ -10,6 +10,7 @@ import {
   AlreadyHostError,
   AuthService,
   DuplicateEmailError,
+  EmailNotVerifiedError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
   InvalidVerificationTokenError,
@@ -158,6 +159,10 @@ export class AuthController {
       });
       res.status(201).json(result);
     } catch (err) {
+      if (err instanceof EmailNotVerifiedError) {
+        res.status(403).json({ error: t("identity.become_host.email_not_verified") });
+        return;
+      }
       if (err instanceof AlreadyHostError) {
         res.status(409).json({ error: t("identity.become_host.already_host") });
         return;

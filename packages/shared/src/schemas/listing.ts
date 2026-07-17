@@ -44,7 +44,10 @@ export const UpdatePhotoPositionSchema = z.object({
 });
 export type UpdatePhotoPositionInput = z.infer<typeof UpdatePhotoPositionSchema>;
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, t("listings.availability.invalid_date"));
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, t("listings.availability.invalid_date"))
+  .refine((s) => !isNaN(new Date(s).getTime()), t("listings.availability.invalid_date"));
 
 export const BlockDateRangeSchema = z
   .object({
