@@ -38,7 +38,7 @@ export function EditListingPage() {
   const photos = useListingPhotos(id);
   const availability = useListingAvailability(id);
 
-  if (isLoading) return <p className="text-fg-3">Loading...</p>;
+  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
   if (!listing)
     return (
       <p role="alert" className="text-danger">
@@ -71,7 +71,7 @@ export function EditListingPage() {
           form={form}
           selectedAmenities={selectedAmenities}
           toggleAmenity={toggleAmenity}
-          save={save}
+          onSubmit={save}
           saveError={saveError}
         />
       </Card>

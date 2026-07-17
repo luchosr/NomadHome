@@ -1,26 +1,23 @@
 import type { UseFormReturn } from "react-hook-form";
-import { t } from "@nomadhome/shared";
+import { t, type LocaleKey } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import type { ListingFormValues } from "../hooks/useEditListing.js";
+import { AMENITIES } from "../lib/listingData.js";
 
-const AMENITIES = [
-  { code: "wifi", label: "Wi-Fi" },
-  { code: "kitchen", label: "Kitchen" },
-  { code: "workspace_desk", label: "Dedicated desk" },
-  { code: "meeting_room", label: "Meeting room" },
-  { code: "phone_booth", label: "Phone booth" },
-  { code: "laundry", label: "Laundry" },
-  { code: "air_conditioning", label: "Air conditioning" },
-  { code: "heating", label: "Heating" },
-  { code: "parking", label: "Parking" },
-  { code: "coffee", label: "Coffee" },
-] as const;
+const FIELD_LABELS: Record<"title" | "city" | "country" | "addressLine" | "currency", LocaleKey> =
+  {
+    title: "host.listings.field_title",
+    city: "host.listings.field_city",
+    country: "host.listings.field_country",
+    addressLine: "host.listings.field_address",
+    currency: "host.listings.field_currency",
+  };
 
 interface Props {
   form: UseFormReturn<ListingFormValues>;
   selectedAmenities: Set<string>;
   toggleAmenity: (code: string) => void;
-  save: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  onSubmit: React.FormEventHandler;
   saveError: string | null;
 }
 
@@ -28,7 +25,7 @@ export function ListingDetailsForm({
   form,
   selectedAmenities,
   toggleAmenity,
-  save,
+  onSubmit,
   saveError,
 }: Props) {
   const {
@@ -37,15 +34,11 @@ export function ListingDetailsForm({
   } = form;
 
   return (
-    <form onSubmit={(e) => void save(e)} className="space-y-5" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {(["title", "city", "country", "addressLine", "currency"] as const).map((field) => (
         <div key={field}>
           <label htmlFor={`edit-${field}`} className="mb-1 block text-sm font-medium text-fg-2">
-            {t(
-              `host.listings.field_${field === "addressLine" ? "address" : field}` as Parameters<
-                typeof t
-              >[0],
-            )}
+            {t(FIELD_LABELS[field])}
           </label>
           <Input id={`edit-${field}`} {...register(field)} required />
         </div>
@@ -110,7 +103,7 @@ export function ListingDetailsForm({
           {t("host.listings.field_amenities")}
         </legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {AMENITIES.map(({ code, label }) => (
+          {AMENITIES.map(({ code, labelKey }) => (
             <label key={code} className="flex items-center gap-2 text-sm text-fg-2">
               <input
                 type="checkbox"
@@ -118,7 +111,7 @@ export function ListingDetailsForm({
                 onChange={() => toggleAmenity(code)}
                 className="h-4 w-4 rounded border-muted accent-forest-700"
               />
-              {label}
+              {t(labelKey)}
             </label>
           ))}
         </div>
