@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { t } from "@nomadhome/shared";
 import { authApi } from "../api/auth.js";
 
 export function VerifyEmailPage() {
@@ -24,7 +25,9 @@ export function VerifyEmailPage() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-6">
       <div className="w-full max-w-md text-center">
-        {status === "pending" && <p className="text-ink-500">Verifying your email…</p>}
+        {status === "pending" && (
+          <p className="text-ink-500">{t("identity.verify_email.pending")}</p>
+        )}
         {status === "success" && (
           <>
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-forest-50">
@@ -39,13 +42,15 @@ export function VerifyEmailPage() {
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </div>
-            <h1 className="font-serif text-3xl text-ink-900">Email verified!</h1>
-            <p className="mt-3 text-ink-500">Your account is confirmed. You can now log in.</p>
+            <h1 className="font-serif text-3xl text-ink-900">
+              {t("identity.verify_email.success_title")}
+            </h1>
+            <p className="mt-3 text-ink-500">{t("identity.verify_email.success_body")}</p>
             <Link
               to="/login"
               className="mt-8 inline-block rounded-xl bg-forest-700 px-8 py-3 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
             >
-              Log in
+              {t("identity.verify_email.success_cta")}
             </Link>
           </>
         )}
@@ -63,15 +68,15 @@ export function VerifyEmailPage() {
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="font-serif text-3xl text-ink-900">Link invalid or expired</h1>
-            <p className="mt-3 text-ink-500">
-              This verification link has already been used or has expired. Please register again.
-            </p>
+            <h1 className="font-serif text-3xl text-ink-900">
+              {t("identity.verify_email.error_title")}
+            </h1>
+            <p className="mt-3 text-ink-500">{t("identity.verify_email.error_body")}</p>
             <Link
               to="/register"
               className="mt-8 inline-block rounded-xl bg-forest-700 px-8 py-3 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
             >
-              Register
+              {t("identity.verify_email.error_cta")}
             </Link>
           </>
         )}

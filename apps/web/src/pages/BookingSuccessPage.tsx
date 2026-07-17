@@ -50,7 +50,7 @@ export function BookingSuccessPage() {
   if (waiting) {
     return (
       <div className="mx-auto max-w-lg py-12 text-center">
-        <p className="text-fg-2">Processing your payment…</p>
+        <p className="text-fg-2">{t("booking.ui.processing")}</p>
       </div>
     );
   }

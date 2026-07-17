@@ -17,6 +17,7 @@ export const en = {
       submit: "Submit",
       cancel: "Cancel",
       save: "Save",
+      loading: "Loading…",
     },
   },
   nav: {
@@ -60,6 +61,10 @@ export const en = {
     generic: {
       unexpected: "Something went wrong. Please try again.",
     },
+    not_found: {
+      title: "404 — Page not found",
+      home: "Go home",
+    },
   },
   validation: {
     required: {
@@ -91,6 +96,16 @@ export const en = {
       terms_required: "You must accept the host terms to continue.",
       already_host: "You're already set up as a host.",
       email_not_verified: "Please verify your email address before becoming a host.",
+    },
+    verify_email: {
+      pending: "Verifying your email…",
+      success_title: "Email verified!",
+      success_body: "Your account is confirmed. You can now log in.",
+      success_cta: "Log in",
+      error_title: "Link invalid or expired",
+      error_body:
+        "This verification link has already been used or has expired. Please register again.",
+      error_cta: "Register",
     },
   },
   listings: {
@@ -195,6 +210,7 @@ export const en = {
       cancel_title: "Payment cancelled",
       cancel_message: "Your payment was not completed. No charges were made.",
       back_to_search: "Back to search",
+      processing: "Processing your payment…",
     },
     dashboard: {
       title: "My Bookings",
