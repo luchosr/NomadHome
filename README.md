@@ -633,7 +633,72 @@ No credentials or secrets appear in the codebase. All sensitive values (`JWT_SEC
 
 ### **2.6. Tests**
 
-> Briefly describe some of the tests performed
+NomadHome uses a three-layer test strategy: **API integration tests** (Vitest + Supertest against a real PostgreSQL instance), **frontend unit tests** (Vitest + React Testing Library), and **end-to-end tests** (Playwright, headless Chromium). The coverage gate is ≥ 80% on changed lines, enforced by CI on every pull request.
+
+#### Layer 1 — API Integration Tests (127 tests)
+
+Located in `apps/api/src/*.test.ts`. Each file corresponds to a user story or API surface. Tests hit the real Express app via Supertest and write to an isolated test database — no mocks at the repository or database layer. Every test cleans up its own rows so they run in any order.
+
+Representative examples:
+
+| File                       | What it covers                                                                                                                                                                                                              |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `booking.test.ts`          | Atomic `BOOKING_HOLD` creation, `409 OVERLAP_CONFLICT` on overlapping dates, self-booking rejection, past check-in guard (`422`), cancellation + `RefundRequest` creation                                                   |
+| `payment.test.ts`          | Stripe Checkout session creation, `checkout.session.completed` webhook → booking confirmed, duplicate webhook replay (idempotency), invalid Stripe signature (`400`), payout recording, double-settlement rejection (`409`) |
+| `admin-moderation.test.ts` | Disable user (cascades: hides listings, flags bookings, revokes tokens), enable user, disable/enable listing, `403` on non-admin access                                                                                     |
+| `search.test.ts`           | City + date range filtering, amenity AND semantics, price/capacity filters, exclusion of `DRAFT`/`DISABLED` listings, exclusion of fully-booked listings                                                                    |
+| `auth.login.test.ts`       | Constant-time comparison on login failure, `401` for disabled accounts, `401` for bad credentials, refresh token issuance                                                                                                   |
+| `review.test.ts`           | One-review-per-booking enforcement, `averageRating`/`reviewCount` recomputed in same transaction, `PublicReview` shape (no `guestId`/`bookingId` leakage)                                                                   |
+
+A typical integration test:
+
+```ts
+it("returns 409 OVERLAP_CONFLICT when dates overlap an existing block", async () => {
+  await createAvailabilityBlock(listingId, "2026-08-01", "2026-08-10");
+
+  const res = await request(app)
+    .post("/bookings")
+    .set("Authorization", `Bearer ${guestToken}`)
+    .send({ listingId, checkIn: "2026-08-05", checkOut: "2026-08-12" });
+
+  expect(res.status).toBe(409);
+  expect(res.body.error.code).toBe("OVERLAP_CONFLICT");
+});
+```
+
+#### Layer 2 — Frontend Unit Tests (66 tests)
+
+Located in `apps/web/src/**/*.test.tsx`. Built with Vitest + React Testing Library; API calls are mocked at the module level with `vi.mock`. Tests validate rendering, user interactions, and error states without a running backend.
+
+| File                          | What it covers                                                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `ProtectedRoute.test.tsx`     | Unauthenticated users redirected to `/login`; role mismatch redirected to home; authorized users render children |
+| `BookingFormPage.test.tsx`    | Price breakdown display, `computeNights` edge cases including NaN guard, disabled submit when dates are missing  |
+| `CancelBookingModal.test.tsx` | Confirm/dismiss flow, loading state, error message on API failure                                                |
+| `AdminUsersPage.test.tsx`     | User list render, disable/enable action buttons, role badges                                                     |
+| `SearchPage.test.tsx`         | URL-state sync (filter params survive reload), empty-state copy, listing card count                              |
+
+#### Layer 3 — End-to-End Tests (41 tests)
+
+Located in `apps/web/e2e/*.spec.ts`. Each file maps to a user story. Tests run against headless Chromium via Playwright; all API calls are intercepted with `page.route()` — fast, deterministic, and network-independent.
+
+| Spec file                        | User story covered                                                            |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| `us-1.1-registration.spec.ts`    | Guest registers; password mismatch error; duplicate email error               |
+| `us-1.3-become-host.spec.ts`     | Guest upgrades to host role                                                   |
+| `us-2.1-create-listing.spec.ts`  | Host creates a draft listing                                                  |
+| `us-2.2-publish-listing.spec.ts` | Host publishes listing (invariant: must have photo + amenity + rate)          |
+| `us-2.3-availability.spec.ts`    | Host sets availability blocks on the calendar                                 |
+| `us-4.1-booking.spec.ts`         | Guest selects dates, sees price breakdown, completes Stripe Checkout redirect |
+| `us-4.2-cancel-booking.spec.ts`  | Guest cancels a confirmed booking                                             |
+| `us-6.1-review.spec.ts`          | Guest submits a post-stay review                                              |
+| `us-7.1-host-dashboard.spec.ts`  | Host views upcoming bookings and listing list                                 |
+| `us-8.1-admin-users.spec.ts`     | Admin disables/enables a user account                                         |
+| `us-8.2-admin-listings.spec.ts`  | Admin disables/enables a listing                                              |
+
+#### CI Enforcement
+
+All three layers run on every pull request in GitHub Actions. The quality gate job fails the PR if any Vitest test fails or coverage on changed lines drops below 80%. The E2E job runs in parallel and is also a blocking gate.
 
 ---
 
