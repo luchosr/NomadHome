@@ -24,8 +24,9 @@ export class StripeWebhookController {
       return;
     }
 
+    const session = event.data.object as Stripe.Checkout.Session;
+
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
       await this.service.handleCheckoutCompleted(
         event.id,
         session.id,
@@ -33,6 +34,8 @@ export class StripeWebhookController {
           ? session.payment_intent
           : (session.payment_intent?.id ?? ""),
       );
+    } else if (event.type === "checkout.session.expired") {
+      await this.service.handleCheckoutExpired(event.id, session.id);
     }
 
     res.json({ received: true });

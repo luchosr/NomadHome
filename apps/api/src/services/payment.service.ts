@@ -142,6 +142,15 @@ export class PaymentService {
     return confirmed;
   }
 
+  /**
+   * Handle checkout.session.expired webhook event.
+   * Cancels the PENDING_PAYMENT booking and releases its BOOKING_HOLD.
+   * Returns null if already processed or no matching booking found.
+   */
+  async handleCheckoutExpired(stripeEventId: string, sessionId: string): Promise<Booking | null> {
+    return this.payments.expireFromWebhook(stripeEventId, sessionId);
+  }
+
   getPayoutSummary(): Promise<PayoutSummaryRow[]> {
     return this.payments.getPayoutSummary();
   }

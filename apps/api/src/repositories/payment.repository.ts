@@ -53,6 +53,40 @@ export class PaymentRepository {
   }
 
   /**
+   * Atomically cancel a PENDING_PAYMENT booking when its Stripe session expires.
+   * Idempotent via StripeProcessedEvent. Deletes the BOOKING_HOLD without
+   * creating a RefundRequest (no payment was captured).
+   */
+  async expireFromWebhook(stripeEventId: string, sessionId: string): Promise<Booking | null> {
+    return prisma.$transaction(async (tx) => {
+      try {
+        await tx.stripeProcessedEvent.create({
+          data: { stripeEventId, eventType: "checkout.session.expired" },
+        });
+      } catch {
+        return null;
+      }
+
+      const booking = await tx.booking.findFirst({
+        where: { stripeCheckoutSessionId: sessionId, status: "PENDING_PAYMENT" },
+      });
+      if (!booking) return null;
+
+      await tx.availabilityBlock.deleteMany({
+        where: { bookingId: booking.id, source: "BOOKING_HOLD" },
+      });
+      return tx.booking.update({
+        where: { id: booking.id },
+        data: {
+          status: "CANCELLED",
+          cancelledAt: new Date(),
+          cancellationReason: "stripe_checkout_expired",
+        },
+      });
+    });
+  }
+
+  /**
    * Per-host view of amounts owed: sum of payoutCents for CONFIRMED bookings
    * whose checkOut is in the past and that are not yet in a PayoutBooking row.
    */

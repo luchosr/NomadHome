@@ -40,11 +40,12 @@ export function createApp(): Express {
   app.use("/stripe", stripeRouter);
 
   // Local dev file uploads (active only when R2 env vars are absent)
-  if (!process.env["R2_ACCOUNT_ID"]) {
+  if (!process.env["CLOUDFLARE_R2_ACCOUNT_ID"]) {
     const uploadsDir = path.join(process.cwd(), "uploads");
     app.put("/dev-upload/:key", express.raw({ type: "*/*", limit: "20mb" }), (req, res) => {
+      const safeKey = path.basename(req.params.key!);
       fs.mkdirSync(uploadsDir, { recursive: true });
-      fs.writeFileSync(path.join(uploadsDir, req.params.key!), req.body as Buffer);
+      fs.writeFileSync(path.join(uploadsDir, safeKey), req.body as Buffer);
       res.status(200).send();
     });
     app.use("/uploads", express.static(uploadsDir));
