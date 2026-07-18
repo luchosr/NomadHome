@@ -31,7 +31,7 @@ A Co-living and Workspace platform
 
 ### **0.4. Project URL:**
 
-https://nomad-home-web.vercel.app/
+- https://nomad-home-web.vercel.app/
 
 ### 0.5. Repository URL or Compressed Archive
 
