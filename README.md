@@ -31,7 +31,7 @@ A Co-living and Workspace platform
 
 ### **0.4. Project URL:**
 
-> It can be public or private. If private, share access securely. You can send them to [alvaro@lidr.co](mailto:alvaro@lidr.co) using a service like [onetimesecret](https://onetimesecret.com/).
+https://nomad-home-web.vercel.app/
 
 ### 0.5. Repository URL or Compressed Archive
 
