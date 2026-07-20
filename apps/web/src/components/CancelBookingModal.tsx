@@ -69,7 +69,7 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
           {t("common.action.close")}
         </Button>
         <Button variant="destructive" onClick={() => void handleConfirm()} disabled={isSubmitting}>
-          {isSubmitting ? "..." : t("booking.dashboard.cancel_confirm")}
+          {isSubmitting ? t("common.submitting") : t("booking.dashboard.cancel_confirm")}
         </Button>
       </div>
     </Modal>

@@ -7,6 +7,7 @@ import { listingsApi } from "../api/listings.js";
 import { DateRangePicker } from "../components/DateRangePicker.js";
 import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
+import { AMENITIES } from "../lib/listingData.js";
 
 function formatRate(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
@@ -40,16 +41,16 @@ export function ListingDetailPage() {
   });
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <p className="text-fg-3">{t("common.loading")}</p>;
   }
 
   if (error instanceof ApiError && error.status === 404) {
-    return <p className="text-slate-500">{t("listings.detail.not_found")}</p>;
+    return <p className="text-fg-3">{t("listings.detail.not_found")}</p>;
   }
 
   if (error || !listing) {
     return (
-      <p role="alert" className="text-red-600">
+      <p role="alert" className="text-danger">
         {t("error.generic.unexpected")}
       </p>
     );
@@ -93,51 +94,54 @@ export function ListingDetailPage() {
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Main content */}
         <div className="flex-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {listing.type === "PROPERTY" ? "Property" : "Workspace"}
+          <span className="text-xs font-medium uppercase tracking-wide text-fg-3">
+            {listing.type === "PROPERTY"
+              ? t("host.listings.type_property")
+              : t("host.listings.type_workspace")}
           </span>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">{listing.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="mt-1 text-2xl font-bold text-fg-1">{listing.title}</h1>
+          <p className="mt-1 text-sm text-fg-3">
             {listing.city}, {listing.country}
           </p>
-          <p className="text-sm text-slate-400">{listing.addressLine}</p>
+          <p className="text-sm text-fg-muted">{listing.addressLine}</p>
 
-          <p className="mt-4 leading-relaxed text-slate-700">{listing.description}</p>
+          <p className="mt-4 leading-relaxed text-fg-2">{listing.description}</p>
 
           {listing.amenities.length > 0 && (
             <div className="mt-6">
-              <h2 className="mb-2 text-lg font-semibold text-slate-900">
+              <h2 className="mb-2 text-lg font-semibold text-fg-1">
                 {t("listings.detail.amenities")}
               </h2>
               <div className="flex flex-wrap gap-2">
-                {listing.amenities.map((a) => (
-                  <span
-                    key={a.amenityCode}
-                    className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
-                  >
-                    {a.amenityCode}
-                  </span>
-                ))}
+                {listing.amenities.map((a) => {
+                  const entry = AMENITIES.find((x) => x.code === a.amenityCode);
+                  return (
+                    <span
+                      key={a.amenityCode}
+                      className="rounded-full bg-surface px-3 py-1 text-sm text-fg-2"
+                    >
+                      {entry ? t(entry.labelKey) : a.amenityCode}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
 
           <div className="mt-6">
-            <h2 className="mb-1 text-lg font-semibold text-slate-900">
-              {t("listings.detail.rating")}
-            </h2>
+            <h2 className="mb-1 text-lg font-semibold text-fg-1">{t("listings.detail.rating")}</h2>
             {listing.avgRating !== null ? (
-              <p className="text-slate-700">
+              <p className="text-fg-2">
                 ⭐ {listing.avgRating.toFixed(1)} / 5 ({listing._count.reviews}{" "}
                 {t("listings.detail.reviews").toLowerCase()})
               </p>
             ) : (
-              <p className="text-slate-500">{t("listings.detail.no_reviews")}</p>
+              <p className="text-fg-3">{t("listings.detail.no_reviews")}</p>
             )}
           </div>
 
           <div className="mt-6">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-fg-3">
               {t("listings.detail.capacity")}: {listing.capacity} {t("listings.detail.guests")}
             </p>
           </div>
@@ -145,10 +149,10 @@ export function ListingDetailPage() {
 
         {/* Booking sidebar */}
         <div className="md:w-96">
-          <div className="rounded-xl border border-slate-200 p-6 shadow-sm">
-            <p className="text-2xl font-bold text-slate-900">
+          <div className="rounded-xl border border-muted p-6 shadow-sm">
+            <p className="text-2xl font-bold text-fg-1">
               {formatRate(listing.nightlyRateCents, listing.currency)}
-              <span className="text-base font-normal text-slate-500"> {t("search.per_night")}</span>
+              <span className="text-base font-normal text-fg-3"> {t("search.per_night")}</span>
             </p>
 
             {isGuest && (

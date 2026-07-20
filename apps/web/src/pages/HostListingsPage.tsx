@@ -33,7 +33,7 @@ export function HostListingsPage() {
     queryFn: () => hostApi.listMine(),
   });
 
-  if (isLoading) return <p className="text-fg-3">Loading...</p>;
+  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
 
   if (error || !data) {
     return (

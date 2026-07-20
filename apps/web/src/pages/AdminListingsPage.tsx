@@ -15,6 +15,21 @@ function listingStatusTone(status: AdminListing["status"]): "success" | "neutral
   }
 }
 
+function listingStatusLabel(status: AdminListing["status"]): string {
+  switch (status) {
+    case "PUBLISHED":
+      return t("host.listings.status_published");
+    case "DRAFT":
+      return t("host.listings.status_draft");
+    case "DISABLED":
+      return t("host.listings.status_disabled");
+  }
+}
+
+function listingTypeLabel(type: AdminListing["type"]): string {
+  return type === "PROPERTY" ? t("host.listings.type_property") : t("host.listings.type_workspace");
+}
+
 export function AdminListingsPage() {
   const queryClient = useQueryClient();
 
@@ -66,11 +81,13 @@ export function AdminListingsPage() {
               {data.data.map((listing: AdminListing) => (
                 <tr key={listing.id} className="border-b border-muted last:border-0">
                   <td className="py-3 pr-4 text-fg-1">{listing.title}</td>
-                  <td className="py-3 pr-4 text-fg-2">{listing.type}</td>
+                  <td className="py-3 pr-4 text-fg-2">{listingTypeLabel(listing.type)}</td>
                   <td className="py-3 pr-4 text-fg-2">{listing.city}</td>
                   <td className="py-3 pr-4 text-fg-2">{listing.host.email}</td>
                   <td className="py-3 pr-4">
-                    <Badge tone={listingStatusTone(listing.status)}>{listing.status}</Badge>
+                    <Badge tone={listingStatusTone(listing.status)}>
+                      {listingStatusLabel(listing.status)}
+                    </Badge>
                   </td>
                   <td className="py-3">
                     {listing.status !== "DISABLED" ? (

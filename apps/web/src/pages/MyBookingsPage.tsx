@@ -73,7 +73,7 @@ export function MyBookingsPage() {
   };
 
   if (isLoading) {
-    return <p className="text-fg-3">Loading...</p>;
+    return <p className="text-fg-3">{t("common.loading")}</p>;
   }
 
   if (error || !data) {
@@ -126,7 +126,7 @@ export function MyBookingsPage() {
                         disabled={checkingOut === booking.id}
                       >
                         {checkingOut === booking.id
-                          ? "…"
+                          ? t("common.submitting")
                           : t("booking.dashboard.complete_payment_button")}
                       </Button>
                     )}

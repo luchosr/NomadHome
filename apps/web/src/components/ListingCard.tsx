@@ -23,7 +23,9 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
       </div>
       <div className="p-4">
         <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-          {listing.type === "PROPERTY" ? "Property" : "Workspace"}
+          {listing.type === "PROPERTY"
+            ? t("host.listings.type_property")
+            : t("host.listings.type_workspace")}
         </span>
         <h3 className="mt-1 font-semibold text-slate-900 group-hover:text-slate-700 truncate">
           {listing.title}

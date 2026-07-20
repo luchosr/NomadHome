@@ -17,9 +17,9 @@ export const en = {
       submit: "Submit",
       cancel: "Cancel",
       save: "Save",
-      loading: "Loading…",
     },
     loading: "Loading…",
+    submitting: "…",
   },
   nav: {
     login: "Log in",

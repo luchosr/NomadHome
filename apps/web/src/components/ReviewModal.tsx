@@ -108,7 +108,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
               {t("common.action.close")}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={rating === 0 || isSubmitting}>
-              {isSubmitting ? "..." : t("booking.dashboard.review_submit")}
+              {isSubmitting ? t("common.submitting") : t("booking.dashboard.review_submit")}
             </Button>
           </div>
         </>
