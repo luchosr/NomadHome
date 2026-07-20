@@ -6,6 +6,8 @@ import { Button, Input } from "@nomadhome/ui";
 import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
 import { useState } from "react";
+import { FormField } from "../components/FormField.js";
+import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -38,15 +40,12 @@ export function LoginPage() {
   return (
     <div className="mx-auto max-w-sm px-4 py-8">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-slate-900">{t("auth.login.title")}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t("auth.login.subtitle")}</p>
+        <h1 className="text-2xl font-bold text-fg-1">{t("auth.login.title")}</h1>
+        <p className="mt-1 text-sm text-fg-3">{t("auth.login.subtitle")}</p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-            {t("auth.login.email_label")}
-          </label>
+        <FormField id="email" label={t("auth.login.email_label")} error={errors.email?.message}>
           <Input
             id="email"
             type="email"
@@ -54,13 +53,13 @@ export function LoginPage() {
             aria-invalid={!!errors.email}
             {...register("email")}
           />
-          {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-            {t("auth.login.password_label")}
-          </label>
+        <FormField
+          id="password"
+          label={t("auth.login.password_label")}
+          error={errors.password?.message}
+        >
           <Input
             id="password"
             type="password"
@@ -68,25 +67,18 @@ export function LoginPage() {
             aria-invalid={!!errors.password}
             {...register("password")}
           />
-          {errors.password && (
-            <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-          )}
-        </div>
+        </FormField>
 
-        {serverError && (
-          <p role="alert" className="text-sm text-red-600">
-            {serverError}
-          </p>
-        )}
+        <ServerErrorAlert error={serverError} />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {t("auth.login.submit")}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-fg-3">
         {t("auth.login.no_account")}{" "}
-        <Link to="/register" className="font-medium text-slate-900 hover:underline">
+        <Link to="/register" className="font-medium text-fg-1 hover:underline">
           {t("auth.login.sign_up_link")}
         </Link>
       </p>

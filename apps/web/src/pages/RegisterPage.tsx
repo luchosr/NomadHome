@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import { useRegister } from "../hooks/useRegister.js";
+import { FormField } from "../components/FormField.js";
+import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
 
 export function RegisterPage() {
   const {
@@ -15,15 +17,12 @@ export function RegisterPage() {
   return (
     <div className="mx-auto max-w-sm px-4 py-8">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-slate-900">{t("auth.register.title")}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t("auth.register.subtitle")}</p>
+        <h1 className="text-2xl font-bold text-fg-1">{t("auth.register.title")}</h1>
+        <p className="mt-1 text-sm text-fg-3">{t("auth.register.subtitle")}</p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-            {t("auth.register.email_label")}
-          </label>
+        <FormField id="email" label={t("auth.register.email_label")} error={errors.email?.message}>
           <Input
             id="email"
             type="email"
@@ -31,13 +30,13 @@ export function RegisterPage() {
             aria-invalid={!!errors.email}
             {...register("email")}
           />
-          {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
-        </div>
+        </FormField>
 
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-            {t("auth.register.password_label")}
-          </label>
+        <FormField
+          id="password"
+          label={t("auth.register.password_label")}
+          error={errors.password?.message}
+        >
           <Input
             id="password"
             type="password"
@@ -45,18 +44,13 @@ export function RegisterPage() {
             aria-invalid={!!errors.password}
             {...register("password")}
           />
-          {errors.password && (
-            <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-          )}
-        </div>
+        </FormField>
 
-        <div>
-          <label
-            htmlFor="confirmPassword"
-            className="mb-1 block text-sm font-medium text-slate-700"
-          >
-            {t("auth.register.confirm_password_label")}
-          </label>
+        <FormField
+          id="confirmPassword"
+          label={t("auth.register.confirm_password_label")}
+          error={errors.confirmPassword?.message}
+        >
           <Input
             id="confirmPassword"
             type="password"
@@ -64,25 +58,18 @@ export function RegisterPage() {
             aria-invalid={!!errors.confirmPassword}
             {...register("confirmPassword")}
           />
-          {errors.confirmPassword && (
-            <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>
-          )}
-        </div>
+        </FormField>
 
-        {serverError && (
-          <p role="alert" className="text-sm text-red-600">
-            {serverError}
-          </p>
-        )}
+        <ServerErrorAlert error={serverError} />
 
         <Button type="submit" className="w-full" disabled={isSubmitting || !isValid}>
           {t("auth.register.submit")}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-fg-3">
         {t("auth.register.have_account")}{" "}
-        <Link to="/login" className="font-medium text-slate-900 hover:underline">
+        <Link to="/login" className="font-medium text-fg-1 hover:underline">
           {t("auth.register.login_link")}
         </Link>
       </p>
