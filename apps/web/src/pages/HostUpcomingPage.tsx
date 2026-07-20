@@ -2,14 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { bookingsApi } from "../api/bookings.js";
 import { PageWrapper } from "../components/PageWrapper.js";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "../lib/dates.js";
 
 export function HostUpcomingPage() {
   const { data, isLoading, error } = useQuery({

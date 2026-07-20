@@ -33,11 +33,11 @@ export function AdminListingsPage() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
   };
 
-  if (isLoading) return <p className="text-slate-500">Loading...</p>;
+  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
 
   if (error || !data) {
     return (
-      <p role="alert" className="text-red-600">
+      <p role="alert" className="text-danger">
         {t("error.generic.unexpected")}
       </p>
     );
@@ -45,15 +45,15 @@ export function AdminListingsPage() {
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-slate-900">{t("admin.listings.title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("admin.listings.title")}</h1>
 
       {data.data.length === 0 ? (
-        <p className="text-slate-600">{t("admin.listings.no_listings")}</p>
+        <p className="text-fg-2">{t("admin.listings.no_listings")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-muted text-left text-fg-3">
                 <th className="pb-2 pr-4 font-medium">{t("admin.listings.title_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.listings.type_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.listings.city_col")}</th>
@@ -64,11 +64,11 @@ export function AdminListingsPage() {
             </thead>
             <tbody>
               {data.data.map((listing: AdminListing) => (
-                <tr key={listing.id} className="border-b border-slate-200 last:border-0">
-                  <td className="py-3 pr-4 text-slate-900">{listing.title}</td>
-                  <td className="py-3 pr-4 text-slate-600">{listing.type}</td>
-                  <td className="py-3 pr-4 text-slate-600">{listing.city}</td>
-                  <td className="py-3 pr-4 text-slate-600">{listing.host.email}</td>
+                <tr key={listing.id} className="border-b border-muted last:border-0">
+                  <td className="py-3 pr-4 text-fg-1">{listing.title}</td>
+                  <td className="py-3 pr-4 text-fg-2">{listing.type}</td>
+                  <td className="py-3 pr-4 text-fg-2">{listing.city}</td>
+                  <td className="py-3 pr-4 text-fg-2">{listing.host.email}</td>
                   <td className="py-3 pr-4">
                     <Badge tone={listingStatusTone(listing.status)}>{listing.status}</Badge>
                   </td>

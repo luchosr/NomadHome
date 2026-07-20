@@ -30,11 +30,11 @@ export function AdminUsersPage() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
   };
 
-  if (isLoading) return <p className="text-slate-500">Loading...</p>;
+  if (isLoading) return <p className="text-fg-3">Loading...</p>;
 
   if (error || !data) {
     return (
-      <p role="alert" className="text-red-600">
+      <p role="alert" className="text-danger">
         {t("error.generic.unexpected")}
       </p>
     );
@@ -42,15 +42,15 @@ export function AdminUsersPage() {
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-slate-900">{t("admin.users.title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("admin.users.title")}</h1>
 
       {data.data.length === 0 ? (
-        <p className="text-slate-600">{t("admin.users.no_users")}</p>
+        <p className="text-fg-2">{t("admin.users.no_users")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-muted text-left text-fg-3">
                 <th className="pb-2 pr-4 font-medium">{t("admin.users.email_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.users.roles_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.users.status_col")}</th>
@@ -59,9 +59,9 @@ export function AdminUsersPage() {
             </thead>
             <tbody>
               {data.data.map((user: AdminUser) => (
-                <tr key={user.id} className="border-b border-slate-200 last:border-0">
-                  <td className="py-3 pr-4 text-slate-900">{user.email}</td>
-                  <td className="py-3 pr-4 text-slate-600">{user.roles.join(", ")}</td>
+                <tr key={user.id} className="border-b border-muted last:border-0">
+                  <td className="py-3 pr-4 text-fg-1">{user.email}</td>
+                  <td className="py-3 pr-4 text-fg-2">{user.roles.join(", ")}</td>
                   <td className="py-3 pr-4">
                     <Badge tone={userStatusTone(user.disabledAt)}>
                       {userStatusLabel(user.disabledAt)}
