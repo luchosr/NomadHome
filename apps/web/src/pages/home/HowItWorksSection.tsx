@@ -1,19 +1,17 @@
 import { t } from "@nomadhome/shared";
 import { WRAP, HOW_IT_WORKS_STEPS } from "./constants.js";
+import { SectionHeading } from "./SectionHeading.js";
 
 export function HowItWorksSection() {
   return (
     <section className="border-y border-sand-300 bg-sand-50 py-20">
       <div className={WRAP}>
         <div className="mb-10">
-          <p className="eyebrow mb-2 text-xs font-medium uppercase tracking-widest text-ink-500">
-            {t("home.how_it_works.eyebrow")}
-          </p>
-          <h2 className="m-0 font-serif text-4xl font-normal leading-tight tracking-tight text-ink-900 md:text-5xl">
-            {t("home.how_it_works.headline_pre")}{" "}
-            <em className="not-italic text-terracotta-500">{t("home.how_it_works.headline_em")}</em>
-            .
-          </h2>
+          <SectionHeading
+            eyebrow={t("home.how_it_works.eyebrow")}
+            pre={t("home.how_it_works.headline_pre")}
+            em={t("home.how_it_works.headline_em")}
+          />
         </div>
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
           {HOW_IT_WORKS_STEPS.map((s) => (

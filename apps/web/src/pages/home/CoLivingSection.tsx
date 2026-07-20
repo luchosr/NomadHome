@@ -1,30 +1,20 @@
 import { t } from "@nomadhome/shared";
 import { WRAP, GRADIENTS, COLIVING_FEATURES } from "./constants.js";
-import { CheckIcon } from "./CheckIcon.js";
+import { SectionHeading } from "./SectionHeading.js";
+import { FeatureList } from "./FeatureList.js";
 
 export function CoLivingSection() {
   return (
     <section className="py-20">
       <div className={`${WRAP} grid grid-cols-1 items-center gap-14 lg:grid-cols-2`}>
         <div>
-          <p className="eyebrow mb-2 text-xs font-medium uppercase tracking-widest text-ink-500">
-            {t("home.coliving.eyebrow")}
-          </p>
-          <h2 className="m-0 font-serif text-4xl font-normal leading-tight tracking-tight text-ink-900 md:text-5xl">
-            {t("home.coliving.headline_pre")}{" "}
-            <em className="not-italic text-terracotta-500">{t("home.coliving.headline_em")}</em>.
-          </h2>
+          <SectionHeading
+            eyebrow={t("home.coliving.eyebrow")}
+            pre={t("home.coliving.headline_pre")}
+            em={t("home.coliving.headline_em")}
+          />
           <p className="mt-5 text-lg leading-relaxed text-ink-700">{t("home.coliving.body")}</p>
-          <ul className="mt-6 flex flex-col gap-3.5">
-            {COLIVING_FEATURES.map((key) => (
-              <li key={key} className="flex gap-3 text-base text-ink-700">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-forest-50 text-forest-700">
-                  <CheckIcon />
-                </span>
-                {t(key)}
-              </li>
-            ))}
-          </ul>
+          <FeatureList features={COLIVING_FEATURES} />
         </div>
         <div
           className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg ${GRADIENTS.night}`}
