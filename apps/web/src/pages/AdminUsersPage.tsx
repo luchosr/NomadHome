@@ -30,7 +30,7 @@ export function AdminUsersPage() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
   };
 
-  if (isLoading) return <p className="text-slate-500">Loading...</p>;
+  if (isLoading) return <p className="text-slate-500">{t("common.action.loading")}</p>;
 
   if (error || !data) {
     return (
