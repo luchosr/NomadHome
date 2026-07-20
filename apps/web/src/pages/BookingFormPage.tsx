@@ -7,17 +7,9 @@ import { BookingSummaryCard } from "../components/BookingSummaryCard.js";
 
 export function BookingFormPage() {
   const {
-    id,
-    listing,
-    isLoading,
-    error,
-    hasDates,
-    checkIn,
-    checkOut,
-    nights,
-    isSubmitting,
-    serverError,
-    handlePayNow,
+    listing: { data: listing, isLoading, error },
+    form: { id, checkIn, checkOut, nights, hasDates },
+    action: { handlePayNow, isSubmitting, serverError },
   } = useBookingForm();
 
   if (!hasDates) {
@@ -73,7 +65,7 @@ export function BookingFormPage() {
       )}
 
       <div className="mt-6">
-        <Button className="w-full" disabled={isSubmitting} onClick={() => void handlePayNow()}>
+        <Button className="w-full" disabled={isSubmitting} onClick={handlePayNow}>
           {isSubmitting ? t("common.action.loading") : t("booking.ui.pay_now")}
         </Button>
       </div>

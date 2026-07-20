@@ -1,7 +1,14 @@
 import { t } from "@nomadhome/shared";
 
+const currencyFormatters = new Map<string, Intl.NumberFormat>();
+
 function formatRate(cents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+  const locale = navigator.language;
+  const key = `${locale}:${currency}`;
+  if (!currencyFormatters.has(key)) {
+    currencyFormatters.set(key, new Intl.NumberFormat(locale, { style: "currency", currency }));
+  }
+  return currencyFormatters.get(key)!.format(cents / 100);
 }
 
 interface Props {
