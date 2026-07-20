@@ -16,7 +16,7 @@ test.describe("US-1.1 — Guest registration", () => {
     await page.getByLabel(/email/i).fill("new@test.com");
     await page.getByLabel(/^password$/i).fill("password1234");
     await page.getByLabel(/confirm password/i).fill("different1234");
-    await page.getByLabel(/^password$/i).blur();
+    await page.getByLabel(/confirm password/i).blur();
     await expect(page.getByText(/passwords do not match/i)).toBeVisible();
   });
 
