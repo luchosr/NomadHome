@@ -4,6 +4,7 @@ import { Button, Input } from "@nomadhome/ui";
 import type { CreateFormValues } from "../hooks/useCreateListing.js";
 import { AMENITIES, COUNTRIES, CURRENCIES } from "../lib/listingData.js";
 import { GroupedSelect } from "./GroupedSelect.js";
+import { AmenityCheckboxGrid } from "./AmenityCheckboxGrid.js";
 
 const SELECT_CLASS =
   "w-full rounded-md border border-muted bg-elevated px-4 py-3 text-base text-fg-1 focus-visible:border-forest-500 focus-visible:outline-none";
@@ -147,19 +148,11 @@ export function CreateListingForm({
           {t("host.listings.field_amenities")}
         </legend>
         <p className="mb-2 text-xs text-fg-3">{t("host.listings.hint_amenities")}</p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {AMENITIES.map(({ code, labelKey }) => (
-            <label key={code} className="flex items-center gap-2 text-sm text-fg-2">
-              <input
-                type="checkbox"
-                checked={selectedAmenities.has(code)}
-                onChange={() => toggleAmenity(code)}
-                className="h-4 w-4 rounded border-muted accent-forest-700"
-              />
-              {t(labelKey)}
-            </label>
-          ))}
-        </div>
+        <AmenityCheckboxGrid
+          amenities={AMENITIES}
+          selected={selectedAmenities}
+          onToggle={toggleAmenity}
+        />
       </fieldset>
 
       {serverError && (
