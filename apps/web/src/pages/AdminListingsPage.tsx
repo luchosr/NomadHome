@@ -33,7 +33,7 @@ export function AdminListingsPage() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
   };
 
-  if (isLoading) return <p className="text-fg-3">Loading...</p>;
+  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
 
   if (error || !data) {
     return (
