@@ -7,6 +7,7 @@ import { bookingsApi, type BookingWithListing } from "../api/bookings.js";
 import { CancelBookingModal } from "../components/CancelBookingModal.js";
 import { ReviewModal } from "../components/ReviewModal.js";
 import { PageWrapper } from "../components/PageWrapper.js";
+import { formatDate } from "../lib/dates.js";
 
 function statusTone(
   status: BookingWithListing["status"],
@@ -42,14 +43,6 @@ function computeNights(checkIn: string, checkOut: string): number {
     0,
     Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / msPerDay),
   );
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export function MyBookingsPage() {
