@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate, useNavigation } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { useAuth } from "../contexts/auth.js";
 
@@ -36,6 +36,7 @@ const navLink =
 export function Layout() {
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
+  const navigation = useNavigation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -48,6 +49,9 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-sand-100">
+      {navigation.state === "loading" && (
+        <div className="fixed inset-x-0 top-0 z-50 h-0.5 animate-pulse bg-forest-700" />
+      )}
       <header
         className="sticky top-0 z-50 border-b border-sand-300"
         style={{
