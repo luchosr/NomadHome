@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { WRAP, GRADIENTS, FEATURED_CARDS } from "./constants.js";
+import { SectionHeading } from "./SectionHeading.js";
 
 export function FeaturedStaysSection() {
   return (
@@ -8,14 +9,12 @@ export function FeaturedStaysSection() {
       <div className={WRAP}>
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
-            <p className="eyebrow mb-2 text-xs font-medium uppercase tracking-widest text-ink-500">
-              {t("home.featured.eyebrow")}
-            </p>
-            <h2 className="m-0 font-serif text-4xl font-normal leading-tight tracking-tight text-ink-900 md:text-5xl">
-              {t("home.featured.headline_pre")}{" "}
-              <em className="not-italic text-terracotta-500">{t("home.featured.headline_em")}</em>{" "}
-              {t("home.featured.headline_post")}
-            </h2>
+            <SectionHeading
+              eyebrow={t("home.featured.eyebrow")}
+              pre={t("home.featured.headline_pre")}
+              em={t("home.featured.headline_em")}
+              post={t("home.featured.headline_post")}
+            />
           </div>
           <Link
             to="/search"

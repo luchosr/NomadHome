@@ -1,6 +1,7 @@
 import { t } from "@nomadhome/shared";
 import { WRAP, GRADIENTS, WORKSPACE_FEATURES } from "./constants.js";
-import { CheckIcon } from "./CheckIcon.js";
+import { SectionHeading } from "./SectionHeading.js";
+import { FeatureList } from "./FeatureList.js";
 
 export function WorkspaceSection() {
   return (
@@ -25,25 +26,14 @@ export function WorkspaceSection() {
           </div>
         </div>
         <div>
-          <p className="eyebrow mb-2 text-xs font-medium uppercase tracking-widest text-ink-500">
-            {t("home.workspace.eyebrow")}
-          </p>
-          <h2 className="m-0 font-serif text-4xl font-normal leading-tight tracking-tight text-ink-900 md:text-5xl">
-            {t("home.workspace.headline_pre")}{" "}
-            <em className="not-italic text-terracotta-500">{t("home.workspace.headline_em")}</em>{" "}
-            {t("home.workspace.headline_post")}
-          </h2>
+          <SectionHeading
+            eyebrow={t("home.workspace.eyebrow")}
+            pre={t("home.workspace.headline_pre")}
+            em={t("home.workspace.headline_em")}
+            post={t("home.workspace.headline_post")}
+          />
           <p className="mt-5 text-lg leading-relaxed text-ink-700">{t("home.workspace.body")}</p>
-          <ul className="mt-6 flex flex-col gap-3.5">
-            {WORKSPACE_FEATURES.map((key) => (
-              <li key={key} className="flex gap-3 text-base text-ink-700">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-forest-50 text-forest-700">
-                  <CheckIcon />
-                </span>
-                {t(key)}
-              </li>
-            ))}
-          </ul>
+          <FeatureList features={WORKSPACE_FEATURES} />
         </div>
       </div>
     </section>

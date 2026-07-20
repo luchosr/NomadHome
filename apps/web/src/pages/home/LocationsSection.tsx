@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { WRAP, GRADIENTS, LOCATION_CARDS } from "./constants.js";
+import { SectionHeading } from "./SectionHeading.js";
 
 export function LocationsSection() {
   return (
@@ -8,13 +9,11 @@ export function LocationsSection() {
       <div className={WRAP}>
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
-            <p className="eyebrow mb-2 text-xs font-medium uppercase tracking-widest text-ink-500">
-              {t("home.locations.eyebrow")}
-            </p>
-            <h2 className="m-0 font-serif text-4xl font-normal leading-tight tracking-tight text-ink-900 md:text-5xl">
-              {t("home.locations.headline_pre")}{" "}
-              <em className="not-italic text-terracotta-500">{t("home.locations.headline_em")}</em>.
-            </h2>
+            <SectionHeading
+              eyebrow={t("home.locations.eyebrow")}
+              pre={t("home.locations.headline_pre")}
+              em={t("home.locations.headline_em")}
+            />
           </div>
           <Link
             to="/search"
