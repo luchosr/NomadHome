@@ -148,7 +148,7 @@ export function CreateListingForm({
         </legend>
         <p className="mb-2 text-xs text-fg-3">{t("host.listings.hint_amenities")}</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {AMENITIES.map(({ code, label }) => (
+          {AMENITIES.map(({ code, labelKey }) => (
             <label key={code} className="flex items-center gap-2 text-sm text-fg-2">
               <input
                 type="checkbox"
@@ -156,7 +156,7 @@ export function CreateListingForm({
                 onChange={() => toggleAmenity(code)}
                 className="h-4 w-4 rounded border-muted accent-forest-700"
               />
-              {label}
+              {t(labelKey)}
             </label>
           ))}
         </div>
