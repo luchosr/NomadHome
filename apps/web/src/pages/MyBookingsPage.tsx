@@ -13,6 +13,7 @@ export function MyBookingsPage() {
     cancelBookingId,
     reviewBookingId,
     checkingOut,
+    checkoutError,
     setCancelBookingId,
     setReviewBookingId,
     handleCompletePayment,
@@ -34,6 +35,12 @@ export function MyBookingsPage() {
   return (
     <PageWrapper>
       <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("booking.dashboard.title")}</h1>
+
+      {checkoutError && (
+        <p role="alert" className="mb-4 text-danger">
+          {checkoutError}
+        </p>
+      )}
 
       {data.data.length === 0 ? (
         <p className="text-fg-2">{t("booking.dashboard.no_bookings")}</p>

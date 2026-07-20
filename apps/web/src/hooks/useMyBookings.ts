@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { t } from "@nomadhome/shared";
 import { bookingsApi } from "../api/bookings.js";
 
 export function useMyBookings() {
@@ -7,6 +8,7 @@ export function useMyBookings() {
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
   const [reviewBookingId, setReviewBookingId] = useState<string | null>(null);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["bookings", "me"],
@@ -15,9 +17,12 @@ export function useMyBookings() {
 
   const handleCompletePayment = async (bookingId: string) => {
     setCheckingOut(bookingId);
+    setCheckoutError(null);
     try {
       const { url } = await bookingsApi.checkout(bookingId);
       window.location.href = url;
+    } catch {
+      setCheckoutError(t("error.generic.unexpected"));
     } finally {
       setCheckingOut(null);
     }
@@ -36,6 +41,7 @@ export function useMyBookings() {
     cancelBookingId,
     reviewBookingId,
     checkingOut,
+    checkoutError,
     setCancelBookingId,
     setReviewBookingId,
     handleCompletePayment,
