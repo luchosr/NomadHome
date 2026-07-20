@@ -1,123 +1,173 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
 import { Layout } from "./components/Layout.js";
 import { ProtectedRoute } from "./components/ProtectedRoute.js";
 import { RoleGuard } from "./components/RoleGuard.js";
-import { HomePage } from "./pages/HomePage.js";
-import { LoginPage } from "./pages/LoginPage.js";
-import { RegisterPage } from "./pages/RegisterPage.js";
-import { NotFoundPage } from "./pages/NotFoundPage.js";
-import { SearchPage } from "./pages/SearchPage.js";
-import { ListingDetailPage } from "./pages/ListingDetailPage.js";
-import { BookingFormPage } from "./pages/BookingFormPage.js";
-import { BookingSuccessPage } from "./pages/BookingSuccessPage.js";
-import { BookingCancelPage } from "./pages/BookingCancelPage.js";
-import { MyBookingsPage } from "./pages/MyBookingsPage.js";
-import { HostListingsPage } from "./pages/HostListingsPage.js";
-import { CreateListingPage } from "./pages/CreateListingPage.js";
-import { EditListingPage } from "./pages/EditListingPage.js";
-import { HostUpcomingPage } from "./pages/HostUpcomingPage.js";
-import { AdminUsersPage } from "./pages/AdminUsersPage.js";
-import { AdminListingsPage } from "./pages/AdminListingsPage.js";
-import { BecomeHostPage } from "./pages/BecomeHostPage.js";
-import { VerifyEmailPage } from "./pages/VerifyEmailPage.js";
 
 export const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <HomePage /> },
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
-      { path: "/verify", element: <VerifyEmailPage /> },
+      // Public routes
       {
-        path: "/become-host",
-        element: (
-          <ProtectedRoute>
-            <BecomeHostPage />
-          </ProtectedRoute>
-        ),
-      },
-      { path: "/search", element: <SearchPage /> },
-      { path: "/listings/:id", element: <ListingDetailPage /> },
-      {
-        path: "/listings/:id/book",
-        element: (
-          <ProtectedRoute>
-            <BookingFormPage />
-          </ProtectedRoute>
-        ),
-      },
-      { path: "/booking/success", element: <BookingSuccessPage /> },
-      { path: "/booking/cancel", element: <BookingCancelPage /> },
-      {
-        path: "/host/listings",
-        element: (
-          <ProtectedRoute>
-            <RoleGuard role="host">
-              <HostListingsPage />
-            </RoleGuard>
-          </ProtectedRoute>
-        ),
+        path: "/",
+        lazy: async () => {
+          const { HomePage } = await import("./pages/HomePage.js");
+          return { Component: HomePage };
+        },
       },
       {
-        path: "/host/listings/new",
-        element: (
-          <ProtectedRoute>
-            <RoleGuard role="host">
-              <CreateListingPage />
-            </RoleGuard>
-          </ProtectedRoute>
-        ),
+        path: "/login",
+        lazy: async () => {
+          const { LoginPage } = await import("./pages/LoginPage.js");
+          return { Component: LoginPage };
+        },
       },
       {
-        path: "/host/listings/:id/edit",
-        element: (
-          <ProtectedRoute>
-            <RoleGuard role="host">
-              <EditListingPage />
-            </RoleGuard>
-          </ProtectedRoute>
-        ),
+        path: "/register",
+        lazy: async () => {
+          const { RegisterPage } = await import("./pages/RegisterPage.js");
+          return { Component: RegisterPage };
+        },
       },
       {
-        path: "/host/upcoming",
-        element: (
-          <ProtectedRoute>
-            <RoleGuard role="host">
-              <HostUpcomingPage />
-            </RoleGuard>
-          </ProtectedRoute>
-        ),
+        path: "/verify",
+        lazy: async () => {
+          const { VerifyEmailPage } = await import("./pages/VerifyEmailPage.js");
+          return { Component: VerifyEmailPage };
+        },
       },
       {
-        path: "/admin/users",
-        element: (
-          <ProtectedRoute>
-            <RoleGuard role="admin">
-              <AdminUsersPage />
-            </RoleGuard>
-          </ProtectedRoute>
-        ),
+        path: "/search",
+        lazy: async () => {
+          const { SearchPage } = await import("./pages/SearchPage.js");
+          return { Component: SearchPage };
+        },
       },
       {
-        path: "/admin/listings",
-        element: (
-          <ProtectedRoute>
-            <RoleGuard role="admin">
-              <AdminListingsPage />
-            </RoleGuard>
-          </ProtectedRoute>
-        ),
+        path: "/listings/:id",
+        lazy: async () => {
+          const { ListingDetailPage } = await import("./pages/ListingDetailPage.js");
+          return { Component: ListingDetailPage };
+        },
       },
       {
-        path: "/bookings",
+        path: "/booking/success",
+        lazy: async () => {
+          const { BookingSuccessPage } = await import("./pages/BookingSuccessPage.js");
+          return { Component: BookingSuccessPage };
+        },
+      },
+      {
+        path: "/booking/cancel",
+        lazy: async () => {
+          const { BookingCancelPage } = await import("./pages/BookingCancelPage.js");
+          return { Component: BookingCancelPage };
+        },
+      },
+
+      // Protected routes — guard runs statically before any chunk is downloaded
+      {
         element: (
           <ProtectedRoute>
-            <MyBookingsPage />
+            <Outlet />
           </ProtectedRoute>
         ),
+        children: [
+          {
+            path: "/become-host",
+            lazy: async () => {
+              const { BecomeHostPage } = await import("./pages/BecomeHostPage.js");
+              return { Component: BecomeHostPage };
+            },
+          },
+          {
+            path: "/listings/:id/book",
+            lazy: async () => {
+              const { BookingFormPage } = await import("./pages/BookingFormPage.js");
+              return { Component: BookingFormPage };
+            },
+          },
+          {
+            path: "/bookings",
+            lazy: async () => {
+              const { MyBookingsPage } = await import("./pages/MyBookingsPage.js");
+              return { Component: MyBookingsPage };
+            },
+          },
+
+          // Host-only routes
+          {
+            element: (
+              <RoleGuard role="host">
+                <Outlet />
+              </RoleGuard>
+            ),
+            children: [
+              {
+                path: "/host/listings",
+                lazy: async () => {
+                  const { HostListingsPage } = await import("./pages/HostListingsPage.js");
+                  return { Component: HostListingsPage };
+                },
+              },
+              {
+                path: "/host/listings/new",
+                lazy: async () => {
+                  const { CreateListingPage } = await import("./pages/CreateListingPage.js");
+                  return { Component: CreateListingPage };
+                },
+              },
+              {
+                path: "/host/listings/:id/edit",
+                lazy: async () => {
+                  const { EditListingPage } = await import("./pages/EditListingPage.js");
+                  return { Component: EditListingPage };
+                },
+              },
+              {
+                path: "/host/upcoming",
+                lazy: async () => {
+                  const { HostUpcomingPage } = await import("./pages/HostUpcomingPage.js");
+                  return { Component: HostUpcomingPage };
+                },
+              },
+            ],
+          },
+
+          // Admin-only routes
+          {
+            element: (
+              <RoleGuard role="admin">
+                <Outlet />
+              </RoleGuard>
+            ),
+            children: [
+              {
+                path: "/admin/users",
+                lazy: async () => {
+                  const { AdminUsersPage } = await import("./pages/AdminUsersPage.js");
+                  return { Component: AdminUsersPage };
+                },
+              },
+              {
+                path: "/admin/listings",
+                lazy: async () => {
+                  const { AdminListingsPage } = await import("./pages/AdminListingsPage.js");
+                  return { Component: AdminListingsPage };
+                },
+              },
+            ],
+          },
+        ],
       },
-      { path: "*", element: <NotFoundPage /> },
+
+      {
+        path: "*",
+        lazy: async () => {
+          const { NotFoundPage } = await import("./pages/NotFoundPage.js");
+          return { Component: NotFoundPage };
+        },
+      },
     ],
   },
 ]);
