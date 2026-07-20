@@ -57,7 +57,7 @@ export function BookingFormPage() {
   }
 
   if (isLoading) {
-    return <p className="text-fg-3">Loading...</p>;
+    return <p className="text-fg-3">{t("common.loading")}</p>;
   }
 
   if (error instanceof ApiError && error.status === 404) {
@@ -148,7 +148,7 @@ export function BookingFormPage() {
 
       <div className="mt-6">
         <Button className="w-full" disabled={isSubmitting} onClick={() => void handlePayNow()}>
-          {isSubmitting ? "..." : t("booking.ui.pay_now")}
+          {isSubmitting ? t("common.submitting") : t("booking.ui.pay_now")}
         </Button>
       </div>
 

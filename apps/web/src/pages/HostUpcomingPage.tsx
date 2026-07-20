@@ -10,7 +10,7 @@ export function HostUpcomingPage() {
     queryFn: () => bookingsApi.hostUpcoming(),
   });
 
-  if (isLoading) return <p className="text-fg-3">Loading...</p>;
+  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
   if (error || !data) {
     return (
       <p role="alert" className="text-danger">

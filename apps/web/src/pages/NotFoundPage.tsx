@@ -4,8 +4,8 @@ import { t } from "@nomadhome/shared";
 export function NotFoundPage() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 px-4 text-center">
-      <h1 className="text-2xl font-bold text-slate-800">{t("error.not_found.title")}</h1>
-      <Link to="/" className="text-sm text-slate-500 hover:underline">
+      <h1 className="text-2xl font-bold text-fg-1">{t("error.not_found.title")}</h1>
+      <Link to="/" className="text-sm text-fg-3 hover:underline">
         {t("error.not_found.home")}
       </Link>
     </div>
