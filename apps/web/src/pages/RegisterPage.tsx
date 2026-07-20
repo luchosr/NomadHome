@@ -4,8 +4,13 @@ import { Button, Input } from "@nomadhome/ui";
 import { useRegister } from "../hooks/useRegister.js";
 
 export function RegisterPage() {
-  const { register, handleSubmit, onSubmit, errors, isSubmitting, isValid, serverError } =
-    useRegister();
+  const {
+    register,
+    handleSubmit,
+    onSubmit,
+    formState: { errors, isSubmitting, isValid },
+    serverError,
+  } = useRegister();
 
   return (
     <div className="mx-auto max-w-sm px-4 py-8">

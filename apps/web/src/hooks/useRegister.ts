@@ -25,7 +25,7 @@ export function useRegister() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
-  } = useForm<RegisterFormInput>({ resolver: zodResolver(RegisterFormSchema), mode: "onChange" });
+  } = useForm<RegisterFormInput>({ resolver: zodResolver(RegisterFormSchema), mode: "onTouched" });
 
   const onSubmit = async (data: RegisterFormInput) => {
     setServerError(null);
@@ -41,5 +41,11 @@ export function useRegister() {
     }
   };
 
-  return { register, handleSubmit, onSubmit, errors, isSubmitting, isValid, serverError };
+  return {
+    register,
+    handleSubmit,
+    onSubmit,
+    formState: { errors, isSubmitting, isValid },
+    serverError,
+  };
 }
