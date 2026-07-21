@@ -120,11 +120,21 @@ async function main(): Promise<void> {
       },
     ];
 
+    // Picsum photo sets per listing (stable seeds → consistent images across re-runs)
+    const listingPhotos = [
+      ["https://picsum.photos/seed/mad1a/1200/800", "https://picsum.photos/seed/mad1b/1200/800"],
+      ["https://picsum.photos/seed/mad2a/1200/800", "https://picsum.photos/seed/mad2b/1200/800"],
+      ["https://picsum.photos/seed/mad3a/1200/800", "https://picsum.photos/seed/mad3b/1200/800"],
+      ["https://picsum.photos/seed/mad4a/1200/800", "https://picsum.photos/seed/mad4b/1200/800"],
+    ];
+
     const existingCount = await prisma.listing.count({
       where: { hostId: hostUser.id, city: "Madrid" },
     });
     if (existingCount === 0) {
-      for (const l of madridListings) {
+      for (let i = 0; i < madridListings.length; i++) {
+        const l = madridListings[i]!;
+        const photos = listingPhotos[i]!;
         const { amenities, ...data } = l;
         await prisma.listing.create({
           data: {
@@ -132,10 +142,13 @@ async function main(): Promise<void> {
             hostId: hostUser.id,
             status: "PUBLISHED",
             amenities: { create: amenities.map((code) => ({ amenityCode: code })) },
+            photos: {
+              create: photos.map((url, position) => ({ url, position })),
+            },
           },
         });
       }
-      console.warn(`[db:seed] Created ${madridListings.length} Madrid listings.`);
+      console.warn(`[db:seed] Created ${madridListings.length} Madrid listings with photos.`);
     }
   }
 
