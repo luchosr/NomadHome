@@ -38,12 +38,11 @@ export function LocationsSection() {
               key={loc.city}
               className={`group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-2xl ${GRADIENTS[loc.grad]}`}
             >
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.16), transparent 55%)",
-                }}
+              <img
+                src={loc.img}
+                alt={loc.city}
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="lazy"
               />
               <div
                 className="absolute inset-0"

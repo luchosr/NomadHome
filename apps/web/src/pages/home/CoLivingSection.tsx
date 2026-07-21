@@ -19,13 +19,13 @@ export function CoLivingSection() {
         <div
           className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg ${GRADIENTS.night}`}
         >
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(circle at 28% 18%, rgba(255,255,255,0.18), transparent 55%)",
-            }}
+          <img
+            src="https://images.unsplash.com/photo-1560184897-ae75f418493e?w=1200&q=80&fit=crop"
+            alt="Co-living shared space"
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
           />
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.25)" }} />
           <div className="absolute bottom-5 left-5 rounded-xl border border-ink-100 bg-white px-4 py-3 shadow-md">
             <p className="text-[11px] font-medium uppercase tracking-widest text-ink-500">
               {t("home.coliving.price_label")}

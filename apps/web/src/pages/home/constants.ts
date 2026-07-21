@@ -32,6 +32,7 @@ export const HOW_IT_WORKS_STEPS = [
 export const FEATURED_CARDS = [
   {
     grad: "twilight",
+    img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&q=80&fit=crop",
     city: "Oaxaca · MX",
     title: "Casa del Fig",
     meta: "6 rooms · coworking · courtyard with a fig tree",
@@ -41,6 +42,7 @@ export const FEATURED_CARDS = [
   },
   {
     grad: "forest",
+    img: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800&q=80&fit=crop",
     city: "Lisboa · PT",
     title: "A Quinta",
     meta: "4 rooms · garden · 10 min from the beach",
@@ -49,6 +51,7 @@ export const FEATURED_CARDS = [
   },
   {
     grad: "morning",
+    img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80&fit=crop",
     city: "Medellín · CO",
     title: "El Poblado",
     meta: "8 rooms · big coworking · rooftop pool",
@@ -58,10 +61,30 @@ export const FEATURED_CARDS = [
 ] as const;
 
 export const LOCATION_CARDS = [
-  { grad: "twilight", city: "Oaxaca", ct: "México · 2 houses" },
-  { grad: "forest", city: "Lisboa", ct: "Portugal · 1 house" },
-  { grad: "night", city: "Medellín", ct: "Colombia · 1 house" },
-  { grad: "terracotta", city: "CDMX", ct: "México · 1 house" },
+  {
+    grad: "twilight",
+    img: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=800&q=80&fit=crop",
+    city: "Oaxaca",
+    ct: "México · 2 houses",
+  },
+  {
+    grad: "forest",
+    img: "https://images.unsplash.com/photo-1588598198321-9735fd5b8e53?w=800&q=80&fit=crop",
+    city: "Lisboa",
+    ct: "Portugal · 1 house",
+  },
+  {
+    grad: "night",
+    img: "https://images.unsplash.com/photo-1556038024-41b3ea5e3462?w=800&q=80&fit=crop",
+    city: "Medellín",
+    ct: "Colombia · 1 house",
+  },
+  {
+    grad: "terracotta",
+    img: "https://images.unsplash.com/photo-1574936145840-28808d77a0b6?w=800&q=80&fit=crop",
+    city: "CDMX",
+    ct: "México · 1 house",
+  },
 ] as const;
 
 export const STAT_ITEMS = [

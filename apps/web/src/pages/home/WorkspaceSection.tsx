@@ -10,13 +10,13 @@ export function WorkspaceSection() {
         <div
           className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg lg:order-first ${GRADIENTS.sand}`}
         >
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(circle at 28% 18%, rgba(255,255,255,0.18), transparent 55%)",
-            }}
+          <img
+            src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80&fit=crop"
+            alt="Co-working workspace"
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
           />
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.15)" }} />
           <div className="absolute right-5 top-5 rounded-xl border border-ink-100 bg-white px-4 py-3 shadow-md">
             <span className="inline-flex items-center gap-2 rounded-full bg-success-bg px-2.5 py-1 text-xs font-medium text-forest-900">
               <span className="h-1.5 w-1.5 rounded-full bg-success" />

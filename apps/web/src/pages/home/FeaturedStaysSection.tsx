@@ -42,11 +42,16 @@ export function FeaturedStaysSection() {
             >
               <Link to="/search" className="block no-underline">
                 <div className={`relative aspect-[4/3] ${GRADIENTS[card.grad]}`}>
+                  <img
+                    src={card.img}
+                    alt={card.title}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                  />
                   <div
                     className="absolute inset-0"
                     style={{
-                      background:
-                        "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.18), transparent 52%)",
+                      background: "linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%)",
                     }}
                   />
                   <div className="absolute left-3.5 top-3.5 flex gap-1.5">
