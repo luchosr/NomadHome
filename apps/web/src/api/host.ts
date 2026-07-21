@@ -13,6 +13,7 @@ export interface HostListing {
   currency: string;
   status: "DRAFT" | "PUBLISHED" | "DISABLED";
   amenities: Array<{ amenityCode: string }>;
+  _count: { bookings: number };
 }
 
 export interface CreateListingInput {

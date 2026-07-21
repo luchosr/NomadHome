@@ -68,6 +68,14 @@ export function HostListingsPage() {
                     {" · "}
                     {listing.city}, {listing.country}
                   </p>
+                  {listing._count.bookings > 0 && (
+                    <p className="mt-1 text-sm font-medium text-success">
+                      {listing._count.bookings}{" "}
+                      {listing._count.bookings === 1
+                        ? t("host.listings.confirmed_booking_singular")
+                        : t("host.listings.confirmed_booking_plural")}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge tone={statusTone(listing.status)}>{statusLabel(listing.status)}</Badge>

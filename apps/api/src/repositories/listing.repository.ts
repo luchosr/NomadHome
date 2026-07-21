@@ -67,10 +67,13 @@ export class ListingRepository {
     });
   }
 
-  listByHost(hostId: string): Promise<ListingWithAmenities[]> {
+  listByHost(hostId: string) {
     return prisma.listing.findMany({
       where: { hostId },
-      include: withAmenities,
+      include: {
+        ...withAmenities,
+        _count: { select: { bookings: { where: { status: "CONFIRMED" } } } },
+      },
       orderBy: { createdAt: "desc" },
     });
   }

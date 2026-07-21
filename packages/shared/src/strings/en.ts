@@ -301,6 +301,8 @@ export const en = {
       hint_rate: "Price per night in the selected currency (e.g. 75 for €75.00).",
       hint_currency: "Select the currency you want to charge guests in.",
       hint_amenities: "Select all that apply — guests can filter by these.",
+      confirmed_booking_singular: "confirmed booking",
+      confirmed_booking_plural: "confirmed bookings",
       amenity_wifi: "Wi-Fi",
       amenity_kitchen: "Kitchen",
       amenity_workspace_desk: "Dedicated desk",

@@ -50,7 +50,7 @@ export class ListingService {
     return listing;
   }
 
-  listOwn(hostId: string): Promise<ListingWithAmenities[]> {
+  listOwn(hostId: string) {
     return this.listings.listByHost(hostId);
   }
 
