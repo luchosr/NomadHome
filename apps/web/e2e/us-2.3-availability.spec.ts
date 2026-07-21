@@ -72,7 +72,7 @@ test.describe("US-2.3 — Host manages availability blocks", () => {
     await page.getByLabel(/start date/i).fill("2026-08-01");
     await page.getByLabel(/end date/i).fill("2026-08-07");
     await page.getByRole("button", { name: /block dates/i }).click();
-    await expect(page.getByText("2026-08-01")).toBeVisible();
+    await expect(page.getByText(/Aug 1, 2026/)).toBeVisible();
   });
 
   test("shows overlap error when block conflicts", async ({ page }) => {

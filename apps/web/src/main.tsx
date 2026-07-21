@@ -17,7 +17,7 @@ createRoot(rootEl).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <RouterProvider router={router} hydrateFallbackElement={null} />
+        <RouterProvider router={router} />
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
