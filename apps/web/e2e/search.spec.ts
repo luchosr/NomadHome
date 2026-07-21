@@ -33,10 +33,17 @@ test.describe("Search", () => {
     await expect(page.getByRole("button", { name: /^search$/i })).toBeVisible();
   });
 
-  test("shows validation error when city is empty", async ({ page }) => {
+  test("searches all listings when city is empty", async ({ page }) => {
+    await page.route(`${API}/search*`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(ONE_RESULT),
+      }),
+    );
     await page.goto("/search");
     await page.getByRole("button", { name: /^search$/i }).click();
-    await expect(page.getByText(/required/i)).toBeVisible();
+    await expect(page.getByText("Lisbon Studio")).toBeVisible();
   });
 
   test("renders listing cards after a successful search", async ({ page }) => {
