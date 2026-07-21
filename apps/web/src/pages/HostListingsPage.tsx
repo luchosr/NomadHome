@@ -68,10 +68,10 @@ export function HostListingsPage() {
                     {" · "}
                     {listing.city}, {listing.country}
                   </p>
-                  {listing._count.bookings > 0 && (
+                  {(listing._count?.bookings ?? 0) > 0 && (
                     <p className="mt-1 text-sm font-medium text-success">
-                      {listing._count.bookings}{" "}
-                      {listing._count.bookings === 1
+                      {listing._count?.bookings}{" "}
+                      {listing._count?.bookings === 1
                         ? t("host.listings.confirmed_booking_singular")
                         : t("host.listings.confirmed_booking_plural")}
                     </p>
