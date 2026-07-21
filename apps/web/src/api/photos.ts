@@ -7,7 +7,10 @@ export interface ListingPhoto {
 }
 
 export const photoApi = {
-  getUploadUrl(listingId: string, contentType: string): Promise<{ url: string; key: string }> {
+  getUploadUrl(
+    listingId: string,
+    contentType: string,
+  ): Promise<{ uploadUrl: string; key: string }> {
     return apiFetch(`/listings/${listingId}/photos/upload-url`, {
       method: "POST",
       body: JSON.stringify({ contentType }),

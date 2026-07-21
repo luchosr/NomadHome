@@ -19,8 +19,8 @@ export function useListingPhotos(id: string | undefined) {
     setIsUploading(true);
     setUploadError(null);
     try {
-      const { url, key } = await photoApi.getUploadUrl(id, file.type);
-      const res = await fetch(url, {
+      const { uploadUrl, key } = await photoApi.getUploadUrl(id, file.type);
+      const res = await fetch(uploadUrl, {
         method: "PUT",
         body: file,
         headers: { "Content-Type": file.type },
