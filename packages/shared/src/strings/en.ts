@@ -66,6 +66,10 @@ export const en = {
       title: "404 — Page not found",
       home: "Go home",
     },
+    title: "Something went wrong",
+    unexpected: "An unexpected error occurred. Please try again.",
+    go_back: "Go back",
+    go_home: "Go to home",
   },
   validation: {
     required: {

@@ -2,10 +2,12 @@ import { createBrowserRouter, Outlet } from "react-router-dom";
 import { Layout } from "./components/Layout.js";
 import { ProtectedRoute } from "./components/ProtectedRoute.js";
 import { RoleGuard } from "./components/RoleGuard.js";
+import { ErrorPage } from "./pages/ErrorPage.js";
 
 export const router = createBrowserRouter([
   {
     element: <Layout />,
+    errorElement: <ErrorPage />,
     children: [
       // Public routes
       {
