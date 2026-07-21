@@ -49,7 +49,11 @@ export function createApp(): Express {
         try {
           const safeKey = path.basename(req.params["key"] ?? "");
           await mkdir(uploadsDir, { recursive: true });
-          await writeFile(path.join(uploadsDir, safeKey), req.body as Buffer);
+          if (!Buffer.isBuffer(req.body)) {
+            res.status(400).json({ error: "invalid_body", message: "expected raw bytes" });
+            return;
+          }
+          await writeFile(path.join(uploadsDir, safeKey), req.body);
           res.status(200).send();
         } catch (err) {
           next(err);

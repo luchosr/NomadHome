@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { CreateListingSchema, UpdateListingSchema, t } from "@nomadhome/shared";
 import {
   ListingForbiddenError,
@@ -35,8 +35,12 @@ export class ListingController {
     }
   };
 
-  listMine = async (req: Request, res: Response): Promise<void> => {
-    res.json(await this.listings.listOwn(this.hostId(req)));
+  listMine = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      res.json(await this.listings.listOwn(this.hostId(req)));
+    } catch (err) {
+      next(err);
+    }
   };
 
   getOne = async (req: Request, res: Response): Promise<void> => {
