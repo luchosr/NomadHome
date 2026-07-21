@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { BlockDateRangeSchema, t } from "@nomadhome/shared";
 import {
   AvailabilityService,
@@ -15,6 +15,16 @@ export class AvailabilityController {
   private hostId(req: Request): string {
     return (req as AuthedRequest).user!.id;
   }
+
+  /** Public — returns blocked date ranges for the listing date picker. */
+  getBlockedDates = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const dates = await this.service.getBlockedDates(req.params["id"] ?? "");
+      res.json(dates);
+    } catch (err) {
+      next(err);
+    }
+  };
 
   block = async (req: Request, res: Response): Promise<void> => {
     const parsed = BlockDateRangeSchema.safeParse(req.body);

@@ -81,6 +81,14 @@ export class AvailabilityService {
     );
   }
 
+  async getBlockedDates(listingId: string): Promise<{ startDate: string; endDate: string }[]> {
+    const blocks = await this.availability.listByListing(listingId);
+    return blocks.map((b) => ({
+      startDate: toISODate(b.startDate),
+      endDate: toISODate(b.endDate),
+    }));
+  }
+
   async deleteBlock(hostId: string, listingId: string, blockId: string): Promise<void> {
     await this.assertOwnership(hostId, listingId);
     const block = await this.availability.findById(blockId);

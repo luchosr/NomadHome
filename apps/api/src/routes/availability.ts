@@ -12,10 +12,15 @@ export function createAvailabilityRouter(): Router {
   );
 
   const router = Router();
-  router.use(requireAuth, requireRole("host"));
-  router.post("/:id/availability", controller.block);
-  router.get("/:id/availability", controller.list);
-  router.delete("/:id/availability/:blockId", controller.deleteBlock);
+  router.get("/:id/blocked-dates", controller.getBlockedDates);
+  router.post("/:id/availability", requireAuth, requireRole("host"), controller.block);
+  router.get("/:id/availability", requireAuth, requireRole("host"), controller.list);
+  router.delete(
+    "/:id/availability/:blockId",
+    requireAuth,
+    requireRole("host"),
+    controller.deleteBlock,
+  );
   return router;
 }
 

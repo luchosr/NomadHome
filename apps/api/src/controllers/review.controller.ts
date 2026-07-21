@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { CreateReviewSchema, t } from "@nomadhome/shared";
 import {
   ReviewService,
@@ -55,8 +55,12 @@ export class ReviewController {
     }
   };
 
-  listForListing = async (req: Request, res: Response): Promise<void> => {
-    const result = await this.service.listForListing(req.params.id ?? "");
-    res.json(result);
+  listForListing = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const result = await this.service.listForListing(req.params["id"] ?? "");
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
   };
 }

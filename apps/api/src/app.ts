@@ -1,5 +1,5 @@
-import express, { type Express } from "express";
-import fs from "node:fs";
+import express, { type Express, type NextFunction, type Request, type Response } from "express";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import cors from "cors";
 import { healthRouter } from "./routes/health.js";
@@ -42,12 +42,24 @@ export function createApp(): Express {
   // Local dev file uploads (active only when R2 env vars are absent)
   if (!process.env["CLOUDFLARE_R2_ACCOUNT_ID"]) {
     const uploadsDir = path.join(process.cwd(), "uploads");
-    app.put("/dev-upload/:key", express.raw({ type: "*/*", limit: "20mb" }), (req, res) => {
-      const safeKey = path.basename(req.params.key!);
-      fs.mkdirSync(uploadsDir, { recursive: true });
-      fs.writeFileSync(path.join(uploadsDir, safeKey), req.body as Buffer);
-      res.status(200).send();
-    });
+    app.put(
+      "/dev-upload/:key",
+      express.raw({ type: "*/*", limit: "20mb" }),
+      async (req: Request, res: Response, next: NextFunction) => {
+        try {
+          const safeKey = path.basename(req.params["key"] ?? "");
+          await mkdir(uploadsDir, { recursive: true });
+          if (!Buffer.isBuffer(req.body)) {
+            res.status(400).json({ error: "invalid_body", message: "expected raw bytes" });
+            return;
+          }
+          await writeFile(path.join(uploadsDir, safeKey), req.body);
+          res.status(200).send();
+        } catch (err) {
+          next(err);
+        }
+      },
+    );
     app.use("/uploads", express.static(uploadsDir));
   }
 
