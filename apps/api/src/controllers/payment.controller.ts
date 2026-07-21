@@ -42,6 +42,23 @@ export class PaymentController {
     }
   };
 
+  syncPaymentStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const booking = await this.service.syncPaymentStatus(this.userId(req), req.params.id ?? "");
+      res.json(booking);
+    } catch (err) {
+      if (err instanceof PaymentBookingNotFoundError) {
+        res.status(404).json({ error: t("payments.error.booking_not_found") });
+        return;
+      }
+      if (err instanceof Stripe.errors.StripeError) {
+        res.status(502).json({ error: "payment_provider_error" });
+        return;
+      }
+      throw err;
+    }
+  };
+
   getPayoutSummary = async (_req: Request, res: Response): Promise<void> => {
     const rows = await this.service.getPayoutSummary();
     res.json(rows);

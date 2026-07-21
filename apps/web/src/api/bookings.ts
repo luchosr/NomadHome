@@ -64,6 +64,9 @@ export const bookingsApi = {
   getById(bookingId: string): Promise<BookingWithListing> {
     return apiFetch(`/bookings/${bookingId}`);
   },
+  syncPayment(bookingId: string): Promise<{ status: string }> {
+    return apiFetch(`/bookings/${bookingId}/sync-payment`, { method: "POST" });
+  },
   hostUpcoming(): Promise<HostUpcomingBooking[]> {
     return apiFetch("/bookings/host-upcoming");
   },

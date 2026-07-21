@@ -151,6 +151,29 @@ export class PaymentService {
     return this.payments.expireFromWebhook(stripeEventId, sessionId);
   }
 
+  /**
+   * Fallback for when the Stripe webhook never arrives.
+   * Retrieves the Checkout session directly from Stripe; if paid, confirms the
+   * booking using a deterministic synthetic event ID so it's still idempotent.
+   */
+  async syncPaymentStatus(guestId: string, bookingId: string): Promise<Booking> {
+    const booking = await this.bookings.findById(bookingId);
+    if (!booking || booking.guestId !== guestId) throw new PaymentBookingNotFoundError();
+    if (booking.status !== "PENDING_PAYMENT" || !booking.stripeCheckoutSessionId) return booking;
+
+    const session = await this.stripe.checkout.sessions.retrieve(booking.stripeCheckoutSessionId);
+    if (session.payment_status !== "paid") return booking;
+
+    await this.payments.confirmFromWebhook(
+      `sync_${session.id}`,
+      session.id,
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : (session.payment_intent?.id ?? ""),
+    );
+    return (await this.bookings.findById(bookingId)) ?? booking;
+  }
+
   getPayoutSummary(): Promise<PayoutSummaryRow[]> {
     return this.payments.getPayoutSummary();
   }

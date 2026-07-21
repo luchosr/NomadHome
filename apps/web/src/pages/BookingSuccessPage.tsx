@@ -39,7 +39,18 @@ export function BookingSuccessPage() {
       setTimeout(() => void poll(), POLL_MS);
     };
 
-    void poll();
+    // Sync payment status directly with Stripe before polling — covers cases
+    // where the webhook hasn't arrived yet or is misconfigured.
+    const start = async () => {
+      try {
+        await bookingsApi.syncPayment(bookingId);
+      } catch {
+        // non-fatal — fall through to polling
+      }
+      void poll();
+    };
+
+    void start();
     return () => {
       cancelled = true;
     };

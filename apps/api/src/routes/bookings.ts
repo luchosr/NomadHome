@@ -52,6 +52,7 @@ router.get("/me", bookingController.listMine);
 router.get("/:id", bookingController.getById);
 router.post("/:id/cancel", bookingController.cancel);
 router.post("/:id/checkout", paymentController.createCheckoutSession);
+router.post("/:id/sync-payment", paymentController.syncPaymentStatus);
 router.post("/:id/review", reviewController.create);
 
 export const bookingsRouter = router;
