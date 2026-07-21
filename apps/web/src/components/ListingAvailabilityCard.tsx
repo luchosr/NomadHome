@@ -1,4 +1,5 @@
 import { t } from "@nomadhome/shared";
+import { formatDate } from "../lib/dates.js";
 import { Button, Card, Input } from "@nomadhome/ui";
 
 interface Block {
@@ -41,7 +42,7 @@ export function ListingAvailabilityCard({
               className="flex items-center justify-between rounded-md border border-muted p-3"
             >
               <span className="text-sm text-fg-2">
-                {block.startDate} – {block.endDate}
+                {formatDate(block.startDate)} – {formatDate(block.endDate)}
               </span>
               <Button variant="destructive" onClick={() => deleteBlock(block.id)}>
                 {t("host.availability.delete")}
