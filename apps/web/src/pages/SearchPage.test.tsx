@@ -65,11 +65,14 @@ describe("SearchPage", () => {
     expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument();
   });
 
-  it("shows validation error when city is empty on submit", async () => {
+  it("searches all listings when city is empty on submit", async () => {
+    mockSearch.mockResolvedValue(mockSearchResult);
     renderSearch();
     await userEvent.click(screen.getByRole("button", { name: /search/i }));
-    expect(await screen.findByText(/required/i)).toBeInTheDocument();
-    expect(mockSearch).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(1));
+    expect(mockSearch).toHaveBeenCalledWith(
+      expect.not.objectContaining({ city: expect.anything() }),
+    );
   });
 
   it("calls searchApi.search and renders ListingCard on valid submit", async () => {
