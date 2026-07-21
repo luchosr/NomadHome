@@ -18,6 +18,17 @@ export function useListingAvailability(id: string | undefined) {
 
   const addBlock = async () => {
     setBlockError(null);
+
+    const conflict = blocks.find((b) => {
+      const bs = b.startDate.slice(0, 10);
+      const be = b.endDate.slice(0, 10);
+      return startDate <= be && bs <= endDate;
+    });
+    if (conflict) {
+      setBlockError(t("host.availability.overlap_error"));
+      return;
+    }
+
     try {
       await availabilityApi.block(id!, startDate, endDate);
       await queryClient.invalidateQueries({ queryKey: ["host", "listings", id, "availability"] });

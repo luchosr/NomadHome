@@ -326,6 +326,7 @@ export const en = {
       block: "Block dates",
       delete: "Remove",
       no_blocks: "No blocked dates.",
+      overlap_error: "These dates overlap with an existing blocked period.",
     },
     upcoming: {
       title: "Upcoming bookings",
