@@ -10,6 +10,7 @@ interface Photo {
 interface Props {
   photos: Photo[];
   isUploading: boolean;
+  uploadError: string | null;
   fileInputRef: RefObject<HTMLInputElement | null>;
   upload: (file: File) => Promise<void>;
   deletePhoto: (id: string) => Promise<void>;
@@ -18,6 +19,7 @@ interface Props {
 export function ListingPhotosCard({
   photos,
   isUploading,
+  uploadError,
   fileInputRef,
   upload,
   deletePhoto,
@@ -36,7 +38,11 @@ export function ListingPhotosCard({
         <div className="grid grid-cols-3 gap-3">
           {photos.map((photo, index) => (
             <div key={photo.id} className="relative">
-              <img src={photo.url} alt={`Photo ${index + 1}`} className="h-28 w-full rounded-md object-cover" />
+              <img
+                src={photo.url}
+                alt={`Photo ${index + 1}`}
+                className="h-28 w-full rounded-md object-cover"
+              />
               <Button
                 variant="destructive"
                 className="mt-1 w-full"
@@ -48,6 +54,7 @@ export function ListingPhotosCard({
           ))}
         </div>
       )}
+      {uploadError && <p className="mt-3 text-sm text-red-600">{uploadError}</p>}
       <div className="mt-4">
         <input
           ref={fileInputRef}
