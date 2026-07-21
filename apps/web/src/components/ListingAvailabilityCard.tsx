@@ -29,6 +29,8 @@ export function ListingAvailabilityCard({
   addBlock,
   deleteBlock,
 }: Props) {
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
     <Card>
       <h2 className="mb-4 text-lg font-semibold text-fg-1">{t("host.availability.title")}</h2>
@@ -60,6 +62,7 @@ export function ListingAvailabilityCard({
             id="avail-start"
             type="date"
             value={startDate}
+            min={today}
             onChange={(e) => setStartDate(e.target.value)}
           />
         </div>
@@ -71,6 +74,7 @@ export function ListingAvailabilityCard({
             id="avail-end"
             type="date"
             value={endDate}
+            min={startDate || today}
             onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
