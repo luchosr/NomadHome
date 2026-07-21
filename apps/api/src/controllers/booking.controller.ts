@@ -67,9 +67,11 @@ export class BookingController {
   };
 
   listHostUpcoming = async (req: Request, res: Response): Promise<void> => {
-    const hostId = this.userId(req);
-    const bookings = await this.service.listHostUpcoming(hostId);
-    res.json(bookings);
+    res.json(await this.service.listHostUpcoming(this.userId(req)));
+  };
+
+  listHostAll = async (req: Request, res: Response): Promise<void> => {
+    res.json(await this.service.listAllForHost(this.userId(req)));
   };
 
   cancel = async (req: Request, res: Response): Promise<void> => {

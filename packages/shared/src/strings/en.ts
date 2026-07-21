@@ -336,6 +336,16 @@ export const en = {
       checkin_col: "Check-in",
       checkout_col: "Check-out",
     },
+    bookings: {
+      title: "All Bookings",
+      no_bookings: "No bookings yet.",
+      listing_col: "Listing",
+      guest_col: "Guest",
+      checkin_col: "Check-in",
+      checkout_col: "Check-out",
+      status_col: "Status",
+      amount_col: "Amount",
+    },
   },
   admin: {
     users: {

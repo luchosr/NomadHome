@@ -47,6 +47,7 @@ const reviewController = new ReviewController(
 const router = Router();
 router.use(requireAuth);
 router.get("/host-upcoming", requireRole("host"), bookingController.listHostUpcoming);
+router.get("/host-all", requireRole("host"), bookingController.listHostAll);
 router.post("/", bookingController.create);
 router.get("/me", bookingController.listMine);
 router.get("/:id", bookingController.getById);

@@ -39,6 +39,17 @@ export interface HostUpcomingBooking {
   guest: { email: string };
 }
 
+export interface HostBooking {
+  id: string;
+  checkIn: string;
+  checkOut: string;
+  status: "PENDING_PAYMENT" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  totalCents: number;
+  currency: string;
+  listing: { title: string };
+  guest: { email: string };
+}
+
 export const bookingsApi = {
   create(input: { listingId: string; checkIn: string; checkOut: string }): Promise<BookingCreated> {
     return apiFetch("/bookings", { method: "POST", body: JSON.stringify(input) });
@@ -69,5 +80,8 @@ export const bookingsApi = {
   },
   hostUpcoming(): Promise<HostUpcomingBooking[]> {
     return apiFetch("/bookings/host-upcoming");
+  },
+  hostAll(): Promise<HostBooking[]> {
+    return apiFetch("/bookings/host-all");
   },
 };

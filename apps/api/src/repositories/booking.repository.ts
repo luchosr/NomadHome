@@ -100,6 +100,17 @@ export class BookingRepository {
     });
   }
 
+  findAllForHost(hostId: string) {
+    return prisma.booking.findMany({
+      where: { hostId },
+      orderBy: { checkIn: "asc" },
+      include: {
+        listing: { select: { title: true } },
+        guest: { select: { email: true } },
+      },
+    });
+  }
+
   latestFeeConfig(): Promise<PlatformFeeConfig | null> {
     return prisma.platformFeeConfig.findFirst({ orderBy: { createdAt: "desc" } });
   }

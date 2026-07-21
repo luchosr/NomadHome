@@ -156,6 +156,10 @@ export class BookingService {
     return this.bookings.findHostUpcoming(hostId);
   }
 
+  listAllForHost(hostId: string) {
+    return this.bookings.findAllForHost(hostId);
+  }
+
   async cancel(
     guestId: string,
     bookingId: string,
