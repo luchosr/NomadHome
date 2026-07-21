@@ -2,7 +2,7 @@ import { apiFetch } from "./client.js";
 import type { SearchResponse } from "@nomadhome/shared";
 
 export interface SearchParams {
-  city: string;
+  city?: string;
   checkIn?: string;
   checkOut?: string;
   page?: number;
@@ -15,7 +15,8 @@ export interface SearchParams {
 
 export const searchApi = {
   search(params: SearchParams): Promise<SearchResponse> {
-    const q = new URLSearchParams({ city: params.city, page: String(params.page ?? 1) });
+    const q = new URLSearchParams({ page: String(params.page ?? 1) });
+    if (params.city) q.set("city", params.city);
     if (params.checkIn) q.set("checkIn", params.checkIn);
     if (params.checkOut) q.set("checkOut", params.checkOut);
     if (params.type) q.set("type", params.type);

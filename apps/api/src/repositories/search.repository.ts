@@ -25,7 +25,7 @@ export class SearchRepository {
 
     const where = {
       status: "PUBLISHED" as const,
-      city: { equals: city, mode: "insensitive" as const },
+      ...(city ? { city: { equals: city, mode: "insensitive" as const } } : {}),
       ...(checkInDate && checkOutDate
         ? {
             availabilityBlocks: {

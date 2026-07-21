@@ -11,7 +11,7 @@ const today = new Date().toISOString().slice(0, 10);
 
 const SearchFormSchema = z
   .object({
-    city: z.string().min(1, t("validation.required.field")),
+    city: z.string().optional(),
     checkIn: z.string().optional(),
     checkOut: z.string().optional(),
     type: z.enum(["PROPERTY", "WORKSPACE", ""]).optional(),
@@ -31,9 +31,11 @@ export type SearchFormValues = z.input<typeof SearchFormSchema>;
 export { today };
 
 function urlParamsToSearchParams(sp: URLSearchParams): SearchParams | null {
+  // Return null only when no params at all (page hasn't been searched yet)
+  if (sp.toString() === "") return null;
+  const params: SearchParams = {};
   const city = sp.get("city");
-  if (!city) return null;
-  const params: SearchParams = { city };
+  if (city) params.city = city;
   const checkIn = sp.get("checkIn");
   const checkOut = sp.get("checkOut");
   const type = sp.get("type");
@@ -83,8 +85,13 @@ export function useSearchPage() {
   });
 
   const submit = form.handleSubmit((values) => {
-    const params: SearchParams = { city: values.city };
-    const sp: Record<string, string> = { city: values.city };
+    const params: SearchParams = {};
+    const sp: Record<string, string> = {};
+
+    if (values.city) {
+      params.city = values.city;
+      sp.city = values.city;
+    }
 
     if (values.checkIn) {
       params.checkIn = values.checkIn;

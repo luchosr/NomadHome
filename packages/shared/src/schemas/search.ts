@@ -3,7 +3,7 @@ import { t } from "../t.js";
 
 export const SearchQuerySchema = z
   .object({
-    city: z.string().min(1),
+    city: z.string().optional(),
     checkIn: z.string().date().optional(),
     checkOut: z.string().date().optional(),
     type: z.enum(["PROPERTY", "WORKSPACE"]).optional(),
