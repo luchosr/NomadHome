@@ -83,9 +83,14 @@ export function Layout() {
                       </Link>
                     ) : null}
                     {user.roles.includes("admin") && (
-                      <Link to="/admin/users" className={navLink}>
-                        {t("nav.admin")}
-                      </Link>
+                      <>
+                        <Link to="/admin/users" className={navLink}>
+                          {t("nav.admin_users")}
+                        </Link>
+                        <Link to="/admin/listings" className={navLink}>
+                          {t("nav.admin_listings")}
+                        </Link>
+                      </>
                     )}
                     <Link to="/bookings" className={navLink}>
                       {t("nav.my_bookings")}
@@ -171,9 +176,14 @@ export function Layout() {
                 </Link>
               ) : null}
               {user.roles.includes("admin") && (
-                <Link to="/admin/users" className={`${navLink} py-2`} onClick={close}>
-                  {t("nav.admin")}
-                </Link>
+                <>
+                  <Link to="/admin/users" className={`${navLink} py-2`} onClick={close}>
+                    {t("nav.admin_users")}
+                  </Link>
+                  <Link to="/admin/listings" className={`${navLink} py-2`} onClick={close}>
+                    {t("nav.admin_listings")}
+                  </Link>
+                </>
               )}
               <Link to="/bookings" className={`${navLink} py-2`} onClick={close}>
                 {t("nav.my_bookings")}

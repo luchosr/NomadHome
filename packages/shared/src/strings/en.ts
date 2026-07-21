@@ -29,6 +29,8 @@ export const en = {
     host_dashboard: "Host Dashboard",
     become_host: "Become a host",
     admin: "Admin",
+    admin_users: "Users",
+    admin_listings: "Listings",
   },
   auth: {
     login: {
