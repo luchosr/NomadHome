@@ -32,7 +32,7 @@ export function createApp(): Express {
       origin: process.env["CORS_ORIGIN"]?.split(",").map((o) => o.trim()) ?? [
         "http://localhost:5173",
       ],
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       credentials: true,
     }),
   );
