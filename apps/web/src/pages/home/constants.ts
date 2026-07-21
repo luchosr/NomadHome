@@ -42,7 +42,7 @@ export const FEATURED_CARDS = [
   },
   {
     grad: "forest",
-    img: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800&q=80&fit=crop",
+    img: "https://picsum.photos/seed/lisboa-house/800/600",
     city: "Lisboa · PT",
     title: "A Quinta",
     meta: "4 rooms · garden · 10 min from the beach",
@@ -69,13 +69,13 @@ export const LOCATION_CARDS = [
   },
   {
     grad: "forest",
-    img: "https://images.unsplash.com/photo-1588598198321-9735fd5b8e53?w=800&q=80&fit=crop",
+    img: "https://picsum.photos/seed/lisboa-city/800/600",
     city: "Lisboa",
     ct: "Portugal · 1 house",
   },
   {
     grad: "night",
-    img: "https://images.unsplash.com/photo-1556038024-41b3ea5e3462?w=800&q=80&fit=crop",
+    img: "https://picsum.photos/seed/medellin/800/600",
     city: "Medellín",
     ct: "Colombia · 1 house",
   },
