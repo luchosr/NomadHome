@@ -15,13 +15,13 @@ import {
   SelfBookingError,
   NoFeeConfigError,
 } from "../services/booking.service.js";
-import type { AuthedRequest } from "../middleware/require-auth.js";
+import { getUser } from "../middleware/require-auth.js";
 
 export class BookingController {
   constructor(private readonly service: BookingService) {}
 
   private userId(req: Request): string {
-    return (req as AuthedRequest).user!.id;
+    return getUser(req).id;
   }
 
   create = async (req: Request, res: Response): Promise<void> => {

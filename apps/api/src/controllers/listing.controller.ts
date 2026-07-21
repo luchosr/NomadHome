@@ -7,14 +7,14 @@ import {
   ListingService,
   UnknownAmenityError,
 } from "../services/listing.service.js";
-import type { AuthedRequest } from "../middleware/require-auth.js";
+import { getUser } from "../middleware/require-auth.js";
 
 /** HTTP edge for listing management. All routes are host-guarded upstream. */
 export class ListingController {
   constructor(private readonly listings: ListingService) {}
 
   private hostId(req: Request): string {
-    return (req as AuthedRequest).user!.id;
+    return getUser(req).id;
   }
 
   create = async (req: Request, res: Response): Promise<void> => {

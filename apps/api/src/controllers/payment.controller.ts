@@ -7,13 +7,13 @@ import {
   PaymentBookingNotFoundError,
   DoublePayoutError,
 } from "../services/payment.service.js";
-import type { AuthedRequest } from "../middleware/require-auth.js";
+import { getUser } from "../middleware/require-auth.js";
 
 export class PaymentController {
   constructor(private readonly service: PaymentService) {}
 
   private userId(req: Request): string {
-    return (req as AuthedRequest).user!.id;
+    return getUser(req).id;
   }
 
   createCheckoutSession = async (req: Request, res: Response): Promise<void> => {

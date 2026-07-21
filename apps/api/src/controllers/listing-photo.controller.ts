@@ -11,13 +11,13 @@ import {
   PhotoNotFoundError,
   PhotoPositionConflictError,
 } from "../services/listing-photo.service.js";
-import type { AuthedRequest } from "../middleware/require-auth.js";
+import { getUser } from "../middleware/require-auth.js";
 
 export class ListingPhotoController {
   constructor(private readonly service: ListingPhotoService) {}
 
   private hostId(req: Request): string {
-    return (req as AuthedRequest).user!.id;
+    return getUser(req).id;
   }
 
   getUploadUrl = async (req: Request, res: Response): Promise<void> => {
