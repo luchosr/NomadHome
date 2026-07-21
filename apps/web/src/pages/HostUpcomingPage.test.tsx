@@ -4,9 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { HostUpcomingPage } from "./HostUpcomingPage.js";
 
-const mockHostUpcoming = vi.fn();
+const mockHostAll = vi.fn();
 vi.mock("../api/bookings.js", () => ({
-  bookingsApi: { hostUpcoming: (...args: unknown[]) => mockHostUpcoming(...args) },
+  bookingsApi: { hostAll: (...args: unknown[]) => mockHostAll(...args) },
 }));
 vi.mock("../contexts/auth.js", () => ({
   useAuth: () => ({
@@ -34,6 +34,9 @@ const mockBookings = [
     id: "b1",
     checkIn: "2027-01-10",
     checkOut: "2027-01-15",
+    status: "CONFIRMED" as const,
+    totalCents: 30000,
+    currency: "USD",
     listing: { title: "Beach House" },
     guest: { email: "guest@example.com" },
   },
@@ -41,19 +44,19 @@ const mockBookings = [
 
 describe("HostUpcomingPage", () => {
   beforeEach(() => {
-    mockHostUpcoming.mockReset();
+    mockHostAll.mockReset();
   });
 
   it("renders listing title and guest email", async () => {
-    mockHostUpcoming.mockResolvedValue(mockBookings);
+    mockHostAll.mockResolvedValue(mockBookings);
     renderPage();
     expect(await screen.findByText("Beach House")).toBeInTheDocument();
     expect(screen.getByText("guest@example.com")).toBeInTheDocument();
   });
 
-  it("shows empty state when no upcoming bookings", async () => {
-    mockHostUpcoming.mockResolvedValue([]);
+  it("shows empty state when no bookings", async () => {
+    mockHostAll.mockResolvedValue([]);
     renderPage();
-    expect(await screen.findByText(/no upcoming bookings/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no bookings yet/i)).toBeInTheDocument();
   });
 });
