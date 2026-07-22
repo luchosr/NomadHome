@@ -1,6 +1,3 @@
-
-
-
 # NomadHome
 
 A Co-living and Workspace platform
@@ -87,28 +84,17 @@ The MVP delivers ten capabilities, each scoped to the minimum that proves the en
 
 ### **1.3. Design and User Experience:**
 
-
 #### Guest flow
-
 
 https://github.com/user-attachments/assets/f8669132-b22c-4f6d-bf68-3625112faeb3
 
-
-
-
 #### Host flow
-
 
 https://github.com/user-attachments/assets/ffc1fdab-4719-4722-94e2-f7d048305cf3
 
 #### Admin flow
 
-
-
 https://github.com/user-attachments/assets/28fdeef2-043a-47e3-80f9-7ce4c5f1bc71
-
-
-
 
 ### **1.4. Installation Instructions:**
 
@@ -1748,10 +1734,74 @@ Three representative tickets — one per discipline (backend, frontend, database
 
 ## 7. Pull Requests
 
-> Document 3 of the Pull Requests performed during project execution
+> 3 pull requests representative of the project execution
 
-**Pull Request 1**
+---
 
-**Pull Request 2**
+### Pull Request 1 — Auth UI: login, register, protected routes, app shell
 
-**Pull Request 3**
+**PR**: [#36 — US-1.1/1.2 — Auth UI: login, register, protected routes, app shell (NH-018)](https://github.com/luchosr/NomadHome/pull/36)
+**Merged**: 2026-06-18
+**Ticket**: NH-018 · OpenSpec change: `add-auth-ui`
+
+**User Stories addressed**:
+
+- **US-1.1** — As a guest, I want to create an account so that I can book listings.
+- **US-1.2** — As a registered user, I want to log in so that I can access my account.
+
+**What shipped**:
+
+- `AuthProvider` + `useAuth` hook — access token in memory, refresh token in `localStorage`, auto-refresh on mount
+- `/login` and `/register` pages with React Hook Form + Zod validation
+- `ProtectedRoute` — redirects unauthenticated users to `/login`
+- `RoleGuard` — renders a 403 page for users missing the required role
+- `Layout` — top nav with logo, role-aware links, login/logout button
+- Router wired with real routes; host/admin/bookings paths stubbed for subsequent tickets
+- Vite dev proxy: `/api` → `http://localhost:3000`
+
+**Quality gates**: lint ✅ · typecheck ✅ · 11 component tests passing ✅ · build clean ✅
+
+---
+
+### Pull Request 2 — Booking form, Stripe redirect, success and cancel pages
+
+**PR**: [#38 — feat(booking): booking form, Stripe redirect, success and cancel pages (US-4.1, US-4.2)](https://github.com/luchosr/NomadHome/pull/38)
+**Merged**: 2026-06-18
+**Ticket**: NH-020 · OpenSpec change: `add-booking-ui`
+
+**User Stories addressed**:
+
+- **US-4.1** — As an authenticated guest I can confirm booking dates and initiate payment so I can reserve a listing.
+- **US-4.2** — As a guest I see a confirmation page after completing payment and a cancel page if I abandon checkout.
+
+**What shipped**:
+
+- `ListingDetailPage` sidebar now shows check-in / check-out date pickers for guests; "Book now" becomes active once valid dates are selected
+- `BookingFormPage` (`/listings/:id/book`, `ProtectedRoute`): shows stay summary (title, dates, nights, total), calls `POST /bookings` then `POST /bookings/:id/checkout`, redirects to Stripe Checkout URL; shows inline error on date overlap
+- `BookingSuccessPage` (`/booking/success`): Stripe success-redirect landing — confirmation message + "View my bookings" link
+- `BookingCancelPage` (`/booking/cancel`): Stripe cancel-redirect landing — back-to-listing link
+
+**Quality gates**: lint ✅ · typecheck ✅ · 37 web tests passing (10 test files) ✅
+
+---
+
+### Pull Request 3 — Admin dashboard: user and listing management
+
+**PR**: [#41 — feat(admin): admin dashboard — user and listing management (US-7.1, US-7.2)](https://github.com/luchosr/NomadHome/pull/41)
+**Merged**: 2026-06-20
+**Ticket**: NH-023 · OpenSpec change: `add-admin-ui`
+
+**User Stories addressed**:
+
+- **US-7.1** — As an admin I can view all users and disable or re-enable any account.
+- **US-7.2** — As an admin I can view all listings and disable or re-enable any listing.
+
+**What shipped**:
+
+- **Backend**: new `GET /admin/users` and `GET /admin/listings` endpoints (paginated, admin-only) returning user roles/disabled status and listing status/host email respectively
+- `AdminUsersPage` (`/admin/users`): table with email, roles, Active/Disabled badge, Disable/Re-enable buttons
+- `AdminListingsPage` (`/admin/listings`): table with title, type, city, host email, status badge, Disable/Re-enable buttons
+- `/admin/*` wildcard placeholder replaced with two specific routes (both `ProtectedRoute` + `RoleGuard` admin)
+- Layout admin nav link updated from `/admin` → `/admin/users`
+
+**Quality gates**: lint ✅ · typecheck ✅ · 7 new API tests + 61 web tests passing ✅
