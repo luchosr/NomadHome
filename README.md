@@ -86,6 +86,18 @@ The MVP delivers ten capabilities, each scoped to the minimum that proves the en
 
 > Provide images and/or video tutorial showing the user experience from when they land on the application, through all main functionalities.
 
+#### Guest flow
+
+<video src="docs/video/Guest%20-%20NomadHome.mp4" controls width="100%"></video>
+
+#### Host flow
+
+<video src="docs/video/Host%20-%20NomadHome.mp4" controls width="100%"></video>
+
+#### Admin flow
+
+<video src="docs/video/Admin%20-%20NomadHome.mp4" controls width="100%"></video>
+
 ### **1.4. Installation Instructions:**
 
 **Prerequisites**: Node.js ≥ 20.19.0 and pnpm. The repo pins its pnpm version via the `packageManager` field — run `corepack enable` once and pnpm will use the pinned version automatically.
