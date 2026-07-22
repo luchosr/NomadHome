@@ -1,3 +1,6 @@
+
+
+
 # NomadHome
 
 A Co-living and Workspace platform
@@ -84,19 +87,28 @@ The MVP delivers ten capabilities, each scoped to the minimum that proves the en
 
 ### **1.3. Design and User Experience:**
 
-> Provide images and/or video tutorial showing the user experience from when they land on the application, through all main functionalities.
 
 #### Guest flow
 
-<video src="docs/video/Guest%20-%20NomadHome.mp4" controls width="100%"></video>
+
+https://github.com/user-attachments/assets/f8669132-b22c-4f6d-bf68-3625112faeb3
+
+
+
 
 #### Host flow
 
-<video src="docs/video/Host%20-%20NomadHome.mp4" controls width="100%"></video>
+
+https://github.com/user-attachments/assets/ffc1fdab-4719-4722-94e2-f7d048305cf3
 
 #### Admin flow
 
-<video src="docs/video/Admin%20-%20NomadHome.mp4" controls width="100%"></video>
+
+
+https://github.com/user-attachments/assets/28fdeef2-043a-47e3-80f9-7ce4c5f1bc71
+
+
+
 
 ### **1.4. Installation Instructions:**
 
