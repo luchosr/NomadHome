@@ -27,700 +27,15 @@ please, take note about the format of the PR, now is more complete with the user
 
 ---
 
-## Session — 2026-07-17 11:42
+## Session — 2026-07-17 11:43
 
 **[4]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/services/listing.service.ts**
-    - [insecure-crypto] L40, 41, 42, 63, 64, 65, 93, 94: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[5]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 11:43
-
-**[6]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/repositories/payment.repository.ts**
-    - [unverified-lookup] L39: DB lookup by ID without ownership check in next 15 lines
-    - [non-atomic-read-delete] L39: Read-then-modify without transaction — potential TOCTOU race
-- **apps/api/src/repositories/search.repository.ts**
-    - [insecure-crypto] L64: weak cipher algorithm
-    - [missing-await] L56: prisma call without await
-    - [missing-await] L68: prisma call without await
-- **apps/api/src/repositories/admin.repository.ts**
-    - [insecure-crypto] L75, 90: weak cipher algorithm
-- **apps/api/src/repositories/review.repository.ts**
-    - [insecure-crypto] L39: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[7]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 11:43
-
-**[8]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/controllers/auth.controller.ts**
-    - [auth-bypass] L17: auth middleware
-    - [jwt-handling] L116, 136: Token refresh logic (verify validation)
-- **apps/api/src/controllers/admin-moderation.controller.ts**
-    - [auth-bypass] L3: auth middleware
-- **apps/api/src/controllers/availability.controller.ts**
-    - [auth-bypass] L10: auth middleware
-- **apps/api/src/controllers/booking.controller.ts**
-    - [auth-bypass] L17: auth middleware
-- **apps/api/src/controllers/listing-photo.controller.ts**
-    - [auth-bypass] L14: auth middleware
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[9]**
 
 ```
 Continue from where you left off.
 ```
 
-**[10]**
+**[5]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -765,223 +80,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:43
 
-**[11]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/controllers/listing.controller.ts**
-    - [auth-bypass] L10: auth middleware
-- **apps/api/src/controllers/payment.controller.ts**
-    - [auth-bypass] L10: auth middleware
-- **apps/api/src/controllers/review.controller.ts**
-    - [auth-bypass] L10: auth middleware
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[12]**
+**[6]**
 
 ```
 Continue from where you left off.
 ```
 
-**[13]**
+**[7]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -1024,228 +129,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:43
 
-**[14]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `env-exposure`: Secrets reaching client bundles via `NEXT_PUBLIC_` / `VITE_` / build-time inlining — flag only if the env var holds a credential.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **Dockerfile**
-    - [dockerfile-from-mutable-tag] L1, 36: FROM without @sha256 digest
-    - [dockerfile-run-as-root] L36: Final stage has no USER directive
-- **.env.example**
-    - [env-exposure] L8: Secret value in committed .env file
-    - [env-exposure] L18: Secret value in committed .env file
-    - [env-exposure] L19: Secret value in committed .env file
-- **.github/workflows/ci.yml**
-    - [github-workflow-security] L35, 42, 82, 85, 108: unpinned action ref (branch/major-tag)
-- **.github/workflows/deploy.yml**
-    - [github-workflow-security] L19, 21: secret reference
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[15]**
+**[8]**
 
 ```
 Continue from where you left off.
 ```
 
-**[16]**
+**[9]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -1289,241 +179,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:43
 
-**[17]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `missing-auth`: Weak candidate — only flag if no auth wrapper, no role check, AND user-controlled input reaches a sink.
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/routes/stripe.ts**
-    - [missing-auth] L31: HTTP entry point: router method handler (weak candidate)
-    - [process-env-access] L11: process.env.STRIPE_SECRET_KEY
-    - [process-env-access] L12: process.env.STRIPE_WEBHOOK_SECRET
-    - [process-env-access] L22: process.env.STRIPE_SUCCESS_URL
-    - [process-env-access] L23: process.env.STRIPE_CANCEL_URL
-- **apps/api/src/routes/admin.ts**
-    - [auth-bypass] L13: auth middleware
-    - [process-env-access] L16: process.env.STRIPE_SECRET_KEY
-    - [process-env-access] L26: process.env.STRIPE_SUCCESS_URL
-    - [process-env-access] L27: process.env.STRIPE_CANCEL_URL
-- **apps/api/src/routes/bookings.ts**
-    - [auth-bypass] L15: auth middleware
-    - [process-env-access] L19: process.env.STRIPE_SECRET_KEY
-    - [process-env-access] L38: process.env.STRIPE_SUCCESS_URL
-    - [process-env-access] L39: process.env.STRIPE_CANCEL_URL
-- **apps/api/src/routes/reviews.ts**
-    - [missing-auth] L20: HTTP entry point: router method handler (weak candidate)
-    - [missing-auth] L22: HTTP entry point: router method handler (weak candidate)
-    - [missing-auth] L33: HTTP entry point: router method handler (weak candidate)
-- **apps/api/src/routes/auth.ts**
-    - [auth-bypass] L7: auth middleware
-    - [process-env-access] L11: process.env.RESEND_API_KEY
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[18]**
+**[10]**
 
 ```
 Continue from where you left off.
 ```
 
-**[19]**
+**[11]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -1568,228 +230,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:43
 
-**[20]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-- `missing-auth`: Weak candidate — only flag if no auth wrapper, no role check, AND user-controlled input reaches a sink.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/routes/availability.ts**
-    - [auth-bypass] L6: auth middleware
-- **apps/api/src/routes/listing-photos.ts**
-    - [auth-bypass] L7: auth middleware
-- **apps/api/src/routes/listings.ts**
-    - [auth-bypass] L5: auth middleware
-- **apps/api/src/routes/search.ts**
-    - [missing-auth] L9: HTTP entry point: router method handler (weak candidate)
-- **apps/api/src/routes/users.ts**
-    - [auth-bypass] L6: auth middleware
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[21]**
+**[12]**
 
 ```
 Continue from where you left off.
 ```
 
-**[22]**
+**[13]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -1834,232 +281,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:43
 
-**[23]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-- `missing-auth`: Weak candidate — only flag if no auth wrapper, no role check, AND user-controlled input reaches a sink.
-- `path-traversal`: Flag if `path.join(root, userInput)` lacks a `path.resolve(...).startsWith(root)` containment check.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **packages/shared/src/schemas/auth.ts**
-    - [jwt-handling] L35: Token refresh logic (verify validation)
-- **packages/shared/src/schemas/listing.ts**
-    - [insecure-crypto] L13, 21: weak cipher algorithm
-- **apps/api/src/app.ts**
-    - [missing-auth] L45: HTTP entry point: app method handler (weak candidate)
-    - [path-traversal] L47: path.join with request-derived input
-    - [process-env-access] L32: process.env.CORS_ORIGIN
-    - [process-env-access] L43: process.env.R2_ACCOUNT_ID
-    - [fs-write-symlink-boundary] L47: fs write to path.join with req.* component
-- **apps/api/src/index.ts**
-    - [process-env-access] L3: process.env.PORT
-    - [process-env-access] L4: process.env.PORT
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[24]**
+**[14]**
 
 ```
 Continue from where you left off.
 ```
 
-**[25]**
+**[15]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -2103,232 +331,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:43
 
-**[26]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `xss`: Check escape state at every step; raw concat into HTML, JSON-in-script without `</`-escape, and ref.innerHTML are the usual sinks.
-- `open-redirect`: Flag only if there's no allowlist, origin check, or hash-only redirect; relative paths starting with `//` are still external.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/src/pages/ListingDetailPage.tsx**
-    - [xss] L178: template literal in HTML
-    - [insecure-crypto] L62, 105: weak cipher algorithm
-    - [open-redirect] L165: redirect URL parameter
-- **apps/web/src/pages/EditListingPage.tsx**
-    - [insecure-crypto] L15, 47, 75, 104, 240, 241, 244, 245, 366, 409: weak cipher algorithm
-    - [untrusted-redirect-following] L153: fetch(url) — default redirect: follow + caller-style URL
-- **apps/web/src/pages/HomePage.tsx**
-    - [xss] L180, 257, 318, 445, 474: template literal in HTML
-    - [insecure-crypto] L39, 50, 68, 73, 121, 220, 232, 259, 264, 305, 334, 338, 342, 346, 347, 353, 382, 457, 460, 498, 514, 587: weak cipher algorithm
-- **apps/web/src/pages/BookingCancelPage.tsx**
-    - [xss] L15: template literal in HTML
-- **apps/web/src/pages/BookingFormPage.tsx**
-    - [xss] L50, 155: template literal in HTML
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[27]**
+**[16]**
 
 ```
 Continue from where you left off.
 ```
 
-**[28]**
+**[17]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -2373,227 +382,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:43
 
-**[29]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `xss`: Check escape state at every step; raw concat into HTML, JSON-in-script without `</`-escape, and ref.innerHTML are the usual sinks.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/src/pages/HostListingsPage.tsx**
-    - [xss] L74: template literal in HTML
-- **apps/web/src/pages/AdminListingsPage.tsx**
-    - [insecure-crypto] L77: weak cipher algorithm
-- **apps/web/src/pages/AdminUsersPage.tsx**
-    - [insecure-crypto] L72: weak cipher algorithm
-- **apps/web/src/pages/CreateListingPage.tsx**
-    - [insecure-crypto] L14, 86, 104, 146, 164, 168, 171, 177, 222, 252, 253, 256, 257, 259, 263, 264, 278: weak cipher algorithm
-- **apps/web/src/pages/MyBookingsPage.tsx**
-    - [insecure-crypto] L141: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[30]**
+**[18]**
 
 ```
 Continue from where you left off.
 ```
 
-**[31]**
+**[19]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -2638,231 +433,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:44
 
-**[32]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `env-exposure`: Secrets reaching client bundles via `NEXT_PUBLIC_` / `VITE_` / build-time inlining — flag only if the env var holds a credential.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/.env**
-    - [env-exposure] L3: Secret value in committed .env file
-    - [env-exposure] L4: Secret value in committed .env file
-    - [env-exposure] L5: Secret value in committed .env file
-    - [env-exposure] L8: Secret value in committed .env file
-- **apps/api/.env.example**
-    - [env-exposure] L3: Secret value in committed .env file
-    - [env-exposure] L22: Secret value in committed .env file
-    - [env-exposure] L23: Secret value in committed .env file
-- **packages/db/prisma/seed.ts**
-    - [insecure-crypto] L15, 71, 80, 84, 96, 97, 98, 106, 110, 119: weak cipher algorithm
-    - [non-atomic-read-delete] L36: Read-then-modify without transaction — potential TOCTOU race
-    - [non-atomic-read-delete] L54: Read-then-modify without transaction — potential TOCTOU race
-    - [crypto-usage] L7: JS crypto library import
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[33]**
+**[20]**
 
 ```
 Continue from where you left off.
 ```
 
-**[34]**
+**[21]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -2905,230 +482,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:44
 
-**[35]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `xss`: Check escape state at every step; raw concat into HTML, JSON-in-script without `</`-escape, and ref.innerHTML are the usual sinks.
-- `env-exposure`: Secrets reaching client bundles via `NEXT_PUBLIC_` / `VITE_` / build-time inlining — flag only if the env var holds a credential.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/src/components/Layout.tsx**
-    - [xss] L161, 165, 170, 174: template literal in HTML
-    - [insecure-crypto] L67, 72, 76, 81, 160, 164, 169: weak cipher algorithm
-- **apps/web/src/components/CancelBookingModal.tsx**
-    - [insecure-crypto] L77: weak cipher algorithm
-- **apps/web/src/components/RoleGuard.tsx**
-    - [insecure-crypto] L13: weak cipher algorithm
-- **packages/db/.env**
-    - [env-exposure] L2: Secret value in committed .env file
-    - [env-exposure] L3: Secret value in committed .env file
-- **packages/shared/src/t.ts**
-    - [xss] L38: template literal in HTML
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[36]**
+**[22]**
 
 ```
 Continue from where you left off.
 ```
 
-**[37]**
+**[23]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -3173,265 +533,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:44
 
-**[38]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `dev-auth-bypass`: `if (env === 'dev') return adminUser` patterns — verify the env check can't be tricked, and that the path isn't reachable in prod.
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-- `secret-in-log`: Logging full headers, request bodies, or error objects can leak Authorization tokens; flag if the log destination is durable.
-- `secret-env-var`: Direct env var reads in client-bundled code (NEXT_PUBLIC_*) are the bug — confirm the file isn't server-only.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/services/storage.service.ts**
-    - [dev-auth-bypass] L13: Auth conditional on isDev/isTest flag — fails open risk
-    - [dev-auth-bypass] L28: Auth conditional on isDev/isTest flag — fails open risk
-    - [dev-auth-bypass] L40: Auth conditional on isDev/isTest flag — fails open risk
-    - [process-env-access] L4: process.env.CLOUDFLARE_R2_ACCOUNT_ID
-    - [process-env-access] L5: process.env.API_BASE_URL
-    - [process-env-access] L16: process.env.CLOUDFLARE_R2_ENDPOINT
-    - [process-env-access] L18: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
-    - [process-env-access] L19: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
-    - [process-env-access] L22: process.env.CLOUDFLARE_R2_BUCKET_NAME
-    - [process-env-access] L23: process.env.CLOUDFLARE_R2_PUBLIC_URL
-- **apps/api/src/services/token.service.ts**
-    - [auth-bypass] L56: auth middleware
-    - [jwt-handling] L32: JWT verification (verify algorithm pinning)
-    - [jwt-handling] L28: JWT signing (verify key management)
-    - [secret-in-log] L23: Secret variable in error response
-    - [secret-env-var] L22: Secret env var access
-    - [algorithm-confusion] L32: JWT verification WITHOUT algorithm pinning — algorithm confusion risk
-    - [env-var-as-bool] L22: Secret env var used as boolean
-    - [process-env-access] L22: process.env.JWT_SECRET
-    - [crypto-usage] L1, 2, 28, 32, 38, 48: Node crypto import, JS crypto library import, JWT sign/verify, Node randomBytes, Node crypto.create*
-- **apps/api/src/services/auth.service.ts**
-    - [insecure-crypto] L9, 249: weak cipher algorithm
-    - [jwt-handling] L26, 39, 175, 186, 224, 230, 232: Token refresh logic (verify validation)
-    - [secret-in-log] L244: Secret variable in log statement
-    - [unverified-lookup] L209: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L245: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L275: DB lookup by ID without ownership check in next 15 lines
-    - [crypto-usage] L1, 2, 91, 117, 118: JS crypto library import, Node crypto import, Node crypto.create*, Node randomBytes
-- **apps/api/src/services/booking.service.ts**
-    - [insecure-crypto] L65: weak cipher algorithm
-    - [unverified-lookup] L83: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L125: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L153: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L169: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L170: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L171: DB lookup by ID without ownership check in next 15 lines
-- **apps/api/src/services/payment.service.ts**
-    - [insecure-crypto] L35: weak cipher algorithm
-    - [unverified-lookup] L55: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L69: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L122: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L123: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L124: DB lookup by ID without ownership check in next 15 lines
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[39]**
+**[24]**
 
 ```
 Continue from where you left off.
 ```
 
-**[40]**
+**[25]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -3476,227 +584,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:44
 
-**[41]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/playwright.config.ts**
-    - [insecure-crypto] L17: weak cipher algorithm
-    - [process-env-access] L6: process.env.CI
-    - [process-env-access] L7: process.env.CI
-    - [process-env-access] L8: process.env.CI
-    - [process-env-access] L23: process.env.CI
-- **apps/api/src/middleware/require-role.ts**
-    - [insecure-crypto] L15: weak cipher algorithm
-- **packages/config/eslint.config.js**
-    - [insecure-crypto] L8: weak cipher algorithm
-- **packages/config/tailwind.preset.js**
-    - [insecure-crypto] L5: weak cipher algorithm
-- **packages/shared/src/strings/en.ts**
-    - [insecure-crypto] L251: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[42]**
+**[26]**
 
 ```
 Continue from where you left off.
 ```
 
-**[43]**
+**[27]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -3741,215 +635,13 @@ Use this exact schema:
 
 ## Session — 2026-07-17 11:44
 
-**[44]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **packages/ui/src/components/button.tsx**
-    - [insecure-crypto] L17, 26: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[45]**
+**[28]**
 
 ```
 Continue from where you left off.
 ```
 
-**[46]**
+**[29]**
 
 ```
 Your previous response was not valid JSON, so the scanner could not parse it.
@@ -3988,4125 +680,154 @@ Use this exact schema:
 
 ---
 
-## Session — 2026-07-17 11:44
-
-**[47]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/repositories/user.repository.ts**
-    - [jwt-handling] L69, 80, 87, 91, 103, 108: Token refresh logic (verify validation)
-    - [unverified-lookup] L42: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L45: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L46: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L80: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L131: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L145: DB lookup by ID without ownership check in next 15 lines
-    - [missing-await] L52: prisma call without await
-    - [missing-await] L60: prisma call without await
-    - [missing-await] L87: prisma call without await
-    - [missing-await] L91: prisma call without await
-    - [missing-await] L136: prisma call without await
-    - [missing-await] L137: prisma call without await
-- **apps/api/src/repositories/booking.repository.ts**
-    - [insecure-crypto] L55, 104: weak cipher algorithm
-    - [unverified-lookup] L42: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L43: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L104: DB lookup by ID without ownership check in next 15 lines
-- **apps/api/src/repositories/listing.repository.ts**
-    - [insecure-crypto] L11, 34, 35, 36, 42, 48, 74, 86, 90, 96, 100: weak cipher algorithm
-    - [unverified-lookup] L54: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L55: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L59: DB lookup by ID without ownership check in next 15 lines
-- **apps/api/src/repositories/availability.repository.ts**
-    - [unverified-lookup] L27: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L28: DB lookup by ID without ownership check in next 15 lines
-    - [non-atomic-read-delete] L28: Read-then-modify without transaction — potential TOCTOU race
-- **apps/api/src/repositories/listing-photo.repository.ts**
-    - [unverified-lookup] L20: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L21: DB lookup by ID without ownership check in next 15 lines
-    - [non-atomic-read-delete] L21: Read-then-modify without transaction — potential TOCTOU race
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[48]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 11:44
-
-**[49]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-- `secret-in-log`: Logging full headers, request bodies, or error objects can leak Authorization tokens; flag if the log destination is durable.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/src/api/auth.ts**
-    - [jwt-handling] L11, 28, 31, 34, 37: Token refresh logic (verify validation)
-    - [secret-in-log] L19: Secret variable in log statement
-    - [secret-in-log] L25: Secret variable in log statement
-    - [secret-in-log] L31: Secret variable in log statement
-    - [secret-in-log] L37: Secret variable in log statement
-    - [secret-in-log] L46: Secret variable in log statement
-- **apps/web/src/api/client.ts**
-    - [secret-in-log] L28: Secret variable in log statement
-- **apps/web/src/api/host.ts**
-    - [insecure-crypto] L10, 20, 28: weak cipher algorithm
-- **apps/web/src/api/listings.ts**
-    - [insecure-crypto] L10: weak cipher algorithm
-- **apps/web/src/contexts/auth.tsx**
-    - [jwt-handling] L48, 50, 60, 62, 67, 69: Token refresh logic (verify validation)
-    - [secret-in-log] L48: Secret variable in log statement
-    - [secret-in-log] L60: Secret variable in log statement
-    - [secret-in-log] L67: Secret variable in log statement
-    - [secret-in-log] L75: Secret variable in log statement
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[50]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 11:44
-
-**[51]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `non-atomic-operation`: Read-then-write patterns without a lock / transaction / atomic op are TOCTOU; flag only if the resource is shared across requests.
-- `secret-in-log`: Logging full headers, request bodies, or error objects can leak Authorization tokens; flag if the log destination is durable.
-- `xss`: Check escape state at every step; raw concat into HTML, JSON-in-script without `</`-escape, and ref.innerHTML are the usual sinks.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/services/listing-photo.service.ts**
-    - [unverified-lookup] L67: DB lookup by ID without ownership check in next 15 lines
-    - [non-atomic-operation] L67: Read-then-write without transaction — verify atomicity
-    - [non-atomic-operation] L74: Read-then-write without transaction — verify atomicity
-    - [crypto-usage] L1, 39: Node crypto import, Node randomUUID
-- **apps/api/src/services/review.service.ts**
-    - [insecure-crypto] L35: weak cipher algorithm
-    - [unverified-lookup] L51: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L76: DB lookup by ID without ownership check in next 15 lines
-- **apps/api/src/services/email.service.ts**
-    - [secret-in-log] L36: Secret variable in log statement
-- **apps/api/src/services/resend.service.ts**
-    - [xss] L23, 32, 33, 34, 35, 45, 46, 47, 55, 56, 57: template literal in HTML
-    - [process-env-access] L8: process.env.EMAIL_FROM
-    - [process-env-access] L23: process.env.APP_URL
-- **apps/api/src/services/availability.service.ts**
-    - [insecure-crypto] L40: weak cipher algorithm
-    - [non-atomic-operation] L86: Read-then-write without transaction — verify atomicity
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[52]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 11:56
-
-**[53]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `env-exposure`: Secrets reaching client bundles via `NEXT_PUBLIC_` / `VITE_` / build-time inlining — flag only if the env var holds a credential.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **Dockerfile**
-    - [dockerfile-from-mutable-tag] L1, 36: FROM without @sha256 digest
-    - [dockerfile-run-as-root] L36: Final stage has no USER directive
-- **.env.example**
-    - [env-exposure] L8: Secret value in committed .env file
-    - [env-exposure] L18: Secret value in committed .env file
-    - [env-exposure] L19: Secret value in committed .env file
-- **.github/workflows/ci.yml**
-    - [github-workflow-security] L35, 42, 82, 85, 108: unpinned action ref (branch/major-tag)
-- **.github/workflows/deploy.yml**
-    - [github-workflow-security] L19, 21: secret reference
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[54]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 11:57
-
-**[55]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/controllers/listing.controller.ts**
-    - [auth-bypass] L10: auth middleware
-- **apps/api/src/controllers/payment.controller.ts**
-    - [auth-bypass] L10: auth middleware
-- **apps/api/src/controllers/review.controller.ts**
-    - [auth-bypass] L10: auth middleware
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[56]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 11:59
-
-**[57]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `missing-auth`: Weak candidate — only flag if no auth wrapper, no role check, AND user-controlled input reaches a sink.
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/routes/stripe.ts**
-    - [missing-auth] L31: HTTP entry point: router method handler (weak candidate)
-    - [process-env-access] L11: process.env.STRIPE_SECRET_KEY
-    - [process-env-access] L12: process.env.STRIPE_WEBHOOK_SECRET
-    - [process-env-access] L22: process.env.STRIPE_SUCCESS_URL
-    - [process-env-access] L23: process.env.STRIPE_CANCEL_URL
-- **apps/api/src/routes/admin.ts**
-    - [auth-bypass] L13: auth middleware
-    - [process-env-access] L16: process.env.STRIPE_SECRET_KEY
-    - [process-env-access] L26: process.env.STRIPE_SUCCESS_URL
-    - [process-env-access] L27: process.env.STRIPE_CANCEL_URL
-- **apps/api/src/routes/bookings.ts**
-    - [auth-bypass] L15: auth middleware
-    - [process-env-access] L19: process.env.STRIPE_SECRET_KEY
-    - [process-env-access] L38: process.env.STRIPE_SUCCESS_URL
-    - [process-env-access] L39: process.env.STRIPE_CANCEL_URL
-- **apps/api/src/routes/reviews.ts**
-    - [missing-auth] L20: HTTP entry point: router method handler (weak candidate)
-    - [missing-auth] L22: HTTP entry point: router method handler (weak candidate)
-    - [missing-auth] L33: HTTP entry point: router method handler (weak candidate)
-- **apps/api/src/routes/auth.ts**
-    - [auth-bypass] L7: auth middleware
-    - [process-env-access] L11: process.env.RESEND_API_KEY
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[58]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:00
-
-**[59]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/controllers/auth.controller.ts**
-    - [auth-bypass] L17: auth middleware
-    - [jwt-handling] L116, 136: Token refresh logic (verify validation)
-- **apps/api/src/controllers/admin-moderation.controller.ts**
-    - [auth-bypass] L3: auth middleware
-- **apps/api/src/controllers/availability.controller.ts**
-    - [auth-bypass] L10: auth middleware
-- **apps/api/src/controllers/booking.controller.ts**
-    - [auth-bypass] L17: auth middleware
-- **apps/api/src/controllers/listing-photo.controller.ts**
-    - [auth-bypass] L14: auth middleware
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[60]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:01
-
-**[61]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-- `missing-auth`: Weak candidate — only flag if no auth wrapper, no role check, AND user-controlled input reaches a sink.
-- `path-traversal`: Flag if `path.join(root, userInput)` lacks a `path.resolve(...).startsWith(root)` containment check.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **packages/shared/src/schemas/auth.ts**
-    - [jwt-handling] L35: Token refresh logic (verify validation)
-- **packages/shared/src/schemas/listing.ts**
-    - [insecure-crypto] L13, 21: weak cipher algorithm
-- **apps/api/src/app.ts**
-    - [missing-auth] L45: HTTP entry point: app method handler (weak candidate)
-    - [path-traversal] L47: path.join with request-derived input
-    - [process-env-access] L32: process.env.CORS_ORIGIN
-    - [process-env-access] L43: process.env.R2_ACCOUNT_ID
-    - [fs-write-symlink-boundary] L47: fs write to path.join with req.* component
-- **apps/api/src/index.ts**
-    - [process-env-access] L3: process.env.PORT
-    - [process-env-access] L4: process.env.PORT
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[62]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:02
-
-**[63]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-- `missing-auth`: Weak candidate — only flag if no auth wrapper, no role check, AND user-controlled input reaches a sink.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/routes/availability.ts**
-    - [auth-bypass] L6: auth middleware
-- **apps/api/src/routes/listing-photos.ts**
-    - [auth-bypass] L7: auth middleware
-- **apps/api/src/routes/listings.ts**
-    - [auth-bypass] L5: auth middleware
-- **apps/api/src/routes/search.ts**
-    - [missing-auth] L9: HTTP entry point: router method handler (weak candidate)
-- **apps/api/src/routes/users.ts**
-    - [auth-bypass] L6: auth middleware
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[64]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:02
-
-**[65]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `xss`: Check escape state at every step; raw concat into HTML, JSON-in-script without `</`-escape, and ref.innerHTML are the usual sinks.
-- `open-redirect`: Flag only if there's no allowlist, origin check, or hash-only redirect; relative paths starting with `//` are still external.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/src/pages/ListingDetailPage.tsx**
-    - [xss] L178: template literal in HTML
-    - [insecure-crypto] L62, 105: weak cipher algorithm
-    - [open-redirect] L165: redirect URL parameter
-- **apps/web/src/pages/EditListingPage.tsx**
-    - [insecure-crypto] L15, 47, 75, 104, 240, 241, 244, 245, 366, 409: weak cipher algorithm
-    - [untrusted-redirect-following] L153: fetch(url) — default redirect: follow + caller-style URL
-- **apps/web/src/pages/HomePage.tsx**
-    - [xss] L180, 257, 318, 445, 474: template literal in HTML
-    - [insecure-crypto] L39, 50, 68, 73, 121, 220, 232, 259, 264, 305, 334, 338, 342, 346, 347, 353, 382, 457, 460, 498, 514, 587: weak cipher algorithm
-- **apps/web/src/pages/BookingCancelPage.tsx**
-    - [xss] L15: template literal in HTML
-- **apps/web/src/pages/BookingFormPage.tsx**
-    - [xss] L50, 155: template literal in HTML
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[66]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:02
-
-**[67]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `xss`: Check escape state at every step; raw concat into HTML, JSON-in-script without `</`-escape, and ref.innerHTML are the usual sinks.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/src/pages/HostListingsPage.tsx**
-    - [xss] L74: template literal in HTML
-- **apps/web/src/pages/AdminListingsPage.tsx**
-    - [insecure-crypto] L77: weak cipher algorithm
-- **apps/web/src/pages/AdminUsersPage.tsx**
-    - [insecure-crypto] L72: weak cipher algorithm
-- **apps/web/src/pages/CreateListingPage.tsx**
-    - [insecure-crypto] L14, 86, 104, 146, 164, 168, 171, 177, 222, 252, 253, 256, 257, 259, 263, 264, 278: weak cipher algorithm
-- **apps/web/src/pages/MyBookingsPage.tsx**
-    - [insecure-crypto] L141: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[68]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:02
-
-**[69]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **packages/ui/src/components/button.tsx**
-    - [insecure-crypto] L17, 26: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[70]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:03
-
-**[71]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `dev-auth-bypass`: `if (env === 'dev') return adminUser` patterns — verify the env check can't be tricked, and that the path isn't reachable in prod.
-- `auth-bypass`: Look for inverted booleans, early returns that skip checks, and `if (process.env.X) skipAuth()` patterns.
-- `jwt-handling`: Look for `algorithm: 'none'`, missing `algorithms: ['HS256']` pinning, or skipping `verify()` in dev branches.
-- `secret-in-log`: Logging full headers, request bodies, or error objects can leak Authorization tokens; flag if the log destination is durable.
-- `secret-env-var`: Direct env var reads in client-bundled code (NEXT_PUBLIC_*) are the bug — confirm the file isn't server-only.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/src/services/storage.service.ts**
-    - [dev-auth-bypass] L13: Auth conditional on isDev/isTest flag — fails open risk
-    - [dev-auth-bypass] L28: Auth conditional on isDev/isTest flag — fails open risk
-    - [dev-auth-bypass] L40: Auth conditional on isDev/isTest flag — fails open risk
-    - [process-env-access] L4: process.env.CLOUDFLARE_R2_ACCOUNT_ID
-    - [process-env-access] L5: process.env.API_BASE_URL
-    - [process-env-access] L16: process.env.CLOUDFLARE_R2_ENDPOINT
-    - [process-env-access] L18: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
-    - [process-env-access] L19: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
-    - [process-env-access] L22: process.env.CLOUDFLARE_R2_BUCKET_NAME
-    - [process-env-access] L23: process.env.CLOUDFLARE_R2_PUBLIC_URL
-- **apps/api/src/services/token.service.ts**
-    - [auth-bypass] L56: auth middleware
-    - [jwt-handling] L32: JWT verification (verify algorithm pinning)
-    - [jwt-handling] L28: JWT signing (verify key management)
-    - [secret-in-log] L23: Secret variable in error response
-    - [secret-env-var] L22: Secret env var access
-    - [algorithm-confusion] L32: JWT verification WITHOUT algorithm pinning — algorithm confusion risk
-    - [env-var-as-bool] L22: Secret env var used as boolean
-    - [process-env-access] L22: process.env.JWT_SECRET
-    - [crypto-usage] L1, 2, 28, 32, 38, 48: Node crypto import, JS crypto library import, JWT sign/verify, Node randomBytes, Node crypto.create*
-- **apps/api/src/services/auth.service.ts**
-    - [insecure-crypto] L9, 249: weak cipher algorithm
-    - [jwt-handling] L26, 39, 175, 186, 224, 230, 232: Token refresh logic (verify validation)
-    - [secret-in-log] L244: Secret variable in log statement
-    - [unverified-lookup] L209: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L245: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L275: DB lookup by ID without ownership check in next 15 lines
-    - [crypto-usage] L1, 2, 91, 117, 118: JS crypto library import, Node crypto import, Node crypto.create*, Node randomBytes
-- **apps/api/src/services/booking.service.ts**
-    - [insecure-crypto] L65: weak cipher algorithm
-    - [unverified-lookup] L83: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L125: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L153: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L169: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L170: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L171: DB lookup by ID without ownership check in next 15 lines
-- **apps/api/src/services/payment.service.ts**
-    - [insecure-crypto] L35: weak cipher algorithm
-    - [unverified-lookup] L55: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L69: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L122: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L123: DB lookup by ID without ownership check in next 15 lines
-    - [unverified-lookup] L124: DB lookup by ID without ownership check in next 15 lines
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[72]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:03
-
-**[73]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `env-exposure`: Secrets reaching client bundles via `NEXT_PUBLIC_` / `VITE_` / build-time inlining — flag only if the env var holds a credential.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/api/.env**
-    - [env-exposure] L3: Secret value in committed .env file
-    - [env-exposure] L4: Secret value in committed .env file
-    - [env-exposure] L5: Secret value in committed .env file
-    - [env-exposure] L8: Secret value in committed .env file
-- **apps/api/.env.example**
-    - [env-exposure] L3: Secret value in committed .env file
-    - [env-exposure] L22: Secret value in committed .env file
-    - [env-exposure] L23: Secret value in committed .env file
-- **packages/db/prisma/seed.ts**
-    - [insecure-crypto] L15, 71, 80, 84, 96, 97, 98, 106, 110, 119: weak cipher algorithm
-    - [non-atomic-read-delete] L36: Read-then-modify without transaction — potential TOCTOU race
-    - [non-atomic-read-delete] L54: Read-then-modify without transaction — potential TOCTOU race
-    - [crypto-usage] L7: JS crypto library import
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[74]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:04
-
-**[75]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
-## Slug-specific reviewer notes
-
-- `xss`: Check escape state at every step; raw concat into HTML, JSON-in-script without `</`-escape, and ref.innerHTML are the usual sinks.
-- `env-exposure`: Secrets reaching client bundles via `NEXT_PUBLIC_` / `VITE_` / build-time inlining — flag only if the env var holds a credential.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/src/components/Layout.tsx**
-    - [xss] L161, 165, 170, 174: template literal in HTML
-    - [insecure-crypto] L67, 72, 76, 81, 160, 164, 169: weak cipher algorithm
-- **apps/web/src/components/CancelBookingModal.tsx**
-    - [insecure-crypto] L77: weak cipher algorithm
-- **apps/web/src/components/RoleGuard.tsx**
-    - [insecure-crypto] L13: weak cipher algorithm
-- **packages/db/.env**
-    - [env-exposure] L2: Secret value in committed .env file
-    - [env-exposure] L3: Secret value in committed .env file
-- **packages/shared/src/t.ts**
-    - [xss] L38: template literal in HTML
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[76]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
-## Session — 2026-07-17 12:04
-
-**[77]**
-
-```
-You are a world-class security researcher with deep expertise in web application security, authentication systems, and modern application frameworks across many languages. You think like an attacker: you look for subtle logic flaws, not just textbook vulnerabilities. You have a track record of finding bugs that automated tools miss — race conditions, auth bypasses via parameter manipulation, and trust boundary violations.
-
-An automated scanner has identified these files as **candidates** worth investigating. The scanner uses regex and heuristic patterns to cast a wide net — many candidates will be false positives, but some will be real vulnerabilities. Your job is to perform a thorough, open-ended security review. Use the flagged patterns as starting points, then investigate each file for ANY security issue you can find — especially the subtle ones that only an expert would catch.
-
-**Static analysis only.** Do NOT attempt to reproduce, exploit, or trigger any vulnerability. Do not run the target code, send requests against any endpoint, or execute proof-of-concept scripts. Review the source code only.
-
-## Severity Classification
-
-Security severities (exploitable by an attacker):
-- **CRITICAL**: Remote Code Execution (RCE), authentication bypass allowing full access, SQL injection on sensitive data, unrestricted file upload leading to RCE, SSRF to internal services
-- **HIGH**: Cross-Site Scripting (XSS), Server-Side Request Forgery (SSRF), privilege escalation, hardcoded secrets/credentials in source code, insecure deserialization, missing authorization on sensitive operations
-- **MEDIUM**: Open redirect, weak cryptographic algorithms, missing rate limiting, information disclosure, insecure direct object references, race conditions, logic bugs in auth/permission checks
-
-Non-security bugs worth reporting alongside security findings:
-- **HIGH_BUG**: Major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG**: Notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-## Known Vulnerability Categories
-
-The scanner looks for these patterns, but you should look for ALL of them regardless of what the scanner flagged:
-
-| Slug | Category |
-|------|----------|
-| auth-bypass | Authentication checks that can be circumvented |
-| missing-auth | HTTP endpoints without authentication |
-| acl-check | Missing or incorrect RBAC/permission checks |
-| xss | Cross-site scripting via innerHTML, dangerouslySetInnerHTML, etc. |
-| dangerous-html | Unsafe HTML rendering with user-controlled data |
-| rce | Remote code execution via exec, eval, spawn, etc. |
-| sql-injection | SQL injection via string interpolation/concatenation |
-| ssrf | Server-side request forgery via user-controlled URLs |
-| path-traversal | File operations with user-controlled paths |
-| secrets-exposure | Hardcoded API keys, tokens, passwords |
-| insecure-crypto | Weak hash algorithms, insecure random generation |
-| open-redirect | Redirects to user-controlled URLs |
-| unsafe-redirect | Redirects bypassing validation functions |
-| public-endpoint | Public endpoints exposing sensitive data without auth |
-| service-entry-point | Service handlers that may lack proper auth |
-| webhook-handler | Webhook endpoints without signature verification |
-| iam-permissions | Misconfigured IAM Action/Resource permissions |
-| jwt-handling | JWT signing/verification misconfigurations |
-| env-exposure | Secrets leaking to client bundles |
-| rate-limit-bypass | Sensitive operations without rate limiting |
-| cache-key-poisoning | Cache keys including attacker-controlled values |
-| secret-env-var | Direct access to secret environment variables |
-| cross-tenant-id | User-supplied IDs in DB lookups without ownership check |
-| secret-in-fallback | Secret env vars with hardcoded fallback values |
-| secret-in-log | Credentials in log statements or error responses |
-| expensive-api-abuse | Endpoints calling expensive APIs (LLM, AI, paid services) without abuse protection |
-| other-* | Any other vulnerability not listed above (use descriptive suffix) |
-
-## False Positive Guidance
-
-Before classifying an issue, check for mitigations:
-- Is the input sanitized or escaped before use? (parameterized queries, HTML escaping)
-- Is there middleware or a framework guard that protects this code path?
-- Is the vulnerable pattern only used with trusted/internal data, not user input?
-- For auth checks: only middleware that *wraps the handler directly* counts (Express middleware, Fastify hooks, NestJS guards, Spring filters, Rails before_action, Django decorators, FastAPI Depends). Edge/proxy/CDN/WAF rules and front-of-stack middleware that runs BEFORE the handler are NOT sufficient on their own — too easy to misconfigure or bypass via routes that escape the matcher.
-- For redirects: is there an explicit allowlist or origin check before the redirect?
-
-If fully mitigated, do NOT flag it. Report only genuine, exploitable vulnerabilities.
-
-## Auth Bypass Patterns to Look For
-
-Beyond missing auth, look for **subtle bypasses** in code that appears to have auth:
-
-### Query String & URL Manipulation
-- **Parameter pollution**: Can duplicate query params (e.g., `?teamId=x&teamId=y`) change behavior or bypass checks?
-- **Encoded characters**: Does the app handle URL-encoded, double-encoded, or Unicode-normalized paths correctly? (`%2F` vs `/`, `%00` null bytes)
-- **Route param injection**: Can dynamic route segments be manipulated to access other users' data?
-- **Token refresh abuse**: Query params that force token refreshes — are they rate-limited?
-
-### Auth Flow Bypasses
-- **OAuth callback manipulation**: State parameter tampering, redirect_uri manipulation, custom URI scheme injection
-- **Session/JWT weaknesses**: Missing algorithm pinning, stub sessions when auth not configured, test tokens reachable in prod
-- **Header injection**: Auth headers like `X-Forwarded-For`, `Authorization`, custom `x-*` tokens — are they validated or trusted blindly?
-
-### Authorization Gaps (has auth, wrong auth)
-- **Cross-tenant access**: User-supplied `teamId`/`userId` used in DB queries instead of the authenticated identity
-- **Missing resource-level checks**: Auth confirms "user is logged in" but doesn't verify "user owns this resource"
-- **Negated permission checks**: `!(await auth.can(...))` with inverted logic
-
-## Out-of-scope files
-
-Skip files that are gitignored, generated, vendored, or not production code. If a file is in `dist/`, `node_modules/`, `vendor/`, `generated/`, or matches `.gitignore`, return an empty findings array for it.
-
----
-
-# NomadHome
-
-## What this codebase does
-
-Co-living and workspace marketplace SaaS. TypeScript strict monorepo: `apps/api`
-(Node.js + Express, layered DDD) and `apps/web` (React + Vite SPA). Guests search
-and book properties/workspaces; hosts create/publish listings; admins moderate.
-Payments via Stripe Checkout (hosted — no card data touches the API); email via
-Resend; photo uploads via signed PUT URLs direct to R2/S3 (bytes never flow through
-the API). PostgreSQL with `btree_gist` + an EXCLUDE constraint on `AvailabilityBlock`
-enforces no overlapping bookings at the DB level.
-
-## Auth shape
-
-- `requireAuth` — verifies Bearer JWT from `Authorization` header, populates
-  `req.user: { id, roles }`. **Does NOT hit the DB** — a recently disabled user
-  with a valid non-expired access token can still pass this check until expiry.
-- `requireRole(...roles)` — RBAC factory applied after `requireAuth`; checks
-  `req.user.roles` array (values: `guest`, `host`, `admin`).
-- `tokenService.verifyAccessToken` — underlying JWT verification.
-- Refresh tokens stored as `tokenHash` (hashed before persist); revoked in bulk
-  when a user is disabled (admin cascade).
-- `disabledAt` is enforced at the refresh endpoint, not on every request.
-
-## Threat model
-
-- A compromised host account can publish listings and collect Stripe payments;
-  IDOR on listing mutations (host accessing another host's listing) is the
-  primary lateral-movement vector.
-- Stripe webhook spoofing: mitigated by `stripe.webhooks.constructEvent` signature
-  verification. The webhook route is mounted **before** `express.json()` to
-  preserve the raw body.
-- Admin disable cascade must atomically hide listings and flag confirmed bookings;
-  partial failures would leave guests holding valid bookings for hidden listings.
-- Snapshot immutability: booking fee columns (`nightlyRateCents`, `*FeeBps`,
-  `*FeeCents`, `currency`) must never be updated after insert — any UPDATE on these
-  columns is a financial integrity bug.
-
-## Project-specific patterns to flag
-
-- **IDOR on listing mutations**: host routes should filter `where: { id, hostId: req.user.id }`.
-  A missing `hostId` constraint in a Prisma query gives any authenticated host
-  read/write access to every listing.
-- **Role gate on `/users/me/become-host`**: adds the `host` role. Should verify
-  `emailVerifiedAt` is non-null before granting. Flag if that check is absent.
-- **Disabled-user window**: `requireAuth` does not check `disabledAt` — endpoints
-  where a disabled user must be rejected immediately (e.g., listing mutations,
-  booking creation) need an explicit DB lookup or a very short access-token TTL.
-- **Webhook route ordering**: `/stripe/webhook` is mounted before `express.json()`.
-  Any new route on `/stripe/*` added after `express.json()` will receive a consumed
-  body and fail signature verification silently.
-- **Booking hold lifecycle**: `BOOKING_HOLD` rows must be deleted on cancellation
-  and `checkout.session.expired`. An orphaned hold permanently blocks those dates.
-
-## Known false-positives
-
-- `/dev-upload/:key` — `express.raw` handler writing files to `uploads/`; active
-  **only when `R2_ACCOUNT_ID` is absent** (local dev stub). Not a prod path.
-- `/health` — intentionally public, no auth.
-- `apps/web/e2e/helpers/auth.ts` and all `apps/web/e2e/` — Playwright test
-  fixtures; `localStorage.setItem("nh_refresh_token", ...)` is not production code.
-- `packages/db/prisma/seed.ts` — may contain hardcoded admin credentials; dev/CI
-  seed only, never deployed with prod secrets.
-
-## Target Files
-
-- **apps/web/playwright.config.ts**
-    - [insecure-crypto] L17: weak cipher algorithm
-    - [process-env-access] L6: process.env.CI
-    - [process-env-access] L7: process.env.CI
-    - [process-env-access] L8: process.env.CI
-    - [process-env-access] L23: process.env.CI
-- **apps/api/src/middleware/require-role.ts**
-    - [insecure-crypto] L15: weak cipher algorithm
-- **packages/config/eslint.config.js**
-    - [insecure-crypto] L8: weak cipher algorithm
-- **packages/config/tailwind.preset.js**
-    - [insecure-crypto] L5: weak cipher algorithm
-- **packages/shared/src/strings/en.ts**
-    - [insecure-crypto] L251: weak cipher algorithm
-
-## Investigation Instructions
-
-For each file:
-1. **Read the file fully** using the Read tool
-2. **Trace data flows** — where does input come from? Is it user-controlled?
-3. **Follow imports** — read related files (middleware, utils, shared libs) to understand the full picture
-4. **Check for mitigations** — is there sanitization, validation, auth middleware, or framework protection?
-5. **Think broadly** — look for issues beyond what the scanner flagged. The scanner only finds surface patterns; you should reason about logic bugs, race conditions, missing checks, etc.
-
-## Output Format
-
-After your investigation, output a JSON block with your findings for EACH file. Use this exact format:
-
-~~~json
-[
-  {
-    "filePath": "relative/path/to/file.ts",
-    "findings": [
-      {
-        "severity": "CRITICAL|HIGH|MEDIUM|HIGH_BUG|BUG",
-        "vulnSlug": "the-vuln-slug-or-other",
-        "title": "Brief title of the issue",
-        "description": "Detailed description of the vulnerability, the attack scenario, and evidence from the code",
-        "lineNumbers": [10, 15],
-        "recommendation": "How to fix this vulnerability",
-        "confidence": "high|medium|low"
-      }
-    ]
-  }
-]
-~~~
-
-**Severity levels:**
-- **CRITICAL / HIGH / MEDIUM** — security vulnerabilities (exploitable by an attacker)
-- **HIGH_BUG** — major non-security bugs that could cause data loss, corruption, outages, or seriously broken behavior
-- **BUG** — notable non-security bugs (logic errors, race conditions, resource leaks) that don't rise to HIGH_BUG
-
-**vulnSlug** can be any of the known categories OR a custom slug for issues not covered by the scanner. Use `"other"` as the slug prefix for novel findings (e.g., `"other-race-condition"`, `"other-logic-bug"`, `"other-info-disclosure"`).
-
-If a file has no real vulnerabilities after thorough investigation, include it with an empty findings array.
-```
-
-**[78]**
-
-```
-Before we wrap up, I want to check on one thing.
-
-Looking back at the investigation you just completed: was there anything you declined to fully analyze, refused to look at, or skipped because the content or the task made you uncomfortable or felt out of scope?
-
-Be candid — this is for internal QA of the scanner. Partial analysis is fine to report here. A "no" is also a totally valid answer if you investigated everything requested.
-
-Reply with ONLY a JSON object, no prose before or after:
-
-~~~json
-{
-  "refused": true | false,
-  "reason": "short overall explanation, or null",
-  "skipped": [
-    { "filePath": "relative/path.ts", "reason": "why you didn't fully analyze this" }
-  ]
-}
-~~~
-
-If you analyzed everything normally, return `{"refused": false, "skipped": []}`.
-```
-
----
-
 ## Session — 2026-07-19 12:36
 
-**[79]**
+**[30]**
 
 ```
 can we resolve Finding 2 in adversarial-review.md?
 ```
 
-**[80]**
+**[31]**
 
 ```
 sorry, can you explain me what are you awaiting from me? related to: Awaiting from you (combined Gate 1 + Gate 2)
 Proposal + delta spec for bootstrap-capability-specs are ready at openspec/changes/bootstrap-capability-specs/. openspec validate --strict ✅. 10 capabilities, 30 requirements, 53 scenarios drafted from PRD §8. Approve proposal + specs and proceed to commit + open PR? (yes / changes / cancel)
 ```
 
-**[81]**
+**[32]**
 
 ```
 yes
 ```
 
-**[82]**
+**[33]**
 
 ```
 install gh
 ```
 
-**[83]**
+**[34]**
 
 ```
 I have connected gh to github, you can continue.
 ```
 
-**[84]**
+**[35]**
 
 ```
 the pr is merged now
 ```
 
-**[85]**
+**[36]**
 
 ```
 can you check if finding 1 of  adversarial-review.md is completed?
 ```
 
-**[86]**
+**[37]**
 
 ```
 can you apply the suggested moves?
 ```
 
-**[87]**
+**[38]**
 
 ```
 can we work with finding 4?
 ```
 
-**[88]**
+**[39]**
 
 ```
 all the PR's are now merged in MAIN branch, can we follow working in Finding 5 in a dedicated branch?
 ```
 
-**[89]**
+**[40]**
 
 ```
 all the PR's are now merged in MAIN branch, can we follow working in Finding 6 in a dedicated branch? please make commits related to a logical change each one.
 ```
 
-**[90]**
+**[41]**
 
 ```
 all the PR's are now merged in MAIN branch, can we follow working in Finding 7 in a dedicated branch? please make commits related to a logical change each one.
 ```
 
-**[91]**
+**[42]**
 
 ```
 yes please, all pr are merged now in main.
 ```
 
-**[92]**
+**[43]**
 
 ```
 yes please, all pr are merged now in main.
 ```
 
-**[93]**
+**[44]**
 
 ```
 yes please, all pr's are already merged in main.
 ```
 
-**[94]**
+**[45]**
 
 ```
 yes please, all pr's are already merged in main.
 ```
 
-**[95]**
+**[46]**
 
 ```
 yes please, all pr's are already merged in main.
 ```
 
-**[96]**
+**[47]**
 
 ```
 there's a file named gemini-adversarial-review.md, can we resolve the findings?
 ```
 
-**[97]**
+**[48]**
 
 ```
 all pr's are merged, continue with finding 14.
 ```
 
-**[98]**
+**[49]**
 
 ```
 all pr's are merged, continue with finding 15.
 ```
 
-**[99]**
+**[50]**
 
 ```
 all pr's are merged, continue with finding 16.
 ```
 
-**[100]**
+**[51]**
 
 ```
 can you check gemini-adversarial-review.md and resolve all the findings that left, in one PR?
 ```
 
-**[101]**
+**[52]**
 
 ```
 can you check gemini-adversarial-review.md and adversarial-review.md to see if there anything that can be done?
 ```
 
-**[102]**
+**[53]**
 
 ```
 can you re take the job?
 ```
 
-**[103]**
+**[54]**
 
 ```
 quisiera saber si puedo agregar ponytail que en CLI sería el comando /plugin marketplace add DietrichGebert/ponytail
@@ -8114,26 +835,320 @@ quisiera saber si puedo agregar ponytail que en CLI sería el comando /plugin ma
 
 ---
 
-## Session — 2026-07-22 16:50
+## Session — 2026-07-22 16:52
 
-**[104]**
+**[55]**
 
 ```
 can you retake your last work?
 ```
 
-**[105]**
+**[56]**
 
 ```
 PR #20 is already merged.
 ```
 
-**[106]**
+**[57]**
 
 ```
 For the UI design, I have the following styles, please use it for NomadHome
 Fetch this design file, read its readme, and implement the relevant aspects of the design. https://api.anthropic.com/v1/design/h/-zOUDP3n2zRvzjFmZekQBw
 Implement: the designs in this project
+```
+
+**[58]**
+
+```
+yes
+```
+
+**[59]**
+
+```
+yes
+```
+
+**[60]**
+
+```
+PR #21 is merged now
+```
+
+**[61]**
+
+```
+proceed with the next ticket
+```
+
+**[62]**
+
+```
+yes
+```
+
+**[63]**
+
+```
+PR #22 is merged
+```
+
+**[64]**
+
+```
+yes
+```
+
+**[65]**
+
+```
+yes
+```
+
+**[66]**
+
+```
+PR #23 is merged now, you can proceed, Docker is open and running in the background if you need it.
+```
+
+**[67]**
+
+```
+yes
+```
+
+**[68]**
+
+```
+pr #24 is merged
+```
+
+**[69]**
+
+```
+yes
+```
+
+**[70]**
+
+```
+yes
+```
+
+**[71]**
+
+```
+PR #25 is merged
+```
+
+**[72]**
+
+```
+host-onboarding
+```
+
+**[73]**
+
+```
+yes
+```
+
+**[74]**
+
+```
+PR #26 is merged
+```
+
+**[75]**
+
+```
+proceed with listings, that slicing works
+```
+
+**[76]**
+
+```
+yes
+```
+
+**[77]**
+
+```
+I saw that you commit several files changed in one commit, please remember to make one commit per logical change.
+```
+
+**[78]**
+
+```
+yes please
+```
+
+**[79]**
+
+```
+please, retake what you where doing.
+```
+
+**[80]**
+
+```
+if I change from opus to sonnet, you will loose the project memory?
+```
+
+**[81]**
+
+```
+PR #27 is now merged
+```
+
+**[82]**
+
+```
+go with R2
+```
+
+**[83]**
+
+```
+yes
+```
+
+**[84]**
+
+```
+yes
+```
+
+**[85]**
+
+```
+yes
+```
+
+**[86]**
+
+```
+yes
+```
+
+**[87]**
+
+```
+pr #28 is merged.
+```
+
+**[88]**
+
+```
+go ahead with NH-011
+```
+
+**[89]**
+
+```
+yes
+```
+
+**[90]**
+
+```
+yes
+```
+
+**[91]**
+
+```
+yes
+```
+
+**[92]**
+
+```
+Pr #29 is merged
+```
+
+**[93]**
+
+```
+ok, go on
+```
+
+**[94]**
+
+```
+yes
+```
+
+**[95]**
+
+```
+yes
+```
+
+**[96]**
+
+```
+yes
+```
+
+**[97]**
+
+```
+PR #30 is merged
+```
+
+**[98]**
+
+```
+yes please
+```
+
+**[99]**
+
+```
+yes
+```
+
+**[100]**
+
+```
+yes
+```
+
+**[101]**
+
+```
+retake the job
+```
+
+**[102]**
+
+```
+yes
+```
+
+**[103]**
+
+```
+yes
+```
+
+**[104]**
+
+```
+PR #31 is merged
+```
+
+**[105]**
+
+```
+please, when you make a pull request, put in a title the user story related. Proceed to nh-014.
+```
+
+**[106]**
+
+```
+yes
 ```
 
 **[107]**
@@ -8151,25 +1166,25 @@ yes
 **[109]**
 
 ```
-PR #21 is merged now
+yes
 ```
 
 **[110]**
 
 ```
-proceed with the next ticket
+you forgot to mention the related user story in the PR
 ```
 
 **[111]**
 
 ```
-yes
+ok, but the use story needs to have a number, to co relate it  to the prd
 ```
 
 **[112]**
 
 ```
-PR #22 is merged
+PR #32 is merged
 ```
 
 **[113]**
@@ -8187,7 +1202,7 @@ yes
 **[115]**
 
 ```
-PR #23 is merged now, you can proceed, Docker is open and running in the background if you need it.
+yes
 ```
 
 **[116]**
@@ -8199,7 +1214,7 @@ yes
 **[117]**
 
 ```
-pr #24 is merged
+PR #33 is merged
 ```
 
 **[118]**
@@ -8211,85 +1226,85 @@ yes
 **[119]**
 
 ```
-yes
+PR #34 is merged
 ```
 
 **[120]**
 
 ```
-PR #25 is merged
+yes
 ```
 
 **[121]**
 
 ```
-host-onboarding
+PR #35 is merged
 ```
 
 **[122]**
 
 ```
-yes
+1
 ```
 
 **[123]**
 
 ```
-PR #26 is merged
+yes
 ```
 
 **[124]**
 
 ```
-proceed with listings, that slicing works
+I saw the PR #36, all changed files are in one commit, that's not good, remember to make one commit per logical change.
 ```
 
 **[125]**
 
 ```
-yes
+rebase
 ```
 
 **[126]**
 
 ```
-I saw that you commit several files changed in one commit, please remember to make one commit per logical change.
+PR #36 is merged
 ```
 
 **[127]**
 
 ```
-yes please
+yes
 ```
 
 **[128]**
 
 ```
-please, retake what you where doing.
+yes
 ```
 
 **[129]**
 
 ```
-if I change from opus to sonnet, you will loose the project memory?
+PR #37 is merged
 ```
 
 **[130]**
 
 ```
-PR #27 is now merged
+yes
 ```
 
 **[131]**
 
 ```
-go with R2
+yes
 ```
 
 **[132]**
 
 ```
-yes
+PR #38 is merged
 ```
 
 **[133]**
@@ -8307,346 +1322,52 @@ yes
 **[135]**
 
 ```
-yes
+PR #39 is merged
 ```
 
 **[136]**
 
 ```
-pr #28 is merged.
+yes
 ```
 
 **[137]**
 
 ```
-go ahead with NH-011
+the pr is already open, can you check if it's all ok? update it if you need it.
 ```
 
 **[138]**
 
 ```
-yes
+PR #40 is merged, there's another claude session helping you with the tasks, is working with git worktress for collidal avoidance.
 ```
 
 **[139]**
 
 ```
-yes
+the other session is awaiting, you need to start your job with nh-023. I think i will pause the other session, I'm afraid of making some mistakes.
 ```
 
 **[140]**
 
 ```
-yes
+please, continue
 ```
 
 **[141]**
 
 ```
-Pr #29 is merged
+yes
 ```
 
 **[142]**
 
 ```
-ok, go on
-```
-
-**[143]**
-
-```
-yes
-```
-
-**[144]**
-
-```
-yes
-```
-
-**[145]**
-
-```
-yes
-```
-
-**[146]**
-
-```
-PR #30 is merged
-```
-
-**[147]**
-
-```
-yes please
-```
-
-**[148]**
-
-```
-yes
-```
-
-**[149]**
-
-```
-yes
-```
-
-**[150]**
-
-```
-retake the job
-```
-
-**[151]**
-
-```
-yes
-```
-
-**[152]**
-
-```
-yes
-```
-
-**[153]**
-
-```
-PR #31 is merged
-```
-
-**[154]**
-
-```
-please, when you make a pull request, put in a title the user story related. Proceed to nh-014.
-```
-
-**[155]**
-
-```
-yes
-```
-
-**[156]**
-
-```
-yes
-```
-
-**[157]**
-
-```
-yes
-```
-
-**[158]**
-
-```
-yes
-```
-
-**[159]**
-
-```
-you forgot to mention the related user story in the PR
-```
-
-**[160]**
-
-```
-ok, but the use story needs to have a number, to co relate it  to the prd
-```
-
-**[161]**
-
-```
-PR #32 is merged
-```
-
-**[162]**
-
-```
-yes
-```
-
-**[163]**
-
-```
-yes
-```
-
-**[164]**
-
-```
-yes
-```
-
-**[165]**
-
-```
-yes
-```
-
-**[166]**
-
-```
-PR #33 is merged
-```
-
-**[167]**
-
-```
-yes
-```
-
-**[168]**
-
-```
-PR #34 is merged
-```
-
-**[169]**
-
-```
-yes
-```
-
-**[170]**
-
-```
-PR #35 is merged
-```
-
-**[171]**
-
-```
-1
-```
-
-**[172]**
-
-```
-yes
-```
-
-**[173]**
-
-```
-I saw the PR #36, all changed files are in one commit, that's not good, remember to make one commit per logical change.
-```
-
-**[174]**
-
-```
-rebase
-```
-
-**[175]**
-
-```
-PR #36 is merged
-```
-
-**[176]**
-
-```
-yes
-```
-
-**[177]**
-
-```
-yes
-```
-
-**[178]**
-
-```
-PR #37 is merged
-```
-
-**[179]**
-
-```
-yes
-```
-
-**[180]**
-
-```
-yes
-```
-
-**[181]**
-
-```
-PR #38 is merged
-```
-
-**[182]**
-
-```
-yes
-```
-
-**[183]**
-
-```
-yes
-```
-
-**[184]**
-
-```
-PR #39 is merged
-```
-
-**[185]**
-
-```
-yes
-```
-
-**[186]**
-
-```
-the pr is already open, can you check if it's all ok? update it if you need it.
-```
-
-**[187]**
-
-```
-PR #40 is merged, there's another claude session helping you with the tasks, is working with git worktress for collidal avoidance.
-```
-
-**[188]**
-
-```
-the other session is awaiting, you need to start your job with nh-023. I think i will pause the other session, I'm afraid of making some mistakes.
-```
-
-**[189]**
-
-```
-please, continue
-```
-
-**[190]**
-
-```
-yes
-```
-
-**[191]**
-
-```
 PR #41 is merged
 ```
 
-**[192]**
+**[143]**
 
 ```
 I'm trying to sign up with the mvp but i'm having the following erroe:
@@ -8695,7 +1416,7 @@ I'm trying to sign up with the mvp but i'm having the following erroe:
 @nomadhome/web:dev:     at afterConnectMultiple (node:net:1715:7)
 ```
 
-**[193]**
+**[144]**
 
 ```
 I think I creqted th .env files that you mentioned me, but when I'm trying to sign up in nomadhome I have the following error:
@@ -8740,7 +1461,7 @@ I think I creqted th .env files that you mentioned me, but when I'm trying to si
 @nomadhome/web:dev:     at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
 ```
 
-**[194]**
+**[145]**
 
 ```
 ok, now I'm having this issue:
@@ -8800,32 +1521,32 @@ Failed:    @nomadhome/api#dev
  ELIFECYCLE  Command failed with exit code 9.
 ```
 
-**[195]**
+**[146]**
 
 ```
 ok, now the sign up seems to work: [email] verification queued for luchosr@gmail.com (token 3a399502…)
 but when i log in, nothing happens.
 ```
 
-**[196]**
+**[147]**
 
 ```
 ok, logging in works now
 ```
 
-**[197]**
+**[148]**
 
 ```
 now let me try to create a listing as a host, I think I can't, the page is quite empty. It shows that I'm logged but nothing more.
 ```
 
-**[198]**
+**[149]**
 
 ```
 ok it works now, let me keep testing
 ```
 
-**[199]**
+**[150]**
 
 ```
 Make sure the claude_design MCP connector (https://api.anthropic.com/v1/design/mcp) is connected — if it needs authorization, tell the user to run /design-login (adds user:design:read/write).
@@ -8834,25 +1555,25 @@ Implement: the designs in this project
 I need to improve the landing page design because is quite empty, can you apply these styles?
 ```
 
-**[200]**
+**[151]**
 
 ```
 can you improve the navigation bar on top of the home? by example, nomadhome did not have a logo, please improve that with the design logo, and make it coherent with the rest of the home page design
 ```
 
-**[201]**
+**[152]**
 
 ```
 can you create a test user? so i can use it to make a full flow test.
 ```
 
-**[202]**
+**[153]**
 
 ```
 can you add some listings in Madrid, for testing purposes so when I log as a guest I can see them?
 ```
 
-**[203]**
+**[154]**
 
 ```
 I have tested for Madrid at first it worked, but now I have this error:
@@ -8862,7 +1583,7 @@ I have tested for Madrid at first it worked, but now I have this error:
 @nomadhome/web:dev:     at afterConnectMultiple (node:net:1715:7) (x3)
 ```
 
-**[204]**
+**[155]**
 
 ```
 when I run pnpm dev, i got this error:
@@ -8933,32 +1654,32 @@ Failed:    @nomadhome/db#build
  ELIFECYCLE  Command failed with exit code 2.
 ```
 
-**[205]**
+**[156]**
 
 ```
 ok, when in reach the home page and I put the input search some word, by example Madrid, and hit search button, please show me all accomodations in Madrid, independant from the date
 ```
 
-**[206]**
+**[157]**
 
 ```
 When selecting the check-in and check-out dates, you should only be able to select from the current day onwards, and never previous days.
 ```
 
-**[207]**
+**[158]**
 
 ```
 When I create a new listing, each form input must include a label explaining the validation so the user understands how to complete each field, and the "create a new listing" action button must be disabled unless all form validations are met.
 In the "Country" field, there must be a dropdown menu with the following options: European Union countries, North America, South America, and Asia.
 ```
 
-**[208]**
+**[159]**
 
 ```
 ok,  the Nightly rate must be in currency units, not in cents. And in the currency input, there must be a dropdown menu with currency from the contries mentioned before.
 ```
 
-**[209]**
+**[160]**
 
 ```
 when I create a listing, I have the following error in network tab:
@@ -8988,7 +1709,7 @@ x-powered-by
 Express
 ```
 
-**[210]**
+**[161]**
 
 ```
 When im editing a listing draft an I try to upload a photo, I have this error on network tab in my browser:
@@ -9054,68 +1775,68 @@ user-agent
 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
 ```
 
-**[211]**
+**[162]**
 
 ```
 can you recheck last prompt?
 ```
 
-**[212]**
+**[163]**
 
 ```
 can you recheck last prompt?
 ```
 
-**[213]**
+**[164]**
 
 ```
 ok, there is a problem, as a host, when I block an accommodation for a specific date and apply it, then when I search for that accommodation and select it, I can choose the blocked dates
 to reserve, and I think it is a mistake. If a property is locked to a specific date range, it should not be selectable for booking in that date range. In the booking view when displaying the calendar to choose dates, dates blocked by the host should not be able to be selected.
 ```
 
-**[214]**
+**[165]**
 
 ```
 fine but blocked dates should not be able to be selected from the calendar input directly.
 ```
 
-**[215]**
+**[166]**
 
 ```
 perfec, but in the ui the calendar exceeds the limits of the container, it's looking ugly.
 ```
 
-**[216]**
+**[167]**
 
 ```
 nope, the idea is not to shrink the calendar, is to expand the div that contains it.
 ```
 
-**[217]**
+**[168]**
 
 ```
 can you create a fle named prompts2.md with all the prompt history in this session? please create it inside docs folder.
 ```
 
-**[218]**
+**[169]**
 
 ```
 sorry, can you include all promprs since the beginning of the project?
 ```
 
-**[219]**
+**[170]**
 
 ```
 please create a new branch named "feature-entrega2-LR", and commit all changes grouped by logical change.
 ```
 
-**[220]**
+**[171]**
 
 ```
 perfect, please create a PR with that branch
 ```
 
-**[221]**
+**[172]**
 
 ```
 the CI catched the following error:
@@ -9124,75 +1845,75 @@ AssertionError: expected "spy" to be called once, but got 0 times
 can you fix it?
 ```
 
-**[222]**
+**[173]**
 
 ```
 I removed prompts2.md can you commit the change?
 ```
 
-**[223]**
+**[174]**
 
 ```
 the pr is merged but I have made a few changes, can you commit them?
 ```
 
-**[224]**
+**[175]**
 
 ```
 the pr is merged but I have made a few changes, can you commit them?
 ```
 
-**[225]**
+**[176]**
 
 ```
 yes, push and open a PR
 ```
 
-**[226]**
+**[177]**
 
 ```
 the ci failed due to a testing error, can you check it and solve it?
 ```
 
-**[227]**
+**[178]**
 
 ```
 I'm habing an issue with the deployment of nomahdome, the github action related throws me this error:
 Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, aws-actions/configure-aws-credentials@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
 ```
 
-**[228]**
+**[179]**
 
 ```
 sorry, in what branch are those changes?
 ```
 
-**[229]**
+**[180]**
 
 ```
 git pull origin main
 ```
 
-**[230]**
+**[181]**
 
 ```
 can you check if there are any conflicts with the local changes?
 ```
 
-**[231]**
+**[182]**
 
 ```
 ok, can you make a PR of the changes in feature-entrega2-LR?
 ```
 
-**[232]**
+**[183]**
 
 ```
 I just merged the pr, but now the deploy action throws me this error:
 Error: Unable to resolve action `aws-actions/amazon-ecr-login@v3`, unable to find version `v3`. Unable to resolve action `aws-actions/amazon-ecs-deploy-task-definition@v3`, unable to find version `v3`. Unable to resolve action `aws-actions/amazon-ecs-render-task-definition@v2`, unable to find version `v2`
 ```
 
-**[233]**
+**[184]**
 
 ```
 ok, now the action throws me this error:
@@ -9224,7 +1945,7 @@ ERROR: failed to build: failed to solve: failed to read dockerfile: open Dockerf
 Error: Process completed with exit code 1.
 ```
 
-**[234]**
+**[185]**
 
 ```
 ok, nos the deploy workflow throws me this error:
@@ -9318,7 +2039,7 @@ ERROR: failed to build: failed to solve: failed to compute cache key: failed to 
 Error: Process completed with exit code 1.
 ```
 
-**[235]**
+**[186]**
 
 ```
 ok, now the deploy throws me the following error:
@@ -9444,7 +2165,7 @@ ERROR: failed to build: failed to solve: process "/bin/sh -c pnpm install --froz
 Error: Process completed with exit code 1.
 ```
 
-**[236]**
+**[187]**
 
 ```
 ok, the deploy throws me this error now:
@@ -9699,7 +2420,7 @@ Dockerfile:31
   31 | >>> RUN pnpm deploy --filter=@nomadhome/api --prod /prod/api
 ```
 
-**[237]**
+**[188]**
 
 ```
 I have mounted a cluster in AWS ecs, the nomadhome service has a task, related to Nomadhme's database, but when it run the task it has the following error:
@@ -9898,13 +2619,13 @@ nomadhome-container
 Could you help me fix it?
 ```
 
-**[238]**
+**[189]**
 
 ```
 now the AWS logs shows me this:
 ```
 
-**[239]**
+**[190]**
 
 ```
 8 de julio de 2026, 20:10
@@ -10149,7 +2870,7 @@ Node.js v20.20.2
 nomadhome-container
 ```
 
-**[240]**
+**[191]**
 
 ```
 I have this typecheck error, can you fix it?
@@ -10246,68 +2967,68 @@ Failed:    @nomadhome/api#typecheck
  ELIFECYCLE  Command failed with exit code 2.
 ```
 
-**[241]**
+**[192]**
 
 ```
 I have deployed Nomadhome's backend and it's working on http://51.92.146.254:3000, I need to change the communication between the frontend and the backend deploy, the frontend needs to fetch the deployed backend or "||" the localhost backend, can you fix it?
 ```
 
-**[242]**
+**[193]**
 
 ```
 mmm I'm not convinced by that solution, can you do the fix like: const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 and create a .env with the backend url, "http://51.92.146.254:3000"? I think hardcoding the backend url is not good.
 ```
 
-**[243]**
+**[194]**
 
 ```
 2
 ```
 
-**[244]**
+**[195]**
 
 ```
 ok, since I delpoyed the frontend in Vercel, I will need to update Verce'ls .env variables for the project, it's ok?
 ```
 
-**[245]**
+**[196]**
 
 ```
 I think i found a security issue, DATABASE_URL="postgresql://nomadhome:nomadhome@localhost:5432/nomadhome", probably those credentials are being public, I'm right?
 ```
 
-**[246]**
+**[197]**
 
 ```
 actually is nomadhome, can we change the password for a security improve? I'm trying to make the backend deployment in railway.com instead of AWS ECS.
 ```
 
-**[247]**
+**[198]**
 
 ```
 Sorry, can I paste a screen capture here?
 ```
 
-**[248]**
+**[199]**
 
 ```
 I habe solved the backend deployment in railway, but when the frontend (deployed in vercel) makes a fetch to the backend, the network shows a CORS error and a 502 error.
 ```
 
-**[249]**
+**[200]**
 
 ```
 Where do I get the JWT_SECRET variable?
 ```
 
-**[250]**
+**[201]**
 
 ```
 The navigation bar on the landing page looks quite bad on mobile resolution when the user is logged in because the navigation links zoom in too much. Could we implement a solution that looks better on mobile?
 ```
 
-**[251]**
+**[202]**
 
 ```
 ok, I tryied to log in in the app running in local and it seems that the backend crashed, this is the log:
@@ -10343,7 +3064,7 @@ ok, I tryied to log in in the app running in local and it seems that the backend
 @nomadhome/api:dev: Node.js v22.22.1
 ```
 
-**[252]**
+**[203]**
 
 ```
 ok, now I have this error:
@@ -10377,7 +3098,7 @@ ok, now I have this error:
 @nomadhome/api:dev: Node.js v22.22.1
 ```
 
-**[253]**
+**[204]**
 
 ```
 I have deleted older containers, this where removed: ai4devs-qa-202602-seniors-db-1         Up 45 hours   5432/tcp
@@ -10386,19 +3107,19 @@ I have deleted older containers, this where removed: ai4devs-qa-202602-seniors-d
 Do i Need to change the port anyway?
 ```
 
-**[254]**
+**[205]**
 
 ```
 mmm I do not know what's happening, can you check if docker is ok and running the correct container?
 ```
 
-**[255]**
+**[206]**
 
 ```
 change the port to 5432 in the .env
 ```
 
-**[256]**
+**[207]**
 
 ```
 I restarted the APi but the problem keeps,
@@ -10432,7 +3153,7 @@ I restarted the APi but the problem keeps,
 @nomadhome/api:dev: Node.js v22.22.1
 ```
 
-**[257]**
+**[208]**
 
 ```
 sorry, but the error is again.
@@ -10464,141 +3185,141 @@ sorry, but the error is again.
 @nomadhome/api:dev: Node.js v22.22.1
 ```
 
-**[258]**
+**[209]**
 
 ```
 can you run they for me?
 ```
 
-**[259]**
+**[210]**
 
 ```
 ok, now it's working but you need to seed it, remember, we have created a few users to test the project
 ```
 
-**[260]**
+**[211]**
 
 ```
 the homepage has an input for city or destination, when the user clicks on it the border shows the input outline, it's quite ugly, really squared, can you beautify it?
 ```
 
-**[261]**
+**[212]**
 
 ```
 ok, can you round a little the corners?
 ```
 
-**[262]**
+**[213]**
 
 ```
 ok, I want to implement resend for the email verification, can you check how we can solve it?
 ```
 
-**[263]**
+**[214]**
 
 ```
 ok, how can I test if it works?
 ```
 
-**[264]**
+**[215]**
 
 ```
 ok can you check if luchosr@gmail.com is a registered user in nomadhome?
 ```
 
-**[265]**
+**[216]**
 
 ```
 ok, let me register with luchosr@gmail.com, but workin in localhost will work?? or do I need to test it in the deployed version of nomadhome?
 ```
 
-**[266]**
+**[217]**
 
 ```
 I just signed up, but I have not an resend or other related email
 ```
 
-**[267]**
+**[218]**
 
 ```
 resend has not sended any email, I just added luchosr@gmail.com in audience, can you delete luchosr@gmail.com registration for do it again?
 ```
 
-**[268]**
+**[219]**
 
 ```
 ok I registered again, but looking at my dashboard, resend hasn't send any email. So can we check if the service related in nomadhome is working properly?
 ```
 
-**[269]**
+**[220]**
 
 ```
 I have received the "Test email from NomadHome", now I restarted the server, let me check if I receive the registration email.
 ```
 
-**[270]**
+**[221]**
 
 ```
 Ok, Now is working but If I click the verification email it takes me to a 404 page isnide nomadhome, with a Go Home link. Can we fix that?
 ```
 
-**[271]**
+**[222]**
 
 ```
 ok let me register, it works, but now the verification links showsme this text inside nomadhome page "Link invalid or expired
 This verification link has already been used or has expired. Please register again."
 ```
 
-**[272]**
+**[223]**
 
 ```
 ok, can we try it again? delete luchosr@gmail.com from the registered users.
 ```
 
-**[273]**
+**[224]**
 
 ```
 again, I got the message "Link invalid or expired
 This verification link has already been used or has expired. Please register again."
 ```
 
-**[274]**
+**[225]**
 
 ```
 ok it works, can we commit all these changes?
 ```
 
-**[275]**
+**[226]**
 
 ```
 in register page, there's only one input for password, but It will be fine to ask to repeat the password to the new users, could you solve that?
 ```
 
-**[276]**
+**[227]**
 
 ```
 ok, now the create account button needs to be disabled until password and confirm password matches.
 ```
 
-**[277]**
+**[228]**
 
 ```
 excellent, please commit by logical commits and push, remember, never mention claude code collaboration in commits.
 ```
 
-**[278]**
+**[229]**
 
 ```
 it seems that there's a few tests that fail, can you fix that?
 ```
 
-**[279]**
+**[230]**
 
 ```
 ok, please commit and push
 ```
 
-**[280]**
+**[231]**
 
 ```
 the CI throws me this error:
@@ -10620,79 +3341,79 @@ the CI throws me this error:
      → Found multiple elements with the text of: /password/i
 ```
 
-**[281]**
+**[232]**
 
 ```
 Can you implement the image storage in cloudflare r2? you can find all you need to acces the Cloudflare's bucket api in apps/api/.env
 ```
 
-**[282]**
+**[233]**
 
 ```
 the variables have been updated in Railway,  can you commit and push the changes?
 ```
 
-**[283]**
+**[234]**
 
 ```
 It's probable that the seed is no more in the DB? I'm looking for madrid listings and there's no one.
 ```
 
-**[284]**
+**[235]**
 
 ```
 can you check User Story us-3.2 in docs/PRD.md? I think it's not implemented.
 ```
 
-**[285]**
+**[236]**
 
 ```
 Go with Open Spec proposal first
 ```
 
-**[286]**
+**[237]**
 
 ```
 yes
 ```
 
-**[287]**
+**[238]**
 
 ```
 yes
 ```
 
-**[288]**
+**[239]**
 
 ```
 can you list each logical commit with its description in the pr?
 ```
 
-**[289]**
+**[240]**
 
 ```
 pr is merged now
 ```
 
-**[290]**
+**[241]**
 
 ```
 in search ui, can you place a "filters" button between the checkout input and the "search" button?, the filter button will display the "filters section"
 ```
 
-**[291]**
+**[242]**
 
 ```
 ok, the button looks no aligned with the rest objects, can you improve it?
 ```
 
-**[292]**
+**[243]**
 
 ```
 ok, but the height of the filters button is shorter than the search button and che chekout input, that's why its looks bad.
 ```
 
-**[293]**
+**[244]**
 
 ```
 on local, when I'm trying to make a booking in the paument UI, i got this error:
@@ -10744,25 +3465,25 @@ user-agent
 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36
 ```
 
-**[294]**
+**[245]**
 
 ```
 ok, now try to create the booking again
 ```
 
-**[295]**
+**[246]**
 
 ```
 ok, why is PENDIMG_PAYMENT?
 ```
 
-**[296]**
+**[247]**
 
 ```
 well, I'm in /bookings ui and I can see the booking, but there's not an action for the booking, I can't click it, or do anything.
 ```
 
-**[297]**
+**[248]**
 
 ```
 ok, but when I hit "Complete payment" button, the back end crashes:
@@ -10845,44 +3566,44 @@ ok, but when I hit "Complete payment" button, the back end crashes:
 @nomadhome/api:dev: Node.js v22.22.1
 ```
 
-**[298]**
+**[249]**
 
 ```
 ok, there ar 2 issues, after I complete the payment via stripe, it tooks me to th succes page, and then when I wanted to see "my bookings" page the user was logged out.
 The second issue is, after the stripe payment, and success (i have to log in again with the guest user) and I see again in "my bookings" the bokking keeps in "pending payment" and still shows the complete payment button.
 ```
 
-**[299]**
+**[250]**
 
 ```
 ok, I updated the .env, but after the successfull payment, when I go to see my booking, the booking keeps with the chip "Pending Payment" and the button "Complete payment", that's wrong.
 ```
 
-**[300]**
+**[251]**
 
 ```
 Ok I forgot to run stripe listen --forward-to http://localhost:3000/stripe/webhook, so the whsec_ must be in a variable of what name?
 ```
 
-**[301]**
+**[252]**
 
 ```
 ok, now is working!
 ```
 
-**[302]**
+**[253]**
 
 ```
 when I click the booking title, it will be usefull to go to the booking publication, what do you think?
 ```
 
-**[303]**
+**[254]**
 
 ```
 perfect, can you make the loggical commits and push?
 ```
 
-**[304]**
+**[255]**
 
 ```
 the Ci throws me this error:
@@ -10894,13 +3615,13 @@ the Ci throws me this error:
  ✓ src/App.test.tsx (1 test) 88ms
 ```
 
-**[305]**
+**[256]**
 
 ```
 nice, we need to implement e2e testing with playwright, can you do it?
 ```
 
-**[306]**
+**[257]**
 
 ```
 ok, the Ci throws me this:
@@ -10947,13 +3668,13 @@ Most common reasons include:
    Duration  14.82s (transform 1.58s, setup 1.86s, collect 9.74s, tests 6.58s, environment 14.48s, prepare 3.12s)
 ```
 
-**[307]**
+**[258]**
 
 ```
 based on the Users stories in docs/PRD.md, can you make the e2e tests for each flow? please one PR per user story, and remember, logical commits and never mention claude collabs.
 ```
 
-**[308]**
+**[259]**
 
 ```
 PR #47 is now closed, but canyou re open it? there are 2 bugs
@@ -10975,7 +3696,7 @@ Replace the route mock with something that matches the actual request, e.g.:
 - or use a Playwright glob pattern like `**/listings/mine*` to avoid hard-coding the API host if you later change `VITE_API_URL` for tests.
 ```
 
-**[309]**
+**[260]**
 
 ```
 ok, PR #48 has 2 bugs:
@@ -11013,7 +3734,7 @@ Optionally, add a catch-all `page.route(`${API}/**`, route => route.abort() | fu
 - apps/web/e2e/us-2.1-create-listing.spec.ts[39-64]
 ```
 
-**[310]**
+**[261]**
 
 ```
 PR #49 has two bugs:
@@ -11065,7 +3786,7 @@ await page.route(`**/listings/${LISTING_ID}/publish`, (route) => {
 If the real backend intentionally returns an empty body/object, instead update the frontend API typing (`hostApi.publish`) to reflect that contract.
 ```
 
-**[311]**
+**[262]**
 
 ```
 PR #50 has 2 incidents:
@@ -11106,7 +3827,7 @@ Prefer one of:
 - (Best long-term) Add `id`/`htmlFor` or `data-testid` to the inputs in `EditListingPage` and use `getByLabel`/`getByTestId` in the E2E tests.
 ```
 
-**[312]**
+**[263]**
 
 ```
 PR #51 has 3 incidents:
@@ -11151,7 +3872,7 @@ The E2E mock checkout URL uses `booking_id` but the app and API generate/consume
 2. Strengthen the assertion to prove the success page used the booking id (and thus exercised polling), e.g. assert `#booking-1` is visible and/or that the page renders the success title after polling.
 ```
 
-**[313]**
+**[264]**
 
 ```
 PR #52 has a few incidents:
@@ -11221,7 +3942,7 @@ The bookings page renders a Cancel button per cancellable booking and a status B
 Create a locator scoped to the booking card containing the listing title (or booking id if rendered), then find the Cancel button/status badge within that scope (e.g., `page.locator('...', { hasText: 'Sunny Loft in Lisbon' })...`).
 ```
 
-**[314]**
+**[265]**
 
 ```
 Pr #53 has a few incidents:
@@ -11271,7 +3992,7 @@ Per compliance, numeric literals whose meaning isn’t self-evident should be re
 +  );
 ```
 
-**[315]**
+**[266]**
 
 ```
 Pr #54 has incidents:
@@ -11308,7 +4029,7 @@ A similar helper already exists in `apps/web/e2e/auth.spec.ts`.
 - Reuse it from both specs to keep the auth bootstrap contract centralized.
 ```
 
-**[316]**
+**[267]**
 
 ```
 pr #55 has incidents:
@@ -11338,7 +4059,7 @@ The E2E spec mocks `GET /admin/users` with user objects missing `createdAt`, whi
  - Example: `createdAt: "2026-01-01T00:00:00.000Z"`
 ```
 
-**[317]**
+**[268]**
 
 ```
 PR #56 has incidents:
@@ -11368,7 +4089,7 @@ Optionally (more robust to status formatting changes), assert the action button 
 - `await expect(page.getByRole("button", { name: /re-enable/i })).toBeVisible();`
 ```
 
-**[318]**
+**[269]**
 
 ```
 pr #57 has an incident:
@@ -11382,162 +4103,146 @@ The Playwright `page.route()` mock for host listings is an exact matcher, which 
 - apps/web/e2e/us-1.3-become-host.spec.ts[42-48]
 ```
 
-**[319]**
+**[270]**
 
 ```
 I think I merged last pr (#57) with updates delay, and now there's a conflict wiht the feature/e2e-us-1.3-become-host  branch, can we fix it?
 ```
 
-**[320]**
+**[271]**
 
 ```
 ok, can you open that pr?
 ```
 
-**[321]**
-
-```
-Read node_modules/deepsec/SKILL.md to understand the tool. Then
-    read data/NomadHome/SETUP.md and follow it: open .., skim
-    its README + AGENTS.md/CLAUDE.md + a handful of representative
-    code files, then replace each section of data/NomadHome/INFO.md.
-
-    Keep it SHORT — target 50–100 lines total. Pick 3–5 examples per
-    section, not exhaustive enumeration. Name primitives (auth
-    helpers, middleware) but no line numbers. Skip generic CWE
-    categories — built-in matchers cover those. Cover only what's
-    project-specific. INFO.md is injected into every scan batch;
-    verbose context dilutes signal.
-```
-
-**[322]**
+**[272]**
 
 ```
 run the deepsec scan
 ```
 
-**[323]**
+**[273]**
 
 ```
 I have upgraded the usage limits, can you retake the last task?
 ```
 
-**[324]**
+**[274]**
 
 ```
 ok, can you fix the most urgent first?
 ```
 
-**[325]**
+**[275]**
 
 ```
 ok, can you now fix the rest issues?
 ```
 
-**[326]**
+**[276]**
 
 ```
 I have added a gemini code review to the workflow, can you add that change to pr # 60?
 ```
 
-**[327]**
+**[277]**
 
 ```
 there was an error on gemini pr review file, I updated it, can you commit it and include it in pr #60?
 ```
 
-**[328]**
+**[278]**
 
 ```
 ok, there was an error on ci, I updated te .yml, can you add the commit and push to pr #60?
 ```
 
-**[329]**
+**[279]**
 
 ```
 I updated the CI again, can you do the same? commit, and push to pr 60?
 ```
 
-**[330]**
+**[280]**
 
 ```
 ok, can you check if there's a new change, if so, commit and push to pr #60.
 ```
 
-**[331]**
+**[281]**
 
 ```
 ok, can you check if there's a new change, if so, commit and push to pr #60.
 ```
 
-**[332]**
+**[282]**
 
 ```
 ok, can you check if there's a new change, if so, commit and push to pr #60.
 ```
 
-**[333]**
+**[283]**
 
 ```
 ok, can you check if there's a new change, if so, commit and push to pr #60.
 ```
 
-**[334]**
+**[284]**
 
 ```
 ok, can you check if there's a new change, if so, commit and push to pr #60.
 ```
 
-**[335]**
+**[285]**
 
 ```
 the gemini-pr-review.yml is failing, can we check why?
 ```
 
-**[336]**
+**[286]**
 
 ```
 ok, it seems that the ci is failing again, can you check?
 ```
 
-**[337]**
+**[287]**
 
 ```
 ok, it seems that the ci is failing again, can you check?
 ```
 
-**[338]**
+**[288]**
 
 ```
 ok, in readme.md point 2.4 Detail the project's infrastructure, including a diagram in the format you deem appropriate, and explain the deployment process followed, we need to fullfill that info, can you do it?
 ```
 
-**[339]**
+**[289]**
 
 ```
 perfect, can you push it?
 ```
 
-**[340]**
+**[290]**
 
 ```
 Im looking main, because pr 60 is merged, and there's no changes in readme.md, are you sure?
 ```
 
-**[341]**
+**[291]**
 
 ```
 ok, now I need to update readme.md with section 2.5. Security,List and describe the main security practices implemented in the project, adding examples if applicable, you can commit and push  directly on main.
 ```
 
-**[342]**
+**[292]**
 
 ```
 ok, now 2.6. Tests
 Briefly describe some of the tests performed, can you update that?
 ```
 
-**[343]**
+**[293]**
 
 ```
 I was checking HomePage.tsx and we need to refactor a few things, and please remove the comments:
@@ -11559,25 +4264,25 @@ Please perform the following changes cleanly while keeping all CSS styles and Ta
 Review the changes, ensure TypeScript doesn't throw any implicit type errors with the form events, and apply the refactor directly to the file.
 ```
 
-**[344]**
+**[294]**
 
 ```
 ok, the HomePage.tsx page, needs to have more components composition, the file is too long, can we extract components like Hero, Search bar, etc..? and aplly performance technics like lazy loading?
 ```
 
-**[345]**
+**[295]**
 
 ```
 ok, please open a pr, commit and push this changes.
 ```
 
-**[346]**
+**[296]**
 
 ```
 apps/web/src/pages/home/CoLivingSection.tsx has a problem, it uses a constant named features, yo need to place all constants in a specific file, not inside the component. and there are hardcoded texts, all texts needs to be imported from i18next files.
 ```
 
-**[347]**
+**[297]**
 
 ```
 gemini Ai is giving this error in code review:
@@ -11591,7 +4296,7 @@ Gemini API error 404: {
 }
 ```
 
-**[348]**
+**[298]**
 
 ```
 ok, I saw a lot of things that you have to make corrections, please remember:
@@ -11603,145 +4308,145 @@ ENGINEERING STANDARDS (Senior Level):
 - COMPOSITION OVER PROPS: Favor component composition (using children/slots) and use clean Tailwind merging tools for style overrides.
 ```
 
-**[349]**
+**[299]**
 
 ```
 please, for refactor cases, max 5 modified  files per pr, can you re strecture the opened PRs?
 ```
 
-**[350]**
+**[300]**
 
 ```
 in pr 64, apps/web/src/components/CreateListingForm.tsx has a lot of hardcoded text, by example, line 45. can you fix that?
 ```
 
-**[351]**
+**[301]**
 
 ```
 in apps/web/src/components/SearchFilterPanel.tsx, AMENITY_OPTIONS needs to be extracted to a constants file, and it has "Wifi", "Parking", and other labels hardcoded, fix that, try not to exceed 5 files per pr, but if you really need it it's ok to do it.
 ```
 
-**[352]**
+**[302]**
 
 ```
 If I leave comments when I'm reviewing the PR, you are allowed to read them? there are a few thinks that needs correction.
 ```
 
-**[353]**
+**[303]**
 
 ```
 ok, in pr 67, I made a few comments in a few files, can you read them?
 ```
 
-**[354]**
+**[304]**
 
 ```
 please  check for each component in pages folder, to apply the rules we talked before, remember, try not to exceed 5 files per each pr, but you can be flexible if you really need it, No hardcoded texts, if the component is more than 100 lines, try to refactor it in smaller components, remember to extract constants, and if it's possible, apply lazy loading. Open as many pr as you need. I will check back in 2 hours.
 ```
 
-**[355]**
+**[305]**
 
 ```
 ok, can you retake what you was doing before reaching the session limit?
 ```
 
-**[356]**
+**[306]**
 
 ```
 ok, but what happened with refactor/edit-listing-hooks branch? it has not a pr.
 ```
 
-**[357]**
+**[307]**
 
 ```
 I left you a comment in PR #71
 ```
 
-**[358]**
+**[308]**
 
 ```
 I left you a few comments in PR #72
 ```
 
-**[359]**
+**[309]**
 
 ```
 I left you a few comments in PR #73
 ```
 
-**[360]**
+**[310]**
 
 ```
 ok, pr #73 fails the CI, it has an e2e test fail.
 ```
 
-**[361]**
+**[311]**
 
 ```
 I left you a few comments in PR #74
 ```
 
-**[362]**
+**[312]**
 
 ```
 I left you a few comments in PR #75, and can you resolve the conflicts it has?
 ```
 
-**[363]**
+**[313]**
 
 ```
 please, can you check the react code into apps/web and make a refactor around DRY principles? Plase have in mind: "When generating or reviewing code in React, apply the DRY principle. If you find two or more identical or structurally similar UI elements, extract them into a reusable subcomponent. Handle small differences (such as text, icons, or handlers) through well-typed props in TypeScript to maintain a clean and modular architecture."
 ```
 
-**[364]**
+**[314]**
 
 ```
 ok, can you make pull request remembering the "trying to not exceed 5 files (but you can be flexible) per refactor pr"?
 ```
 
-**[365]**
+**[315]**
 
 ```
 can you retake your last task?
 ```
 
-**[366]**
+**[316]**
 
 ```
 I saw a lot of inconsistencies around i18n between a lot of components, can you re check that?
 ```
 
-**[367]**
+**[317]**
 
 ```
 pr #78 has conflicts, can you solve them?
 ```
 
-**[368]**
+**[318]**
 
 ```
 ok, now when I pay for a booking, and the payment is correctyly done, the booking keeps in "pending Payment" state. Can you check that?
 ```
 
-**[369]**
+**[319]**
 
 ```
 I left you a comment in pr #80
 ```
 
-**[370]**
+**[320]**
 
 ```
 I left you a comment in pr #80
 ```
 
-**[371]**
+**[321]**
 
 ```
 PR #81 has merge conflicts
 ```
 
-**[372]**
+**[322]**
 
 ```
 I was checking the backend code in apps/api, and I let's fix some things:
@@ -11775,13 +4480,13 @@ Analyze the provided Express application entry point or module, identify archite
 Please remember the flexible limit of around 5 files per pr of refactoring.
 ```
 
-**[373]**
+**[323]**
 
 ```
 yes
 ```
 
-**[374]**
+**[324]**
 
 ```
 I saw a few things in PR # 82:
@@ -11802,19 +4507,19 @@ Act as a Senior Node.js & TypeScript Engineer. Refactor the current codebase bas
 Please generate the updated files with these fixes applied, maintaining clean TypeScript types and keeping the code dry.
 ```
 
-**[375]**
+**[325]**
 
 ```
 git status
 ```
 
-**[376]**
+**[326]**
 
 ```
 I have already removed the gemini AI pr revew workflow, commit and push them.
 ```
 
-**[377]**
+**[327]**
 
 ```
 I'm testing the deploy of nomadhome and when I make a search with madrid payload, I see that there is a cors problem:
@@ -11836,19 +4541,19 @@ user-agent
 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36
 ```
 
-**[378]**
+**[328]**
 
 ```
 ok, now I need film the user experience with all the roles in the app, what actions do you suggest to show all the flow for each role?
 ```
 
-**[379]**
+**[329]**
 
 ```
 yes, seed the DB with test users and a listing
 ```
 
-**[380]**
+**[330]**
 
 ```
 I have an error with that:
@@ -11881,32 +4586,32 @@ Please make sure your database server is running at `postgres.railway.internal:5
 Exit status 1
 ```
 
-**[381]**
+**[331]**
 
 ```
 ok, I made it, this was the result:
 Upserted 10 amenities.
 ```
 
-**[382]**
+**[332]**
 
 ```
 the listings show up but without photos, If I want to attach real photos, how do we make it?
 ```
 
-**[383]**
+**[333]**
 
 ```
 option B
 ```
 
-**[384]**
+**[334]**
 
 ```
 ok, but those photos are in production now?
 ```
 
-**[385]**
+**[335]**
 
 ```
 mmm i got this:
@@ -11915,19 +4620,19 @@ mmm i got this:
 Did you mean "pnpm test"?
 ```
 
-**[386]**
+**[336]**
 
 ```
 great! at the homepage there are a lot of sections that are cards but with no photos, can you add real photos to them?
 ```
 
-**[387]**
+**[337]**
 
 ```
 lisboa and medellin card's photos are not being loaded, can you solve it?
 ```
 
-**[388]**
+**[338]**
 
 ```
 ok, when I'm trying to upload a photo as a host, I have this issue:
@@ -11971,7 +4676,7 @@ user-agent
 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36
 ```
 
-**[389]**
+**[339]**
 
 ```
 I left the localhost source too, it's ok to leave it as this?:
@@ -11993,7 +4698,7 @@ I left the localhost source too, it's ok to leave it as this?:
 ]
 ```
 
-**[390]**
+**[340]**
 
 ```
 ok, now when I'm uploading a photo, I have this error:
@@ -12041,31 +4746,31 @@ sec-fetch-dest
 empty
 ```
 
-**[391]**
+**[341]**
 
 ```
 the blocked dates when the host is editing the listing are shown like this: 2026-07-24T00:00:00.000Z – 2026-07-31T00:00:00.000Z, for the user is not good can you solve it?
 ```
 
-**[392]**
+**[342]**
 
 ```
 and, when hte page is loading, this warning happens in my console: No `HydrateFallback` element provided to render during initial hydration
 ```
 
-**[393]**
+**[343]**
 
 ```
 ok, on the date picker when the host selects the dates to block, it needs only to be available dates from the present day and days after. Never days before the present.
 ```
 
-**[394]**
+**[344]**
 
 ```
 mm CI is not passing, can you check it?
 ```
 
-**[395]**
+**[345]**
 
 ```
 ok, when I reloaded the edit listings page, this message appeared:
@@ -12078,7 +4783,7 @@ You can provide a way better UX than this when your app throws errors by providi
 I think there's no error handling correctly implementing, can we fix that?
 ```
 
-**[396]**
+**[346]**
 
 ```
 ok, I just tryied to block a date inside a date previously blocked and It thorws me this error:
@@ -12137,7 +4842,7 @@ Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like 
 Can we manage the overlap conflict? by exmaple not allowing to select dates that are previously blocked?
 ```
 
-**[397]**
+**[347]**
 
 ```
 ok, when as a host I'm publishing the listing, i got this error:
@@ -12156,121 +4861,127 @@ Cb    @    index-DMknVyiM.js:50
 ﻿
 ```
 
-**[398]**
+**[348]**
 
 ```
 can you do if I click search button with no input value as a city, show the most recent listings published?
 ```
 
-**[399]**
+**[349]**
 
 ```
 CI pipeline is not passing, can you ckeck it?
 ```
 
-**[400]**
+**[350]**
 
 ```
 ok, e2e are failing now due the modification.
 ```
 
-**[401]**
+**[351]**
 
 ```
 I just published a listing in Villa la Angostura city, but then when I make a search in search input with "Villa la Angostura"and click search, it's not appearing
 ```
 
-**[402]**
+**[352]**
 
 ```
 in production stage, when I make a booking as a guest and pay for it, Even though I made the payment correctly, when I view my bookings they all appear as "pending payment". Could you fix that? They should appear as paid after the payment is successfully processed.
 ```
 
-**[403]**
+**[353]**
 
 ```
 as a host, i made a listing in villa la angostura, then as a guest I payed a booking in that listing, "villa la angostura", the I logged out, and now I am logged as the host and in my dashboard there's no way to know if a guest payed any listing, "villa la angostura" in this example.
 ```
 
-**[404]**
+**[354]**
 
 ```
 Ci failed
 ```
 
-**[405]**
+**[355]**
 
 ```
 now CI is not passing due a failing test
 ```
 
-**[406]**
+**[356]**
 
 ```
 ok, but I think I'm not being clear, as a Host when I'm looking at host dashboard page, there's no way to know if any listing is already booked by any guest.
 ```
 
-**[407]**
+**[357]**
 
 ```
 ok, now when i go as a host to host dashboard i got this message: Something went wrong
 Cannot read properties of undefined (reading 'bookings')
 ```
 
-**[408]**
+**[358]**
 
 ```
 when I am logged as admin, in Admin page, there is a list of users, but there is not a list of listings. Can you fix it?
 ```
 
-**[409]**
+**[359]**
 
 ```
 ok, in README.md, in point 1.3, can you add the 3 videos, host, guest and admin hosted in docs/video ?
 ```
 
-**[410]**
+**[360]**
 
 ```
 ok,  can you commit and push it?
 ```
 
-**[411]**
+**[361]**
 
 ```
 ok, I removed the video folder inside docs, can you commit and push?
 ```
 
-**[412]**
+**[362]**
 
 ```
 ok, cah you check the last ponti in README.md? point 7. Pull Requests
 ```
 
-**[413]**
+**[363]**
 
 ```
 ok, can you audit  the readme and see if it need any change? or if it has any discrfepancy with the code, deployment or anything else?
 ```
 
-**[414]**
+**[364]**
 
 ```
 ok, now I need all the prompts I introduced here from the beginning of the session, where can I found them?
 ```
 
-**[415]**
+**[365]**
 
 ```
 I need the first ones, since the beginning of nomadhome's project
 ```
 
-**[416]**
+**[366]**
 
 ```
 can you exgtract all the prompts from the historical use that are here and paste them in historical-prompts.md in nomadhome's root folder? the url is: file:///Users/luciano/.claude/projects/-Users-luciano-Documents-IA4devs-NomadHome/
 ```
 
+**[367]**
+
+```
+ok, can you remove that one related to deepsec security scanner?
+```
+
 ---
 
-_Total prompts: 416_
+_Total prompts: 367_
