@@ -1,0 +1,62 @@
+{
+  "filePath": "apps/api/src/services/email.service.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "secret-in-log",
+      "lineNumbers": [36],
+      "snippet": "  async sendVerificationEmail(to: string, rawToken: string): Promise<void> {\n    console.info(`[email] verification queued for ${to} (token ${rawToken.slice(0, 8)}…)`);\n  }",
+      "matchedPattern": "Secret variable in log statement"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.338Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "859853756fb34001ede4dfdf9417c4da032b169d2a80bb7209f2d7672c04efd1",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "secret-in-log",
+      "title": "Partial email-verification token written to durable log",
+      "description": "LoggingEmailService.sendVerificationEmail logs the first 8 characters of the raw verification token via console.info (durable stdout/log aggregation). The token is randomBytes(32).toString('hex') = 64 hex chars (256 bits) and is single-use with a 24h TTL; verifyEmail looks it up by SHA-256 of the FULL token. Logging 8 of 64 hex chars exposes only 32 bits and leaves 224 bits secret, so it is not practically exploitable — the truncation is effectively a deliberate mitigation. Reported at low confidence as a logging-hygiene/defense-in-depth issue: token material of any length in durable logs is best avoided, and in a misconfigured deployment where RESEND_API_KEY is unset this stub becomes the live verification path (auth.ts:12).",
+      "lineNumbers": [36],
+      "recommendation": "Do not log token material at all; log only a non-sensitive correlation id (e.g. userId or verification record id). If a breadcrumb is desired, log the token hash prefix rather than the raw token prefix.",
+      "confidence": "low",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:44:48.766Z",
+      "durationMs": 78077.6,
+      "durationApiMs": 77040.4,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a7ac9a8c-d4fe-4b1d-b3e3-7b102c225d6b",
+      "findingCount": 1,
+      "numTurns": 5.2,
+      "phase": "process",
+      "costUsd": 0.34809500000000004,
+      "usage": {
+        "inputTokens": 3,
+        "outputTokens": 5217.2,
+        "cacheReadInputTokens": 93268,
+        "cacheCreationInputTokens": 17101.6
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T20:28:48+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:44:48.793Z"
+  }
+}

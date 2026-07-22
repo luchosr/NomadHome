@@ -1,0 +1,63 @@
+{
+  "filePath": "apps/api/src/services/review.service.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [35],
+      "snippet": "\nfunction isUniqueViolation(err: unknown): boolean {\n  return err instanceof Error && err.message.includes(\"Unique constraint failed\");\n}\n",
+      "matchedPattern": "weak cipher algorithm"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [51],
+      "snippet": "  ): Promise<Review> {\n    const booking = await this.bookings.findById(bookingId);\n    if (!booking || booking.guestId !== guestId) throw new ReviewNotFoundError();\n    if (booking.status !== \"CONFIRMED\") throw new BookingNotConfirmedError();\n",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [76],
+      "snippet": "  ): Promise<{ reviews: Review[]; averageRating: number | null; reviewCount: number }> {\n    const listing = await this.listings.findById(listingId);\n    const reviews = await this.reviews.findByListing(listingId);\n    return {\n      reviews,",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.352Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "b9573bb2ade91ddf74af46cacc6bbb76febcf6226e863509a7eb45c794de5cfd",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:44:48.793Z",
+      "durationMs": 78077.6,
+      "durationApiMs": 77040.4,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a7ac9a8c-d4fe-4b1d-b3e3-7b102c225d6b",
+      "findingCount": 0,
+      "numTurns": 5.2,
+      "phase": "process",
+      "costUsd": 0.34809500000000004,
+      "usage": {
+        "inputTokens": 3,
+        "outputTokens": 5217.2,
+        "cacheReadInputTokens": 93268,
+        "cacheCreationInputTokens": 17101.6
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T23:43:38+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:44:48.816Z"
+  }
+}

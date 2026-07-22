@@ -1,0 +1,56 @@
+{
+  "filePath": "apps/api/src/controllers/review.controller.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "auth-bypass",
+      "lineNumbers": [10],
+      "snippet": "  ReviewAlreadyExistsError,\n} from \"../services/review.service.js\";\nimport type { AuthedRequest } from \"../middleware/require-auth.js\";\n\nexport class ReviewController {",
+      "matchedPattern": "auth middleware"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.250Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "4e6b3f51380c295dbf71f418f8ad8031a19db9b93fbba38f55b8ea16a35bbed6",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T09:57:42.549Z",
+      "durationMs": 76450.33333333333,
+      "durationApiMs": 75648.66666666667,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "9c09916f-126e-455d-8d70-8a6067742498",
+      "findingCount": 0,
+      "numTurns": 8.666666666666666,
+      "phase": "process",
+      "costUsd": 0.3525211666666666,
+      "usage": {
+        "inputTokens": 4,
+        "outputTokens": 5360,
+        "cacheReadInputTokens": 108484,
+        "cacheCreationInputTokens": 20974.666666666668
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T23:43:38+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:57:42.572Z"
+  }
+}

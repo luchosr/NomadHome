@@ -1,0 +1,67 @@
+{
+  "filePath": "packages/shared/src/schemas/listing.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [13, 21],
+      "snippet": "export const CreateListingSchema = z.object({\n  title: z.string().min(1, t(\"validation.required.field\")),\n  description: z.string().min(1, t(\"validation.required.field\")),\n  type: z.enum(LISTING_TYPES, { errorMap: () => ({ message: t(\"listings.create.invalid_type\") }) }),\n  city: z.string().min(1, t(\"validation.required.field\")),",
+      "matchedPattern": "weak cipher algorithm"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.308Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "734243c1f7a14f5631a1637555bea7c9b5b6ee572eda9e3a7090aeaaa9130b9e",
+  "findings": [
+    {
+      "severity": "BUG",
+      "vulnSlug": "other-weak-validation",
+      "title": "isoDate regex accepts semantically invalid dates (e.g. 2026-13-45)",
+      "description": "The `isoDate` validator (L47) only enforces the shape `\\d{4}-\\d{2}-\\d{2}` — it does not validate that the month/day are real. Values like `2026-13-45`, `2026-00-00`, or `0000-99-99` pass validation. `BlockDateRangeSchema.refine((d) => d.endDate > d.startDate)` then compares them as strings, so a nonsense-but-lexicographically-greater endDate also passes. A host submitting such a range to the availability-block endpoint pushes an invalid date into the persistence layer; when it reaches PostgreSQL's date/daterange parsing it throws, surfacing as an unhandled 500 rather than a clean 400. This is a robustness/validation gap, not a security hole (host-only input, DB rejects truly invalid values), but it defeats the purpose of client/server shared validation.",
+      "lineNumbers": [47, 54],
+      "recommendation": "Validate real calendar dates, e.g. `z.string().refine((s) => !Number.isNaN(Date.parse(s)) && /^\\d{4}-\\d{2}-\\d{2}$/.test(s))` or use `z.coerce.date()` / a date library, then compare as Date objects. Keeps a nonsense date from reaching the DB as a 500.",
+      "confidence": "low",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:01:10.549Z",
+      "durationMs": 50324,
+      "durationApiMs": 49951,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "2a95237a-67fc-4ea7-b5e7-2a80578f48f0",
+      "findingCount": 1,
+      "numTurns": 2,
+      "phase": "process",
+      "costUsd": 0.1874780625,
+      "usage": {
+        "inputTokens": 1.5,
+        "outputTokens": 3523.25,
+        "cacheReadInputTokens": 22383,
+        "cacheCreationInputTokens": 10087.75
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T14:41:40+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:01:10.573Z"
+  }
+}

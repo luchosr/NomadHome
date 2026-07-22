@@ -1,0 +1,80 @@
+{
+  "filePath": "apps/api/src/repositories/booking.repository.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [55, 104],
+      "snippet": "        tx.booking.findMany({\n          where: { guestId },\n          orderBy: { createdAt: \"desc\" },\n          skip: (page - 1) * limit,\n          take: limit,",
+      "matchedPattern": "weak cipher algorithm"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [42],
+      "snippet": "\n  findById(id: string): Promise<Booking | null> {\n    return prisma.booking.findUnique({ where: { id } });\n  }\n",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [43],
+      "snippet": "  findById(id: string): Promise<Booking | null> {\n    return prisma.booking.findUnique({ where: { id } });\n  }\n\n  findByGuest(",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [104],
+      "snippet": "  latestFeeConfig(): Promise<PlatformFeeConfig | null> {\n    return prisma.platformFeeConfig.findFirst({ orderBy: { createdAt: \"desc\" } });\n  }\n}\n",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.355Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "d3a8dd808af20b24ea0ef425cbec835a86a2bf5984a709c3f515b5d2235d3e7f",
+  "findings": [
+    {
+      "severity": "HIGH_BUG",
+      "vulnSlug": "other-orphaned-booking-hold",
+      "title": "BOOKING_HOLD never released for abandoned (PENDING_PAYMENT) bookings — permanently blocks listing availability",
+      "description": "`create()` (L27-40) atomically inserts a Booking (default status PENDING_PAYMENT per schema.prisma L240) and an AvailabilityBlock with source=BOOKING_HOLD that reserves the date range via the DB EXCLUDE constraint. The ONLY code path that deletes a BOOKING_HOLD is `cancel()` (L75-77: deleteMany where bookingId+source=BOOKING_HOLD). But `BookingService.cancel` (booking.service.ts L155-157) throws BOOKING_NOT_CANCELLABLE unless status===CONFIRMED, so a guest cannot cancel an unpaid booking. Meanwhile the Stripe webhook controller (stripe-webhook.controller.ts L27) handles ONLY 'checkout.session.completed' — there is NO 'checkout.session.expired' handler, and a repo-wide grep found no cron/setInterval/cleanup job. Result: if a guest creates a booking and abandons Stripe Checkout (or the session expires), the BOOKING_HOLD lives forever and permanently blocks those dates on the listing. This is directly abusable: an authenticated guest can POST /bookings for many date ranges on a competitor's listing and never pay, locking out the entire calendar (availability denial-of-service). The README (packages/db docs L675) states the intended invariant 'a BOOKING_HOLD row exists iff status ∈ {PENDING_PAYMENT, CONFIRMED}; CANCELLED deletes the hold' — but nothing transitions an abandoned PENDING_PAYMENT booking out of that state or frees its hold.",
+      "lineNumbers": [29, 75],
+      "recommendation": "Add a 'checkout.session.expired' branch to the Stripe webhook that transitions the booking to CANCELLED/EXPIRED and deletes its BOOKING_HOLD (reuse the deleteMany in cancel()), and/or add a scheduled sweep that expires stale PENDING_PAYMENT bookings past a TTL and releases their holds. Ensure hold deletion is idempotent.",
+      "confidence": "high",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:44:11.548Z",
+      "durationMs": 70708,
+      "durationApiMs": 69616,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "1530cb14-d885-484a-8d3b-c05602f6eca4",
+      "findingCount": 1,
+      "numTurns": 6.8,
+      "phase": "process",
+      "costUsd": 0.3912065,
+      "usage": {
+        "inputTokens": 3,
+        "outputTokens": 4911.8,
+        "cacheReadInputTokens": 106273,
+        "cacheCreationInputTokens": 21526
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-19T10:22:33+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:44:11.666Z"
+  }
+}

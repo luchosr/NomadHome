@@ -1,0 +1,121 @@
+{
+  "filePath": "apps/api/src/services/storage.service.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "dev-auth-bypass",
+      "lineNumbers": [13],
+      "snippet": "\n  constructor() {\n    if (!isLocalDev) {\n      this.client = new S3Client({\n        region: \"auto\",",
+      "matchedPattern": "Auth conditional on isDev/isTest flag — fails open risk"
+    },
+    {
+      "vulnSlug": "dev-auth-bypass",
+      "lineNumbers": [28],
+      "snippet": "\n  getPresignedUploadUrl(key: string, contentType: string, ttlSeconds = 300): Promise<string> {\n    if (isLocalDev) {\n      return Promise.resolve(`${API_BASE}/dev-upload/${key}`);\n    }",
+      "matchedPattern": "Auth conditional on isDev/isTest flag — fails open risk"
+    },
+    {
+      "vulnSlug": "dev-auth-bypass",
+      "lineNumbers": [40],
+      "snippet": "\n  publicUrlFor(key: string): string {\n    if (isLocalDev) return `${API_BASE}/uploads/${key}`;\n    return `${this.publicUrl}/${key}`;\n  }",
+      "matchedPattern": "Auth conditional on isDev/isTest flag — fails open risk"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [4],
+      "snippet": "\nconst isLocalDev = !process.env[\"CLOUDFLARE_R2_ACCOUNT_ID\"];\nconst API_BASE = (process.env[\"API_BASE_URL\"] ?? \"http://localhost:3000\").replace(/\\/$/, \"\");",
+      "matchedPattern": "process.env.CLOUDFLARE_R2_ACCOUNT_ID"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [5],
+      "snippet": "const isLocalDev = !process.env[\"CLOUDFLARE_R2_ACCOUNT_ID\"];\nconst API_BASE = (process.env[\"API_BASE_URL\"] ?? \"http://localhost:3000\").replace(/\\/$/, \"\");\n",
+      "matchedPattern": "process.env.API_BASE_URL"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [16],
+      "snippet": "        region: \"auto\",\n        endpoint: process.env[\"CLOUDFLARE_R2_ENDPOINT\"] ?? \"\",\n        credentials: {",
+      "matchedPattern": "process.env.CLOUDFLARE_R2_ENDPOINT"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [18],
+      "snippet": "        credentials: {\n          accessKeyId: process.env[\"CLOUDFLARE_R2_ACCESS_KEY_ID\"] ?? \"\",\n          secretAccessKey: process.env[\"CLOUDFLARE_R2_SECRET_ACCESS_KEY\"] ?? \"\",",
+      "matchedPattern": "process.env.CLOUDFLARE_R2_ACCESS_KEY_ID"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [19],
+      "snippet": "          accessKeyId: process.env[\"CLOUDFLARE_R2_ACCESS_KEY_ID\"] ?? \"\",\n          secretAccessKey: process.env[\"CLOUDFLARE_R2_SECRET_ACCESS_KEY\"] ?? \"\",\n        },",
+      "matchedPattern": "process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [22],
+      "snippet": "      });\n      this.bucket = process.env[\"CLOUDFLARE_R2_BUCKET_NAME\"] ?? \"\";\n      this.publicUrl = (process.env[\"CLOUDFLARE_R2_PUBLIC_URL\"] ?? \"\").replace(/\\/$/, \"\");",
+      "matchedPattern": "process.env.CLOUDFLARE_R2_BUCKET_NAME"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [23],
+      "snippet": "      this.bucket = process.env[\"CLOUDFLARE_R2_BUCKET_NAME\"] ?? \"\";\n      this.publicUrl = (process.env[\"CLOUDFLARE_R2_PUBLIC_URL\"] ?? \"\").replace(/\\/$/, \"\");\n    }",
+      "matchedPattern": "process.env.CLOUDFLARE_R2_PUBLIC_URL"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.397Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "f8ea3d6058005e889b130d1e77888654516abfe3086f2fdc284d2a261ce9e257",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "vulnSlug": "path-traversal",
+      "title": "Env-var name mismatch exposes unauthenticated dev file-write endpoint in production",
+      "description": "storage.service.ts decides 'local dev' via `!process.env.CLOUDFLARE_R2_ACCOUNT_ID` (L4) and reads ALL real R2 config from `CLOUDFLARE_R2_*` (L16-23). But apps/api/src/app.ts registers the local-dev endpoints behind a DIFFERENT variable: `if (!process.env['R2_ACCOUNT_ID'])` (app.ts:43) it mounts `app.put('/dev-upload/:key', express.raw(...), fs.writeFileSync(path.join(uploadsDir, req.params.key), req.body))` (app.ts:45-49) and `app.use('/uploads', express.static(uploadsDir))` (app.ts:50). The two guards use different names, so the enabling condition for the dev endpoint is fully decoupled from whether R2 is actually configured. A production deployment configured per apps/api/.env.example (which documents CLOUDFLARE_R2_ACCOUNT_ID, not R2_ACCOUNT_ID) sets CLOUDFLARE_R2_ACCOUNT_ID (storage.service isLocalDev=false → uses R2 for real) but never sets the unprefixed R2_ACCOUNT_ID, so app.ts's guard is true and the dev endpoints stay live in prod. The committed runtime apps/api/.env demonstrates exactly this state (CLOUDFLARE_R2_ACCOUNT_ID set to a real value; R2_ACCOUNT_ID absent). The dev-upload handler is unauthenticated (mounted before all routers/guards) and writes attacker-controlled bytes to a filesystem path built directly from `req.params.key`. Attack: (a) `PUT /dev-upload/evil.html` writes uploads/evil.html, then served same-origin via `/uploads/evil.html` → stored XSS / content spoofing / overwrite of legitimate listing photos (integrity) / disk-fill DoS (20mb each); (b) since Express (v4.21) decodes the captured param, `PUT /dev-upload/..%2f..%2f..%2fpath` decodes to `../../../path` and escapes uploads/ via path.join → arbitrary file write anywhere the process can write → potential RCE. The documented 'known false-positive' (dev-only, active only when R2_ACCOUNT_ID absent) is void precisely because the flag that turns the endpoint on is not the flag that configures R2.",
+      "lineNumbers": [4, 13],
+      "recommendation": "Use one source of truth for the dev/R2 decision: export `isLocalDev` from storage.service.ts and reuse it in app.ts, aligning on a single variable name (CLOUDFLARE_R2_ACCOUNT_ID). Additionally, never register /dev-upload unless NODE_ENV!=='production' AND an explicit opt-in flag is set; require auth; reject any key containing '/', '..', or that path.resolve()s outside uploadsDir; and restrict content types/size.",
+      "confidence": "high",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:03:32.563Z",
+      "durationMs": 116118.2,
+      "durationApiMs": 115292.4,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "ef7880e1-da62-442c-ae43-83ae821704b9",
+      "findingCount": 1,
+      "numTurns": 8.2,
+      "phase": "process",
+      "costUsd": 0.44308995000000007,
+      "usage": {
+        "inputTokens": 241.2,
+        "outputTokens": 7925.8,
+        "cacheReadInputTokens": 196936.4,
+        "cacheCreationInputTokens": 19814.8
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-07-13T16:58:43+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:03:32.676Z"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "filePath": "apps/api/src/routes/listing-photos.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "auth-bypass",
+      "lineNumbers": [7],
+      "snippet": "import { ListingRepository } from \"../repositories/listing.repository.js\";\nimport { StorageService } from \"../services/storage.service.js\";\nimport { requireAuth } from \"../middleware/require-auth.js\";\nimport { requireRole } from \"../middleware/require-role.js\";\n",
+      "matchedPattern": "auth middleware"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.245Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "b34aaf9b0af6dcd9b89cd4ba50735fb7c77832c24b7c66497dbf2a86e251722b",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "other-unrestricted-upload-content-type",
+      "title": "Presigned upload URL accepts arbitrary content-type (SVG/HTML smuggling)",
+      "description": "POST /listings/:id/photos/upload-url is host-guarded and ownership-checked, but UploadUrlRequestSchema (packages/shared/src/schemas/listing.ts:31-33) validates `contentType` as only `z.string().min(1)` — no image allowlist. ListingPhotoService.getUploadUrl (listing-photo.service.ts:33-42) passes it straight into StorageService.getPresignedUploadUrl (storage.service.ts:27-37) as the S3/R2 PutObject ContentType. A malicious/compromised host can mint a presigned PUT for `image/svg+xml` or `text/html`, upload active markup, then register it; the object is later served from the public bucket with that content-type. Directly opening the stored URL executes script in the storage origin — escalating to app-cookie theft if the public bucket is a cookie-sharing subdomain of the app. Secondary: ListingPhotoService.register (listing-photo.service.ts:44-53) accepts an arbitrary `key` and never verifies it matches the `photos/<listingId>/` prefix that getUploadUrl issued (service.ts:39) or that the object exists, so a host can also point a listing photo at any object in the bucket. The frontend `accept=\"image/*\"` (EditListingPage.tsx:380) is client-side only and not enforced server-side.",
+      "lineNumbers": [21, 22],
+      "recommendation": "Restrict contentType to an allowlist (e.g. image/jpeg|png|webp) in UploadUrlRequestSchema and re-check server-side in getUploadUrl. Serve the public bucket from a cookieless origin with Content-Disposition: attachment / a restrictive CSP. In register(), validate that `key` starts with the expected `photos/${listingId}/` prefix.",
+      "confidence": "medium",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:02:06.162Z",
+      "durationMs": 63033.4,
+      "durationApiMs": 62652,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a548e19d-d2b4-4688-b3fd-55796678d901",
+      "findingCount": 1,
+      "numTurns": 6.6,
+      "phase": "process",
+      "costUsd": 0.2685416,
+      "usage": {
+        "inputTokens": 3.4,
+        "outputTokens": 4185.2,
+        "cacheReadInputTokens": 107688.2,
+        "cacheCreationInputTokens": 14428.2
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T00:46:17+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:02:06.185Z"
+  }
+}

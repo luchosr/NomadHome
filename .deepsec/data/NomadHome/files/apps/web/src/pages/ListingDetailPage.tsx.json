@@ -1,0 +1,68 @@
+{
+  "filePath": "apps/web/src/pages/ListingDetailPage.tsx",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "xss",
+      "lineNumbers": [178],
+      "snippet": "\n                {datesValid ? (\n                  <Link to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}>\n                    <Button className=\"w-full\">{t(\"listings.detail.book_now\")}</Button>\n                  </Link>",
+      "matchedPattern": "template literal in HTML"
+    },
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [62, 105],
+      "snippet": "  const thumbnails = sortedPhotos.slice(1);\n\n  const isGuest = user?.roles.includes(\"guest\");\n  const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;\n",
+      "matchedPattern": "weak cipher algorithm"
+    },
+    {
+      "vulnSlug": "open-redirect",
+      "lineNumbers": [165],
+      "snippet": "                    setSearchParams(\n                      (prev) => {\n                        const next = new URLSearchParams(prev);\n                        if (newIn) next.set(\"checkIn\", newIn);\n                        else next.delete(\"checkIn\");",
+      "matchedPattern": "redirect URL parameter"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.317Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "cfb5a49e844d7ce652580842d01d06acf6dbeaff8b68f07b9720ed0cad409aeb",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:02:16.630Z",
+      "durationMs": 27134,
+      "durationApiMs": 26929.2,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "f8d0e077-a04c-40c1-b3db-e13aba8e8880",
+      "findingCount": 0,
+      "numTurns": 2.2,
+      "phase": "process",
+      "costUsd": 0.15910144999999998,
+      "usage": {
+        "inputTokens": 1.4,
+        "outputTokens": 1878.4,
+        "cacheReadInputTokens": 32747.4,
+        "cacheCreationInputTokens": 12094.2
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-24T19:47:34+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:02:16.704Z"
+  }
+}

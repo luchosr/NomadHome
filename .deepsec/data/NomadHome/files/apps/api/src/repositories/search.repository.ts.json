@@ -1,0 +1,68 @@
+{
+  "filePath": "apps/api/src/repositories/search.repository.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [64],
+      "snippet": "          },\n        },\n        orderBy: [{ createdAt: \"desc\" }, { id: \"asc\" }],\n        skip: (page - 1) * pageSize,\n        take: pageSize,",
+      "matchedPattern": "weak cipher algorithm"
+    },
+    {
+      "vulnSlug": "missing-await",
+      "lineNumbers": [56],
+      "snippet": "\n    const [listings, total] = await prisma.$transaction([\n      prisma.listing.findMany({\n        where,\n        include: {",
+      "matchedPattern": "prisma call without await"
+    },
+    {
+      "vulnSlug": "missing-await",
+      "lineNumbers": [68],
+      "snippet": "        take: pageSize,\n      }),\n      prisma.listing.count({ where }),\n    ]);\n",
+      "matchedPattern": "prisma call without await"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.404Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "b5aaad737bd2c69308393d6dbc4c926302afff87668e2d4e00b737f3538c9aae",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:43:17.995Z",
+      "durationMs": 74242,
+      "durationApiMs": 72987.5,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a355449b-d2fb-42b5-ab66-97db3b8c36fe",
+      "findingCount": 0,
+      "numTurns": 7.75,
+      "phase": "process",
+      "costUsd": 0.410895125,
+      "usage": {
+        "inputTokens": 4.25,
+        "outputTokens": 5165.5,
+        "cacheReadInputTokens": 131292.75,
+        "cacheCreationInputTokens": 21609
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-24T19:43:56+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:43:18.034Z"
+  }
+}

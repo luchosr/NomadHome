@@ -1,0 +1,56 @@
+{
+  "filePath": "packages/shared/src/schemas/auth.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "jwt-handling",
+      "lineNumbers": [35],
+      "snippet": "/** Request shape for the refresh and logout endpoints — carries the opaque refresh token. */\nexport const RefreshTokenSchema = z.object({\n  refreshToken: z.string().min(1, t(\"validation.required.field\")),\n});\n",
+      "matchedPattern": "Token refresh logic (verify validation)"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.326Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "bf621eae271c3fb4f9c86ace99d034d02f104a7f40c00791bfcafb70543ec5d4",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:01:10.455Z",
+      "durationMs": 50324,
+      "durationApiMs": 49951,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "2a95237a-67fc-4ea7-b5e7-2a80578f48f0",
+      "findingCount": 0,
+      "numTurns": 2,
+      "phase": "process",
+      "costUsd": 0.1874780625,
+      "usage": {
+        "inputTokens": 1.5,
+        "outputTokens": 3523.25,
+        "cacheReadInputTokens": 22383,
+        "cacheCreationInputTokens": 10087.75
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-16T17:16:30+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:01:10.548Z"
+  }
+}

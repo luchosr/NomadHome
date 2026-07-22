@@ -1,0 +1,51 @@
+{
+  "filePath": "apps/web/src/api/client.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "secret-in-log",
+      "lineNumbers": [28],
+      "snippet": "  };\n  if (accessToken) headers[\"Authorization\"] = `Bearer ${accessToken}`;\n",
+      "matchedPattern": "Secret variable in log statement"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.337Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "7d55ccb6e12b86409ca5b09572db34e7b4ee9764dfe1723319037972c0e7ba5b",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:44:17.635Z",
+      "durationMs": 17963.4,
+      "durationApiMs": 17755,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "bad83436-d5fb-4f55-a359-89960cff5408",
+      "findingCount": 0,
+      "numTurns": 1.2,
+      "phase": "process",
+      "costUsd": 0.1002653,
+      "usage": {
+        "inputTokens": 0.8,
+        "outputTokens": 1295,
+        "cacheReadInputTokens": 9648.6,
+        "cacheCreationInputTokens": 6306.2
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-07-09T11:13:36+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:44:17.658Z"
+  }
+}

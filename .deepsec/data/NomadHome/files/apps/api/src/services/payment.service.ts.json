@@ -1,0 +1,86 @@
+{
+  "filePath": "apps/api/src/services/payment.service.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [35],
+      "snippet": "\nfunction isUniqueViolation(err: unknown): boolean {\n  return err instanceof Error && err.message.includes(\"Unique constraint failed\");\n}\n",
+      "matchedPattern": "weak cipher algorithm"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [55],
+      "snippet": "  ): Promise<{ url: string; sessionId: string }> {\n    const booking = await this.bookings.findById(bookingId);\n    if (!booking || booking.guestId !== guestId) throw new PaymentBookingNotFoundError();\n    if (booking.status !== \"PENDING_PAYMENT\") throw new BookingNotPendingError();\n",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [69],
+      "snippet": "\n    const listing = await this.listings.findById(booking.listingId);\n    const listingTitle = listing?.title ?? \"Stay\";\n\n    const session = await this.stripe.checkout.sessions.create({",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [122],
+      "snippet": "      const [guest, host, listing] = await Promise.all([\n        this.users.findById(confirmed.guestId),\n        this.users.findById(confirmed.hostId),\n        this.listings.findById(confirmed.listingId),\n      ]);",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [123],
+      "snippet": "        this.users.findById(confirmed.guestId),\n        this.users.findById(confirmed.hostId),\n        this.listings.findById(confirmed.listingId),\n      ]);\n      if (guest && host && listing) {",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [124],
+      "snippet": "        this.users.findById(confirmed.hostId),\n        this.listings.findById(confirmed.listingId),\n      ]);\n      if (guest && host && listing) {\n        const hostProfile = await this.users.findHostProfile(host.id);",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.353Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "dcd54de36e26396295885b9f6c11f8678eed90622ee7d45656c10e9ede6d7e12",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:03:32.746Z",
+      "durationMs": 116118.2,
+      "durationApiMs": 115292.4,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "ef7880e1-da62-442c-ae43-83ae821704b9",
+      "findingCount": 0,
+      "numTurns": 8.2,
+      "phase": "process",
+      "costUsd": 0.44308995000000007,
+      "usage": {
+        "inputTokens": 241.2,
+        "outputTokens": 7925.8,
+        "cacheReadInputTokens": 196936.4,
+        "cacheCreationInputTokens": 19814.8
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T20:28:48+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:03:32.771Z"
+  }
+}

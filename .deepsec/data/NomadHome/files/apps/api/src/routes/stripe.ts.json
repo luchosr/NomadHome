@@ -1,0 +1,101 @@
+{
+  "filePath": "apps/api/src/routes/stripe.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "missing-auth",
+      "lineNumbers": [31],
+      "snippet": "const router = Router();\n// Raw body required for Stripe signature verification — must be mounted before express.json()\nrouter.post(\"/webhook\", express.raw({ type: \"application/json\" }), controller.handle);\n\nexport const stripeRouter = router;",
+      "matchedPattern": "HTTP entry point: router method handler (weak candidate)"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [11],
+      "snippet": "\nconst stripe = new Stripe(process.env[\"STRIPE_SECRET_KEY\"] ?? \"sk_test_placeholder\");\nconst webhookSecret = process.env[\"STRIPE_WEBHOOK_SECRET\"] ?? \"whsec_placeholder\";",
+      "matchedPattern": "process.env.STRIPE_SECRET_KEY"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [12],
+      "snippet": "const stripe = new Stripe(process.env[\"STRIPE_SECRET_KEY\"] ?? \"sk_test_placeholder\");\nconst webhookSecret = process.env[\"STRIPE_WEBHOOK_SECRET\"] ?? \"whsec_placeholder\";\n",
+      "matchedPattern": "process.env.STRIPE_WEBHOOK_SECRET"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [22],
+      "snippet": "    stripe,\n    process.env[\"STRIPE_SUCCESS_URL\"] ?? \"http://localhost:5173/booking/success\",\n    process.env[\"STRIPE_CANCEL_URL\"] ?? \"http://localhost:5173/listings\",",
+      "matchedPattern": "process.env.STRIPE_SUCCESS_URL"
+    },
+    {
+      "vulnSlug": "process-env-access",
+      "lineNumbers": [23],
+      "snippet": "    process.env[\"STRIPE_SUCCESS_URL\"] ?? \"http://localhost:5173/booking/success\",\n    process.env[\"STRIPE_CANCEL_URL\"] ?? \"http://localhost:5173/listings\",\n  ),",
+      "matchedPattern": "process.env.STRIPE_CANCEL_URL"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.397Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "e301b15b2bf389589cc58c0bab6ca259fadf947bec99e7125458d269b02963d9",
+  "findings": [
+    {
+      "severity": "HIGH_BUG",
+      "vulnSlug": "other-orphaned-hold",
+      "title": "checkout.session.expired not handled — abandoned checkout permanently blocks listing dates",
+      "description": "The Stripe webhook (mounted here at L31, logic in stripe-webhook.controller.ts) only handles `checkout.session.completed`. Booking creation (booking.repository.ts create) inserts a `BOOKING_HOLD` AvailabilityBlock in the same transaction, and the DB EXCLUDE constraint blocks any overlapping booking on those dates. When a guest starts checkout and then abandons it, Stripe fires `checkout.session.expired` — which is silently ignored, so the hold is never deleted. The booking also stays `PENDING_PAYMENT`, and BookingService.cancel refuses to cancel anything that isn't `CONFIRMED` (booking.service.ts L155), so neither the guest nor the system can release the hold. Result: every abandoned checkout permanently blocks those dates for that listing, degrading host inventory over time. The project threat model explicitly calls this out: 'An orphaned hold permanently blocks those dates.'",
+      "lineNumbers": [31],
+      "recommendation": "Handle `checkout.session.expired` (and `checkout.session.async_payment_failed`) in the webhook controller: delete the `BOOKING_HOLD` AvailabilityBlock for the session's booking and transition the booking to EXPIRED/CANCELLED. Optionally add a sweeper for holds whose Stripe session is no longer open.",
+      "confidence": "high",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    },
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "secret-in-fallback",
+      "title": "STRIPE_WEBHOOK_SECRET falls back to a hardcoded placeholder, enabling webhook forgery if unset",
+      "description": "`webhookSecret = process.env[\"STRIPE_WEBHOOK_SECRET\"] ?? \"whsec_placeholder\"` (L12) feeds `stripe.webhooks.constructEvent` (controller L21). Webhook signature verification is the sole defense against spoofing per the threat model. If STRIPE_WEBHOOK_SECRET is missing in an environment, verification silently downgrades to the known, source-hardcoded secret `whsec_placeholder`. An attacker can then forge a `checkout.session.completed` event signed with that placeholder — using their own session id (returned to them by createCheckoutSession) — and get their booking marked CONFIRMED without paying. Exploitation is conditional on the env var being unset, but a hardcoded secret fallback should never silently satisfy a signature check.",
+      "lineNumbers": [12, 26, 31],
+      "recommendation": "Fail fast at startup if STRIPE_WEBHOOK_SECRET (and STRIPE_SECRET_KEY) are unset instead of substituting a placeholder. Never provide a hardcoded fallback for a value used in signature verification.",
+      "confidence": "medium",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T09:59:52.224Z",
+      "durationMs": 72180.4,
+      "durationApiMs": 71681.8,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "1a4e85d1-a5ab-46d7-86d6-69fe5b726dc3",
+      "findingCount": 2,
+      "numTurns": 7,
+      "phase": "process",
+      "costUsd": 0.29685815000000004,
+      "usage": {
+        "inputTokens": 2.8,
+        "outputTokens": 5193.4,
+        "cacheReadInputTokens": 94894.8,
+        "cacheCreationInputTokens": 15879.8
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T20:29:28+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:59:52.332Z"
+  }
+}

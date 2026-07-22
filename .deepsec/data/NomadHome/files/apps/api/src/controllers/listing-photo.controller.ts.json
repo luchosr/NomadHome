@@ -1,0 +1,56 @@
+{
+  "filePath": "apps/api/src/controllers/listing-photo.controller.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "auth-bypass",
+      "lineNumbers": [14],
+      "snippet": "  PhotoPositionConflictError,\n} from \"../services/listing-photo.service.js\";\nimport type { AuthedRequest } from \"../middleware/require-auth.js\";\n\nexport class ListingPhotoController {",
+      "matchedPattern": "auth middleware"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.251Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "30442513e99f5550931642e8fc66cb9ec601605c9fcedd1a353f6c30587c76c5",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:00:50.039Z",
+      "durationMs": 83755,
+      "durationApiMs": 83302,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "6770147c-9135-433d-aa34-f625366ceab9",
+      "findingCount": 0,
+      "numTurns": 7.2,
+      "phase": "process",
+      "costUsd": 0.30919125,
+      "usage": {
+        "inputTokens": 4.8,
+        "outputTokens": 5481.6,
+        "cacheReadInputTokens": 184497,
+        "cacheCreationInputTokens": 12780.6
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T00:46:17+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:00:50.061Z"
+  }
+}

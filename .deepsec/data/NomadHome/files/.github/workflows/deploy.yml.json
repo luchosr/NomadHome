@@ -1,0 +1,67 @@
+{
+  "filePath": ".github/workflows/deploy.yml",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "github-workflow-security",
+      "lineNumbers": [19, 21],
+      "snippet": "        run: |\n          curl -X POST \"https://api.vercel.com/v1/deployments\" \\\n            -H \"Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}\" \\\n            -H \"Content-Type: application/json\" \\\n            -d \"{\\\"name\\\": \\\"nomadhome\\\", \\\"project\\\": \\\"${{ secrets.VERCEL_PROJECT_ID }}\\\", \\\"deploymentDataSource\\\": \\\"github\\\"}\"",
+      "matchedPattern": "secret reference"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.462Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "7f2282041a1b18eafb85b8ee142e3bf5184f33ae12f260183f687d91e8f92b4a",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "github-workflow-security",
+      "title": "Secrets interpolated directly into a run-step shell command",
+      "description": "`VERCEL_TOKEN` (L19) and `VERCEL_PROJECT_ID` (L21) are inlined into the `run:` curl command via `${{ secrets.* }}`, which renders the secret values into the shell command string at expansion time. GitHub's own guidance discourages this in favor of passing secrets through `env:` and referencing `$VAR`, because inline expansion widens the surface for accidental log/command-line exposure and for shell breakage/injection if a value ever contained metacharacters. Practical exploitability is low: this workflow triggers only on `push` to `main` (trusted committers, no untrusted PR input), the secrets are admin-set and masked in logs, and Vercel IDs/tokens are not attacker-controlled. Reported as a best-practice hardening item.",
+      "lineNumbers": [19, 21],
+      "recommendation": "Move the secrets into an `env:` block on the step and reference them as environment variables in the curl command (e.g. `env: { VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} }` then `-H \"Authorization: Bearer $VERCEL_TOKEN\"`), quoting expansions to avoid word-splitting.",
+      "confidence": "low",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T09:56:47.679Z",
+      "durationMs": 44306.5,
+      "durationApiMs": 43534.5,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "6963c53a-a8d5-4d66-892c-852ae466d9a2",
+      "findingCount": 1,
+      "numTurns": 2.75,
+      "phase": "process",
+      "costUsd": 0.178759,
+      "usage": {
+        "inputTokens": 15,
+        "outputTokens": 3102,
+        "cacheReadInputTokens": 32188,
+        "cacheCreationInputTokens": 9533
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-07-09T15:24:11+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:56:47.696Z"
+  }
+}

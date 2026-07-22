@@ -1,0 +1,87 @@
+{
+  "filePath": "apps/api/src/repositories/admin.repository.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [75, 90],
+      "snippet": "      const [data, total] = await Promise.all([\n        tx.user.findMany({\n          orderBy: { createdAt: \"desc\" },\n          skip: (page - 1) * limit,\n          take: limit,",
+      "matchedPattern": "weak cipher algorithm"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.315Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "5053c82b0ba0f481e78b1646ebc59a77328885b4b67f63e6e0b1538593cd46d7",
+  "findings": [
+    {
+      "severity": "BUG",
+      "vulnSlug": "other-state-machine-bug",
+      "title": "enableListing force-publishes listings that were DRAFT before being disabled",
+      "description": "enableListing() unconditionally sets status to PUBLISHED. However a DRAFT listing can legitimately reach DISABLED: disableUser()'s cascade disables listings with status in ['PUBLISHED','DRAFT'] (line 14), and disableListing() operates on any listingId regardless of prior status. Sequence: host creates a DRAFT listing -> admin disables the host (or the listing) -> listing becomes DISABLED -> admin later enables the listing -> it becomes PUBLISHED even though the host never published it. This exposes an unfinished/unreviewed draft (potentially with placeholder pricing, incomplete description, or wrong availability) to the public search/listing surface. The pre-disable status is not preserved, so enable cannot correctly restore it.",
+      "lineNumbers": [64, 65, 66, 67, 68, 69, 14],
+      "recommendation": "Record the status prior to disabling (e.g., a `previousStatus` column or only setting DISABLED from PUBLISHED) and restore it on enable, or restrict enableListing to listings whose previous state was PUBLISHED. Do not blanket-set PUBLISHED.",
+      "confidence": "medium",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    },
+    {
+      "severity": "BUG",
+      "vulnSlug": "other-missing-audit-log",
+      "title": "Disabling a user emits no user_disabled audit event",
+      "description": "disableUser() sets disabledAt, cascades to listings, and creates BookingFlag rows, but never records an AuthAuditEvent. The AuthAuditEventType enum defines a `user_disabled` value specifically for this action, yet no code path writes it (verified across admin.repository.ts, admin.service.ts, and admin-moderation.controller.ts). The MVP compliance scope requires a 'basic audit log of auth events'; account disablement is a security-relevant admin action and should be captured. Without it, there is no trail of who disabled whom or when.",
+      "lineNumbers": [7, 8, 9, 10, 11, 46],
+      "recommendation": "Within the disableUser transaction, insert an AuthAuditEvent with event 'user_disabled', the target userId, and metadata identifying the acting adminId.",
+      "confidence": "medium",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    },
+    {
+      "severity": "BUG",
+      "vulnSlug": "other-defense-in-depth",
+      "title": "Disabling a user does not revoke refresh tokens (design drift)",
+      "description": "The documented auth design states refresh tokens are 'revoked in bulk when a user is disabled (admin cascade)'. disableUser() performs no RefreshToken revocation (no updateMany setting revokedAt). In practice this is compensated: AuthService.refresh() re-loads the user and rejects when user.disabledAt is set (auth.service.ts line 210), so a disabled user cannot mint new tokens; the existing short-lived access token remains valid until expiry (the documented, accepted window). The residual risk is purely defense-in-depth: the stale token rows persist, and if the refresh-endpoint disabledAt check were ever refactored away, the tokens would silently become usable again. Flagging as low-impact drift between stated design and implementation.",
+      "lineNumbers": [7, 8, 9, 10, 11, 47],
+      "recommendation": "For belt-and-suspenders parity with the documented design, add `tx.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } })` inside the disableUser transaction.",
+      "confidence": "low",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:43:18.034Z",
+      "durationMs": 74242,
+      "durationApiMs": 72987.5,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a355449b-d2fb-42b5-ab66-97db3b8c36fe",
+      "findingCount": 3,
+      "numTurns": 7.75,
+      "phase": "process",
+      "costUsd": 0.410895125,
+      "usage": {
+        "inputTokens": 4.25,
+        "outputTokens": 5165.5,
+        "cacheReadInputTokens": 131292.75,
+        "cacheCreationInputTokens": 21609
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-19T17:56:55+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:43:18.068Z"
+  }
+}

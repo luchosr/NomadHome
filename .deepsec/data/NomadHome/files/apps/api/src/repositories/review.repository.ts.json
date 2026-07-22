@@ -1,0 +1,67 @@
+{
+  "filePath": "apps/api/src/repositories/review.repository.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "insecure-crypto",
+      "lineNumbers": [39],
+      "snippet": "    return prisma.review.findMany({\n      where: { listingId },\n      orderBy: { createdAt: \"desc\" },\n    });\n  }",
+      "matchedPattern": "weak cipher algorithm"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.314Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "454addfb67f7edfb3598278daad3f8d256e27eefe3876ff5113c60d71ded9e12",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "other-info-disclosure",
+      "title": "Public reviews endpoint leaks internal guestId and bookingId",
+      "description": "findByListing() returns full Review rows, and ReviewService.listForListing / ReviewController.listForListing serialize them directly to the response of the public, unauthenticated route GET /listings/:id/reviews (reviews.ts line 20, no requireAuth). Each row includes internal identifiers guestId and bookingId in addition to the intended rating/text/createdAt. Exposing the reviewer's internal user UUID publicly enables cross-referencing/enumeration of users, and leaking bookingId exposes an internal identifier that is otherwise not surfaced to third parties. No auth mutation can be performed with these ids (review/booking mutations enforce guestId ownership), so impact is limited to information disclosure of internal identifiers, not direct account takeover.",
+      "lineNumbers": [36, 37, 38, 39, 40, 41],
+      "recommendation": "Return a projection instead of the raw entity: select/map only the fields the public UI needs (id, rating, text, createdAt, and a display name if desired). Do not expose guestId or bookingId on the public endpoint.",
+      "confidence": "medium",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:43:18.068Z",
+      "durationMs": 74242,
+      "durationApiMs": 72987.5,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a355449b-d2fb-42b5-ab66-97db3b8c36fe",
+      "findingCount": 1,
+      "numTurns": 7.75,
+      "phase": "process",
+      "costUsd": 0.410895125,
+      "usage": {
+        "inputTokens": 4.25,
+        "outputTokens": 5165.5,
+        "cacheReadInputTokens": 131292.75,
+        "cacheCreationInputTokens": 21609
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T23:43:38+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:43:18.095Z"
+  }
+}

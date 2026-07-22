@@ -1,0 +1,83 @@
+{
+  "filePath": "Dockerfile",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "dockerfile-from-mutable-tag",
+      "lineNumbers": [1, 36],
+      "snippet": "FROM node:20-alpine AS builder\nWORKDIR /app",
+      "matchedPattern": "FROM without @sha256 digest"
+    },
+    {
+      "vulnSlug": "dockerfile-run-as-root",
+      "lineNumbers": [36],
+      "snippet": "FROM node:20-alpine AS runner\nWORKDIR /app\n",
+      "matchedPattern": "Final stage has no USER directive"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.430Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "ea815b7d285ff470e045214b01352261a8f43252c0465a7e44a251f90bc70284",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "dockerfile-run-as-root",
+      "title": "Runtime container runs as root (no USER directive)",
+      "description": "The final `runner` stage (L36-45) sets WORKDIR, copies the built API, and runs `CMD [\"node\", \"dist/index.js\"]` with no `USER` directive, so the API process runs as UID 0 (root) inside the container. The `node:20-alpine` base image ships a non-root `node` user specifically for this. This is a defense-in-depth gap, not directly exploitable on its own: if any RCE or file-write bug in the Node app (or a dependency) is triggered, running as root maximizes blast radius — the attacker can write anywhere in the container filesystem, tamper with the copied Prisma schema/migrations, and has a stronger position for container-escape primitives that require root. Combined with the app's own threat surface (Stripe/webhook handling, signed-URL uploads), least-privilege here is worthwhile.",
+      "lineNumbers": [36, 45],
+      "recommendation": "Add `USER node` (and ensure copied files are readable by that user) in the runner stage before CMD, e.g. `COPY --chown=node:node --from=builder /prod/api .` then `USER node`. Optionally add an init process (dumb-init/tini) for correct signal handling.",
+      "confidence": "medium",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    },
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "dockerfile-from-mutable-tag",
+      "title": "Base image pinned to mutable tag instead of digest",
+      "description": "Both stages use `FROM node:20-alpine` (L1, L36), a mutable tag that is re-pointed upstream over time. Builds are therefore not reproducible and are exposed to supply-chain risk: whatever `node:20-alpine` resolves to at build time is trusted implicitly, so a compromised or unexpectedly-changed upstream tag would be pulled silently. This is a hardening/supply-chain item, not directly attacker-exploitable.",
+      "lineNumbers": [1, 36],
+      "recommendation": "Pin the base image by digest (e.g. `FROM node:20-alpine@sha256:<digest>`) and update it deliberately via Dependabot/Renovate so base-image changes are reviewed.",
+      "confidence": "low",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T09:56:47.540Z",
+      "durationMs": 44306.5,
+      "durationApiMs": 43534.5,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "6963c53a-a8d5-4d66-892c-852ae466d9a2",
+      "findingCount": 2,
+      "numTurns": 2.75,
+      "phase": "process",
+      "costUsd": 0.178759,
+      "usage": {
+        "inputTokens": 15,
+        "outputTokens": 3102,
+        "cacheReadInputTokens": 32188,
+        "cacheCreationInputTokens": 9533
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-07-08T20:15:19+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:56:47.605Z"
+  }
+}

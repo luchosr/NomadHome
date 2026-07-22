@@ -1,0 +1,56 @@
+{
+  "filePath": "apps/api/src/controllers/admin-moderation.controller.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "auth-bypass",
+      "lineNumbers": [3],
+      "snippet": "import type { Request, Response } from \"express\";\nimport { AdminService, AdminTargetNotFoundError } from \"../services/admin.service.js\";\nimport type { AuthedRequest } from \"../middleware/require-auth.js\";\n\nexport class AdminModerationController {",
+      "matchedPattern": "auth middleware"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.253Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "6e95b81ba3f9c28b035044fc8895878df520f40251d4064658d4f33ef5475eb8",
+  "findings": [],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:00:49.988Z",
+      "durationMs": 83755,
+      "durationApiMs": 83302,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "6770147c-9135-433d-aa34-f625366ceab9",
+      "findingCount": 0,
+      "numTurns": 7.2,
+      "phase": "process",
+      "costUsd": 0.30919125,
+      "usage": {
+        "inputTokens": 4.8,
+        "outputTokens": 5481.6,
+        "cacheReadInputTokens": 184497,
+        "cacheCreationInputTokens": 12780.6
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-19T17:59:38+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:00:50.017Z"
+  }
+}

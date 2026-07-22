@@ -1,0 +1,93 @@
+{
+  "filePath": "apps/api/src/controllers/auth.controller.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "auth-bypass",
+      "lineNumbers": [17],
+      "snippet": "  InvalidVerificationTokenError,\n} from \"../services/auth.service.js\";\nimport type { AuthedRequest } from \"../middleware/require-auth.js\";\n\n/** HTTP edge for auth: validate input, extract request context, map errors. */",
+      "matchedPattern": "auth middleware"
+    },
+    {
+      "vulnSlug": "jwt-handling",
+      "lineNumbers": [116, 136],
+      "snippet": "    try {\n      const tokens = await this.auth.refresh({\n        refreshToken: parsed.data.refreshToken,\n        ipAddress: req.ip ?? \"unknown\",\n        userAgent: req.get(\"user-agent\") ?? undefined,",
+      "matchedPattern": "Token refresh logic (verify validation)"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.328Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "2c6e04361ac2a31acfe7feee2b35f83c34b2de4eed29ea71b577d2622a5031db",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "acl-check",
+      "title": "become-host grants host role without verifying email ownership",
+      "description": "POST /users/me/become-host (becomeHost, L140-167) delegates to AuthService.becomeHost (services/auth.service.ts L244-272), which checks only that the user exists and is not already a host. It never checks user.emailVerifiedAt. Compounding this, login() (services/auth.service.ts L143-155) rejects only disabled accounts, not unverified ones, so a user can register with an email they do not control, log in, and call become-host to obtain the `host` role plus a HostProfile carrying an attacker-chosen payoutEmail. The host role enables publishing listings and collecting Stripe payouts, so bypassing email verification here is a meaningful trust/authorization gap (the primary lateral-movement actor in the threat model is a host account). emailVerifiedAt is only ever read to echo it back in `me` (L103); it gates nothing.",
+      "lineNumbers": [140, 153],
+      "recommendation": "In AuthService.becomeHost, load the user and reject with a 403 (e.g. EmailNotVerifiedError) when emailVerifiedAt is null before creating the host profile / adding the role. Optionally also block unverified accounts from logging in, or from any state-changing endpoint.",
+      "confidence": "high",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    },
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "rate-limit-bypass",
+      "title": "No rate limiting or lockout on authentication endpoints",
+      "description": "There is no rate-limiting middleware anywhere (confirmed: only require-auth and require-role exist in middleware/, and package.json has no express-rate-limit or equivalent; app.ts adds only cors + express.json). login (L65-86) has no throttle or account lockout after repeated login_failed events, enabling credential stuffing / brute force bounded only by bcrypt cost. register (L41-63) is unauthenticated and triggers this.email.sendVerificationEmail() to any attacker-supplied address (services/auth.service.ts L134) with no cap, enabling email-bombing of arbitrary victims and Resend cost abuse. refresh (L107) is likewise unthrottled.",
+      "lineNumbers": [41, 65, 107],
+      "recommendation": "Add per-IP and per-account rate limiting (e.g. express-rate-limit) to /auth/login, /auth/register, and /auth/refresh, plus progressive backoff / temporary lockout after N failed logins. Cap verification emails per address/time window.",
+      "confidence": "medium",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    },
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "jwt-handling",
+      "title": "Access-token verification does not pin the JWT algorithm",
+      "description": "requireAuth (imported L17) calls tokenService.verifyAccessToken, which in services/token.service.ts L31-33 runs `jwt.verify(token, this.secret())` with no `algorithms` option. Best practice is to pin `algorithms: ['HS256']`. Practically NOT currently exploitable: JWT_SECRET is a symmetric string, and jsonwebtoken v9 defaults a string key to HS256/384/512 only (it rejects `none` and RS256), so the classic alg-confusion/none attacks do not apply. Flagged as defense-in-depth: if the secret is ever swapped to an RSA public key (e.g. a future RS256 migration) without adding pinning, the token would become forgeable.",
+      "lineNumbers": [17],
+      "recommendation": "Pass `{ algorithms: ['HS256'] }` to jwt.verify in TokenService.verifyAccessToken so the accepted algorithm is explicit and future-proof.",
+      "confidence": "low",
+      "producedByRunId": "20260717095347-0766c6f11f0620e6"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717095347-0766c6f11f0620e6",
+      "investigatedAt": "2026-07-17T10:00:49.863Z",
+      "durationMs": 83755,
+      "durationApiMs": 83302,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "6770147c-9135-433d-aa34-f625366ceab9",
+      "findingCount": 3,
+      "numTurns": 7.2,
+      "phase": "process",
+      "costUsd": 0.30919125,
+      "usage": {
+        "inputTokens": 4.8,
+        "outputTokens": 5481.6,
+        "cacheReadInputTokens": 184497,
+        "cacheCreationInputTokens": 12780.6
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-07-10T18:20:03+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T10:00:49.955Z"
+  }
+}

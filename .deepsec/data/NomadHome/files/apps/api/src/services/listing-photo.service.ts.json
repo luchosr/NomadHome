@@ -1,0 +1,80 @@
+{
+  "filePath": "apps/api/src/services/listing-photo.service.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [67],
+      "snippet": "    await this.assertOwnership(hostId, listingId);\n    const photo = await this.photos.findById(photoId);\n    if (!photo || photo.listingId !== listingId) throw new PhotoNotFoundError();\n    return this.photos.updatePosition(photoId, position);\n  }",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "non-atomic-operation",
+      "lineNumbers": [67],
+      "snippet": "    await this.assertOwnership(hostId, listingId);\n    const photo = await this.photos.findById(photoId);\n    if (!photo || photo.listingId !== listingId) throw new PhotoNotFoundError();\n    return this.photos.updatePosition(photoId, position);\n  }\n",
+      "matchedPattern": "Read-then-write without transaction — verify atomicity"
+    },
+    {
+      "vulnSlug": "non-atomic-operation",
+      "lineNumbers": [74],
+      "snippet": "    await this.assertOwnership(hostId, listingId);\n    const photo = await this.photos.findById(photoId);\n    if (!photo || photo.listingId !== listingId) throw new PhotoNotFoundError();\n    await this.photos.delete(photoId);\n  }\n",
+      "matchedPattern": "Read-then-write without transaction — verify atomicity"
+    },
+    {
+      "vulnSlug": "crypto-usage",
+      "lineNumbers": [1, 39],
+      "snippet": "import crypto from \"node:crypto\";\nimport type { ListingPhoto } from \"@nomadhome/db\";\nimport {",
+      "matchedPattern": "Node crypto import, Node randomUUID"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.445Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "0fe47e8b918b8aa335ee3abe809e2ff9c4ac0c82e4ec685f3292a3325425a26a",
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "vulnSlug": "other-unrestricted-upload",
+      "title": "Presigned upload content-type not restricted to an image allowlist",
+      "description": "getUploadUrl passes the client-supplied contentType straight to StorageService.getPresignedUploadUrl, which pins it as the S3/R2 PutObject ContentType. UploadUrlRequestSchema validates contentType only as z.string().min(1) (packages/shared/src/schemas/listing.ts:31-33) — no image allowlist. A host can request a presigned PUT for text/html or image/svg+xml, upload active content to the public bucket, and the object is served back from CLOUDFLARE_R2_PUBLIC_URL with that Content-Type. Navigating to the URL executes the HTML/SVG script, giving stored XSS/phishing/malware hosting on the platform's storage domain; impact depends on whether that domain shares cookie scope with the app (e.g. a *.nomadhome.com subdomain). The key itself is safe (server-generated photos/<listingId>/<uuid>), so this is specifically a content-type validation gap.",
+      "lineNumbers": [33, 36, 40],
+      "recommendation": "Restrict contentType to an explicit image allowlist (e.g. image/jpeg, image/png, image/webp) in UploadUrlRequestSchema and re-check in getUploadUrl before presigning; ensure the bucket serves objects with X-Content-Type-Options: nosniff and, ideally, from a cookieless domain.",
+      "confidence": "medium",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:44:48.744Z",
+      "durationMs": 78077.6,
+      "durationApiMs": 77040.4,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a7ac9a8c-d4fe-4b1d-b3e3-7b102c225d6b",
+      "findingCount": 1,
+      "numTurns": 5.2,
+      "phase": "process",
+      "costUsd": 0.34809500000000004,
+      "usage": {
+        "inputTokens": 3,
+        "outputTokens": 5217.2,
+        "cacheReadInputTokens": 93268,
+        "cacheCreationInputTokens": 17101.6
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T00:46:17+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:44:48.766Z"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "filePath": "apps/api/src/repositories/payment.repository.ts",
+  "projectId": "NomadHome",
+  "candidates": [
+    {
+      "vulnSlug": "unverified-lookup",
+      "lineNumbers": [39],
+      "snippet": "\n      const booking = await tx.booking.findFirst({\n        where: { stripeCheckoutSessionId: sessionId },\n      });\n      if (!booking) return null;",
+      "matchedPattern": "DB lookup by ID without ownership check in next 15 lines"
+    },
+    {
+      "vulnSlug": "non-atomic-read-delete",
+      "lineNumbers": [39],
+      "snippet": "\n      const booking = await tx.booking.findFirst({\n        where: { stripeCheckoutSessionId: sessionId },\n      });\n      if (!booking) return null;\n",
+      "matchedPattern": "Read-then-modify without transaction — potential TOCTOU race"
+    }
+  ],
+  "lastScannedAt": "2026-07-17T09:38:11.419Z",
+  "lastScannedRunId": "20260717093810-c6894085c9ab08e4",
+  "fileHash": "cf750543f7d752a664f3fcf92c098bc1f1d13521c3266b72172e67491c12e99f",
+  "findings": [
+    {
+      "severity": "BUG",
+      "vulnSlug": "other-financial-integrity",
+      "title": "recordPayout does not validate booking ownership, eligibility, or amount",
+      "description": "recordPayout() creates a Payout for a given hostId and links every UUID in bookingIds via PayoutBooking, with no check that (a) each booking's hostId equals data.hostId, (b) the bookings are CONFIRMED / past checkout / unsettled, or (c) amountCents equals the sum of the linked bookings' payoutCents. The RecordPayoutSchema only validates shape. The DB `PayoutBooking.bookingId @unique` constraint prevents settling the same booking twice, but nothing prevents attaching Host B's booking to Host A's payout: doing so marks Host B's booking as settled (getPayoutSummary filters on `payoutBooking: null`), so Host B is silently never paid for it, and the recorded amount can diverge from what was actually owed. The endpoint is admin-only (router.use(requireAuth, requireRole('admin'))), so this is an integrity footgun for a trusted operator rather than an attacker-exploitable vulnerability, but it undermines the financial-integrity invariant the threat model prioritizes.",
+      "lineNumbers": [96, 116, 117, 118, 119],
+      "recommendation": "In recordPayout (or the service), load the referenced bookings and assert each belongs to hostId, is CONFIRMED with checkOut in the past, and is not already settled; assert amountCents equals the sum of their payoutCents (and matches currency). Reject with a domain error otherwise, inside the same transaction.",
+      "confidence": "medium",
+      "producedByRunId": "20260717093816-f3a964cf42b62c42"
+    }
+  ],
+  "analysisHistory": [
+    {
+      "runId": "20260717093816-f3a964cf42b62c42",
+      "investigatedAt": "2026-07-17T09:43:17.892Z",
+      "durationMs": 74242,
+      "durationApiMs": 72987.5,
+      "agentType": "claude-agent-sdk",
+      "model": "claude-opus-4-8",
+      "modelConfig": {
+        "model": "claude-opus-4-8"
+      },
+      "agentSessionId": "a355449b-d2fb-42b5-ab66-97db3b8c36fe",
+      "findingCount": 1,
+      "numTurns": 7.75,
+      "phase": "process",
+      "costUsd": 0.410895125,
+      "usage": {
+        "inputTokens": 4.25,
+        "outputTokens": 5165.5,
+        "cacheReadInputTokens": 131292.75,
+        "cacheCreationInputTokens": 21609
+      },
+      "refusal": {
+        "refused": false,
+        "skipped": [],
+        "raw": "```json\n{\"refused\": false, \"reason\": null, \"skipped\": []}\n```"
+      }
+    }
+  ],
+  "status": "analyzed",
+  "gitInfo": {
+    "recentCommitters": [
+      {
+        "name": "Luciano Ramello",
+        "email": "luchosr@gmail.com",
+        "date": "2026-06-17T20:28:48+02:00"
+      }
+    ],
+    "enrichedAt": "2026-07-17T09:43:17.995Z"
+  }
+}

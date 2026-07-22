@@ -1,0 +1,27 @@
+{
+  "runId": "20260717093816-f3a964cf42b62c42",
+  "projectId": "NomadHome",
+  "rootPath": "/Users/luciano/Documents/IA4devs/NomadHome",
+  "createdAt": "2026-07-17T09:38:16.386Z",
+  "type": "process",
+  "phase": "done",
+  "pid": 35650,
+  "hostname": "MacBook-Air-de-Luciano.local",
+  "processorConfig": {
+    "agentType": "claude-agent-sdk",
+    "model": "claude-opus-4-8",
+    "modelConfig": {
+      "model": "claude-opus-4-8"
+    },
+    "invocationMode": "scan"
+  },
+  "stats": {
+    "filesProcessed": 20,
+    "findingsCount": 14,
+    "totalCostUsd": 7.208972,
+    "totalInputTokens": 73,
+    "totalOutputTokens": 93972,
+    "totalDurationMs": 1392283
+  },
+  "completedAt": "2026-07-17T09:44:48.817Z"
+}
