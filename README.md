@@ -69,13 +69,13 @@ The MVP delivers ten capabilities, each scoped to the minimum that proves the en
 
 | #   | Capability       | What it delivers in MVP                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | --- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Identity**     | Email/password registration with email verification; login with short-lived JWT access tokens + revocable refresh tokens stored in `httpOnly` cookies; roles `guest` / `host` / `admin` (a single account can hold multiple); auth audit log for `registered`, `login_succeeded`, `login_failed`, `role_added`, `user_disabled`.                                                                                                                                                                                                                                                                                                 |
+| 1   | **Identity**     | Email/password registration with email verification; login with short-lived JWT access tokens + revocable refresh tokens stored in `localStorage`; roles `guest` / `host` / `admin` (a single account can hold multiple); auth audit log for `registered`, `login_succeeded`, `login_failed`, `role_added`, `user_disabled`.                                                                                                                                                                                                                                                                                                     |
 | 2   | **Listings**     | Hosts create, edit, publish, and unpublish properties (co-living) and workspaces (hot desks, meeting rooms) with title, description, type, city, capacity, nightly rate, photos (signed-URL upload), and amenities. Listings move through `DRAFT → PUBLISHED → DISABLED` with invariants enforced in the domain layer (no publishing without a photo, amenity, and non-zero rate).                                                                                                                                                                                                                                               |
 | 3   | **Search**       | Guests search published listings by city + date range. Filter by price range, type, amenities (AND semantics), and capacity. Results are paginated, URL-state-synced so they're shareable, and exclude any listing whose `AvailabilityBlock` rows overlap the requested range.                                                                                                                                                                                                                                                                                                                                                   |
 | 4   | **Booking**      | Instant booking with atomic hold: a `Booking (PENDING_PAYMENT)` and its `AvailabilityBlock (BOOKING_HOLD)` are inserted in one transaction guarded by a Postgres `EXCLUDE USING gist` constraint — concurrent double-booking is structurally impossible. Guests can cancel before check-in; refund amount is computed per cancellation policy and queued as `RefundRequest (PENDING_ADMIN)`.                                                                                                                                                                                                                                     |
 | 5   | **Payments**     | Stripe Checkout (hosted) for guest payment — NomadHome never touches card data. Platform charges a configurable **split fee**: a guest service fee added on top of the host price, plus a host commission deducted from the host's payout. Both fees are snapshotted on the booking at creation time so future config changes never retro-alter existing bookings. Webhooks (`checkout.session.completed`, `checkout.session.expired`) are signature-verified and idempotent via a `StripeProcessedEvent` dedup table. Host payouts are **manual** in MVP: admins see what is owed per host and record the out-of-band transfer. |
 | 6   | **Reviews**      | One guest review per completed booking (1–5 stars + optional free text, max 2000 chars), enforced by `Review.bookingId UNIQUE`. `Listing.averageRating` and `Listing.reviewCount` are recomputed in the same transaction as the review insert.                                                                                                                                                                                                                                                                                                                                                                                   |
-| 7   | **Host tooling** | Minimal host dashboard listing own listings (all statuses) and upcoming bookings sorted by check-in. Guest PII minimized to first name + last initial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 7   | **Host tooling** | Minimal host dashboard listing own listings (all statuses) and all bookings across all statuses (Pending, Confirmed, Cancelled, Completed) sorted by check-in. Shows confirmed booking count per listing. Guest PII minimized to first name + last initial.                                                                                                                                                                                                                                                                                                                                                                      |
 | 8   | **Admin**        | Role-guarded admin surface (no separate `apps/admin` in MVP). Disable users with cascading effects: hide their listings, flag affected confirmed bookings, revoke all refresh tokens. Disable listings with notice emails to affected guests/hosts. Compute and record manual host payouts.                                                                                                                                                                                                                                                                                                                                      |
 | 9   | **Platform**     | English-only, mobile-responsive web. All user-facing strings routed through a `t(key)` helper backed by a single English lookup table so future i18n is an integration, not a refactor.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 10  | **Compliance**   | bcrypt (cost ≥12) for passwords; HTTPS in production; refresh tokens stored as hashes; auth event audit log; PII minimization on host-facing endpoints; rate limits on auth endpoints.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -176,12 +176,12 @@ C4Container
 
 **Pattern: Layered DDD per bounded context.** The four bounded contexts are **Identity**, **Listings**, **Booking & Payments**, and **Trust** (Reviews + Admin). Each contains the four canonical layers:
 
-| Layer              | Lives in                       | Responsibility                                                                               |
-| ------------------ | ------------------------------ | -------------------------------------------------------------------------------------------- |
-| **Presentation**   | `apps/api/src/presentation/`   | Controllers, Express routes, middleware (`requireAuth`, `requireRole`)                       |
-| **Application**    | `apps/api/src/application/`    | Services that orchestrate workflows; transactions span here                                  |
-| **Domain**         | `apps/api/src/domain/`         | Entities, value objects, repository interfaces, domain services — zero external dependencies |
-| **Infrastructure** | `apps/api/src/infrastructure/` | Prisma-backed repositories, Stripe/Resend/storage clients, logger                            |
+| Layer              | Lives in                     | Responsibility                                                         |
+| ------------------ | ---------------------------- | ---------------------------------------------------------------------- |
+| **Presentation**   | `apps/api/src/controllers/`  | Controllers, Express routes, middleware (`requireAuth`, `requireRole`) |
+| **Application**    | `apps/api/src/services/`     | Services that orchestrate workflows; transactions span here            |
+| **Infrastructure** | `apps/api/src/repositories/` | Prisma-backed repositories, Stripe/Resend/storage clients              |
+| **Cross-cutting**  | `apps/api/src/middleware/`   | Auth guards, rate limiting, error handler                              |
 
 **Why this architecture.**
 
@@ -235,20 +235,15 @@ nomadhome/
 │   ├── web/                       # React 18 SPA — guest + host + admin behind role-guarded routes
 │   │   ├── public/                # Static assets (favicons, etc.)
 │   │   ├── src/
-│   │   │   ├── assets/            # Global media (images, fonts)
-│   │   │   ├── components/
-│   │   │   │   ├── ui/            # shadcn/ui primitives (unmodified)
-│   │   │   │   └── shared/        # Compound UI shared across features
-│   │   │   ├── features/          # Feature folders per bounded context
-│   │   │   │   ├── auth/          # Register, Login, BecomeHost
-│   │   │   │   ├── listings/      # Listing forms, photo uploader
-│   │   │   │   ├── search/        # SearchPage, SearchFiltersPanel
-│   │   │   │   ├── bookings/      # Quote, checkout redirect, MyBookings, ReviewForm
-│   │   │   │   ├── host/          # Host dashboard, upcoming bookings
-│   │   │   │   └── admin/         # AdminUsersPage, AdminListingsPage, AdminPayoutsPage
-│   │   │   ├── hooks/             # Global reusable hooks (useAuth, useDebounce)
-│   │   │   ├── lib/               # api-client (Axios), shadcn cn utility
-│   │   │   ├── routes/            # React Router tree + RoleGate wrappers
+│   │   │   ├── api/               # API client modules per domain (auth, bookings, host, search…)
+│   │   │   ├── components/        # Shared UI components (Layout, ProtectedRoute, RoleGuard, modals…)
+│   │   │   ├── contexts/          # React contexts (AuthContext + useAuth hook)
+│   │   │   ├── hooks/             # Global reusable hooks
+│   │   │   ├── lib/               # Utilities (dates, cn, listingData constants)
+│   │   │   ├── pages/             # Page components (one per route: SearchPage, BookingFormPage…)
+│   │   │   │   └── home/          # HomePage section components
+│   │   │   ├── store.ts           # Zustand store (ephemeral UI state)
+│   │   │   ├── router.tsx         # React Router tree with lazy-loaded routes + RoleGuard wrappers
 │   │   │   ├── App.tsx            # App shell + context providers
 │   │   │   ├── index.css          # Tailwind directives + CSS variables
 │   │   │   └── main.tsx           # Entry point
@@ -259,22 +254,13 @@ nomadhome/
 │   │
 │   └── api/                       # Node.js + Express REST API — layered DDD
 │       ├── src/
-│       │   ├── domain/            # Pure domain — no external dependencies
-│       │   │   ├── models/        # Entities + value objects (User, Listing, Booking, Money, DateRange…)
-│       │   │   └── repositories/  # Repository interfaces (I…Repository)
-│       │   ├── application/       # Services, orchestration, transactions
-│       │   │   └── services/      # IdentityService, ListingService, BookingService, PricingService…
-│       │   ├── presentation/      # HTTP layer
-│       │   │   └── controllers/   # Express controllers (thin)
-│       │   ├── infrastructure/    # Adapters to the outside world
-│       │   │   ├── repositories/  # Prisma-backed implementations of repository interfaces
-│       │   │   ├── email/         # Resend wrapper + template registry
-│       │   │   ├── payments/      # Stripe wrapper + webhook signature verification
-│       │   │   └── logger.ts      # pino structured logger
+│       │   ├── controllers/       # Express controllers (thin, one per domain)
+│       │   ├── services/          # Application services — orchestration + transactions
+│       │   ├── repositories/      # Prisma-backed data access (one per aggregate)
 │       │   ├── middleware/        # requireAuth, requireRole, error handler, rate limit
 │       │   ├── routes/            # Express route bindings (auth, listings, bookings, admin…)
-│       │   └── index.ts           # Composition root (DI wiring) + app bootstrap
-│       ├── test-utils/            # Builders and fakes for tests
+│       │   ├── app.ts             # Express app setup (middleware, router mounting)
+│       │   └── index.ts           # Entry point + DI wiring
 │       ├── vitest.config.ts
 │       ├── tsconfig.json
 │       └── package.json
@@ -332,8 +318,8 @@ nomadhome/
 **Patterns at a glance**:
 
 - **Monorepo with pnpm workspaces** so FE/BE/DB/contracts evolve together; PRs touch every side atomically.
-- **Layered DDD inside `apps/api`** (presentation → application → domain → infrastructure) with bounded contexts mirroring the marketplace's natural domains. Full rationale in [docs/backend-standards.md](docs/backend-standards.md).
-- **Feature folders inside `apps/web`** colocating queries, stores, and pages per feature. Explicit separation of server state (TanStack Query), ephemeral UI state (Zustand), and shareable filter state (URL params). Full rationale in [docs/frontend-standards.md](docs/frontend-standards.md).
+- **Layered DDD inside `apps/api`** (controllers → services → repositories) with domain logic in services and data access isolated in repositories. Full rationale in [docs/backend-standards.md](docs/backend-standards.md).
+- **Page-plus-component structure inside `apps/web`**: `pages/` for route-level components, `components/` for shared UI, `api/` for typed fetch wrappers, `contexts/` for auth state. Explicit separation of server state (TanStack Query), ephemeral UI state (Zustand), and shareable filter state (URL params). Full rationale in [docs/frontend-standards.md](docs/frontend-standards.md).
 - **`openspec/` as source of truth** for what the system does — every behavior change flows through Proposal → Spec → Implementation → Archive ([CLAUDE.md](CLAUDE.md) §4).
 - **`docs/` as source of truth** for _why_ it does it — PRD, data model, C4 diagrams, standards, tasks.
 
@@ -362,7 +348,7 @@ flowchart TD
     subgraph ci["GitHub Actions CI"]
         GATE["Quality gate job\npnpm install --frozen-lockfile\npnpm lint\npnpm typecheck\nprisma migrate deploy\npnpm test --coverage ≥80%\npnpm build\nopenspec validate --strict"]
         E2E["E2E job\nPlaywright headless Chromium\npnpm test:e2e"]
-        GEMINI["Gemini AI Code Review\ngemini-1.5-flash via REST API\nposts comment to PR"]
+        GEMINI["(reserved for future AI review)"]
     end
 
     subgraph prod["Production"]
@@ -385,7 +371,7 @@ flowchart TD
     D -- git push --> PR
     PR -- triggers --> GATE
     PR -- triggers --> E2E
-    PR -- triggers --> GEMINI
+    PR -- triggers (reserved) --> GEMINI
     PR -- human review + CI green --> MAIN
     MAIN -- deploy.yml: POST Vercel API --> WEB_PROD
     MAIN -- Docker build + push --> API_PROD
@@ -423,12 +409,6 @@ Every pull request runs two parallel jobs defined in `.github/workflows/ci.yml`:
 **E2E** (blocks merge if red):
 
 - Playwright against headless Chromium; all API calls mocked via `page.route()` so tests are fast and network-independent.
-
-**Gemini AI Code Review** (informational, non-blocking):
-
-- Triggers on `opened`/`synchronize` events for changes in `apps/**` or `packages/**`.
-- Calls the Gemini REST API directly (`generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent`) — no SDK dependency.
-- Posts a structured review comment (bugs, architecture, optimization suggestions) to the PR.
 
 Branch protection on `main` requires all CI jobs green + at least one human approval before merge.
 
@@ -702,7 +682,7 @@ Located in `apps/web/e2e/*.spec.ts`. Each file maps to a user story. Tests run a
 | `us-4.1-booking.spec.ts`         | Guest selects dates, sees price breakdown, completes Stripe Checkout redirect |
 | `us-4.2-cancel-booking.spec.ts`  | Guest cancels a confirmed booking                                             |
 | `us-6.1-review.spec.ts`          | Guest submits a post-stay review                                              |
-| `us-7.1-host-dashboard.spec.ts`  | Host views upcoming bookings and listing list                                 |
+| `us-7.1-host-dashboard.spec.ts`  | Host views all bookings (all statuses) and listing list                       |
 | `us-8.1-admin-users.spec.ts`     | Admin disables/enables a user account                                         |
 | `us-8.2-admin-listings.spec.ts`  | Admin disables/enables a listing                                              |
 
@@ -872,7 +852,7 @@ erDiagram
         uuid listingId FK
         uuid guestId FK
         int rating "CHECK 1..5"
-        text body "nullable, max 2000"
+        text text "nullable, max 2000"
         datetime createdAt
     }
 
@@ -1098,7 +1078,7 @@ Historical rows are kept for auditability. `PricingService.currentConfig()` reso
 | `listingId` | `uuid`     | **FK** → `Listing.id`             | Denormalized for read-side fanout. |
 | `guestId`   | `uuid`     | **FK** → `User.id`                |                                    |
 | `rating`    | `int`      | NOT NULL, CHECK 1..5              |                                    |
-| `body`      | `text?`    | nullable, max 2000 chars          |                                    |
+| `text`      | `text?`    | nullable, max 2000 chars          |                                    |
 | `createdAt` | `DateTime` | default `now()`                   |                                    |
 
 Insert triggers (in app, not DB) recompute `Listing.averageRating` and `Listing.reviewCount` in the **same transaction** as the review insert — guarantees consistency under concurrent reviews.
@@ -1269,8 +1249,9 @@ paths:
       parameters:
         - name: city
           in: query
-          required: true
-          schema: { type: string, minLength: 2 }
+          required: false
+          schema: { type: string }
+          description: Optional. When omitted, all cities are searched.
           example: Lisbon
         - name: checkIn
           in: query
@@ -1550,12 +1531,9 @@ Three representative tickets — one per discipline (backend, frontend, database
 
 - `packages/db/prisma/schema.prisma` — add `Booking`, `PlatformFeeConfig`, `StripeProcessedEvent` models; create migration `add_bookings`.
 - `packages/shared/src/schemas/bookings.ts` — `CreateBookingSchema`, `BookingDTO`, `PriceBreakdownDTO`.
-- `apps/api/src/domain/models/Booking.ts`, `Money.ts`, `DateRange.ts`.
-- `apps/api/src/domain/repositories/IBookingRepository.ts`, `IPlatformFeeConfigRepository.ts`.
-- `apps/api/src/application/services/BookingService.ts`, `PricingService.ts`.
-- `apps/api/src/infrastructure/repositories/BookingRepository.ts`, `PlatformFeeConfigRepository.ts`.
-- `apps/api/src/infrastructure/payments/stripe.ts` (Stripe client wrapper).
-- `apps/api/src/presentation/controllers/bookingsController.ts`.
+- `apps/api/src/services/booking.service.ts`, `payment.service.ts`.
+- `apps/api/src/repositories/booking.repository.ts`, `payment.repository.ts`.
+- `apps/api/src/controllers/booking.controller.ts`, `payment.controller.ts`.
 - `apps/api/src/routes/bookings.ts`.
 - `apps/api/src/index.ts` (composition root wiring).
 - Tests in `apps/api/src/**/__tests__/*.test.ts`.
@@ -1606,28 +1584,29 @@ Three representative tickets — one per discipline (backend, frontend, database
 
 **Scope.**
 
-- Add `useListingsSearchQuery(query)` hook in `apps/web/src/features/search/hooks/` using TanStack Query with `keepPreviousData: true` and a query key that includes the normalized query object.
-- Add `useSearchUIStore` (Zustand) storing only `filtersPanelOpen` and `toggleFiltersPanel` — no filter values.
-- Add `SearchPage` (`/search`):
-  - Sticky search bar (city + date range + type) using React Hook Form + Zod resolver against `SearchListingsQuerySchema` imported from `packages/shared`.
-  - Reads initial form state from URL query params on mount; writes form state back to URL on submit via `useSearchParams`.
-  - Result grid renders `ListingCard` per item (PR `NH-202` ships `ListingCard`).
+- Add search API client in `apps/web/src/api/search.ts` using TanStack Query with `keepPreviousData: true`.
+- Add ephemeral UI state (filter panel open/close) to `apps/web/src/store.ts` (Zustand) — no filter values in store.
+- Add `SearchPage` (`apps/web/src/pages/SearchPage.tsx`):
+  - Sticky search bar (city + date range + type) using React Hook Form + Zod resolver against `SearchListingsQuerySchema` from `packages/shared`.
+  - Reads initial form state from URL query params on mount; writes back on submit via `useSearchParams`.
+  - Result grid renders `ListingCard` per item.
   - Empty state with copy via `t('search.empty')`.
   - Loading state preserves prior results painted (via `keepPreviousData`).
-- Add `SearchFiltersPanel` (slide-over on mobile via shadcn `Sheet`, sidebar on desktop):
-  - Dual-handle price slider, type radio, capacity stepper, amenity checkboxes (multi-select).
+- Add `SearchFilterPanel` (`apps/web/src/components/SearchFilterPanel.tsx`):
+  - Type radio, price, capacity, amenity checkboxes (multi-select).
   - All filter changes update URL via `useSearchParams` — never via local state.
-  - "Clear filters" CTA resets the URL params for filter fields only (preserves city + dates).
-- Wire route `/search` in `apps/web/src/routes/`.
+  - "Clear filters" CTA resets filter URL params only (preserves city + dates).
+- Wire route `/search` in `apps/web/src/router.tsx`.
 
 **Files allowed to touch.**
 
-- `apps/web/src/features/search/` (entire feature folder — create as needed).
-- `apps/web/src/routes/index.tsx` (route registration).
-- `packages/shared/src/schemas/search.ts` (extend `SearchListingsQuerySchema` with optional filter fields if not already present — coordinated with `NH-102` backend search filters).
+- `apps/web/src/pages/SearchPage.tsx` and `apps/web/src/pages/SearchPage.test.tsx`.
+- `apps/web/src/components/SearchFilterPanel.tsx`.
+- `apps/web/src/api/search.ts`.
+- `apps/web/src/router.tsx` (route registration).
+- `packages/shared/src/schemas/search.ts` (extend `SearchListingsQuerySchema` with optional filter fields if not already present).
 - `packages/shared/src/strings/en.ts` (add `search.*` keys).
-- `apps/web/src/components/shared/` only if a new shared compound component is needed and the addition is justified in PR description.
-- Tests in `apps/web/src/features/search/__tests__/` and `apps/web/e2e/search.spec.ts`.
+- `apps/web/e2e/search.spec.ts`.
 
 **Forbidden.**
 
