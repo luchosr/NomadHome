@@ -337,7 +337,7 @@ How can we solve it?
 
 132.  I'm trying to sign up with the mvp but i'm having the following erroe:
       @nomadhome/api:dev: [api] NomadHome API listening on port 3000
-      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
+      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node\*modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
       @nomadhome/api:dev: throw new PrismaClientInitializationError(message, this.client.\_clientVersion)
       @nomadhome/api:dev: ^
       @nomadhome/api:dev:
@@ -345,7 +345,7 @@ How can we solve it?
       @nomadhome/api:dev: Invalid `prisma.user.findUnique()` invocation in
       @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/repositories/user.repository.ts:42:24
       @nomadhome/api:dev:
-      @nomadhome/api:dev: 39 /\*_ Persistence for the identity aggregate (User + its verification tokens + audit log). _/
+      @nomadhome/api:dev: 39 /\*\* Persistence for the identity aggregate (User + its verification tokens + audit log). \_/
       @nomadhome/api:dev: 40 export class UserRepository {
       @nomadhome/api:dev: 41 findByEmail(email: string): Promise<User | null> {
       @nomadhome/api:dev: → 42 return prisma.user.findUnique(
@@ -382,7 +382,7 @@ How can we solve it?
 
 133.  I think I creqted th .env files that you mentioned me, but when I'm trying to sign up in nomadhome I have the following error:
       @nomadhome/api:dev: [api] NomadHome API listening on port 3000
-      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
+      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node\*modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
       @nomadhome/api:dev: throw new PrismaClientInitializationError(message, this.client.\_clientVersion)
       @nomadhome/api:dev: ^
       @nomadhome/api:dev:
@@ -390,7 +390,7 @@ How can we solve it?
       @nomadhome/api:dev: Invalid `prisma.user.findUnique()` invocation in
       @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/repositories/user.repository.ts:42:24
       @nomadhome/api:dev:
-      @nomadhome/api:dev: 39 /\*_ Persistence for the identity aggregate (User + its verification tokens + audit log). _/
+      @nomadhome/api:dev: 39 /\*\* Persistence for the identity aggregate (User + its verification tokens + audit log). \_/
       @nomadhome/api:dev: 40 export class UserRepository {
       @nomadhome/api:dev: 41 findByEmail(email: string): Promise<User | null> {
       @nomadhome/api:dev: → 42 return prisma.user.findUnique(
@@ -718,7 +718,7 @@ ERROR run failed: command exited (2)
      Error: Unable to resolve action `aws-actions/amazon-ecr-login@v3`, unable to find version `v3`. Unable to resolve action `aws-actions/amazon-ecs-deploy-task-definition@v3`, unable to find version `v3`. Unable to resolve action `aws-actions/amazon-ecs-render-task-definition@v2`, unable to find version `v2`
 
 173. ok, now the action throws me this error:
-     Run docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+     Run docker build -t $ECR_REGISTRY/$ECR\*REPOSITORY:$IMAGE_TAG .
   docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
   docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
      docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -733,8 +733,8 @@ ERROR run failed: command exited (2)
      ECS_TASK_DEFINITION: nomadhome-task
      CONTAINER_NAME: nomadhome-container
      AWS_DEFAULT_REGION: eu-south-2
-     AWS_ACCESS_KEY_ID: **_
-     AWS_SECRET_ACCESS_KEY: _**
+     AWS_ACCESS_KEY_ID: \*\**
+     AWS*SECRET_ACCESS_KEY: \*\*\*
      ECR_REGISTRY: 050083686330.dkr.ecr.eu-south-2.amazonaws.com
      IMAGE_TAG: 7e3a24e0e2cb0ad4b7eec365825013bc1ce4ef93
      #0 building with "default" instance using docker driver
@@ -746,7 +746,7 @@ ERROR: failed to build: failed to solve: failed to read dockerfile: open Dockerf
 Error: Process completed with exit code 1.
 
 174. ok, nos the deploy workflow throws me this error:
-     Run docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+     Run docker build -t $ECR_REGISTRY/$ECR\*REPOSITORY:$IMAGE_TAG .
   docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
   docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
      docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -761,8 +761,8 @@ Error: Process completed with exit code 1.
      ECS_TASK_DEFINITION: nomadhome-task
      CONTAINER_NAME: nomadhome-container
      AWS_DEFAULT_REGION: eu-south-2
-     AWS_ACCESS_KEY_ID: **_
-     AWS_SECRET_ACCESS_KEY: _**
+     AWS_ACCESS_KEY_ID: \*\**
+     AWS*SECRET_ACCESS_KEY: \*\*\*
      ECR_REGISTRY: 050083686330.dkr.ecr.eu-south-2.amazonaws.com
      IMAGE_TAG: 3dca0ed4b71be71098f06802e6eb441e6ee553c9
      #0 building with "default" instance using docker driver
@@ -842,7 +842,7 @@ ERROR: failed to build: failed to solve: failed to compute cache key: failed to 
 Error: Process completed with exit code 1.
 
 175. ok, now the deploy throws me the following error:
-     Run docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+     Run docker build -t $ECR_REGISTRY/$ECR\*REPOSITORY:$IMAGE_TAG .
   docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
   docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
      docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -857,8 +857,8 @@ Error: Process completed with exit code 1.
      ECS_TASK_DEFINITION: nomadhome-task
      CONTAINER_NAME: nomadhome-container
      AWS_DEFAULT_REGION: eu-south-2
-     AWS_ACCESS_KEY_ID: **_
-     AWS_SECRET_ACCESS_KEY: _**
+     AWS_ACCESS_KEY_ID: \*\**
+     AWS*SECRET_ACCESS_KEY: \*\*\*
      ECR_REGISTRY: 050083686330.dkr.ecr.eu-south-2.amazonaws.com
      IMAGE_TAG: 624b7e56c8298a57d6e39ba3459bd749440feb72
      #0 building with "default" instance using docker driver
@@ -969,7 +969,7 @@ ERROR: failed to build: failed to solve: process "/bin/sh -c pnpm install --froz
 Error: Process completed with exit code 1.
 
 176. ok, the deploy throws me this error now:
-     Run docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+     Run docker build -t $ECR_REGISTRY/$ECR\*REPOSITORY:$IMAGE_TAG .
   docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
   docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
      docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -984,8 +984,8 @@ Error: Process completed with exit code 1.
      ECS_TASK_DEFINITION: nomadhome-task
      CONTAINER_NAME: nomadhome-container
      AWS_DEFAULT_REGION: eu-south-2
-     AWS_ACCESS_KEY_ID: **_
-     AWS_SECRET_ACCESS_KEY: _**
+     AWS_ACCESS_KEY_ID: \*\**
+     AWS*SECRET_ACCESS_KEY: \*\*\*
      ECR_REGISTRY: 050083686330.dkr.ecr.eu-south-2.amazonaws.com
      IMAGE_TAG: cceb8d24cefcc44c5a579e47c452e4c0784149e5
      #0 building with "default" instance using docker driver
@@ -1778,7 +1778,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: [api] NomadHome API listening on port 3000
      13:43:11 [vite] (client) hmr update /src/components/Layout.tsx, /src/index.css
      13:43:34 [vite] (client) hmr update /src/components/Layout.tsx, /src/index.css (x2)
-     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
+     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node\*modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
      @nomadhome/api:dev: throw new PrismaClientInitializationError(message, this.client.\_clientVersion)
      @nomadhome/api:dev: ^
      @nomadhome/api:dev:
@@ -1786,7 +1786,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: Invalid `prisma.user.findUnique()` invocation in
      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/repositories/user.repository.ts:42:24
      @nomadhome/api:dev:
-     @nomadhome/api:dev: 39 /\*_ Persistence for the identity aggregate (User + its verification tokens + audit log). _/
+     @nomadhome/api:dev: 39 /\*\* Persistence for the identity aggregate (User + its verification tokens + audit log). \_/
      @nomadhome/api:dev: 40 export class UserRepository {
      @nomadhome/api:dev: 41 findByEmail(email: string): Promise<User | null> {
      @nomadhome/api:dev: → 42 return prisma.user.findUnique(
@@ -1808,7 +1808,7 @@ ERROR run failed: command exited (2)
 
 192. ok, now I have this error:
      @nomadhome/api:dev: [api] NomadHome API listening on port 3000
-     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
+     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node\*modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
      @nomadhome/api:dev: throw new PrismaClientInitializationError(message, this.client.\_clientVersion)
      @nomadhome/api:dev: ^
      @nomadhome/api:dev:
@@ -1816,7 +1816,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: Invalid `prisma.user.findUnique()` invocation in
      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/repositories/user.repository.ts:42:24
      @nomadhome/api:dev:
-     @nomadhome/api:dev: 39 /\*_ Persistence for the identity aggregate (User + its verification tokens + audit log). _/
+     @nomadhome/api:dev: 39 /\*\* Persistence for the identity aggregate (User + its verification tokens + audit log). \_/
      @nomadhome/api:dev: 40 export class UserRepository {
      @nomadhome/api:dev: 41 findByEmail(email: string): Promise<User | null> {
      @nomadhome/api:dev: → 42 return prisma.user.findUnique(
@@ -1847,7 +1847,7 @@ ERROR run failed: command exited (2)
 
 196. I restarted the APi but the problem keeps,
      @nomadhome/api:dev: [api] NomadHome API listening on port 3000
-     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
+     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node\*modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:242
      @nomadhome/api:dev: throw new PrismaClientInitializationError(message, this.client.\_clientVersion)
      @nomadhome/api:dev: ^
      @nomadhome/api:dev:
@@ -1855,7 +1855,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: Invalid `prisma.user.findUnique()` invocation in
      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/repositories/user.repository.ts:42:24
      @nomadhome/api:dev:
-     @nomadhome/api:dev: 39 /\*_ Persistence for the identity aggregate (User + its verification tokens + audit log). _/
+     @nomadhome/api:dev: 39 /\*\* Persistence for the identity aggregate (User + its verification tokens + audit log). \_/
      @nomadhome/api:dev: 40 export class UserRepository {
      @nomadhome/api:dev: 41 findByEmail(email: string): Promise<User | null> {
      @nomadhome/api:dev: → 42 return prisma.user.findUnique(
@@ -1877,7 +1877,7 @@ ERROR run failed: command exited (2)
 
 197. sorry, but the error is again.
      @nomadhome/api:dev: [api] NomadHome API listening on port 3000
-     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228
+     @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/node\*modules/.pnpm/@prisma+client@6.19.3_prisma@6.19.3_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228
      @nomadhome/api:dev: throw new PrismaClientKnownRequestError(message, {
      @nomadhome/api:dev: ^
      @nomadhome/api:dev:
@@ -1885,7 +1885,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: Invalid `prisma.user.findUnique()` invocation in
      @nomadhome/api:dev: /Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/repositories/user.repository.ts:42:24
      @nomadhome/api:dev:
-     @nomadhome/api:dev: 39 /\*_ Persistence for the identity aggregate (User + its verification tokens + audit log). _/
+     @nomadhome/api:dev: 39 /\*\* Persistence for the identity aggregate (User + its verification tokens + audit log). \_/
      @nomadhome/api:dev: 40 export class UserRepository {
      @nomadhome/api:dev: 41 findByEmail(email: string): Promise<User | null> {
      @nomadhome/api:dev: → 42 return prisma.user.findUnique(
@@ -2051,18 +2051,18 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: triggerUncaughtException(err, true /_ fromPromise _/);
      @nomadhome/api:dev: ^
      @nomadhome/api:dev:
-     @nomadhome/api:dev: StripeAuthenticationError: Invalid API Key provided: sk*test***\*\*\***lder
+     @nomadhome/api:dev: StripeAuthenticationError: Invalid API Key provided: sk\*test**\*\*\*\***lder
      @nomadhome/api:dev: at generateV1Error (/Users/luciano/Documents/IA4devs/NomadHome/node*modules/.pnpm/stripe@22.2.1*@types+node@22.19.21/node*modules/stripe/src/Error.ts:27:12)
      @nomadhome/api:dev: at <anonymous> (/Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/stripe@22.2.1*@types+node@22.19.21/node*modules/stripe/src/RequestSender.ts:205:23)
      @nomadhome/api:dev: at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
      @nomadhome/api:dev: Originating from:
      @nomadhome/api:dev: at SessionResource.\_makeRequest (/Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/stripe@22.2.1*@types+node@22.19.21/node*modules/stripe/src/StripeResource.ts:98:27)
-     @nomadhome/api:dev: at SessionResource.create (/Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/stripe@22.2.1*@types+node@22.19.21/node*modules/stripe/src/resources/Checkout/Sessions.ts:138:17)
+     @nomadhome/api:dev: at SessionResource.create (/Users/luciano/Documents/IA4devs/NomadHome/node_modules/.pnpm/stripe@22.2.1*@types+node@22.19.21/node\*modules/stripe/src/resources/Checkout/Sessions.ts:138:17)
      @nomadhome/api:dev: at PaymentService.createCheckoutSession (/Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/services/payment.service.ts:72:57)
      @nomadhome/api:dev: at async createCheckoutSession (/Users/luciano/Documents/IA4devs/NomadHome/apps/api/src/controllers/payment.controller.ts:20:22) {
      @nomadhome/api:dev: type: 'StripeAuthenticationError',
      @nomadhome/api:dev: raw: {
-     @nomadhome/api:dev: message: 'Invalid API Key provided: sk_test***\*\*\***lder',
+     @nomadhome/api:dev: message: 'Invalid API Key provided: sk*test**\*\*\*\***lder',
      @nomadhome/api:dev: type: 'invalid_request_error',
      @nomadhome/api:dev: headers: {
      @nomadhome/api:dev: server: 'nginx',
@@ -2072,7 +2072,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: connection: 'keep-alive',
      @nomadhome/api:dev: 'access-control-allow-credentials': 'true',
      @nomadhome/api:dev: 'access-control-allow-methods': 'GET, HEAD, PUT, PATCH, POST, DELETE',
-     @nomadhome/api:dev: 'access-control-allow-origin': '_',
+     @nomadhome/api:dev: 'access-control-allow-origin': '*',
      @nomadhome/api:dev: 'access-control-expose-headers': 'Request-Id, Stripe-Manage-Version, Stripe-Should-Retry, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required',
      @nomadhome/api:dev: 'access-control-max-age': '300',
      @nomadhome/api:dev: 'cache-control': 'no-cache, no-store',
@@ -2086,7 +2086,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: statusCode: 401,
      @nomadhome/api:dev: requestId: undefined
      @nomadhome/api:dev: },
-     @nomadhome/api:dev: rawType: 'invalid_request_error',
+     @nomadhome/api:dev: rawType: 'invalid*request_error',
      @nomadhome/api:dev: code: undefined,
      @nomadhome/api:dev: doc_url: undefined,
      @nomadhome/api:dev: param: undefined,
@@ -2099,7 +2099,7 @@ ERROR run failed: command exited (2)
      @nomadhome/api:dev: connection: 'keep-alive',
      @nomadhome/api:dev: 'access-control-allow-credentials': 'true',
      @nomadhome/api:dev: 'access-control-allow-methods': 'GET, HEAD, PUT, PATCH, POST, DELETE',
-     @nomadhome/api:dev: 'access-control-allow-origin': '_',
+     @nomadhome/api:dev: 'access-control-allow-origin': '*',
      @nomadhome/api:dev: 'access-control-expose-headers': 'Request-Id, Stripe-Manage-Version, Stripe-Should-Retry, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required',
      @nomadhome/api:dev: 'access-control-max-age': '300',
      @nomadhome/api:dev: 'cache-control': 'no-cache, no-store',
@@ -3139,23 +3139,3 @@ I think there's no error handling correctly implementing, can we fix that?
      Cannot read properties of undefined (reading 'bookings')
 
 347. when I am logged as admin, in Admin page, there is a list of users, but there is not a list of listings. Can you fix it?
-
-348. ok, in README.md, in point 1.3, can you add the 3 videos, host, guest and admin hosted in docs/video ?
-
-349. ok, can you commit and push it?
-
-350. ok, I removed the video folder inside docs, can you commit and push?
-
-351. ok, cah you check the last ponti in README.md? point 7. Pull Requests
-
-352. ok, can you audit the readme and see if it need any change? or if it has any discrfepancy with the code, deployment or anything else?
-
-353. ok, now I need all the prompts I introduced here from the beginning of the session, where can I found them?
-
-354. I need the first ones, since the beginning of nomadhome's project
-
-355. can you exgtract all the prompts from the historical use that are here and paste them in historical-prompts.md in nomadhome's root folder? the url is: file:///Users/luciano/.claude/projects/-Users-luciano-Documents-IA4devs-NomadHome/
-
-356. ok, can you remove that one related to deepsec security scanner?
-
-357. ok, can you check prompts.md? see how it's formatted and continue it with the prompst in historical-prompts?
