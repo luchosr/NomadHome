@@ -147,3 +147,4 @@ vite.config.ts.timestamp-*
 
 # Prisma generated client
 packages/db/generated/
+.deepsec/
