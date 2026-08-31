@@ -24,6 +24,20 @@ async function registerAndLogin(email: string) {
   return res.body as { accessToken: string; refreshToken: string };
 }
 
+async function registerUnverifiedAndLogin(email: string) {
+  await prisma.user.create({
+    data: {
+      email,
+      passwordHash: await bcrypt.hash("password123", 12),
+      emailVerifiedAt: null,
+    },
+  });
+  const res = await request(createApp())
+    .post("/auth/login")
+    .send({ email, password: "password123" });
+  return res.body as { accessToken: string; refreshToken: string };
+}
+
 const validForm = { displayName: "Lucia", payoutEmail: "pay@example.com", acceptedTerms: true };
 
 describe.skipIf(!hasDatabase)("POST /users/me/become-host", () => {
@@ -85,6 +99,24 @@ describe.skipIf(!hasDatabase)("POST /users/me/become-host", () => {
     const res = await request(createApp()).post("/users/me/become-host").send(validForm);
     expect(res.status).toBe(401);
     expect(await prisma.hostProfile.count()).toBe(0);
+  });
+
+  it("rejects onboarding for an unverified email with 403 EMAIL_NOT_VERIFIED", async () => {
+    const { accessToken } = await registerUnverifiedAndLogin("unverified@example.com");
+
+    const res = await request(createApp())
+      .post("/users/me/become-host")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(validForm);
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe("EMAIL_NOT_VERIFIED");
+    expect(await prisma.hostProfile.count()).toBe(0);
+
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: "unverified@example.com" },
+    });
+    expect(user.roles).toEqual(["guest"]);
   });
 });
 

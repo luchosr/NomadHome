@@ -199,6 +199,7 @@ export const en = {
       not_cancellable: "This booking cannot be cancelled.",
       checkin_passed: "Check-in date has already passed.",
       no_fee_config: "Platform fee configuration is missing. Contact support.",
+      email_not_verified: "Please verify your email address before booking.",
     },
     ui: {
       form_title: "Confirm your booking",

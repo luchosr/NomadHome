@@ -133,6 +133,18 @@ describe("BookingFormPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/no longer available/i);
   });
 
+  it("shows verification error when create throws ApiError 403 EMAIL_NOT_VERIFIED", async () => {
+    mockGetDetail.mockResolvedValue(mockListing);
+    mockCreate.mockRejectedValue(new ApiError(403, { error: "EMAIL_NOT_VERIFIED" }));
+
+    renderForm();
+    await screen.findByText("Ocean View Suite");
+
+    await userEvent.click(screen.getByRole("button", { name: /pay now/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/verify your email/i);
+  });
+
   it("shows select_dates message when no checkIn param is provided", () => {
     renderForm("?checkOut=2026-07-12");
     expect(screen.getByText(/select check-in and check-out/i)).toBeInTheDocument();

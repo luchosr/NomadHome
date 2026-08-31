@@ -15,6 +15,7 @@ import {
   SelfBookingError,
   NoFeeConfigError,
 } from "../services/booking.service.js";
+import { EmailNotVerifiedError } from "../services/auth.service.js";
 import { getUser } from "../middleware/require-auth.js";
 
 export class BookingController {
@@ -93,6 +94,12 @@ export class BookingController {
   };
 
   private mapError(err: unknown, res: Response): void {
+    if (err instanceof EmailNotVerifiedError) {
+      res
+        .status(403)
+        .json({ error: "EMAIL_NOT_VERIFIED", message: t("booking.error.email_not_verified") });
+      return;
+    }
     if (err instanceof PastCheckInError) {
       res.status(422).json({ error: "PAST_CHECKIN", message: t("booking.error.checkin_passed") });
       return;

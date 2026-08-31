@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { BecomeHostSchema, type BecomeHostInput, t } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import { useAuth } from "../contexts/auth.js";
-import { ApiError } from "../api/client.js";
+import { ApiError, extractApiMessage } from "../api/client.js";
 import { useState } from "react";
 import { FormField } from "../components/FormField.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
@@ -28,6 +28,12 @@ export function BecomeHostPage() {
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setServerError(t("identity.become_host.already_host"));
+      } else if (
+        err instanceof ApiError &&
+        err.status === 403 &&
+        extractApiMessage(err) === "EMAIL_NOT_VERIFIED"
+      ) {
+        setServerError(t("identity.become_host.email_not_verified"));
       } else {
         setServerError(t("error.generic.unexpected"));
       }
