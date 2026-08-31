@@ -92,11 +92,16 @@ export function BookingFormPage() {
       const { url } = await bookingsApi.checkout(booking.id);
       window.location.href = url;
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
+      if (err instanceof ApiError && err.status === 409) {
         const body = err.body as { error?: string };
-        if (body?.error === "BOOKING_OVERLAP") {
+        if (body?.error === "OVERLAP_CONFLICT") {
           setServerError(t("booking.error.overlap"));
-        } else if (body?.error === "SELF_BOOKING") {
+        } else {
+          setServerError(t("error.generic.unexpected"));
+        }
+      } else if (err instanceof ApiError && err.status === 422) {
+        const body = err.body as { error?: string };
+        if (body?.error === "SELF_BOOKING_NOT_ALLOWED") {
           setServerError(t("booking.error.self_booking"));
         } else {
           setServerError(t("error.generic.unexpected"));
