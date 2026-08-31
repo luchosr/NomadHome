@@ -121,9 +121,9 @@ describe("BookingFormPage", () => {
     await waitFor(() => expect(window.location.href).toBe("https://checkout.stripe.com/abc"));
   });
 
-  it("shows overlap error when create throws ApiError 422 BOOKING_OVERLAP", async () => {
+  it("shows overlap error when create throws ApiError 409 OVERLAP_CONFLICT", async () => {
     mockGetDetail.mockResolvedValue(mockListing);
-    mockCreate.mockRejectedValue(new ApiError(422, { error: "BOOKING_OVERLAP" }));
+    mockCreate.mockRejectedValue(new ApiError(409, { error: "OVERLAP_CONFLICT" }));
 
     renderForm();
     await screen.findByText("Ocean View Suite");
@@ -131,6 +131,18 @@ describe("BookingFormPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /pay now/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/no longer available/i);
+  });
+
+  it("shows self-booking error when create throws ApiError 422 SELF_BOOKING_NOT_ALLOWED", async () => {
+    mockGetDetail.mockResolvedValue(mockListing);
+    mockCreate.mockRejectedValue(new ApiError(422, { error: "SELF_BOOKING_NOT_ALLOWED" }));
+
+    renderForm();
+    await screen.findByText("Ocean View Suite");
+
+    await userEvent.click(screen.getByRole("button", { name: /pay now/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/cannot book your own listing/i);
   });
 
   it("shows verification error when create throws ApiError 403 EMAIL_NOT_VERIFIED", async () => {
