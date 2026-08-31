@@ -4,6 +4,7 @@ import { BookingRepository } from "../repositories/booking.repository.js";
 import { ListingRepository } from "../repositories/listing.repository.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import { type EmailService } from "./email.service.js";
+import { EmailNotVerifiedError } from "./auth.service.js";
 
 export class BookingNotFoundError extends Error {
   constructor() {
@@ -87,6 +88,9 @@ export class BookingService {
     checkIn: Date,
     checkOut: Date,
   ): Promise<Booking> {
+    const guest = await this.users.findById(guestId);
+    if (!guest || !guest.emailVerifiedAt) throw new EmailNotVerifiedError();
+
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     if (checkIn < today) throw new PastCheckInError();
