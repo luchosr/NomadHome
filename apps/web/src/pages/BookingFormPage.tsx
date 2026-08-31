@@ -5,7 +5,7 @@ import { t } from "@nomadhome/shared";
 import { Button } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { bookingsApi } from "../api/bookings.js";
-import { ApiError } from "../api/client.js";
+import { ApiError, extractApiMessage } from "../api/client.js";
 
 function formatRate(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
@@ -101,6 +101,12 @@ export function BookingFormPage() {
         } else {
           setServerError(t("error.generic.unexpected"));
         }
+      } else if (
+        err instanceof ApiError &&
+        err.status === 403 &&
+        extractApiMessage(err) === "EMAIL_NOT_VERIFIED"
+      ) {
+        setServerError(t("booking.error.email_not_verified"));
       } else {
         setServerError(t("error.generic.unexpected"));
       }
