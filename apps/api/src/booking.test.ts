@@ -7,12 +7,13 @@ import { createApp } from "./app.js";
 const hasDatabase = Boolean(process.env.DATABASE_URL);
 const app = createApp();
 
-async function createUser(email: string, opts: { host?: boolean } = {}) {
+async function createUser(email: string, opts: { host?: boolean; emailVerified?: boolean } = {}) {
+  const emailVerified = opts.emailVerified ?? true;
   return prisma.user.create({
     data: {
       email,
       passwordHash: await bcrypt.hash("pass1234567", 12),
-      emailVerifiedAt: new Date(),
+      emailVerifiedAt: emailVerified ? new Date() : null,
       roles: opts.host ? ["guest", "host"] : ["guest"],
     },
   });
@@ -178,6 +179,23 @@ describe.skipIf(!hasDatabase)("POST /bookings", () => {
       .post("/bookings")
       .send({ listingId: "any", checkIn: "2027-01-10", checkOut: "2027-01-15" });
     expect(res.status).toBe(401);
+  });
+
+  it("returns 403 EMAIL_NOT_VERIFIED when guest email is not verified", async () => {
+    const host = await createUser("host6@test.com", { host: true });
+    const guest = await createUser("guest6@test.com", { emailVerified: false });
+    const guestToken = await tokenFor(guest.id);
+    const listing = await createPublishedListing(host.id);
+    await seedFeeConfig();
+
+    const res = await request(app)
+      .post("/bookings")
+      .set("Authorization", `Bearer ${guestToken}`)
+      .send({ listingId: listing.id, checkIn: "2027-01-10", checkOut: "2027-01-15" });
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe("EMAIL_NOT_VERIFIED");
+    expect(await prisma.booking.count()).toBe(0);
   });
 });
 
