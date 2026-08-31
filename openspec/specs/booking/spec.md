@@ -97,7 +97,7 @@ The system SHALL ensure that a single booking record corresponds to exactly one 
 
 The system SHALL allow an authenticated guest to create a booking for a published listing whose full requested date range is available. On creation the system SHALL atomically insert a `Booking` record with status `PENDING_PAYMENT` and an `AvailabilityBlock` row with source `BOOKING_HOLD` in a single database transaction. Fee and rate values SHALL be snapshotted from the listing and the current `PlatformFeeConfig` row at creation time and SHALL be immutable thereafter.
 
-The booking SHALL NOT be created if: the listing is not in `PUBLISHED` status; the guest is the same user as the host; `checkOut` is not strictly after `checkIn`; or any part of the requested date range overlaps an existing `AvailabilityBlock` for the same listing.
+The booking SHALL NOT be created if: the guest's email is not verified (`emailVerifiedAt` is `null`); the listing is not in `PUBLISHED` status; the guest is the same user as the host; `checkOut` is not strictly after `checkIn`; or any part of the requested date range overlaps an existing `AvailabilityBlock` for the same listing. The email-verification check SHALL be evaluated before any other precondition. Rejection for an unverified email SHALL return HTTP 403 with a stable machine-readable error code `EMAIL_NOT_VERIFIED` in the response body, in addition to a human-readable `message`.
 
 #### Scenario: Guest creates a booking for an available published listing
 
@@ -113,6 +113,16 @@ The booking SHALL NOT be created if: the listing is not in `PUBLISHED` status; t
 - **And** `booking.totalChargedCents` equals `subtotalCents + guestServiceFeeCents`
 - **And** `booking.payoutCents` equals `subtotalCents - hostCommissionCents`
 - **And** an `AvailabilityBlock` with `source = BOOKING_HOLD` and `bookingId = booking.id` exists for the listing on `[checkIn, checkOut)`
+
+#### Scenario: Guest with unverified email cannot create a booking
+
+- **Given** an authenticated guest whose `emailVerifiedAt` is `null`
+- **And** a listing with status `PUBLISHED` owned by a different user
+- **When** the guest submits `POST /bookings` with `{ listingId, checkIn, checkOut }`
+- **Then** the system responds `403 Forbidden`
+- **And** the response body includes `error: "EMAIL_NOT_VERIFIED"`
+- **And** the response body includes a human-readable `message`
+- **And** no `Booking` record is created
 
 #### Scenario: Booking attempt overlaps an existing block (race condition or host block)
 
@@ -145,8 +155,6 @@ The booking SHALL NOT be created if: the listing is not in `PUBLISHED` status; t
 - **When** the guest submits `POST /bookings` with `checkOut <= checkIn`
 - **Then** the system responds `422 Unprocessable Entity` with a validation error
 - **And** no `Booking` record is created
-
----
 
 ### Requirement: Guest can retrieve a booking
 

@@ -84,7 +84,7 @@ The system SHALL authenticate a registered user with valid credentials by issuin
 
 The system SHALL allow an authenticated guest to gain the `host` role in addition to `guest` by completing the host onboarding form, after which the user can access host-only routes.
 
-The onboarding endpoint SHALL be `POST /users/me/become-host`, protected by authentication. The form SHALL capture a display name and a payout email and SHALL require explicit acceptance of the current terms; the system SHALL stamp the accepted terms version server-side (the client cannot set it). Creating the host profile and adding the `host` role SHALL be atomic. The response SHALL include a fresh access token carrying the updated roles so the user can access host-only routes without re-authenticating. A user who already holds the `host` role SHALL be rejected (HTTP 409) without creating a duplicate profile.
+The onboarding endpoint SHALL be `POST /users/me/become-host`, protected by authentication. The form SHALL capture a display name and a payout email and SHALL require explicit acceptance of the current terms; the system SHALL stamp the accepted terms version server-side (the client cannot set it). Creating the host profile and adding the `host` role SHALL be atomic. The response SHALL include a fresh access token carrying the updated roles so the user can access host-only routes without re-authenticating. A user who already holds the `host` role SHALL be rejected (HTTP 409) without creating a duplicate profile. A user whose email is not verified (`emailVerifiedAt` is `null`) SHALL be rejected (HTTP 403) without creating a host profile; the response body SHALL include a stable machine-readable error code `EMAIL_NOT_VERIFIED` in addition to a human-readable `message`.
 
 #### Scenario: Guest completes host onboarding
 
@@ -114,6 +114,16 @@ The onboarding endpoint SHALL be `POST /users/me/become-host`, protected by auth
 - **WHEN** it is sent to the host onboarding endpoint
 - **THEN** the system returns HTTP 401
 - **AND** no host profile is created
+
+#### Scenario: Onboarding is rejected for an unverified email
+
+- **GIVEN** an authenticated user with role `guest` only whose `emailVerifiedAt` is `null`
+- **WHEN** the user submits the host onboarding form
+- **THEN** the system returns HTTP 403
+- **AND** the response body includes `error: "EMAIL_NOT_VERIFIED"`
+- **AND** the response body includes a human-readable `message`
+- **AND** no host profile is created
+- **AND** the user does not gain the `host` role
 
 ### Requirement: Access tokens and refresh tokens
 
