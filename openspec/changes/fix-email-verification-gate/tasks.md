@@ -10,8 +10,8 @@
 
 ## 2. Frontend
 
-- [ ] 2.1 In `apps/web/src/pages/BecomeHostPage.tsx` (`onSubmit` catch block, lines 28-34), add a branch: when `err instanceof ApiError && err.status === 403`, read `(err.body as { error?: string })?.error`, and if it is `"EMAIL_NOT_VERIFIED"`, call `setServerError(t("identity.become_host.email_not_verified"))` instead of falling through to `t("error.generic.unexpected")`. Keep the existing `409` branch unchanged.
-- [ ] 2.2 In `apps/web/src/pages/BookingFormPage.tsx` (`onSubmit` catch block, lines 94-105), add a branch: when `err instanceof ApiError && err.status === 403`, read `(err.body as { error?: string })?.error`, and if it is `"EMAIL_NOT_VERIFIED"`, call `setServerError(t("booking.error.email_not_verified"))`. Keep the existing `422` branch (`BOOKING_OVERLAP` / `SELF_BOOKING`) unchanged — those literal codes are a pre-existing, unrelated mismatch with the actual backend codes (`OVERLAP_CONFLICT` / `SELF_BOOKING_NOT_ALLOWED`) and are out of scope for this fix.
+- [x] 2.1 In `apps/web/src/pages/BecomeHostPage.tsx` (`onSubmit` catch block, lines 28-34), add a branch: when `err instanceof ApiError && err.status === 403`, read `(err.body as { error?: string })?.error`, and if it is `"EMAIL_NOT_VERIFIED"`, call `setServerError(t("identity.become_host.email_not_verified"))` instead of falling through to `t("error.generic.unexpected")`. Keep the existing `409` branch unchanged.
+- [x] 2.2 In `apps/web/src/pages/BookingFormPage.tsx` (`onSubmit` catch block, lines 94-105), add a branch: when `err instanceof ApiError && err.status === 403`, read `(err.body as { error?: string })?.error`, and if it is `"EMAIL_NOT_VERIFIED"`, call `setServerError(t("booking.error.email_not_verified"))`. Keep the existing `422` branch (`BOOKING_OVERLAP` / `SELF_BOOKING`) unchanged — those literal codes are a pre-existing, unrelated mismatch with the actual backend codes (`OVERLAP_CONFLICT` / `SELF_BOOKING_NOT_ALLOWED`) and are out of scope for this fix.
 
 ## 3. Tests
 
