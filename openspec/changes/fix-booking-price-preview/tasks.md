@@ -2,10 +2,10 @@
 
 ## 1. Backend
 
-- [ ] 1.1 In `apps/api/src/services/booking.service.ts`, extract the pricing calculation (`subtotalCents`, `guestServiceFeeCents`, `totalChargedCents`, `hostCommissionCents`, `payoutCents`) out of `create()` into one shared pure function (e.g. `computeBookingPricing(nightlyRateCents, nights, feeConfig)`). `create()` must call it — no duplicated math.
-- [ ] 1.2 Add `BookingService.quote(listingId, checkIn, checkOut)`: validates the listing exists and is `PUBLISHED` (throw `ListingNotAvailableError` otherwise, reusing the existing error → 404 mapping), fetches `feeConfig` via `this.bookings.latestFeeConfig()`, computes nights and calls the shared pricing function from 1.1. Does NOT check `emailVerifiedAt`. Does NOT write to the database.
-- [ ] 1.3 Add `GET /bookings/quote` route (`apps/api/src/routes/bookings.ts`) guarded only by `requireAuth` (no email-verification check), with `listingId`/`checkIn`/`checkOut` query params validated via Zod (reuse the existing date-validation pattern from `POST /bookings`).
-- [ ] 1.4 Add the controller handler mapping the service result to `200 { nights, nightlyRateCents, subtotalCents, guestServiceFeeBps, guestServiceFeeCents, totalChargedCents, currency }`, and mapping `ListingNotAvailableError` to `404`.
+- [x] 1.1 In `apps/api/src/services/booking.service.ts`, extract the pricing calculation (`subtotalCents`, `guestServiceFeeCents`, `totalChargedCents`, `hostCommissionCents`, `payoutCents`) out of `create()` into one shared pure function (e.g. `computeBookingPricing(nightlyRateCents, nights, feeConfig)`). `create()` must call it — no duplicated math.
+- [x] 1.2 Add `BookingService.quote(listingId, checkIn, checkOut)`: validates the listing exists and is `PUBLISHED` (throw `ListingNotAvailableError` otherwise, reusing the existing error → 404 mapping), fetches `feeConfig` via `this.bookings.latestFeeConfig()`, computes nights and calls the shared pricing function from 1.1. Does NOT check `emailVerifiedAt`. Does NOT write to the database.
+- [x] 1.3 Add `GET /bookings/quote` route (`apps/api/src/routes/bookings.ts`) guarded only by `requireAuth` (no email-verification check), with `listingId`/`checkIn`/`checkOut` query params validated via Zod (reuse the existing date-validation pattern from `POST /bookings`).
+- [x] 1.4 Add the controller handler mapping the service result to `200 { nights, nightlyRateCents, subtotalCents, guestServiceFeeBps, guestServiceFeeCents, totalChargedCents, currency }`, and mapping `ListingNotAvailableError` to `404`.
 
 ## 2. Frontend
 
