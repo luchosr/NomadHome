@@ -33,6 +33,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history (not just the PR merge ref) so diff-cover can diff
+          # against origin/main below.
+          fetch-depth: 0
 
       # Node 20.20.0: above the project's >= 20.19 floor (project.md §4) and the
       # lowest 20.x the OpenSpec CLI's deps accept (posthog-node needs ^20.20.0).
@@ -62,8 +66,37 @@ jobs:
           pnpm --filter @nomadhome/db exec prisma generate
           pnpm --filter @nomadhome/db exec prisma migrate deploy
 
-      - name: Test
-        run: pnpm test
+      - name: Test with coverage
+        run: pnpm coverage
+
+      # diff-cover checks coverage of only the lines changed in this PR (not
+      # whole-repo coverage) against the merged lcov reports below.
+      - name: Setup Python for diff-cover
+        if: github.event_name == 'pull_request'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install diff-cover
+        if: github.event_name == 'pull_request'
+        run: pip install diff-cover==10.*
+
+      - name: Merge coverage reports
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p coverage
+          rm -f coverage/lcov.info
+          for pkg in apps/api apps/web packages/ui packages/shared packages/db; do
+            if [ -f "$pkg/coverage/lcov.info" ]; then
+              sed "s|^SF:|SF:$pkg/|" "$pkg/coverage/lcov.info" >> coverage/lcov.info
+            fi
+          done
+
+      - name: Diff coverage gate (≥80% on changed lines)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin main
+          diff-cover coverage/lcov.info --compare-branch=origin/main --fail-under=80
 
       - name: Build
         run: pnpm build
