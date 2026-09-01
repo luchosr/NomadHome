@@ -74,6 +74,44 @@ function isExclusionViolation(err: unknown): boolean {
   );
 }
 
+interface FeeConfigRates {
+  guestServiceFeeBps: number;
+  hostCommissionBps: number;
+}
+
+interface BookingPricing {
+  nights: number;
+  subtotalCents: number;
+  guestServiceFeeCents: number;
+  hostCommissionCents: number;
+  totalChargedCents: number;
+  payoutCents: number;
+}
+
+function computeBookingPricing(
+  nightlyRateCents: number,
+  nights: number,
+  feeConfig: FeeConfigRates,
+): BookingPricing {
+  const subtotalCents = nightlyRateCents * nights;
+  const guestServiceFeeCents = Math.floor((subtotalCents * feeConfig.guestServiceFeeBps) / 10000);
+  const hostCommissionCents = Math.floor((subtotalCents * feeConfig.hostCommissionBps) / 10000);
+  return {
+    nights,
+    subtotalCents,
+    guestServiceFeeCents,
+    hostCommissionCents,
+    totalChargedCents: subtotalCents + guestServiceFeeCents,
+    payoutCents: subtotalCents - hostCommissionCents,
+  };
+}
+
+export interface BookingQuote extends BookingPricing {
+  nightlyRateCents: number;
+  guestServiceFeeBps: number;
+  currency: string;
+}
+
 export class BookingService {
   constructor(
     private readonly bookings: BookingRepository,
@@ -103,9 +141,7 @@ export class BookingService {
     if (!feeConfig) throw new NoFeeConfigError();
 
     const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
-    const subtotalCents = listing.nightlyRateCents * nights;
-    const guestServiceFeeCents = Math.floor((subtotalCents * feeConfig.guestServiceFeeBps) / 10000);
-    const hostCommissionCents = Math.floor((subtotalCents * feeConfig.hostCommissionBps) / 10000);
+    const pricing = computeBookingPricing(listing.nightlyRateCents, nights, feeConfig);
 
     try {
       return await this.bookings.create({
@@ -114,16 +150,16 @@ export class BookingService {
         hostId: listing.hostId,
         checkIn,
         checkOut,
-        nights,
+        nights: pricing.nights,
         nightlyRateCents: listing.nightlyRateCents,
-        subtotalCents,
+        subtotalCents: pricing.subtotalCents,
         guestServiceFeeBps: feeConfig.guestServiceFeeBps,
-        guestServiceFeeCents,
+        guestServiceFeeCents: pricing.guestServiceFeeCents,
         hostCommissionBps: feeConfig.hostCommissionBps,
-        hostCommissionCents,
+        hostCommissionCents: pricing.hostCommissionCents,
         currency: listing.currency,
-        totalChargedCents: subtotalCents + guestServiceFeeCents,
-        payoutCents: subtotalCents - hostCommissionCents,
+        totalChargedCents: pricing.totalChargedCents,
+        payoutCents: pricing.payoutCents,
       });
     } catch (err) {
       if (!isExclusionViolation(err)) throw err;
@@ -134,6 +170,24 @@ export class BookingService {
         endDate: toISODate(checkOut),
       });
     }
+  }
+
+  async quote(listingId: string, checkIn: Date, checkOut: Date): Promise<BookingQuote> {
+    const listing = await this.listings.findById(listingId);
+    if (!listing || listing.status !== "PUBLISHED") throw new ListingNotAvailableError();
+
+    const feeConfig = await this.bookings.latestFeeConfig();
+    if (!feeConfig) throw new NoFeeConfigError();
+
+    const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
+    const pricing = computeBookingPricing(listing.nightlyRateCents, nights, feeConfig);
+
+    return {
+      ...pricing,
+      nightlyRateCents: listing.nightlyRateCents,
+      guestServiceFeeBps: feeConfig.guestServiceFeeBps,
+      currency: listing.currency,
+    };
   }
 
   async getForGuest(guestId: string, bookingId: string): Promise<Booking> {

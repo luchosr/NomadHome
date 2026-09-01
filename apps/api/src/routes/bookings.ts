@@ -50,6 +50,7 @@ router.get("/host-upcoming", requireRole("host"), bookingController.listHostUpco
 router.get("/host-all", requireRole("host"), bookingController.listHostAll);
 router.post("/", bookingController.create);
 router.get("/me", bookingController.listMine);
+router.get("/quote", bookingController.quote);
 router.get("/:id", bookingController.getById);
 router.post("/:id/cancel", bookingController.cancel);
 router.post("/:id/checkout", paymentController.createCheckoutSession);
