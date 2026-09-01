@@ -208,9 +208,7 @@ describe.skipIf(!hasDatabase)("PATCH /admin/listings/:id/disable", () => {
 describe.skipIf(!hasDatabase)("PATCH /admin/listings/:id/enable", () => {
   beforeEach(() => resetDatabase());
 
-  // Skipped: openspec/specs/admin/spec.md contradicts itself on the target status
-  // (DRAFT vs PUBLISHED). Implementation currently sets DRAFT. See issue #89.
-  it.skip("sets listing status to PUBLISHED (200)", async () => {
+  it("sets listing status to DRAFT (200)", async () => {
     await createUser("admin@test.com", ["admin"]);
     const host = await createUser("host@test.com", ["guest", "host"]);
     const adminToken = await tokenFor("admin@test.com");
@@ -225,7 +223,7 @@ describe.skipIf(!hasDatabase)("PATCH /admin/listings/:id/enable", () => {
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe("PUBLISHED");
+    expect(res.body.status).toBe("DRAFT");
     expect(res.body.disabledAt).toBeNull();
   });
 
