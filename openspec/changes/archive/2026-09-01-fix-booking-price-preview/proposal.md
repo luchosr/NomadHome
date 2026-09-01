@@ -8,7 +8,7 @@ The existing "Booking form page" requirement (`openspec/specs/booking/spec.md:18
 
 ## What
 
-- Add a read-only pricing preview so the frontend can show the real, itemized total *before* a booking is created (today, pricing is only computed as a side effect of `POST /bookings`, which already commits a booking hold).
+- Add a read-only pricing preview so the frontend can show the real, itemized total _before_ a booking is created (today, pricing is only computed as a side effect of `POST /bookings`, which already commits a booking hold).
 - New endpoint: `GET /bookings/quote?listingId=&checkIn=&checkOut=` (authenticated; guest role; deliberately NOT gated on email verification — previewing a price isn't the action that requires a verified email, creating the booking still is). Returns `{ nights, nightlyRateCents, subtotalCents, guestServiceFeeBps, guestServiceFeeCents, totalChargedCents, currency }`.
 - Extract the pricing math (subtotal → service fee → total) out of `BookingService.create` into one shared pure function, used by both `create()` and the new quote path, so there is exactly one place that computes money and it cannot drift between preview and charge.
 - Update `BookingFormPage.tsx` to fetch the quote on load (alongside the existing listing fetch) and render an itemized breakdown: nightly rate × nights (subtotal), a "Service fee" line, then the fee-inclusive total — replacing today's base-only total. "Pay now" still creates the booking and redirects to Stripe exactly as before.
@@ -22,10 +22,10 @@ The existing "Booking form page" requirement (`openspec/specs/booking/spec.md:18
 
 ## Risks & Mitigations
 
-| Risk | Likelihood | Mitigation |
-| --- | --- | --- |
-| Quote and actual booking-creation charge drift apart if the shared pricing function isn't truly reused by both paths. | Low | Delta spec + tasks require both `create()` and the quote handler to call the same extracted function; QA test asserts a quote's `totalChargedCents` matches the subsequently created booking's `totalChargedCents` for the same inputs. |
-| Fee config changes between the guest viewing the quote and clicking "Pay now" (rare, admin-driven). | Low | Out of scope for this fix — `POST /bookings` remains the authoritative charge; a stale quote is a pre-existing, acceptable window already implicit in any quote-then-commit flow. Not addressed here. |
+| Risk                                                                                                                  | Likelihood | Mitigation                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Quote and actual booking-creation charge drift apart if the shared pricing function isn't truly reused by both paths. | Low        | Delta spec + tasks require both `create()` and the quote handler to call the same extracted function; QA test asserts a quote's `totalChargedCents` matches the subsequently created booking's `totalChargedCents` for the same inputs. |
+| Fee config changes between the guest viewing the quote and clicking "Pay now" (rare, admin-driven).                   | Low        | Out of scope for this fix — `POST /bookings` remains the authoritative charge; a stale quote is a pre-existing, acceptable window already implicit in any quote-then-commit flow. Not addressed here.                                   |
 
 ## Rollout
 
