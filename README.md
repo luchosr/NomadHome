@@ -346,7 +346,7 @@ flowchart TD
     end
 
     subgraph ci["GitHub Actions CI"]
-        GATE["Quality gate job\npnpm install --frozen-lockfile\npnpm lint\npnpm typecheck\nprisma migrate deploy\npnpm test --coverage ≥80%\npnpm build\nopenspec validate --strict"]
+        GATE["Quality gate job\npnpm install --frozen-lockfile\npnpm lint\npnpm typecheck\nprisma migrate deploy\npnpm coverage + diff-cover ≥80% (changed lines)\npnpm build\nopenspec validate --strict"]
         E2E["E2E job\nPlaywright headless Chromium\npnpm test:e2e"]
         GEMINI["(reserved for future AI review)"]
     end
@@ -402,9 +402,10 @@ Every pull request runs two parallel jobs defined in `.github/workflows/ci.yml`:
 2. `pnpm lint` — ESLint, zero warnings
 3. `pnpm typecheck` — TypeScript strict mode, zero errors
 4. `prisma generate` + `prisma migrate deploy` — schema applied against a fresh Postgres service container
-5. `pnpm test` — Vitest unit + integration, ≥80% coverage on changed lines
-6. `pnpm build` — all workspace packages compile
-7. `openspec validate --all --strict` — every active OpenSpec change is spec-compliant
+5. `pnpm coverage` — Vitest unit + integration with coverage instrumentation
+6. `diff-cover` — fails the job if coverage on lines changed in the PR drops below 80% (whole-repo coverage is not checked; untouched files can sit at any %)
+7. `pnpm build` — all workspace packages compile
+8. `openspec validate --all --strict` — every active OpenSpec change is spec-compliant
 
 **E2E** (blocks merge if red):
 
@@ -1555,7 +1556,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 
 - `pnpm lint` (zero warnings).
 - `pnpm typecheck` (zero errors).
-- `pnpm test --changed --coverage` (all green, ≥80% coverage on changed lines).
+- `pnpm test --changed` (all green); CI's `diff-cover` step enforces ≥80% coverage on changed lines.
 - Conventional Commits with `(NH-101)` suffix on every commit.
 - `openspec validate add-booking-and-payments` passes.
 
@@ -1624,7 +1625,7 @@ Three representative tickets — one per discipline (backend, frontend, database
 
 **Quality gates.**
 
-- `pnpm lint`, `pnpm typecheck`, `pnpm test --changed --coverage` (≥80% on changed lines).
+- `pnpm lint`, `pnpm typecheck`, `pnpm test --changed`; CI's `diff-cover` step enforces ≥80% on changed lines.
 - `pnpm test:e2e search.spec.ts` passes the URL-state-survives-reload scenario.
 - Lighthouse mobile score on `/search` ≥ 90 in performance + a11y (run via `pnpm preview` + manual Lighthouse run before opening PR).
 - Every user-facing string goes through `t()` — verified by the project's ESLint rule (XC-2.2 in [docs/tasks.md](docs/tasks.md)).
