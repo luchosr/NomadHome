@@ -11,6 +11,26 @@ const LISTING = {
   currency: "EUR",
 };
 
+const QUOTE = {
+  nights: 3,
+  nightlyRateCents: NIGHTLY_RATE_CENTS,
+  subtotalCents: NIGHTLY_RATE_CENTS * 3,
+  guestServiceFeeBps: 1000,
+  guestServiceFeeCents: 2250,
+  totalChargedCents: NIGHTLY_RATE_CENTS * 3 + 2250,
+  currency: "EUR",
+};
+
+async function mockQuote(page: Page) {
+  await page.route(`**/bookings/quote*`, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(QUOTE),
+    }),
+  );
+}
+
 async function mockGuestSession(page: Page) {
   const refreshToken = crypto.randomUUID();
   const accessToken = crypto.randomUUID();
@@ -48,11 +68,13 @@ test.describe("US-4.1 — Guest books a listing", () => {
         body: JSON.stringify(LISTING),
       }),
     );
+    await mockQuote(page);
     await page.goto(`/listings/${LISTING_ID}/book?checkIn=2026-08-01&checkOut=2026-08-04`);
     await expect(page.getByText("Sunny Loft in Lisbon")).toBeVisible();
     await expect(page.getByText("2026-08-01")).toBeVisible();
     await expect(page.getByText("2026-08-04")).toBeVisible();
-    await expect(page.getByRole("button", { name: /pay now/i })).toBeVisible();
+    await expect(page.getByText(/service fee/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /pay now/i })).toBeEnabled();
   });
 
   test("creates booking and shows success page after payment", async ({ page }) => {
@@ -64,6 +86,7 @@ test.describe("US-4.1 — Guest books a listing", () => {
         body: JSON.stringify(LISTING),
       }),
     );
+    await mockQuote(page);
     await page.route("**/bookings", (route) =>
       route.fulfill({
         status: 201,

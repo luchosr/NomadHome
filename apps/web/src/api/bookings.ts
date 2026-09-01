@@ -1,5 +1,15 @@
 import { apiFetch } from "./client.js";
 
+export interface BookingQuote {
+  nights: number;
+  nightlyRateCents: number;
+  subtotalCents: number;
+  guestServiceFeeBps: number;
+  guestServiceFeeCents: number;
+  totalChargedCents: number;
+  currency: string;
+}
+
 export interface BookingCreated {
   id: string;
   listingId: string;
@@ -53,6 +63,10 @@ export interface HostBooking {
 export const bookingsApi = {
   create(input: { listingId: string; checkIn: string; checkOut: string }): Promise<BookingCreated> {
     return apiFetch("/bookings", { method: "POST", body: JSON.stringify(input) });
+  },
+  quote(listingId: string, checkIn: string, checkOut: string): Promise<BookingQuote> {
+    const params = new URLSearchParams({ listingId, checkIn, checkOut });
+    return apiFetch(`/bookings/quote?${params.toString()}`);
   },
   checkout(bookingId: string): Promise<{ url: string; sessionId: string }> {
     return apiFetch(`/bookings/${bookingId}/checkout`, { method: "POST" });

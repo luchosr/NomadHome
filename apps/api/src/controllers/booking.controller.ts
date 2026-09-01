@@ -3,6 +3,7 @@ import {
   CreateBookingSchema,
   CancelBookingSchema,
   BookingListQuerySchema,
+  BookingQuoteQuerySchema,
   t,
 } from "@nomadhome/shared";
 import {
@@ -39,6 +40,32 @@ export class BookingController {
         new Date(parsed.data.checkOut),
       );
       res.status(201).json(booking);
+    } catch (err) {
+      this.mapError(err, res);
+    }
+  };
+
+  quote = async (req: Request, res: Response): Promise<void> => {
+    const parsed = BookingQuoteQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(422).json({ error: "validation", issues: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const quote = await this.service.quote(
+        parsed.data.listingId,
+        new Date(parsed.data.checkIn),
+        new Date(parsed.data.checkOut),
+      );
+      res.status(200).json({
+        nights: quote.nights,
+        nightlyRateCents: quote.nightlyRateCents,
+        subtotalCents: quote.subtotalCents,
+        guestServiceFeeBps: quote.guestServiceFeeBps,
+        guestServiceFeeCents: quote.guestServiceFeeCents,
+        totalChargedCents: quote.totalChargedCents,
+        currency: quote.currency,
+      });
     } catch (err) {
       this.mapError(err, res);
     }

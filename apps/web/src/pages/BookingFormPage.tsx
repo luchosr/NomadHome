@@ -43,6 +43,20 @@ export function BookingFormPage() {
     },
   });
 
+  const {
+    data: quote,
+    isLoading: isQuoteLoading,
+    error: quoteError,
+  } = useQuery({
+    queryKey: ["booking-quote", id, checkIn, checkOut],
+    queryFn: () => bookingsApi.quote(id!, checkIn, checkOut),
+    enabled: !!id && hasDates,
+    retry: (failCount, err) => {
+      if (err instanceof ApiError && err.status === 404) return false;
+      return failCount < 2;
+    },
+  });
+
   if (!hasDates) {
     return (
       <div className="mx-auto max-w-lg py-12 text-center">
@@ -76,9 +90,21 @@ export function BookingFormPage() {
     );
   }
 
+  if (quoteError) {
+    return (
+      <p role="alert" className="text-danger">
+        {t("error.generic.unexpected")}
+      </p>
+    );
+  }
+
   const nights = computeNights(checkIn, checkOut);
-  const total = formatRate(listing.nightlyRateCents * nights, listing.currency);
   const nightlyRate = formatRate(listing.nightlyRateCents, listing.currency);
+  const subtotal = quote ? formatRate(quote.subtotalCents, quote.currency) : t("common.loading");
+  const serviceFee = quote
+    ? formatRate(quote.guestServiceFeeCents, quote.currency)
+    : t("common.loading");
+  const total = quote ? formatRate(quote.totalChargedCents, quote.currency) : t("common.loading");
 
   const handlePayNow = async () => {
     setServerError(null);
@@ -142,7 +168,12 @@ export function BookingFormPage() {
             {nightlyRate} &times; {nights}{" "}
             {nights === 1 ? t("booking.ui.night") : t("booking.ui.nights")}
           </span>
-          <span className="font-medium text-fg-1">{total}</span>
+          <span className="font-medium text-fg-1">{subtotal}</span>
+        </div>
+
+        <div className="flex justify-between text-sm text-fg-2">
+          <span>{t("booking.ui.service_fee")}</span>
+          <span className="font-medium text-fg-1">{serviceFee}</span>
         </div>
 
         <div className="flex justify-between border-t border-subtle pt-4">
@@ -158,7 +189,11 @@ export function BookingFormPage() {
       )}
 
       <div className="mt-6">
-        <Button className="w-full" disabled={isSubmitting} onClick={() => void handlePayNow()}>
+        <Button
+          className="w-full"
+          disabled={isSubmitting || isQuoteLoading || !quote}
+          onClick={() => void handlePayNow()}
+        >
           {isSubmitting ? t("common.submitting") : t("booking.ui.pay_now")}
         </Button>
       </div>
