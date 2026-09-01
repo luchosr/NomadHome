@@ -16,10 +16,12 @@ vi.mock("../api/listings.js", () => ({
 
 const mockCreate = vi.fn();
 const mockCheckout = vi.fn();
+const mockQuote = vi.fn();
 vi.mock("../api/bookings.js", () => ({
   bookingsApi: {
     create: (...args: unknown[]) => mockCreate(...args),
     checkout: (...args: unknown[]) => mockCheckout(...args),
+    quote: (...args: unknown[]) => mockQuote(...args),
   },
 }));
 
@@ -63,6 +65,17 @@ const mockListing: ListingDetail = {
   avgRating: null,
 };
 
+// 2 nights x €100.00 = €200.00 subtotal; 15% service fee = €30.00; total €230.00
+const mockQuoteResponse = {
+  nights: 2,
+  nightlyRateCents: 10000,
+  subtotalCents: 20000,
+  guestServiceFeeBps: 1500,
+  guestServiceFeeCents: 3000,
+  totalChargedCents: 23000,
+  currency: "EUR",
+};
+
 // --- tests ---
 
 describe("BookingFormPage", () => {
@@ -70,6 +83,8 @@ describe("BookingFormPage", () => {
     mockGetDetail.mockReset();
     mockCreate.mockReset();
     mockCheckout.mockReset();
+    mockQuote.mockReset();
+    mockQuote.mockResolvedValue(mockQuoteResponse);
     mockUseAuth.mockReturnValue({
       user: { id: "u1", email: "guest@test.com", roles: ["guest"] },
       isLoading: false,
@@ -161,5 +176,22 @@ describe("BookingFormPage", () => {
     renderForm("?checkOut=2026-07-12");
     expect(screen.getByText(/select check-in and check-out/i)).toBeInTheDocument();
     expect(mockGetDetail).not.toHaveBeenCalled();
+  });
+
+  it("renders itemized subtotal, service fee, and fee-inclusive total from the quote", async () => {
+    mockGetDetail.mockResolvedValue(mockListing);
+    mockQuote.mockResolvedValue(mockQuoteResponse);
+
+    renderForm();
+    await screen.findByText("Ocean View Suite");
+
+    // Subtotal (nightly rate x nights) — €200.00
+    expect((await screen.findAllByText(/200\.00/)).length).toBeGreaterThan(0);
+    // Service fee line, labeled and showing €30.00
+    expect(await screen.findByText(/service fee/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/30\.00/).length).toBeGreaterThan(0);
+    // Fee-inclusive total = subtotalCents + guestServiceFeeCents = €230.00, not the old €200.00 base-only total
+    const totalRow = screen.getByText(/^total$/i).closest("div");
+    expect(totalRow).toHaveTextContent("230.00");
   });
 });

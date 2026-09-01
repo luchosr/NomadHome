@@ -15,8 +15,8 @@
 
 ## 3. Tests
 
-- [ ] 3.1 In `apps/api/src/booking.test.ts` (or a new `booking-quote.test.ts`), test: quote returns the correct breakdown for a valid listing/dates; quote succeeds for a guest with `emailVerified: false` (unlike `POST /bookings`); quote returns 404 for a nonexistent/unpublished listing; a quote's `totalChargedCents` matches the `totalChargedCents` of a booking subsequently created via `POST /bookings` with the same listing/dates (drift-proofing).
-- [ ] 3.2 In `apps/web/src/pages/BookingFormPage.test.tsx`, test that with a mocked quote response the page renders the subtotal, the "Service fee" line, and a total equal to `subtotalCents + guestServiceFeeCents` — not the old base-only total.
+- [x] 3.1 In `apps/api/src/booking.test.ts` (or a new `booking-quote.test.ts`), test: quote returns the correct breakdown for a valid listing/dates; quote succeeds for a guest with `emailVerified: false` (unlike `POST /bookings`); quote returns 404 for a nonexistent/unpublished listing; a quote's `totalChargedCents` matches the `totalChargedCents` of a booking subsequently created via `POST /bookings` with the same listing/dates (drift-proofing).
+- [x] 3.2 In `apps/web/src/pages/BookingFormPage.test.tsx`, test that with a mocked quote response the page renders the subtotal, the "Service fee" line, and a total equal to `subtotalCents + guestServiceFeeCents` — not the old base-only total.
 
 ## 4. Docs & Ops
 
