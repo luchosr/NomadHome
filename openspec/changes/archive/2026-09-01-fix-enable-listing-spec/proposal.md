@@ -25,9 +25,9 @@ The corresponding test (`apps/api/src/admin-moderation.test.ts`, "sets listing s
 
 ## Risks & Mitigations
 
-| Risk | Likelihood | Mitigation |
-| --- | --- | --- |
-| Someone relied on the (wrong) `PUBLISHED` scenario text as the intended future behavior rather than a typo. | Low | `docs/data-model.md`'s unconditional invariant and the capability overview both independently agree on `DRAFT`, giving two independent sources against one. |
+| Risk                                                                                                        | Likelihood | Mitigation                                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Someone relied on the (wrong) `PUBLISHED` scenario text as the intended future behavior rather than a typo. | Low        | `docs/data-model.md`'s unconditional invariant and the capability overview both independently agree on `DRAFT`, giving two independent sources against one. |
 
 ## Rollout
 
