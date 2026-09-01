@@ -41,11 +41,13 @@ export {
   CreateBookingSchema,
   CancelBookingSchema,
   BookingListQuerySchema,
+  BookingQuoteQuerySchema,
 } from "./schemas/booking.js";
 export type {
   CreateBookingInput,
   CancelBookingInput,
   BookingListQuery,
+  BookingQuoteQuery,
 } from "./schemas/booking.js";
 export { RecordPayoutSchema } from "./schemas/payment.js";
 export type { RecordPayoutInput } from "./schemas/payment.js";

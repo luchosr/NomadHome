@@ -27,3 +27,16 @@ export const BookingListQuerySchema = z.object({
 });
 
 export type BookingListQuery = z.infer<typeof BookingListQuerySchema>;
+
+export const BookingQuoteQuerySchema = z
+  .object({
+    listingId: z.string().uuid(),
+    checkIn: isoDate,
+    checkOut: isoDate,
+  })
+  .refine((d) => d.checkOut > d.checkIn, {
+    message: "checkOut must be after checkIn",
+    path: ["checkOut"],
+  });
+
+export type BookingQuoteQuery = z.infer<typeof BookingQuoteQuerySchema>;
