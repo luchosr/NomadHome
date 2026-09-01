@@ -208,6 +208,7 @@ export const en = {
       nights: "nights",
       night: "night",
       nightly_rate: "per night",
+      service_fee: "Service fee",
       total: "Total",
       pay_now: "Pay now",
       select_dates: "Select check-in and check-out dates to book.",

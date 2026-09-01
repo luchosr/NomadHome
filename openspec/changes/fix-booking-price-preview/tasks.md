@@ -9,9 +9,9 @@
 
 ## 2. Frontend
 
-- [ ] 2.1 Add `bookingsApi.quote(listingId, checkIn, checkOut)` in `apps/web/src/api/bookings.ts`.
-- [ ] 2.2 In `BookingFormPage.tsx`, fetch the quote via `useQuery` alongside the existing listing fetch. Replace the current `nightlyRateCents * nights` total with the quote's `subtotalCents`/`guestServiceFeeCents`/`totalChargedCents`. Render subtotal, a "Service fee" line, and the fee-inclusive total. Handle the quote's loading state (e.g. disable "Pay now" until it resolves) and error state (reuse the existing generic error pattern).
-- [ ] 2.3 Leave the `handlePayNow` submit flow (`POST /bookings` → `POST /bookings/:id/checkout` → redirect) unchanged — the quote is a preview only, not the source of truth at charge time.
+- [x] 2.1 Add `bookingsApi.quote(listingId, checkIn, checkOut)` in `apps/web/src/api/bookings.ts`.
+- [x] 2.2 In `BookingFormPage.tsx`, fetch the quote via `useQuery` alongside the existing listing fetch. Replace the current `nightlyRateCents * nights` total with the quote's `subtotalCents`/`guestServiceFeeCents`/`totalChargedCents`. Render subtotal, a "Service fee" line, and the fee-inclusive total. Handle the quote's loading state (e.g. disable "Pay now" until it resolves) and error state (reuse the existing generic error pattern).
+- [x] 2.3 Leave the `handlePayNow` submit flow (`POST /bookings` → `POST /bookings/:id/checkout` → redirect) unchanged — the quote is a preview only, not the source of truth at charge time.
 
 ## 3. Tests
 
