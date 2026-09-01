@@ -16,5 +16,11 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     exclude: ["**/node_modules/**", "**/e2e/**"],
+    coverage: {
+      provider: "v8",
+      reporter: ["lcov", "text"],
+      include: ["src/**"],
+      exclude: ["src/test/**", "src/**/*.test.{ts,tsx}"],
+    },
   },
 });

@@ -347,7 +347,7 @@ A ticket cannot reach the next phase if any gate is red. **Print the failing out
 1. `pnpm install --frozen-lockfile`
 2. `pnpm lint` — zero warnings.
 3. `pnpm typecheck`
-4. `pnpm test --coverage` — coverage on changed lines ≥ 80%.
+4. `pnpm coverage` + `diff-cover` — coverage on changed lines ≥ 80% (CI-only; see NH-94).
 5. `pnpm test:e2e` — Playwright, headless.
 6. `pnpm build` — all apps build.
 7. `openspec validate --strict` — every active change validates.
@@ -522,7 +522,7 @@ ACCEPTANCE CRITERIA (verbatim from spec):
 QUALITY GATES TO PASS BEFORE RETURNING:
 - pnpm lint (zero warnings)
 - pnpm typecheck (zero errors)
-- pnpm test --changed (all green, ≥80% coverage on changed lines)
+- pnpm test --changed (all green); the ≥80%-coverage-on-changed-lines gate runs in CI, not locally
 - Conventional Commit messages with (<TICKET-ID>) suffix
 
 EXIT CONDITION:
