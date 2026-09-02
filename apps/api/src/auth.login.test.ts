@@ -113,4 +113,19 @@ describe.skipIf(!hasDatabase)("auth login + session", () => {
     const res = await request(createApp()).get("/auth/me");
     expect(res.status).toBe(401);
   });
+
+  it("returns 429 on the 6th /auth/login request from the same IP within a minute", async () => {
+    const app = createApp();
+    const payload = { email: "nobody@example.com", password: "password123" };
+
+    let last;
+    for (let i = 0; i < 6; i += 1) {
+      last = await request(app).post("/auth/login").send(payload);
+    }
+
+    expect(last?.status).toBe(429);
+    // The throttled request never reaches login logic: no audit event for the 6th attempt.
+    const audit = await prisma.authAuditEvent.findMany({ where: { event: "login_failed" } });
+    expect(audit).toHaveLength(5);
+  });
 });

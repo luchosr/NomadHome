@@ -64,4 +64,19 @@ describe.skipIf(!hasDatabase)("POST /auth/register", () => {
     expect(res.status).toBe(400);
     expect(await prisma.user.count()).toBe(0);
   });
+
+  it("returns 429 on the 6th /auth/register request from the same IP within a minute", async () => {
+    const app = createApp();
+
+    let last;
+    for (let i = 0; i < 6; i += 1) {
+      last = await request(app)
+        .post("/auth/register")
+        .send({ email: `throttle-${i}@example.com`, password: "password123" });
+    }
+
+    expect(last?.status).toBe(429);
+    // The throttled 6th request never reaches registration logic: no account created for it.
+    expect(await prisma.user.count()).toBe(5);
+  });
 });

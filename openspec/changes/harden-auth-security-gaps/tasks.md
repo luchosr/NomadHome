@@ -10,9 +10,9 @@
 
 ## 2. Tests
 
-- [ ] 2.1 Backend: add a test asserting the 6th `POST /auth/login` request from the same IP within a minute returns 429 (check how existing tests simulate/control source IP — likely via a header or supertest's default, verify the actual rate-limit key strategy works in the test environment before writing assertions against it).
-- [ ] 2.2 Backend: add the equivalent test for `POST /auth/register`.
-- [ ] 2.3 Backend: add a `token.service.test.ts` (or extend an existing one) case asserting `TokenService` throws when `JWT_SECRET` is set but shorter than 32 characters, and succeeds when it's exactly 32 or more.
+- [x] 2.1 Backend: add a test asserting the 6th `POST /auth/login` request from the same IP within a minute returns 429 (check how existing tests simulate/control source IP — likely via a header or supertest's default, verify the actual rate-limit key strategy works in the test environment before writing assertions against it).
+- [x] 2.2 Backend: add the equivalent test for `POST /auth/register`.
+- [x] 2.3 Backend: add a `token.service.test.ts` (or extend an existing one) case asserting `TokenService` throws when `JWT_SECRET` is set but shorter than 32 characters, and succeeds when it's exactly 32 or more.
 - [ ] 2.4 Confirm existing tests that call login/register repeatedly in a loop (if any — check `auth.login.test.ts`, `auth.register.test.ts`, and any test helper that logs in many users in sequence) don't trip the new rate limit; adjust the rate-limiter's test-environment behavior (e.g. skip/raise the limit when `NODE_ENV=test`) only if this turns out to be a real problem, not preemptively.
 
 ## 3. Docs & Ops
