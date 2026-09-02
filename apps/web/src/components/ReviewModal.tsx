@@ -2,7 +2,7 @@ import { useState } from "react";
 import { t } from "@nomadhome/shared";
 import { Button } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
-import { ApiError } from "../api/client.js";
+import { getDisplayMessage } from "../api/client.js";
 import { Modal } from "./Modal.js";
 
 interface Props {
@@ -30,11 +30,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
       setSuccess(true);
       setTimeout(onSuccess, 1200);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409) {
-        setError(t("booking.dashboard.review_already_exists"));
-      } else {
-        setError(t("error.generic.unexpected"));
-      }
+      setError(getDisplayMessage(err));
     } finally {
       setIsSubmitting(false);
     }

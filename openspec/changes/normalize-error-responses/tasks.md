@@ -12,13 +12,13 @@
 
 ## 2. Frontend
 
-- [ ] 2.1 Add `getDisplayMessage(err: unknown): string` to `apps/web/src/api/client.ts`: if `err instanceof ApiError` and `err.body` is an object with a string `message` field, return it; otherwise return `t("error.generic.unexpected")`.
-- [ ] 2.2 `apps/web/src/pages/LoginPage.tsx`: replace the `err.status === 401` branch with `setServerError(getDisplayMessage(err))` unconditionally in the catch block.
-- [ ] 2.3 `apps/web/src/pages/BecomeHostPage.tsx`: replace the `409`/`403 EMAIL_NOT_VERIFIED` branches with `setServerError(getDisplayMessage(err))` unconditionally.
-- [ ] 2.4 `apps/web/src/pages/BookingFormPage.tsx`: replace the `409 OVERLAP_CONFLICT`/`422 SELF_BOOKING_NOT_ALLOWED`/`403 EMAIL_NOT_VERIFIED` branches with `setServerError(getDisplayMessage(err))` unconditionally.
-- [ ] 2.5 `apps/web/src/components/ReviewModal.tsx`: replace the `409` branch with `setError(getDisplayMessage(err))` unconditionally — this also fixes the previously-generic `BOOKING_NOT_CONFIRMED`/`CHECKOUT_NOT_PASSED`/`BOOKING_NOT_FOUND` cases, which the backend already sent good messages for but the form never surfaced.
-- [ ] 2.6 `apps/web/src/components/CancelBookingModal.tsx`: replace the `422` branch with `setError(getDisplayMessage(err))` unconditionally.
-- [ ] 2.7 Leave `apps/web/src/contexts/auth.tsx` (401/403 logout interceptor) and `apps/web/src/pages/ListingDetailPage.tsx` (404-based query retry) untouched — both use status codes for control flow, not message selection; out of scope per proposal.md.
+- [x] 2.1 Add `getDisplayMessage(err: unknown): string` to `apps/web/src/api/client.ts`: if `err instanceof ApiError` and `err.body` is an object with a string `message` field, return it; otherwise return `t("error.generic.unexpected")`.
+- [x] 2.2 `apps/web/src/pages/LoginPage.tsx`: replace the `err.status === 401` branch with `setServerError(getDisplayMessage(err))` unconditionally in the catch block.
+- [x] 2.3 `apps/web/src/pages/BecomeHostPage.tsx`: replace the `409`/`403 EMAIL_NOT_VERIFIED` branches with `setServerError(getDisplayMessage(err))` unconditionally.
+- [x] 2.4 `apps/web/src/pages/BookingFormPage.tsx`: replace the `409 OVERLAP_CONFLICT`/`422 SELF_BOOKING_NOT_ALLOWED`/`403 EMAIL_NOT_VERIFIED` branches with `setServerError(getDisplayMessage(err))` unconditionally.
+- [x] 2.5 `apps/web/src/components/ReviewModal.tsx`: replace the `409` branch with `setError(getDisplayMessage(err))` unconditionally — this also fixes the previously-generic `BOOKING_NOT_CONFIRMED`/`CHECKOUT_NOT_PASSED`/`BOOKING_NOT_FOUND` cases, which the backend already sent good messages for but the form never surfaced.
+- [x] 2.6 `apps/web/src/components/CancelBookingModal.tsx`: replace the `422` branch with `setError(getDisplayMessage(err))` unconditionally.
+- [x] 2.7 Leave `apps/web/src/contexts/auth.tsx` (401/403 logout interceptor) and `apps/web/src/pages/ListingDetailPage.tsx` (404-based query retry) untouched — both use status codes for control flow, not message selection; out of scope per proposal.md.
 
 ## 3. Tests
 
