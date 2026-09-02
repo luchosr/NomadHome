@@ -95,14 +95,15 @@ describe("BookingFormPage", () => {
     });
   });
 
-  it("shows listing title and computed nights + total when listing loads", async () => {
+  it("shows listing title and nights when listing loads", async () => {
     mockGetDetail.mockResolvedValue(mockListing);
     renderForm();
 
     expect(await screen.findByText("Ocean View Suite")).toBeInTheDocument();
-    // 2 nights × €100.00 = €200.00
     expect(screen.getByText(/nights/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/200/).length).toBeGreaterThan(0);
+    // Fee-inclusive total display is covered by the dedicated "renders
+    // itemized subtotal..." test below, sourced from the quote — not
+    // duplicated/weakened here.
   });
 
   it("calls create then checkout then redirects on Pay now click", async () => {
@@ -113,7 +114,6 @@ describe("BookingFormPage", () => {
       checkIn: "2026-07-10",
       checkOut: "2026-07-12",
       status: "PENDING",
-      totalCents: 20000,
     });
     mockCheckout.mockResolvedValue({
       url: "https://checkout.stripe.com/abc",
