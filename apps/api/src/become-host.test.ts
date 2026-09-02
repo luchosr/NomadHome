@@ -92,6 +92,9 @@ describe.skipIf(!hasDatabase)("POST /users/me/become-host", () => {
       .send(validForm);
 
     expect(res.status).toBe(409);
+    expect(res.body.error).toBe("ALREADY_HOST");
+    expect(typeof res.body.message).toBe("string");
+    expect(res.body.message.length).toBeGreaterThan(0);
     expect(await prisma.hostProfile.count()).toBe(1);
   });
 

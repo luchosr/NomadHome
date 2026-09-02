@@ -79,7 +79,10 @@ export class AuthController {
       res.status(200).json(tokens);
     } catch (err) {
       if (err instanceof InvalidCredentialsError) {
-        res.status(401).json({ error: t("identity.login.invalid_credentials") });
+        res.status(401).json({
+          error: "INVALID_CREDENTIALS",
+          message: t("identity.login.invalid_credentials"),
+        });
         return;
       }
       throw err;
@@ -160,16 +163,17 @@ export class AuthController {
       res.status(201).json(result);
     } catch (err) {
       if (err instanceof EmailNotVerifiedError) {
-        res
-          .status(403)
-          .json({
-            error: "EMAIL_NOT_VERIFIED",
-            message: t("identity.become_host.email_not_verified"),
-          });
+        res.status(403).json({
+          error: "EMAIL_NOT_VERIFIED",
+          message: t("identity.become_host.email_not_verified"),
+        });
         return;
       }
       if (err instanceof AlreadyHostError) {
-        res.status(409).json({ error: t("identity.become_host.already_host") });
+        res.status(409).json({
+          error: "ALREADY_HOST",
+          message: t("identity.become_host.already_host"),
+        });
         return;
       }
       throw err;

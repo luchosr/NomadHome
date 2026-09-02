@@ -65,7 +65,7 @@ describe("LoginPage", () => {
     expect(mockNavigate).toHaveBeenCalled();
   });
 
-  it("shows server error on failed login", async () => {
+  it("shows the generic fallback message when the server sends no message field", async () => {
     const { ApiError } = await import("../api/client.js");
     mockLogin.mockRejectedValue(new ApiError(401, {}));
     renderLogin();
@@ -74,6 +74,27 @@ describe("LoginPage", () => {
     await userEvent.type(screen.getByLabelText(/password/i), "wrongpassword");
     await userEvent.click(screen.getByRole("button", { name: /log in/i }));
 
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong. Please try again.",
+    );
+  });
+
+  it("shows the server-provided message on login failure instead of a canned string", async () => {
+    const { ApiError } = await import("../api/client.js");
+    mockLogin.mockRejectedValue(
+      new ApiError(401, {
+        error: "INVALID_CREDENTIALS",
+        message: "That email/password combination is not recognized.",
+      }),
+    );
+    renderLogin();
+
+    await userEvent.type(screen.getByLabelText(/email/i), "user@test.com");
+    await userEvent.type(screen.getByLabelText(/password/i), "wrongpassword");
+    await userEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "That email/password combination is not recognized.",
+    );
   });
 });

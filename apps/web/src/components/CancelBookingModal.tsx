@@ -2,7 +2,7 @@ import { useState } from "react";
 import { t } from "@nomadhome/shared";
 import { Button } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
-import { ApiError } from "../api/client.js";
+import { getDisplayMessage } from "../api/client.js";
 import { Modal } from "./Modal.js";
 
 interface Props {
@@ -23,16 +23,7 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
       await bookingsApi.cancel(bookingId, reason.trim() || undefined);
       onSuccess();
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
-        const body = err.body as { error?: string };
-        if (body?.error === "CHECKIN_ALREADY_PASSED") {
-          setError(t("booking.dashboard.cancel_error_passed"));
-        } else {
-          setError(t("booking.dashboard.cancel_error_generic"));
-        }
-      } else {
-        setError(t("booking.dashboard.cancel_error_generic"));
-      }
+      setError(getDisplayMessage(err));
     } finally {
       setIsSubmitting(false);
     }

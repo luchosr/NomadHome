@@ -52,6 +52,9 @@ describe.skipIf(!hasDatabase)("auth login + session", () => {
       .send({ email: "lucia@example.com", password: "wrong-password" });
 
     expect(res.status).toBe(401);
+    expect(res.body.error).toBe("INVALID_CREDENTIALS");
+    expect(typeof res.body.message).toBe("string");
+    expect(res.body.message.length).toBeGreaterThan(0);
     expect(await prisma.refreshToken.count()).toBe(0);
     const audit = await prisma.authAuditEvent.findMany({ where: { event: "login_failed" } });
     expect(audit).toHaveLength(1);

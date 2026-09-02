@@ -14,7 +14,10 @@ test.describe("Login", () => {
       route.fulfill({
         status: 401,
         contentType: "application/json",
-        body: JSON.stringify({ error: "invalid_credentials" }),
+        body: JSON.stringify({
+          error: "INVALID_CREDENTIALS",
+          message: "Invalid email or password.",
+        }),
       }),
     );
     await page.goto("/login");

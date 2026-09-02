@@ -1,3 +1,5 @@
+import { t } from "@nomadhome/shared";
+
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 let accessToken: string | null = null;
@@ -29,6 +31,18 @@ export function extractApiMessage(err: unknown): string | null {
     if (typeof error === "string") return error;
   }
   return null;
+}
+
+/** Returns the server-provided display message for an error, or a generic fallback. */
+export function getDisplayMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    const body = err.body;
+    if (typeof body === "object" && body !== null && "message" in body) {
+      const { message } = body as { message: unknown };
+      if (typeof message === "string") return message;
+    }
+  }
+  return t("error.generic.unexpected");
 }
 
 export async function apiFetch<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {

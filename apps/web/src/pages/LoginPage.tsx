@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LoginSchema, type LoginInput, t } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import { useAuth } from "../contexts/auth.js";
-import { ApiError } from "../api/client.js";
+import { getDisplayMessage } from "../api/client.js";
 import { useState } from "react";
 import { FormField } from "../components/FormField.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
@@ -29,11 +29,7 @@ export function LoginPage() {
       await login(data.email, data.password);
       navigate(from, { replace: true });
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        setServerError(t("auth.login.error"));
-      } else {
-        setServerError(t("error.generic.unexpected"));
-      }
+      setServerError(getDisplayMessage(err));
     }
   };
 

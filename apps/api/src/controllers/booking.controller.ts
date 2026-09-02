@@ -132,11 +132,14 @@ export class BookingController {
       return;
     }
     if (err instanceof BookingNotFoundError) {
-      res.status(404).json({ error: t("booking.error.not_found") });
+      res.status(404).json({ error: "BOOKING_NOT_FOUND", message: t("booking.error.not_found") });
       return;
     }
     if (err instanceof ListingNotAvailableError) {
-      res.status(404).json({ error: t("booking.error.listing_not_found") });
+      res.status(404).json({
+        error: "LISTING_NOT_AVAILABLE",
+        message: t("booking.error.listing_not_found"),
+      });
       return;
     }
     if (err instanceof SelfBookingError) {
@@ -146,7 +149,11 @@ export class BookingController {
       return;
     }
     if (err instanceof BookingOverlapError) {
-      res.status(409).json({ error: "OVERLAP_CONFLICT", conflict: err.conflict });
+      res.status(409).json({
+        error: "OVERLAP_CONFLICT",
+        message: t("booking.error.overlap"),
+        conflict: err.conflict,
+      });
       return;
     }
     if (err instanceof BookingNotCancellableError) {
@@ -159,7 +166,7 @@ export class BookingController {
       return;
     }
     if (err instanceof NoFeeConfigError) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: "NO_FEE_CONFIG", message: err.message });
       return;
     }
     throw err;

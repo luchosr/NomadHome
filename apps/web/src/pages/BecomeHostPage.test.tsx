@@ -46,11 +46,43 @@ describe("BecomeHostPage", () => {
   });
 
   it("shows verification message when becomeHost throws ApiError 403 EMAIL_NOT_VERIFIED", async () => {
-    mockBecomeHost.mockRejectedValue(new ApiError(403, { error: "EMAIL_NOT_VERIFIED" }));
+    mockBecomeHost.mockRejectedValue(
+      new ApiError(403, {
+        error: "EMAIL_NOT_VERIFIED",
+        message: "Please verify your email address before becoming a host.",
+      }),
+    );
 
     renderPage();
     await fillAndSubmit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/verify your email/i);
+  });
+
+  it("shows the server-provided message when already a host, instead of a canned string", async () => {
+    mockBecomeHost.mockRejectedValue(
+      new ApiError(409, {
+        error: "ALREADY_HOST",
+        message: "This account already has an active host profile.",
+      }),
+    );
+
+    renderPage();
+    await fillAndSubmit();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This account already has an active host profile.",
+    );
+  });
+
+  it("shows the generic fallback message when the server sends no message field", async () => {
+    mockBecomeHost.mockRejectedValue(new ApiError(500, {}));
+
+    renderPage();
+    await fillAndSubmit();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong. Please try again.",
+    );
   });
 });
