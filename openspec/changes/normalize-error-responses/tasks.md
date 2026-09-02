@@ -2,13 +2,13 @@
 
 ## 1. Backend
 
-- [ ] 1.1 `apps/api/src/controllers/auth.controller.ts` `login` (line ~82): change `res.status(401).json({ error: t("identity.login.invalid_credentials") })` to `res.status(401).json({ error: "INVALID_CREDENTIALS", message: t("identity.login.invalid_credentials") })`.
-- [ ] 1.2 `apps/api/src/controllers/auth.controller.ts` `becomeHost` `AlreadyHostError` branch (line ~172): change `res.status(409).json({ error: t("identity.become_host.already_host") })` to `res.status(409).json({ error: "ALREADY_HOST", message: t("identity.become_host.already_host") })`.
-- [ ] 1.3 `apps/api/src/controllers/booking.controller.ts` `mapError`, `BookingNotFoundError` branch: change `res.status(404).json({ error: t("booking.error.not_found") })` to `res.status(404).json({ error: "BOOKING_NOT_FOUND", message: t("booking.error.not_found") })`.
-- [ ] 1.4 `apps/api/src/controllers/booking.controller.ts` `mapError`, `ListingNotAvailableError` branch: change `res.status(404).json({ error: t("booking.error.listing_not_found") })` to `res.status(404).json({ error: "LISTING_NOT_AVAILABLE", message: t("booking.error.listing_not_found") })`.
-- [ ] 1.5 `apps/api/src/controllers/booking.controller.ts` `mapError`, `BookingOverlapError` branch: add a `message: t("booking.error.overlap")` field alongside the existing `error: "OVERLAP_CONFLICT"` and `conflict` payload (keep `conflict` — it's structured data some future UI could use, not the display message).
-- [ ] 1.6 `apps/api/src/controllers/booking.controller.ts` `mapError`, `NoFeeConfigError` branch: change `res.status(500).json({ error: err.message })` to `res.status(500).json({ error: "NO_FEE_CONFIG", message: err.message })` (`err.message` is already the translated string per `NoFeeConfigError`'s constructor).
-- [ ] 1.7 `apps/api/src/controllers/review.controller.ts` `ReviewNotFoundError` branch: change `res.status(404).json({ error: t("reviews.error.booking_not_found") })` to `res.status(404).json({ error: "BOOKING_NOT_FOUND", message: t("reviews.error.booking_not_found") })`.
+- [x] 1.1 `apps/api/src/controllers/auth.controller.ts` `login` (line ~82): change `res.status(401).json({ error: t("identity.login.invalid_credentials") })` to `res.status(401).json({ error: "INVALID_CREDENTIALS", message: t("identity.login.invalid_credentials") })`.
+- [x] 1.2 `apps/api/src/controllers/auth.controller.ts` `becomeHost` `AlreadyHostError` branch (line ~172): change `res.status(409).json({ error: t("identity.become_host.already_host") })` to `res.status(409).json({ error: "ALREADY_HOST", message: t("identity.become_host.already_host") })`.
+- [x] 1.3 `apps/api/src/controllers/booking.controller.ts` `mapError`, `BookingNotFoundError` branch: change `res.status(404).json({ error: t("booking.error.not_found") })` to `res.status(404).json({ error: "BOOKING_NOT_FOUND", message: t("booking.error.not_found") })`.
+- [x] 1.4 `apps/api/src/controllers/booking.controller.ts` `mapError`, `ListingNotAvailableError` branch: change `res.status(404).json({ error: t("booking.error.listing_not_found") })` to `res.status(404).json({ error: "LISTING_NOT_AVAILABLE", message: t("booking.error.listing_not_found") })`.
+- [x] 1.5 `apps/api/src/controllers/booking.controller.ts` `mapError`, `BookingOverlapError` branch: add a `message: t("booking.error.overlap")` field alongside the existing `error: "OVERLAP_CONFLICT"` and `conflict` payload (keep `conflict` — it's structured data some future UI could use, not the display message).
+- [x] 1.6 `apps/api/src/controllers/booking.controller.ts` `mapError`, `NoFeeConfigError` branch: change `res.status(500).json({ error: err.message })` to `res.status(500).json({ error: "NO_FEE_CONFIG", message: err.message })` (`err.message` is already the translated string per `NoFeeConfigError`'s constructor).
+- [x] 1.7 `apps/api/src/controllers/review.controller.ts` `ReviewNotFoundError` branch: change `res.status(404).json({ error: t("reviews.error.booking_not_found") })` to `res.status(404).json({ error: "BOOKING_NOT_FOUND", message: t("reviews.error.booking_not_found") })`.
 
 ## 2. Frontend
 

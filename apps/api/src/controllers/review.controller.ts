@@ -29,7 +29,10 @@ export class ReviewController {
       res.status(201).json(review);
     } catch (err) {
       if (err instanceof ReviewNotFoundError) {
-        res.status(404).json({ error: t("reviews.error.booking_not_found") });
+        res.status(404).json({
+          error: "BOOKING_NOT_FOUND",
+          message: t("reviews.error.booking_not_found"),
+        });
         return;
       }
       if (err instanceof BookingNotConfirmedError) {
