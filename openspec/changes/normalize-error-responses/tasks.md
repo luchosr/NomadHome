@@ -22,10 +22,10 @@
 
 ## 3. Tests
 
-- [ ] 3.1 Backend: extend `apps/api/src/auth.login.test.ts` to assert `error: "INVALID_CREDENTIALS"` + `message` on the 401 response; extend `apps/api/src/become-host.test.ts` to assert `error: "ALREADY_HOST"` + `message` on the 409 response.
-- [ ] 3.2 Backend: extend `apps/api/src/booking.test.ts` to assert `error`/`message` on the `LISTING_NOT_AVAILABLE` 404 and the `OVERLAP_CONFLICT` 409 (message field, in addition to existing `conflict` assertions); add/extend a `NoFeeConfigError` 500 case if one exists (check current coverage first — don't invent a new fixture path if none already exercises `NoFeeConfigError`).
-- [ ] 3.3 Backend: extend the review-creation test file to assert `error: "BOOKING_NOT_FOUND"` + `message` on its 404.
-- [ ] 3.4 Frontend: for each of `LoginPage.test.tsx`, `BecomeHostPage.test.tsx`, `BookingFormPage.test.tsx`, `ReviewModal.test.tsx` (or equivalent, create if missing following existing conventions), `CancelBookingModal.test.tsx` — assert that a mocked `ApiError` with a `message` field (matching a code NOT previously special-cased, e.g. a made-up new code for ReviewModal's now-fixed `BOOKING_NOT_CONFIRMED` case) renders that exact message, proving the generic-fallback trap from issue #98 is closed. Also keep/adjust one case per form asserting the true no-message fallback still shows the generic string.
+- [x] 3.1 Backend: extend `apps/api/src/auth.login.test.ts` to assert `error: "INVALID_CREDENTIALS"` + `message` on the 401 response; extend `apps/api/src/become-host.test.ts` to assert `error: "ALREADY_HOST"` + `message` on the 409 response.
+- [x] 3.2 Backend: extend `apps/api/src/booking.test.ts` to assert `error`/`message` on the `LISTING_NOT_AVAILABLE` 404 and the `OVERLAP_CONFLICT` 409 (message field, in addition to existing `conflict` assertions); add/extend a `NoFeeConfigError` 500 case if one exists (check current coverage first — don't invent a new fixture path if none already exercises `NoFeeConfigError`).
+- [x] 3.3 Backend: extend the review-creation test file to assert `error: "BOOKING_NOT_FOUND"` + `message` on its 404.
+- [x] 3.4 Frontend: for each of `LoginPage.test.tsx`, `BecomeHostPage.test.tsx`, `BookingFormPage.test.tsx`, `ReviewModal.test.tsx` (or equivalent, create if missing following existing conventions), `CancelBookingModal.test.tsx` — assert that a mocked `ApiError` with a `message` field (matching a code NOT previously special-cased, e.g. a made-up new code for ReviewModal's now-fixed `BOOKING_NOT_CONFIRMED` case) renders that exact message, proving the generic-fallback trap from issue #98 is closed. Also keep/adjust one case per form asserting the true no-message fallback still shows the generic string.
 
 ## 4. Docs & Ops
 

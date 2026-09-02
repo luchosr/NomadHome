@@ -138,7 +138,12 @@ describe("BookingFormPage", () => {
 
   it("shows overlap error when create throws ApiError 409 OVERLAP_CONFLICT", async () => {
     mockGetDetail.mockResolvedValue(mockListing);
-    mockCreate.mockRejectedValue(new ApiError(409, { error: "OVERLAP_CONFLICT" }));
+    mockCreate.mockRejectedValue(
+      new ApiError(409, {
+        error: "OVERLAP_CONFLICT",
+        message: "These dates are no longer available.",
+      }),
+    );
 
     renderForm();
     await screen.findByText("Ocean View Suite");
@@ -150,7 +155,12 @@ describe("BookingFormPage", () => {
 
   it("shows self-booking error when create throws ApiError 422 SELF_BOOKING_NOT_ALLOWED", async () => {
     mockGetDetail.mockResolvedValue(mockListing);
-    mockCreate.mockRejectedValue(new ApiError(422, { error: "SELF_BOOKING_NOT_ALLOWED" }));
+    mockCreate.mockRejectedValue(
+      new ApiError(422, {
+        error: "SELF_BOOKING_NOT_ALLOWED",
+        message: "You cannot book your own listing.",
+      }),
+    );
 
     renderForm();
     await screen.findByText("Ocean View Suite");
@@ -162,7 +172,12 @@ describe("BookingFormPage", () => {
 
   it("shows verification error when create throws ApiError 403 EMAIL_NOT_VERIFIED", async () => {
     mockGetDetail.mockResolvedValue(mockListing);
-    mockCreate.mockRejectedValue(new ApiError(403, { error: "EMAIL_NOT_VERIFIED" }));
+    mockCreate.mockRejectedValue(
+      new ApiError(403, {
+        error: "EMAIL_NOT_VERIFIED",
+        message: "Please verify your email address before booking.",
+      }),
+    );
 
     renderForm();
     await screen.findByText("Ocean View Suite");
@@ -170,6 +185,39 @@ describe("BookingFormPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /pay now/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/verify your email/i);
+  });
+
+  it("shows the server-provided message when the listing is no longer available, instead of the generic fallback", async () => {
+    mockGetDetail.mockResolvedValue(mockListing);
+    mockCreate.mockRejectedValue(
+      new ApiError(404, {
+        error: "LISTING_NOT_AVAILABLE",
+        message: "This listing was unpublished while you were booking.",
+      }),
+    );
+
+    renderForm();
+    await screen.findByText("Ocean View Suite");
+
+    await userEvent.click(screen.getByRole("button", { name: /pay now/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This listing was unpublished while you were booking.",
+    );
+  });
+
+  it("shows the generic fallback message when the server sends no message field", async () => {
+    mockGetDetail.mockResolvedValue(mockListing);
+    mockCreate.mockRejectedValue(new ApiError(500, {}));
+
+    renderForm();
+    await screen.findByText("Ocean View Suite");
+
+    await userEvent.click(screen.getByRole("button", { name: /pay now/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong. Please try again.",
+    );
   });
 
   it("shows select_dates message when no checkIn param is provided", () => {

@@ -190,6 +190,9 @@ describe.skipIf(!hasDatabase)("POST /bookings/:id/review", () => {
       .send({ rating: 4 });
 
     expect(res.status).toBe(404);
+    expect(res.body.error).toBe("BOOKING_NOT_FOUND");
+    expect(typeof res.body.message).toBe("string");
+    expect(res.body.message.length).toBeGreaterThan(0);
   });
 
   it("returns 422 BOOKING_NOT_CONFIRMED for a PENDING_PAYMENT booking", async () => {

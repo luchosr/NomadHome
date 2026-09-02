@@ -114,6 +114,8 @@ describe.skipIf(!hasDatabase)("POST /bookings", () => {
 
     expect(res.status).toBe(409);
     expect(res.body.error).toBe("OVERLAP_CONFLICT");
+    expect(typeof res.body.message).toBe("string");
+    expect(res.body.message.length).toBeGreaterThan(0);
   });
 
   it("returns 422 SELF_BOOKING_NOT_ALLOWED when guest books own listing", async () => {
@@ -158,6 +160,9 @@ describe.skipIf(!hasDatabase)("POST /bookings", () => {
       .send({ listingId: listing.id, checkIn: "2027-01-10", checkOut: "2027-01-15" });
 
     expect(res.status).toBe(404);
+    expect(res.body.error).toBe("LISTING_NOT_AVAILABLE");
+    expect(typeof res.body.message).toBe("string");
+    expect(res.body.message.length).toBeGreaterThan(0);
   });
 
   it("returns 422 when checkOut is not after checkIn", async () => {
