@@ -12,6 +12,8 @@ The system SHALL allow an authenticated guest who owns a booking with status `CO
 
 On successful creation the system SHALL atomically update `Listing.averageRating` (arithmetic mean of all rating values for that listing, rounded to 2 decimal places) and `Listing.reviewCount` within the same database transaction.
 
+Rejection for a booking that doesn't exist or isn't owned by the requesting guest SHALL return HTTP 404 with error code `BOOKING_NOT_FOUND` and a human-readable `message`.
+
 Host-to-guest reviews are out of scope for MVP.
 
 #### Scenario: Guest submits a review after check-out
@@ -43,7 +45,8 @@ Host-to-guest reviews are out of scope for MVP.
 - **Given** an authenticated guest
 - **And** a booking owned by a different guest
 - **When** the guest submits `POST /bookings/:id/review`
-- **Then** the system responds `404 Not Found`
+- **Then** the system responds `404 Not Found` with error code `BOOKING_NOT_FOUND`
+- **And** the response body includes a human-readable `message`
 - **And** no review is created
 
 #### Scenario: Review is rejected for a non-CONFIRMED booking

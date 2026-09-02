@@ -97,7 +97,7 @@ The system SHALL ensure that a single booking record corresponds to exactly one 
 
 The system SHALL allow an authenticated guest to create a booking for a published listing whose full requested date range is available. On creation the system SHALL atomically insert a `Booking` record with status `PENDING_PAYMENT` and an `AvailabilityBlock` row with source `BOOKING_HOLD` in a single database transaction. Fee and rate values SHALL be snapshotted from the listing and the current `PlatformFeeConfig` row at creation time and SHALL be immutable thereafter.
 
-The booking SHALL NOT be created if: the guest's email is not verified (`emailVerifiedAt` is `null`); the listing is not in `PUBLISHED` status; the guest is the same user as the host; `checkOut` is not strictly after `checkIn`; or any part of the requested date range overlaps an existing `AvailabilityBlock` for the same listing. The email-verification check SHALL be evaluated before any other precondition. Rejection for an unverified email SHALL return HTTP 403 with a stable machine-readable error code `EMAIL_NOT_VERIFIED` in the response body, in addition to a human-readable `message`.
+The booking SHALL NOT be created if: the guest's email is not verified (`emailVerifiedAt` is `null`); the listing is not in `PUBLISHED` status; the guest is the same user as the host; `checkOut` is not strictly after `checkIn`; or any part of the requested date range overlaps an existing `AvailabilityBlock` for the same listing. The email-verification check SHALL be evaluated before any other precondition. Rejection for an unverified email SHALL return HTTP 403 with a stable machine-readable error code `EMAIL_NOT_VERIFIED` in the response body, in addition to a human-readable `message`. Rejection for a missing/unpublished listing SHALL return HTTP 404 with error code `LISTING_NOT_AVAILABLE` and a human-readable `message`. Rejection for an overlapping date range SHALL return HTTP 409 with error code `OVERLAP_CONFLICT`, the conflicting block details, and a human-readable `message`.
 
 #### Scenario: Guest creates a booking for an available published listing
 
@@ -130,6 +130,7 @@ The booking SHALL NOT be created if: the guest's email is not verified (`emailVe
 - **And** a published listing that already has an `AvailabilityBlock` covering some or all of `[checkIn, checkOut)`
 - **When** the guest submits `POST /bookings` with the overlapping date range
 - **Then** the system responds `409 Conflict` with error code `OVERLAP_CONFLICT`
+- **And** the response body includes a human-readable `message`
 - **And** the response body includes the conflicting block's `blockId`, `source`, `startDate`, `endDate`, and `bookingId` (when `source = BOOKING_HOLD`)
 - **And** no `Booking` record is created
 
@@ -145,7 +146,8 @@ The booking SHALL NOT be created if: the guest's email is not verified (`emailVe
 - **Given** an authenticated guest
 - **And** a listing whose status is `DRAFT` or `DISABLED`
 - **When** the guest submits `POST /bookings` referencing that listing
-- **Then** the system responds `404 Not Found`
+- **Then** the system responds `404 Not Found` with error code `LISTING_NOT_AVAILABLE`
+- **And** the response body includes a human-readable `message`
 - **And** no `Booking` record is created
 
 #### Scenario: Guest submits a booking with invalid dates

@@ -5,7 +5,8 @@
 GitHub issue #98: five guest-facing forms (`BecomeHostPage.tsx`, `BookingFormPage.tsx`, `LoginPage.tsx`, `ReviewModal.tsx`, `CancelBookingModal.tsx`) each catch API errors by branching on one or two specific HTTP status codes, falling through to a generic `error.generic.unexpected` message for everything else. This is why the become-host 403 (issue #84) shipped invisible to users, and it will keep happening for any future error the frontend hasn't special-cased.
 
 The root cause is on the backend: error response shape is inconsistent across controllers. Three conventions coexist today:
-- `{ error: t(...) }` — the human message travels *as* the `error` field, no stable code
+
+- `{ error: t(...) }` — the human message travels _as_ the `error` field, no stable code
 - `{ error: "CODE" }` — a stable code with no `message` at all
 - `{ error: "CODE", message: t(...) }` — the correct pattern, already used where earlier tickets (#84, booking cancellation) fixed specific cases
 
@@ -29,10 +30,10 @@ Because of this inconsistency, the frontend can't simply "show `message` if pres
 
 ## Risks & Mitigations
 
-| Risk | Likelihood | Mitigation |
-| --- | --- | --- |
-| Removing a form's specific status-code branch changes user-visible message wording if the corresponding backend `message` string differs from what the frontend used to show. | Low | The backend already owns the canonical wording via `t(...)`; frontend branches were duplicating (and risking drifting from) that same text. Tests assert the exact expected message text per scenario. |
-| A future error site is added to one of the 3 touched controllers without the `{error, message}` shape, silently reintroducing the bug class. | Medium | Out of scope to enforce structurally in this ticket (e.g. a lint rule or shared response-builder) — flagged as a candidate follow-up, not blocking this fix. |
+| Risk                                                                                                                                                                          | Likelihood | Mitigation                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Removing a form's specific status-code branch changes user-visible message wording if the corresponding backend `message` string differs from what the frontend used to show. | Low        | The backend already owns the canonical wording via `t(...)`; frontend branches were duplicating (and risking drifting from) that same text. Tests assert the exact expected message text per scenario. |
+| A future error site is added to one of the 3 touched controllers without the `{error, message}` shape, silently reintroducing the bug class.                                  | Medium     | Out of scope to enforce structurally in this ticket (e.g. a lint rule or shared response-builder) — flagged as a candidate follow-up, not blocking this fix.                                           |
 
 ## Rollout
 
