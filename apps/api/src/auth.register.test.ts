@@ -1,17 +1,38 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import { prisma, resetDatabase } from "@nomadhome/db";
 import { createApp } from "./app.js";
+import { authRateLimitStore } from "./middleware/rate-limit.js";
 
 // DB-backed; runs in CI (Postgres service) and skips locally without DATABASE_URL.
 const hasDatabase = Boolean(process.env.DATABASE_URL);
 
 describe.skipIf(!hasDatabase)("POST /auth/register", () => {
+  const originalAuthRateLimitMax = process.env.AUTH_RATE_LIMIT_MAX;
+
+  beforeAll(() => {
+    // vitest.config.ts raises AUTH_RATE_LIMIT_MAX suite-wide so unrelated
+    // integration files that register/log in several times aren't
+    // throttled. This file asserts the real throttling behavior, so it
+    // restores the actual production default (5 req/min/IP) for the
+    // duration of its tests.
+    delete process.env.AUTH_RATE_LIMIT_MAX;
+  });
   beforeEach(async () => {
     await resetDatabase();
+    // The auth rate limiter is a module-level singleton shared by every
+    // `createApp()` call in this file, so it accumulates hits across test
+    // cases. Reset it between tests so unrelated earlier requests never
+    // count toward (or dilute) the dedicated 429 test below.
+    await authRateLimitStore.resetAll();
   });
   afterAll(async () => {
     await prisma.$disconnect();
+    if (originalAuthRateLimitMax === undefined) {
+      delete process.env.AUTH_RATE_LIMIT_MAX;
+    } else {
+      process.env.AUTH_RATE_LIMIT_MAX = originalAuthRateLimitMax;
+    }
   });
 
   it("creates a guest account with a hashed password, a verification token, and an audit event", async () => {

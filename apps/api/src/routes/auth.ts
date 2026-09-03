@@ -5,6 +5,7 @@ import { LoggingEmailService } from "../services/email.service.js";
 import { ResendEmailService } from "../services/resend.service.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import { requireAuth } from "../middleware/require-auth.js";
+import { authRateLimit } from "../middleware/rate-limit.js";
 
 /** Wire the auth router with the default production dependencies. */
 export function createAuthRouter(): Router {
@@ -15,8 +16,8 @@ export function createAuthRouter(): Router {
 
   const router = Router();
   router.get("/verify", controller.verifyEmail);
-  router.post("/register", controller.register);
-  router.post("/login", controller.login);
+  router.post("/register", authRateLimit, controller.register);
+  router.post("/login", authRateLimit, controller.login);
   router.post("/refresh", controller.refresh);
   router.post("/logout", controller.logout);
   router.get("/me", requireAuth, controller.me);

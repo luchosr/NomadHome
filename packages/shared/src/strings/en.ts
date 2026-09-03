@@ -64,6 +64,7 @@ export const en = {
     generic: {
       unexpected: "Something went wrong. Please try again.",
     },
+    rate_limited: "Too many requests. Please try again later.",
     not_found: {
       title: "404 — Page not found",
       home: "Go home",
