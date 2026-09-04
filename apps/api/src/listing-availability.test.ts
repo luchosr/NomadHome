@@ -194,4 +194,32 @@ describe.skipIf(!hasDatabase)("listing availability", () => {
     expect(res.status).toBe(403);
     expect(await prisma.availabilityBlock.count()).toBe(0);
   });
+
+  it("returns 200 for an anonymous request to GET /:id/blocked-dates", async () => {
+    const token = await tokenFor("host@example.com", { host: true });
+    const listing = await createListing(token);
+    await request(createApp())
+      .post(`/listings/${listing.id}/availability`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ startDate: "2026-09-01", endDate: "2026-09-05" });
+
+    const res = await request(createApp()).get(`/listings/${listing.id}/blocked-dates`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(1);
+  });
+
+  it("returns 200 for a logged-in non-host guest requesting GET /:id/blocked-dates", async () => {
+    const hostToken = await tokenFor("host@example.com", { host: true });
+    const listing = await createListing(hostToken);
+    const guestToken = await tokenFor("guest@example.com");
+
+    const res = await request(createApp())
+      .get(`/listings/${listing.id}/blocked-dates`)
+      .set("Authorization", `Bearer ${guestToken}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
 });

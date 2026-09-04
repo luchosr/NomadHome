@@ -17,12 +17,16 @@ export function createListingPhotosRouter(): Router {
   );
 
   const router = Router();
-  router.use(requireAuth, requireRole("host"));
-  router.post("/:id/photos/upload-url", controller.getUploadUrl);
-  router.post("/:id/photos", controller.register);
-  router.get("/:id/photos", controller.list);
-  router.patch("/:id/photos/:photoId/position", controller.updatePosition);
-  router.delete("/:id/photos/:photoId", controller.deletePhoto);
+  router.post("/:id/photos/upload-url", requireAuth, requireRole("host"), controller.getUploadUrl);
+  router.post("/:id/photos", requireAuth, requireRole("host"), controller.register);
+  router.get("/:id/photos", requireAuth, requireRole("host"), controller.list);
+  router.patch(
+    "/:id/photos/:photoId/position",
+    requireAuth,
+    requireRole("host"),
+    controller.updatePosition,
+  );
+  router.delete("/:id/photos/:photoId", requireAuth, requireRole("host"), controller.deletePhoto);
   return router;
 }
 
