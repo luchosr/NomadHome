@@ -15,10 +15,7 @@ export function SearchResults({ isLoading, isError, data }: Props) {
     return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-64 animate-pulse rounded-xl border border-slate-200 bg-slate-100"
-          />
+          <div key={i} className="h-64 animate-pulse rounded-card border border-muted bg-inset" />
         ))}
       </div>
     );
@@ -26,14 +23,14 @@ export function SearchResults({ isLoading, isError, data }: Props) {
 
   if (isError) {
     return (
-      <p role="alert" className="text-red-600">
+      <p role="alert" className="text-danger">
         {t("error.generic.unexpected")}
       </p>
     );
   }
 
   if (!data || data.data.length === 0) {
-    return <p className="text-slate-500">{t("search.no_results")}</p>;
+    return <p className="text-fg-3">{t("search.no_results")}</p>;
   }
 
   return (
