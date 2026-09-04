@@ -374,7 +374,7 @@ flowchart TD
     PR -- triggers (reserved) --> GEMINI
     PR -- human review + CI green --> MAIN
     MAIN -- deploy.yml: POST Vercel API --> WEB_PROD
-    MAIN -- Docker build + push --> API_PROD
+    MAIN -- Railway native GitHub integration (outside this repo's CI) --> API_PROD
     API_PROD -- DATABASE_URL --> PG
     API_PROD -- CLOUDFLARE_R2_* --> R2
     API_PROD -- STRIPE_SECRET_KEY --> STRIPE
@@ -422,12 +422,12 @@ Branch protection on `main` requires all CI jobs green + at least one human appr
 3. Vercel pulls the latest `main`, runs `vite build` for `apps/web`, and deploys the resulting static bundle to its CDN edge network globally.
 4. The deployed URL is posted back to the PR as a Vercel preview comment.
 
-**API (Docker) — manual / platform-specific:**
+**API (Docker) — Railway, outside this repo's GitHub Actions:**
 
 1. The `Dockerfile` at repo root performs a **multi-stage build**:
    - **Builder stage** (`node:20.20.0-alpine`): installs all dependencies (with `HUSKY=0` to skip Git hooks), builds `@nomadhome/shared`, `@nomadhome/db` (including `prisma generate`), and `@nomadhome/api`; then runs `pnpm deploy --prod` to produce a lean production bundle at `/prod/api`.
    - **Runner stage** (`node:20.20.0-alpine`): copies only the production bundle, creates a non-root system user (`app:app`), sets `USER app`, exposes port `3000`, and starts with `node dist/index.js`.
-2. The image is built and pushed to a container registry, then deployed to the API host.
+2. Railway's native GitHub integration watches `main` and builds/pushes the image itself — no workflow in `.github/workflows/` builds or deploys the API image; `deploy.yml` only triggers the Vercel redeploy above.
 3. Prisma migrations (`prisma migrate deploy`) run as a pre-start step against the production `DATABASE_URL`.
 
 **Key environment variables required in production:**
