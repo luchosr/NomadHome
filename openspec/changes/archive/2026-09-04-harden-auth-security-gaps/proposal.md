@@ -23,11 +23,11 @@ Neither gap is documented in `openspec/specs/` today — both are genuinely new 
 
 ## Risks & Mitigations
 
-| Risk | Likelihood | Mitigation |
-| --- | --- | --- |
-| CI's `JWT_SECRET: ci-test-secret` (13 chars) is now too short once the length check ships, breaking every test that issues a token. | High (certain, if unaddressed) | Update `.github/workflows/ci.yml`'s job-level `JWT_SECRET` to a ≥32-char value as part of this change, alongside the code fix. |
-| A real deployed environment has a `JWT_SECRET` shorter than 32 chars today. | Unknown (no visibility into prod config from this repo) | Not this ticket's problem to fix operationally, but flagging here so whoever merges/deploys checks their env before rollout — this is a fail-loud change by design. |
-| Rate limiting rejects legitimate rapid retries (e.g. a flaky network causing a user to resubmit login quickly). | Low | 5 req/min/IP is the number already documented and presumably already reviewed/accepted for register; applying the same threshold to login is consistent, not a new arbitrary number. |
+| Risk                                                                                                                                | Likelihood                                              | Mitigation                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CI's `JWT_SECRET: ci-test-secret` (13 chars) is now too short once the length check ships, breaking every test that issues a token. | High (certain, if unaddressed)                          | Update `.github/workflows/ci.yml`'s job-level `JWT_SECRET` to a ≥32-char value as part of this change, alongside the code fix.                                                       |
+| A real deployed environment has a `JWT_SECRET` shorter than 32 chars today.                                                         | Unknown (no visibility into prod config from this repo) | Not this ticket's problem to fix operationally, but flagging here so whoever merges/deploys checks their env before rollout — this is a fail-loud change by design.                  |
+| Rate limiting rejects legitimate rapid retries (e.g. a flaky network causing a user to resubmit login quickly).                     | Low                                                     | 5 req/min/IP is the number already documented and presumably already reviewed/accepted for register; applying the same threshold to login is consistent, not a new arbitrary number. |
 
 ## Rollout
 
