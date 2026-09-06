@@ -59,23 +59,34 @@ export function HostListingsPage() {
           {data.map((listing) => (
             <Card key={listing.id}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex-1">
-                  <p className="font-semibold text-fg-1">{listing.title}</p>
-                  <p className="mt-1 text-sm text-fg-3">
-                    {listing.type === "PROPERTY"
-                      ? t("host.listings.type_property")
-                      : t("host.listings.type_workspace")}
-                    {" · "}
-                    {listing.city}, {listing.country}
-                  </p>
-                  {(listing._count?.bookings ?? 0) > 0 && (
-                    <p className="mt-1 text-sm font-medium text-success">
-                      {listing._count?.bookings}{" "}
-                      {listing._count?.bookings === 1
-                        ? t("host.listings.confirmed_booking_singular")
-                        : t("host.listings.confirmed_booking_plural")}
+                <div className="flex flex-1 items-center gap-4">
+                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-inset">
+                    {listing.primaryPhotoUrl && (
+                      <img
+                        src={listing.primaryPhotoUrl}
+                        alt={listing.title}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-fg-1">{listing.title}</p>
+                    <p className="mt-1 text-sm text-fg-3">
+                      {listing.type === "PROPERTY"
+                        ? t("host.listings.type_property")
+                        : t("host.listings.type_workspace")}
+                      {" · "}
+                      {listing.city}, {listing.country}
                     </p>
-                  )}
+                    {(listing._count?.bookings ?? 0) > 0 && (
+                      <p className="mt-1 text-sm font-medium text-success">
+                        {listing._count?.bookings}{" "}
+                        {listing._count?.bookings === 1
+                          ? t("host.listings.confirmed_booking_singular")
+                          : t("host.listings.confirmed_booking_plural")}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge tone={statusTone(listing.status)}>{statusLabel(listing.status)}</Badge>
