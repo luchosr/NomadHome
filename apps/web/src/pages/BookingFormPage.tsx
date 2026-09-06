@@ -124,7 +124,7 @@ export function BookingFormPage() {
     }
   };
 
-  const sortedPhotos = [...listing.photos].sort((a, b) => a.position - b.position);
+  const sortedPhotos = [...(listing.photos ?? [])].sort((a, b) => a.position - b.position);
   const primaryPhoto = sortedPhotos[0];
 
   return (

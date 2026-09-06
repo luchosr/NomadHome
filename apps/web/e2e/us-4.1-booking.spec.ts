@@ -7,8 +7,11 @@ const NIGHTLY_RATE_CENTS = 7500;
 const LISTING = {
   id: LISTING_ID,
   title: "Sunny Loft in Lisbon",
+  city: "Lisbon",
+  country: "PT",
   nightlyRateCents: NIGHTLY_RATE_CENTS,
   currency: "EUR",
+  photos: [{ id: "photo-1", url: "https://picsum.photos/seed/lisbon/800/600", position: 0 }],
 };
 
 const QUOTE = {
