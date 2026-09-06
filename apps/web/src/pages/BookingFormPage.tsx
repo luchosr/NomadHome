@@ -124,39 +124,52 @@ export function BookingFormPage() {
     }
   };
 
+  const sortedPhotos = [...(listing.photos ?? [])].sort((a, b) => a.position - b.position);
+  const primaryPhoto = sortedPhotos[0];
+
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
+    <div className="mx-auto max-w-xl px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("booking.ui.form_title")}</h1>
 
-      <div className="space-y-4 rounded-xl border border-subtle bg-elevated p-6 shadow-sm">
-        <p className="text-lg font-semibold text-fg-1">{listing.title}</p>
+      <div className="overflow-hidden rounded-xl border border-subtle bg-elevated shadow-sm">
+        {primaryPhoto && (
+          <img src={primaryPhoto.url} alt={listing.title} className="h-40 w-full object-cover" />
+        )}
+        <div className="space-y-4 p-6">
+          <div>
+            <p className="text-lg font-semibold text-fg-1">{listing.title}</p>
+            <p className="text-sm text-fg-3">
+              {listing.city}, {listing.country}
+            </p>
+          </div>
 
-        <div className="flex justify-between text-sm text-fg-2">
-          <span>{t("booking.ui.checkin_label")}</span>
-          <span className="font-medium text-fg-1">{checkIn}</span>
-        </div>
+          <div className="flex justify-between text-sm text-fg-2">
+            <span>{t("booking.ui.checkin_label")}</span>
+            <span className="font-medium text-fg-1">{checkIn}</span>
+          </div>
 
-        <div className="flex justify-between text-sm text-fg-2">
-          <span>{t("booking.ui.checkout_label")}</span>
-          <span className="font-medium text-fg-1">{checkOut}</span>
-        </div>
+          <div className="flex justify-between text-sm text-fg-2">
+            <span>{t("booking.ui.checkout_label")}</span>
+            <span className="font-medium text-fg-1">{checkOut}</span>
+          </div>
 
-        <div className="flex justify-between text-sm text-fg-2">
-          <span>
-            {nightlyRate} &times; {nights}{" "}
-            {nights === 1 ? t("booking.ui.night") : t("booking.ui.nights")}
-          </span>
-          <span className="font-medium text-fg-1">{subtotal}</span>
-        </div>
+          <div className="flex justify-between text-sm text-fg-2">
+            <span>
+              {nightlyRate} &times; {nights}{" "}
+              {nights === 1 ? t("booking.ui.night") : t("booking.ui.nights")}
+            </span>
+            <span className="font-medium text-fg-1">{subtotal}</span>
+          </div>
 
-        <div className="flex justify-between text-sm text-fg-2">
-          <span>{t("booking.ui.service_fee")}</span>
-          <span className="font-medium text-fg-1">{serviceFee}</span>
-        </div>
+          <div className="flex justify-between text-sm text-fg-2">
+            <span>{t("booking.ui.service_fee")}</span>
+            <span className="font-medium text-fg-1">{serviceFee}</span>
+          </div>
 
-        <div className="flex justify-between border-t border-subtle pt-4">
-          <span className="font-semibold text-fg-1">{t("booking.ui.total")}</span>
-          <span className="font-bold text-fg-1">{total}</span>
+          <div className="flex justify-between border-t border-subtle pt-4">
+            <span className="font-semibold text-fg-1">{t("booking.ui.total")}</span>
+            <span className="font-bold text-fg-1">{total}</span>
+          </div>
         </div>
       </div>
 
