@@ -64,7 +64,7 @@ export function ListingDetailPage() {
   const datesValid = checkIn.length > 0 && checkOut.length > 0 && checkOut > checkIn;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8">
       {/* Photo gallery */}
       {primaryPhoto ? (
         <div className="mb-4">
@@ -149,7 +149,7 @@ export function ListingDetailPage() {
 
         {/* Booking sidebar */}
         <div className="md:w-96">
-          <div className="rounded-xl border border-muted p-6 shadow-sm">
+          <div className="rounded-xl border border-muted p-6 shadow-sm md:sticky md:top-8">
             <p className="text-2xl font-bold text-fg-1">
               {formatRate(listing.nightlyRateCents, listing.currency)}
               <span className="text-base font-normal text-fg-3"> {t("search.per_night")}</span>
