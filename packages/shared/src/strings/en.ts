@@ -225,6 +225,7 @@ export const en = {
     dashboard: {
       title: "My Bookings",
       no_bookings: "You have no bookings yet.",
+      no_bookings_cta: "Browse listings",
       status_pending: "Pending Payment",
       status_confirmed: "Confirmed",
       status_cancelled: "Cancelled",
@@ -346,6 +347,7 @@ export const en = {
     bookings: {
       title: "All Bookings",
       no_bookings: "No bookings yet.",
+      no_bookings_cta: "View my listings",
       listing_col: "Listing",
       guest_col: "Guest",
       checkin_col: "Check-in",

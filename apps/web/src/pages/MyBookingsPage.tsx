@@ -7,6 +7,7 @@ import { bookingsApi, type BookingWithListing } from "../api/bookings.js";
 import { CancelBookingModal } from "../components/CancelBookingModal.js";
 import { ReviewModal } from "../components/ReviewModal.js";
 import { PageWrapper } from "../components/PageWrapper.js";
+import { EmptyState } from "../components/EmptyState.js";
 import { formatDate } from "../lib/dates.js";
 
 function statusTone(
@@ -89,7 +90,11 @@ export function MyBookingsPage() {
       <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("booking.dashboard.title")}</h1>
 
       {data.data.length === 0 ? (
-        <p className="text-fg-2">{t("booking.dashboard.no_bookings")}</p>
+        <EmptyState
+          message={t("booking.dashboard.no_bookings")}
+          ctaLabel={t("booking.dashboard.no_bookings_cta")}
+          ctaTo="/search"
+        />
       ) : (
         <div className="space-y-4">
           {data.data.map((booking) => {
