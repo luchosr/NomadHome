@@ -67,15 +67,20 @@ export class ListingRepository {
     });
   }
 
-  listByHost(hostId: string) {
-    return prisma.listing.findMany({
+  async listByHost(hostId: string) {
+    const listings = await prisma.listing.findMany({
       where: { hostId },
       include: {
         ...withAmenities,
         _count: { select: { bookings: { where: { status: "CONFIRMED" } } } },
+        photos: { select: { url: true }, orderBy: { position: "asc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
     });
+    return listings.map(({ photos, ...listing }) => ({
+      ...listing,
+      primaryPhotoUrl: photos[0]?.url ?? null,
+    }));
   }
 
   photoCount(id: string): Promise<number> {
