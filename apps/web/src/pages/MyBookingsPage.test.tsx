@@ -121,5 +121,9 @@ describe("MyBookingsPage", () => {
     mockListMine.mockResolvedValue({ data: [], total: 0, page: 1, limit: 20 });
     renderPage();
     expect(await screen.findByText(/you have no bookings yet/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /browse listings/i })).toHaveAttribute(
+      "href",
+      "/search",
+    );
   });
 });

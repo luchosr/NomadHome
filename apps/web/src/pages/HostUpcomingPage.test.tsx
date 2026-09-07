@@ -58,5 +58,9 @@ describe("HostUpcomingPage", () => {
     mockHostAll.mockResolvedValue([]);
     renderPage();
     expect(await screen.findByText(/no bookings yet/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view my listings/i })).toHaveAttribute(
+      "href",
+      "/host/listings",
+    );
   });
 });

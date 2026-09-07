@@ -3,6 +3,7 @@ import { t } from "@nomadhome/shared";
 import { Badge } from "@nomadhome/ui";
 import { bookingsApi, type HostBooking } from "../api/bookings.js";
 import { PageWrapper } from "../components/PageWrapper.js";
+import { EmptyState } from "../components/EmptyState.js";
 import { formatDate } from "../lib/dates.js";
 
 function statusTone(status: HostBooking["status"]): "warning" | "success" | "neutral" | "info" {
@@ -59,7 +60,11 @@ export function HostUpcomingPage() {
       <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("host.bookings.title")}</h1>
 
       {data.length === 0 ? (
-        <p className="text-fg-2">{t("host.bookings.no_bookings")}</p>
+        <EmptyState
+          message={t("host.bookings.no_bookings")}
+          ctaLabel={t("host.bookings.no_bookings_cta")}
+          ctaTo="/host/listings"
+        />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
