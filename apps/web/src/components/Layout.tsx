@@ -42,7 +42,7 @@ export function Layout() {
   const handleLogout = async () => {
     setMenuOpen(false);
     await logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const close = () => setMenuOpen(false);
