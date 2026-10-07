@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Badge, Button } from "@nomadhome/ui";
+import { Badge, Button, Skeleton } from "@nomadhome/ui";
 import { adminApi, type AdminListing } from "../api/admin.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 
@@ -48,7 +48,25 @@ export function AdminListingsPage() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
   };
 
-  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
+  if (isLoading) {
+    return (
+      <PageWrapper>
+        <Skeleton className="mb-6 h-8 w-48" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 border-b border-muted pb-3">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-4 w-1/6" />
+              <Skeleton className="h-4 w-1/6" />
+              <Skeleton className="h-4 w-1/5" />
+              <Skeleton className="h-6 w-16 rounded-pill" />
+              <Skeleton className="h-9 w-20 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </PageWrapper>
+    );
+  }
 
   if (error || !data) {
     return (
