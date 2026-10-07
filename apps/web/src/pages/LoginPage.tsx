@@ -5,17 +5,32 @@ import { LoginSchema, type LoginInput, t } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import { useAuth } from "../contexts/auth.js";
 import { getDisplayMessage } from "../api/client.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormField } from "../components/FormField.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
 
+/** Where a user with these roles should land when there is no explicit redirect target. */
+function roleLandingPath(roles: string[]): string {
+  if (roles.includes("admin")) return "/admin/users";
+  if (roles.includes("host")) return "/host/listings";
+  return "/";
+}
+
 export function LoginPage() {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? "/";
+  // Distinguish "no explicit `from` in state" (role-based redirect applies) from
+  // "`from` resolved to the `/` fallback" (still an explicit redirect target).
+  const explicitFrom = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
+  const from = explicitFrom ?? "/";
 
   const [serverError, setServerError] = useState<string | null>(null);
+  // Set after a successful login that had no explicit `from`: we must wait for
+  // the auth context's `user` (populated asynchronously by `login`) before we
+  // know the freshly logged-in user's roles, so we defer the navigation to the
+  // effect below instead of reading a stale `user` value here.
+  const [awaitingRoleRedirect, setAwaitingRoleRedirect] = useState(false);
 
   const {
     register,
@@ -23,11 +38,21 @@ export function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({ resolver: zodResolver(LoginSchema) });
 
+  useEffect(() => {
+    if (!awaitingRoleRedirect || !user) return;
+    setAwaitingRoleRedirect(false);
+    navigate(roleLandingPath(user.roles), { replace: true });
+  }, [awaitingRoleRedirect, user, navigate]);
+
   const onSubmit = async (data: LoginInput) => {
     setServerError(null);
     try {
       await login(data.email, data.password);
-      navigate(from, { replace: true });
+      if (explicitFrom !== undefined) {
+        navigate(from, { replace: true });
+      } else {
+        setAwaitingRoleRedirect(true);
+      }
     } catch (err) {
       setServerError(getDisplayMessage(err));
     }
