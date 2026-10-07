@@ -64,11 +64,11 @@ describe("ListingDetailPage", () => {
     mockUseAuth.mockReturnValue({ user: null, isLoading: false });
   });
 
-  it("shows loading state while fetching", async () => {
+  it("shows a skeleton while fetching", async () => {
     // Never resolves during the test
     mockGetDetail.mockReturnValue(new Promise(() => {}));
     renderDetail();
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByTestId("listing-detail-skeleton")).toBeInTheDocument();
   });
 
   it("renders listing title, description, and amenities after load", async () => {

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Badge } from "@nomadhome/ui";
+import { Badge, Skeleton } from "@nomadhome/ui";
 import { bookingsApi, type HostBooking } from "../api/bookings.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 import { EmptyState } from "../components/EmptyState.js";
@@ -46,7 +46,25 @@ export function HostUpcomingPage() {
     queryFn: () => bookingsApi.hostAll(),
   });
 
-  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
+  if (isLoading) {
+    return (
+      <PageWrapper>
+        <Skeleton className="mb-6 h-8 w-40" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 border-b border-muted pb-3">
+              <Skeleton className="h-4 w-1/5" />
+              <Skeleton className="h-4 w-1/5" />
+              <Skeleton className="h-4 w-1/6" />
+              <Skeleton className="h-4 w-1/6" />
+              <Skeleton className="h-6 w-16 rounded-pill" />
+              <Skeleton className="h-4 w-14" />
+            </div>
+          ))}
+        </div>
+      </PageWrapper>
+    );
+  }
   if (error || !data) {
     return (
       <p role="alert" className="text-danger">

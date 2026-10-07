@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button } from "@nomadhome/ui";
+import { Button, Skeleton } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { bookingsApi } from "../api/bookings.js";
 import { ApiError, getDisplayMessage } from "../api/client.js";
@@ -71,7 +71,22 @@ export function BookingFormPage() {
   }
 
   if (isLoading) {
-    return <p className="text-fg-3">{t("common.loading")}</p>;
+    return (
+      <div className="mx-auto max-w-xl px-4 py-8">
+        <Skeleton className="mb-6 h-8 w-48" />
+        <div className="overflow-hidden rounded-xl border border-subtle bg-elevated shadow-sm">
+          <Skeleton className="h-40 w-full rounded-none" />
+          <div className="space-y-4 p-6">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-6 w-full" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error instanceof ApiError && error.status === 404) {

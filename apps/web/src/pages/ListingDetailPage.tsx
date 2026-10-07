@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button } from "@nomadhome/ui";
+import { Button, Skeleton } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { DateRangePicker } from "../components/DateRangePicker.js";
 import { useAuth } from "../contexts/auth.js";
@@ -41,7 +41,31 @@ export function ListingDetailPage() {
   });
 
   if (isLoading) {
-    return <p className="text-fg-3">{t("common.loading")}</p>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8" data-testid="listing-detail-skeleton">
+        <Skeleton className="mb-4 h-64 w-full rounded-xl sm:h-[480px]" />
+        <div className="flex flex-col gap-8 md:flex-row">
+          <div className="flex-1 space-y-4">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-20 w-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-16 rounded-pill" />
+              <Skeleton className="h-6 w-20 rounded-pill" />
+              <Skeleton className="h-6 w-16 rounded-pill" />
+            </div>
+          </div>
+          <div className="md:w-96">
+            <div className="rounded-xl border border-muted p-6 shadow-sm">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="mt-4 h-10 w-full" />
+              <Skeleton className="mt-3 h-10 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error instanceof ApiError && error.status === 404) {

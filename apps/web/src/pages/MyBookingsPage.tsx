@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Badge, Button, Card } from "@nomadhome/ui";
+import { Badge, Button, Card, Skeleton } from "@nomadhome/ui";
 import { bookingsApi, type BookingWithListing } from "../api/bookings.js";
 import { CancelBookingModal } from "../components/CancelBookingModal.js";
 import { ReviewModal } from "../components/ReviewModal.js";
@@ -74,7 +74,27 @@ export function MyBookingsPage() {
   };
 
   if (isLoading) {
-    return <p className="text-fg-3">{t("common.loading")}</p>;
+    return (
+      <PageWrapper>
+        <Skeleton className="mb-6 h-8 w-52" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-6 w-20 rounded-pill" />
+                  <Skeleton className="h-9 w-24 rounded-md" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </PageWrapper>
+    );
   }
 
   if (error || !data) {

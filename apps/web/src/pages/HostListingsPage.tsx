@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Badge, Button, Card } from "@nomadhome/ui";
+import { Badge, Button, Card, Skeleton } from "@nomadhome/ui";
 import { hostApi, type HostListing } from "../api/host.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 
@@ -33,7 +33,32 @@ export function HostListingsPage() {
     queryFn: () => hostApi.listMine(),
   });
 
-  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
+  if (isLoading) {
+    return (
+      <PageWrapper>
+        <Skeleton className="mb-6 h-8 w-48" />
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-1 items-center gap-4">
+                  <Skeleton className="h-16 w-16 flex-shrink-0 rounded-lg" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-6 w-20 rounded-pill" />
+                  <Skeleton className="h-9 w-16 rounded-md" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </PageWrapper>
+    );
+  }
 
   if (error || !data) {
     return (

@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { Badge, Button, Card } from "@nomadhome/ui";
+import { Badge, Button, Card, Skeleton } from "@nomadhome/ui";
 import type { HostListing } from "../api/host.js";
 import { useEditListing } from "../hooks/useEditListing.js";
 import { useListingPhotos } from "../hooks/useListingPhotos.js";
@@ -38,7 +38,37 @@ export function EditListingPage() {
   const photos = useListingPhotos(id);
   const availability = useListingAvailability(id);
 
-  if (isLoading) return <p className="text-fg-3">{t("common.loading")}</p>;
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-10 px-4 py-8">
+        <Skeleton className="h-8 w-56" />
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-6 w-24 rounded-pill" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+        </div>
+        <Card>
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </Card>
+        <Card>
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </Card>
+        <Card>
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
   if (!listing)
     return (
       <p role="alert" className="text-danger">

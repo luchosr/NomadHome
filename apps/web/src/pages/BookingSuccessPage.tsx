@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { Button } from "@nomadhome/ui";
+import { Button, Skeleton } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
 import { useAuth } from "../contexts/auth.js";
 
@@ -61,7 +61,12 @@ export function BookingSuccessPage() {
   if (waiting) {
     return (
       <div className="mx-auto max-w-lg py-12 text-center">
-        <p className="text-fg-2">{t("booking.ui.processing")}</p>
+        <p className="mb-6 text-fg-2">{t("booking.ui.processing")}</p>
+        <div className="space-y-3">
+          <Skeleton className="mx-auto h-8 w-2/3" />
+          <Skeleton className="mx-auto h-4 w-1/2" />
+          <Skeleton className="mx-auto h-4 w-1/3" />
+        </div>
       </div>
     );
   }
