@@ -6,4 +6,6 @@ export { Input } from "./components/input.js";
 export type { InputProps } from "./components/input.js";
 export { Card } from "./components/card.js";
 export type { CardProps } from "./components/card.js";
+export { Skeleton } from "./components/skeleton.js";
+export type { SkeletonProps } from "./components/skeleton.js";
 export { cn } from "./lib/cn.js";
