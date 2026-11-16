@@ -14,7 +14,7 @@ export function StatsSection() {
             className="flex flex-col justify-between gap-6 border-2 border-border bg-surface-inverse p-5 text-fg-inverse"
           >
             <p
-              className="m-0 font-display font-black leading-solid tabular-nums text-signal"
+              className="m-0 font-display font-black leading-solid tabular-nums text-ember"
               style={{ fontSize: "clamp(3rem, 2rem + 4vw, 5.5rem)" }}
             >
               {s.v}

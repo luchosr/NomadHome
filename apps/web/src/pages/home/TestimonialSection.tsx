@@ -6,7 +6,7 @@ import { WRAP, FIELD } from "./constants.js";
 // launch (change task 11.1). Presenting it as real is a trust and legal risk.
 export function TestimonialSection() {
   return (
-    <section className={`${FIELD} bg-sign-green`}>
+    <section className={`${FIELD} bg-sage`}>
       <div className={WRAP}>
         <figure className="m-0 max-w-4xl border-2 border-border bg-surface p-8 text-fg md:p-12">
           <blockquote className="m-0">

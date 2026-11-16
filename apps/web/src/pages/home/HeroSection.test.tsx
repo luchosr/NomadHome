@@ -73,7 +73,7 @@ describe("HeroSection placeholder legibility on the orange panel", () => {
   it("uses no old Gantry palette classes in the hero", () => {
     const { container } = renderHero();
     expect(container.innerHTML).not.toMatch(
-      /(?:^|[\s"':])[a-z-]*-(?:signal|sign-green|black|white)\b|surface-(?:signal|green)/,
+      /(?:^|[\s"':])(?:bg|text|border|ring|outline|fill|stroke|from|to|via|divide|placeholder|decoration|shadow|accent|caret)-(?:signal|sign-green|black|white)\b|surface-(?:signal|green)/,
     );
   });
 

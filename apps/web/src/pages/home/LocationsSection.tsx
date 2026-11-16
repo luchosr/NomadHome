@@ -8,7 +8,7 @@ import { SectionHeading } from "./SectionHeading.js";
 // Replace before public launch (task 11.1).
 export function LocationsSection() {
   return (
-    <section className={`${FIELD} bg-signal`}>
+    <section className={`${FIELD} bg-ember`}>
       <div className={WRAP}>
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeading
@@ -17,7 +17,7 @@ export function LocationsSection() {
           />
           <Link
             to="/search"
-            className="inline-flex shrink-0 items-center gap-3 self-start border-2 border-border px-5 py-3 text-base font-bold text-fg no-underline transition-colors hover:bg-action hover:text-signal md:self-auto"
+            className="inline-flex shrink-0 items-center gap-3 self-start border-2 border-border bg-surface px-5 py-3 text-base font-bold text-fg no-underline transition-colors hover:bg-action hover:text-action-fg md:self-auto"
           >
             {t("home.locations.explore_all")}
             <Arrow className="size-5" />
@@ -30,7 +30,7 @@ export function LocationsSection() {
             <li key={loc.cityKey} className="border-b-2 border-border">
               <Link
                 to={`/search?city=${encodeURIComponent(t(loc.cityKey))}`}
-                className="group flex items-center gap-x-6 py-5 text-fg no-underline transition-colors duration-med ease-out hover:bg-action hover:text-signal focus-visible:bg-action focus-visible:text-signal focus-visible:[--focus:var(--signal)] focus-visible:-outline-offset-[5px] px-4 md:py-6"
+                className="group flex items-center gap-x-6 py-5 text-fg no-underline transition-colors duration-med ease-out hover:bg-action hover:text-action-fg focus-visible:bg-action focus-visible:text-action-fg focus-visible:[--focus:var(--paper)] focus-visible:[--focus-gap:var(--ink)] focus-visible:-outline-offset-[5px] px-4 md:py-6"
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-1 md:flex-row md:items-baseline md:gap-x-8">
                   <span className="break-words font-display text-5xl font-black leading-solid md:text-7xl lg:text-8xl">
