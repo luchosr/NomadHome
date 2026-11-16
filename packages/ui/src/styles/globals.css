@@ -39,6 +39,11 @@
 }
 
 @layer base {
+  /* Keep focused elements clear of the sticky 58 px nav. */
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+
   /* The canvas is always white. */
   body {
     @apply bg-surface font-sans text-base text-fg;
