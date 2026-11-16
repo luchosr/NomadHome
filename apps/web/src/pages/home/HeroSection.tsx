@@ -37,7 +37,10 @@ export function HeroSection() {
           }}
         >
           <div className="flex min-w-0 flex-col justify-end gap-4">
-            <h1 id="hero-title" className="m-0 max-w-[24ch] text-2xl font-black text-fg">
+            <h1
+              id="hero-title"
+              className="m-0 max-w-[28ch] text-2xl font-black text-fg md:text-3xl"
+            >
               {t("home.hero.headline")}
             </h1>
             <div className="flex flex-col gap-1 [container-type:inline-size]">
@@ -47,7 +50,7 @@ export function HeroSection() {
               <Input
                 id="city-search"
                 autoComplete="off"
-                className="rounded-none border-0 border-b-4 bg-transparent px-0 py-0 font-display font-black leading-[0.85] tracking-tight placeholder:text-fg-muted focus-visible:border-transparent focus-visible:bg-transparent"
+                className={`rounded-none border-0 border-b-4 bg-transparent px-0 py-0 font-display font-black leading-[0.85] tracking-tight placeholder:text-fg-subtle focus-visible:border-transparent focus-visible:bg-transparent ${city ? "" : "border-dashed"}`}
                 style={{ fontSize: destinationSize(city.length) }}
                 placeholder={t("home.hero.search_placeholder")}
                 value={city}
@@ -89,7 +92,7 @@ export function HeroSection() {
               <p className="m-0 flex items-baseline gap-3" aria-live="polite">
                 <span
                   data-testid="stay-length"
-                  className={`font-display font-black leading-solid tabular-nums ${nights === null ? "text-fg-muted" : "text-fg"}`}
+                  className={`font-display font-black leading-solid tabular-nums ${nights === null ? "text-fg-subtle underline decoration-dashed decoration-4 underline-offset-8" : "text-fg"}`}
                   style={{ fontSize: numeralSize(String(nights ?? "").length) }}
                 >
                   {nights ?? t("home.hero.stay_empty")}
