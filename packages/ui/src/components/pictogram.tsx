@@ -45,12 +45,16 @@ export function Pictogram({ name, label, ...props }: PictogramProps) {
         </>
       ) : (
         <>
-          {/* desktop slab and two legs */}
-          <rect x="3" y="17" width="26" height="4" fill="currentColor" stroke="none" />
-          <path d="M6 21v7M26 21v7" />
-          {/* screen on a stand */}
-          <rect x="9.5" y="4.5" width="13" height="8" />
-          <path d="M16 12.5V17" />
+          {/* desk slab and two legs */}
+          <rect x="2" y="18" width="17" height="3" fill="currentColor" stroke="none" />
+          <path d="M4.5 21v8M16.5 21v8" />
+          {/* laptop: screen and base */}
+          <rect x="5.5" y="6.5" width="9" height="7" />
+          <rect x="3" y="15.5" width="14" height="2.5" fill="currentColor" stroke="none" />
+          {/* chair: backrest, seat, stem and foot */}
+          <path d="M27 6v13" />
+          <rect x="22" y="18" width="7" height="3" fill="currentColor" stroke="none" />
+          <path d="M25.5 21v8M22 29h7" />
         </>
       )}
     </svg>
