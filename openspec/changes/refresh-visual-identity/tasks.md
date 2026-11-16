@@ -36,7 +36,7 @@ break `openspec validate`).
 - [x] 3.2 Rebuild `HeroSection.tsx` and `useHomeSearch.ts` presentation: yellow panel, city input as largest line, dates plus stay-length numeral, Live/Work pictograms with shared arrow to the black search panel; slim nav styling in `Layout.tsx`; no hero photo
 - [x] 3.3 Migrate remaining sections in `apps/web/src/pages/home/` (`HowItWorksSection`, `CoLivingSection`, `WorkspaceSection`, `FeaturedStaysSection`, `LocationsSection`, `CtaBandSection`, `SectionHeading`, `FeatureList`, `CheckIcon`, `HomeFooter`) to one-panel-one-fact composition
 - [x] 3.4 Mark `StatsSection` and `TestimonialSection` as synthetic placeholders (code comment per design.md D8), restyled only
-- [ ] 3.5 Verify at 360 px and desktop: no horizontal scroll, no clipping; `pnpm test` green
+- [x] 3.5 Verify at 360 px and desktop: no horizontal scroll, no clipping; `pnpm test` green
 
 ## 4. Search API: amenities in results (backend, additive)
 
@@ -47,11 +47,11 @@ break `openspec validate`).
 
 ## 5. Search migration
 
-- [ ] 5.1 Red: update `SearchPage.test.tsx` and `ListingCard.test.tsx` for the new card anatomy and filter container behavior
-- [ ] 5.2 Restyle `ListingCard.tsx`: photo, type, nightly price (USD), 2-3 amenities in fixed positions; shape-coded availability
-- [ ] 5.3 Restyle `SearchFilterPanel.tsx`: side panel on desktop, sheet on mobile, behavior unchanged
-- [ ] 5.4 Restyle `SearchPage.tsx` and `SearchResults.tsx` (Operate mode, no map); empty/loading/error states keep existing behavior
-- [ ] 5.5 Verify: `pnpm test` green for `apps/web`
+- [x] 5.1 Red: update `SearchPage.test.tsx` and `ListingCard.test.tsx` for the new card anatomy and filter container behavior
+- [x] 5.2 Restyle `ListingCard.tsx`: photo, type, nightly price (USD), 2-3 amenities in fixed positions; shape-coded availability
+- [x] 5.3 Restyle `SearchFilterPanel.tsx`: side panel on desktop, sheet on mobile, behavior unchanged
+- [x] 5.4 Restyle `SearchPage.tsx` and `SearchResults.tsx` (Operate mode, no map); empty/loading/error states keep existing behavior
+- [x] 5.5 Verify: `pnpm test` green for `apps/web`
 
 ## 6. Accessibility and contrast
 
