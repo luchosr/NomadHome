@@ -31,6 +31,7 @@ export const en = {
     admin: "Admin",
     admin_users: "Users",
     admin_listings: "Listings",
+    menu_toggle: "Toggle menu",
   },
   auth: {
     login: {
@@ -384,17 +385,17 @@ export const en = {
   },
   home: {
     hero: {
-      eyebrow: "Co-living & workspaces · 9 cities",
-      headline_pre: "Find a place to",
-      headline_em: "land",
-      headline_post: ", and people to land with.",
-      subheadline:
-        "Private rooms in beautiful shared homes, a desk waiting in every city, and a community that turns a stay into a circle of friends.",
+      headline: "Live and work in one place, for weeks at a time.",
       search_label: "Where",
-      search_placeholder: "City or destination",
+      search_placeholder: "City",
       search_aria: "Search",
-      trust_rating: "4.9 from 1,200+ members",
-      trust_nps: "NPS +62 · 92% would stay again",
+      checkin_label: "Check-in",
+      checkout_label: "Check-out",
+      stay_empty: "–",
+      stay_unit_one: "night",
+      stay_unit_other: "nights",
+      live_label: "Live",
+      work_label: "Work",
     },
     featured: {
       eyebrow: "Featured · this month",
