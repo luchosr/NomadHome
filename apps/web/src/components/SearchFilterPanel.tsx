@@ -151,7 +151,7 @@ export function SearchFilterPanel({ id, register, onReset, onClose }: Props) {
                   className="peer sr-only"
                 />
                 {/* Selected = solid black panel with a check glyph; unselected = outlined panel. */}
-                <span className="inline-flex items-center gap-2 border-2 border-border bg-surface px-3 py-2 text-sm font-bold text-fg transition-colors duration-fast ease-out hover:bg-signal peer-checked:bg-action peer-checked:text-signal peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-border peer-checked:[&>svg]:block">
+                <span className="inline-flex items-center gap-2 border-2 border-border bg-surface px-3 py-2 text-sm font-bold text-fg transition-colors duration-fast ease-out hover:bg-ember peer-checked:bg-action peer-checked:text-action-fg peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-border peer-checked:[&>svg]:block">
                   <svg
                     viewBox="0 0 16 16"
                     aria-hidden="true"
