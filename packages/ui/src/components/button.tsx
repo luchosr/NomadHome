@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/cn.js";
 
@@ -27,7 +27,7 @@ const button = cva(
   },
 );
 
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof button>;
+export type ButtonProps = ComponentPropsWithRef<"button"> & VariantProps<typeof button>;
 
 /** Shared button following the NomadHome design system. */
 export function Button({ className, variant, ...props }: ButtonProps) {
