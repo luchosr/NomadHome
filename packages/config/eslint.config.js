@@ -10,7 +10,7 @@ import globals from "globals";
  */
 export default tseslint.config(
   {
-    ignores: ["dist/**", "build/**", "node_modules/**", ".turbo/**", "coverage/**"],
+    ignores: ["dist/**", "build/**", "node_modules/**", ".turbo/**", "coverage/**", ".claude/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
