@@ -55,8 +55,8 @@ break `openspec validate`).
 
 ## 6. Accessibility and contrast
 
-- [ ] 6.1 Compute and record contrast ratios for every token pairing (black on `#FFC700`, white on `#00704A`, black on white, focus ring) and add an automated test asserting AA thresholds
-- [ ] 6.2 Keyboard/focus, `prefers-reduced-motion` and 360 px pass on landing and search; fix findings
+- [x] 6.1 Compute and record contrast ratios for every token pairing (black on `#FFC700`, white on `#00704A`, black on white, focus ring) and add an automated test asserting AA thresholds
+- [x] 6.2 Keyboard/focus, `prefers-reduced-motion` and 360 px pass on landing and search; fix findings
 
 ## 7. Review and update existing unit tests (MANDATORY)
 
