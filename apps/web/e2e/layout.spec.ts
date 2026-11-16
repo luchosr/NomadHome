@@ -1,14 +1,15 @@
 import { test, expect } from "@playwright/test";
 import type { Locator, Page, TestInfo } from "@playwright/test";
 
-// Layout checks for the visual-identity refresh (NH-118, design.md D6).
+// Layout checks for the visual-identity refresh (NH-118, design.md D6) and the warm palette (NH-129).
 // Deliberately NOT toHaveScreenshot(): pixel baselines recorded on macOS differ from
 // Linux CI (fonts, antialiasing). These assertions fail on structural breakage instead:
-// overflow, overlap, missing font, wrong signal colour. Screenshots are attached to the
+// overflow, overlap, missing font, wrong orange colour. Screenshots are attached to the
 // report as artifacts and never compared.
 
 const API = "http://localhost:3000";
-const SIGNAL_RGB = "rgb(255, 199, 0)";
+const EMBER_RGB = "rgb(230, 95, 53)";
+const INK_RGB = "rgb(30, 30, 30)";
 
 const VIEWPORTS = [
   { name: "desktop-1440", width: 1440, height: 900 },
@@ -93,7 +94,7 @@ for (const vp of VIEWPORTS) {
   test.describe(`Layout at ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test("landing: hero is signal yellow, in Overpass, without overflow or overlap", async ({
+    test("landing: hero is orange, in Overpass, without overflow or overlap", async ({
       page,
     }, testInfo) => {
       await mockSearch(page);
@@ -101,7 +102,8 @@ for (const vp of VIEWPORTS) {
 
       const hero = page.locator('section[aria-labelledby="hero-title"]');
       await expect(hero).toBeVisible();
-      await expect(hero).toHaveCSS("background-color", SIGNAL_RGB);
+      await expect(hero).toHaveCSS("background-color", EMBER_RGB);
+      await expect(hero).toHaveCSS("color", INK_RGB);
       await expectOverpass(page.locator("#hero-title"));
 
       const city = await box(page.locator("#city-search"));
@@ -117,14 +119,15 @@ for (const vp of VIEWPORTS) {
       await attachScreenshot(page, testInfo, `landing-${vp.name}`);
     });
 
-    test("search: header band is signal yellow, results render as non-overlapping cards", async ({
+    test("search: header band is orange, results render as non-overlapping cards", async ({
       page,
     }, testInfo) => {
       await mockSearch(page);
       await page.goto("/search?city=Lisbon");
 
-      const band = page.locator("section.bg-signal").first();
-      await expect(band).toHaveCSS("background-color", SIGNAL_RGB);
+      const band = page.locator("section.bg-ember").first();
+      await expect(band).toHaveCSS("background-color", EMBER_RGB);
+      await expect(band).toHaveCSS("color", INK_RGB);
       await expectOverpass(page.getByRole("heading", { level: 1 }));
 
       const cards = page.locator('a[href^="/listings/"]');
