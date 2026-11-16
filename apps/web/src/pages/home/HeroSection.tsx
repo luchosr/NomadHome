@@ -39,7 +39,7 @@ export function HeroSection() {
           <div className="flex min-w-0 flex-col justify-end gap-4">
             <h1
               id="hero-title"
-              className="m-0 max-w-[28ch] text-2xl font-black text-fg md:text-3xl"
+              className="m-0 max-w-[28ch] text-2xl font-black text-fg md:text-[2.25rem] md:leading-tight"
             >
               {t("home.hero.headline")}
             </h1>
