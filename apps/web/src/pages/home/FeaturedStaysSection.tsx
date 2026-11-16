@@ -4,6 +4,8 @@ import { Arrow } from "@nomadhome/ui";
 import { WRAP, FIELD, FEATURED_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
+// SYNTHETIC (NH-118, design.md D8): cards come from FEATURED_CARDS (invented demo records)
+// and their state tags are placeholders. Replace before public launch (task 11.1).
 export function FeaturedStaysSection() {
   return (
     <section className={`${FIELD} bg-surface`}>

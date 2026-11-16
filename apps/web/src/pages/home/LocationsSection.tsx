@@ -4,6 +4,8 @@ import { Arrow } from "@nomadhome/ui";
 import { WRAP, FIELD, LOCATION_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
+// SYNTHETIC (NH-118, design.md D8): the city tiles come from LOCATION_CARDS (demo data).
+// Replace before public launch (task 11.1).
 export function LocationsSection() {
   return (
     <section className={`${FIELD} bg-signal`}>

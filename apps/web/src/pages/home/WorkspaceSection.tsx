@@ -4,6 +4,9 @@ import { WRAP, FIELD, WORKSPACE_FEATURES } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 import { FeatureList } from "./FeatureList.js";
 
+// SYNTHETIC (NH-118, design.md D8): the status strip (home.workspace.status_*) describes an
+// invented demo workspace. Replace with a real listing or remove before public launch
+// (task 11.1).
 export function WorkspaceSection() {
   return (
     <section className={`${FIELD} bg-surface`}>

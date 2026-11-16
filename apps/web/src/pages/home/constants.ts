@@ -21,6 +21,9 @@ export const HOW_IT_WORKS_STEPS = [
   { n: "03", hKey: "home.how_it_works.step_03_heading", pKey: "home.how_it_works.step_03_body" },
 ] as const;
 
+// SYNTHETIC (NH-118, design.md D8): the featured stays, their prices (USD), descriptions
+// and tags are invented demo records, not real listings. Replace with real data or remove
+// before public launch (change task 11.1).
 export const FEATURED_CARDS = [
   {
     img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&q=80&fit=crop",
@@ -49,6 +52,8 @@ export const FEATURED_CARDS = [
   },
 ] as const;
 
+// SYNTHETIC (NH-118, design.md D8): the four cities are demo tiles, not a statement of
+// where inventory exists. Replace with real data before public launch (task 11.1).
 export const LOCATION_CARDS = [
   {
     img: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=800&q=80&fit=crop",
@@ -72,8 +77,10 @@ export const LOCATION_CARDS = [
   },
 ] as const;
 
+// SYNTHETIC (NH-118, design.md D8): invented figures, no real source. Replace or remove
+// before public launch (task 11.1). The city count mirrors the four LOCATION_CARDS.
 export const STAT_ITEMS = [
-  { v: "9", lKey: "home.stats.cities_label" },
+  { v: "4", lKey: "home.stats.cities_label" },
   { v: "142", lKey: "home.stats.rooms_label" },
   { v: "92%", lKey: "home.stats.occupancy_label" },
   { v: "+62", lKey: "home.stats.nps_label" },
@@ -91,15 +98,10 @@ export const FOOTER_NAV_COLS = [
   },
   {
     hKey: "home.footer.nav_company",
-    links: [
-      "home.footer.link_about",
-      "home.footer.link_become_host",
-      "home.footer.link_community",
-      "home.footer.link_careers",
-    ],
+    links: ["home.footer.link_about", "home.footer.link_become_host", "home.footer.link_careers"],
   },
   {
     hKey: "home.footer.nav_support",
-    links: ["home.footer.link_help", "home.footer.link_house_rules", "home.footer.link_contact"],
+    links: ["home.footer.link_help", "home.footer.link_contact"],
   },
 ] as const;

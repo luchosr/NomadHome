@@ -4,6 +4,9 @@ import { WRAP, FIELD, COLIVING_FEATURES } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 import { FeatureList } from "./FeatureList.js";
 
+// SYNTHETIC (NH-118, design.md D8): the example monthly rate in the price panel
+// (home.coliving.price_*) is an invented USD figure. Replace with a real listing rate or
+// remove before public launch (task 11.1).
 export function CoLivingSection() {
   return (
     <section className={`${FIELD} bg-sign-green text-fg-inverse [--focus:var(--signal)]`}>
