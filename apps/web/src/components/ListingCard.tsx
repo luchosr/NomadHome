@@ -34,25 +34,27 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
       to={`/listings/${listing.id}`}
       className="group flex h-full flex-col border-2 border-border bg-surface text-fg no-underline transition-colors duration-med ease-out hover:bg-signal focus-visible:bg-signal"
     >
-      <div className="relative aspect-[4/3] border-b-2 border-border bg-surface-inset">
-        {listing.primaryPhotoUrl ? (
-          <img
-            src={listing.primaryPhotoUrl}
-            alt={listing.title}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-fg-subtle">
-            <Pictogram name={isProperty ? "bed" : "desk"} className="size-16" />
-          </div>
-        )}
-        <Badge
-          tone="accent"
-          className="absolute left-0 top-0 rounded-none border-0 border-b-2 border-r-2"
-        >
-          {isProperty ? t("host.listings.type_property") : t("host.listings.type_workspace")}
-        </Badge>
+      <div className="border-b-2 border-border">
+        <div className="relative aspect-[4/3] bg-surface-inset">
+          {listing.primaryPhotoUrl ? (
+            <img
+              src={listing.primaryPhotoUrl}
+              alt={listing.title}
+              className="block h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-fg-subtle">
+              <Pictogram name={isProperty ? "bed" : "desk"} className="size-16" />
+            </div>
+          )}
+          <Badge
+            tone="accent"
+            className="absolute left-0 top-0 rounded-none border-0 border-b-2 border-r-2"
+          >
+            {isProperty ? t("host.listings.type_property") : t("host.listings.type_workspace")}
+          </Badge>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
