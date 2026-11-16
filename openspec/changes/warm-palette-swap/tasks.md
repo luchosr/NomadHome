@@ -58,23 +58,23 @@ as NH-118: a `specs/<change>/` folder without `spec.md` would break validation).
 
 ## 8. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 8.1 Run targeted tests (`pnpm --filter @nomadhome/ui test`, `pnpm --filter @nomadhome/web test`), then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`
-- [ ] 8.2 Database state: N/A. No backend, API, Prisma schema or data change; the web and UI packages do not touch a database. State this in the report; do not connect to any database
-- [ ] 8.3 Create report `openspec/changes/warm-palette-swap/reports/YYYY-MM-DD-step-8-unit-test-verification.md` with commands, results and the DB N/A justification
+- [x] 8.1 Run targeted tests (`pnpm --filter @nomadhome/ui test`, `pnpm --filter @nomadhome/web test`), then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`
+- [x] 8.2 Database state: N/A. No backend, API, Prisma schema or data change; the web and UI packages do not touch a database. State this in the report; do not connect to any database
+- [x] 8.3 Create report `openspec/changes/warm-palette-swap/reports/YYYY-MM-DD-step-8-unit-test-verification.md` with commands, results and the DB N/A justification
 
 ## 9. Manual endpoint testing with curl (MANDATORY - N/A)
 
-- [ ] 9.1 N/A. No endpoint is added or changed; `apps/api` and `packages/shared` are untouched. Record the justification in the step-8 report and run `git diff --stat origin/main -- apps/api packages/db packages/shared` to prove the paths are unchanged
+- [x] 9.1 N/A. No endpoint is added or changed; `apps/api` and `packages/shared` are untouched. Record the justification in the step-8 report and run `git diff --stat origin/main -- apps/api packages/db packages/shared` to prove the paths are unchanged
 
 ## 10. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 10.1 Inspect existing Playwright specs touching landing and search; update only colour-dependent selectors and assertions
-- [ ] 10.2 Execute `pnpm test:e2e` (agent runs it)
-- [ ] 10.3 Walk landing and search with Playwright MCP at desktop and 360 px; store screenshots and outcomes in `reports/YYYY-MM-DD-step-10-e2e-and-visual-verification.md`
+- [x] 10.1 Inspect existing Playwright specs touching landing and search; update only colour-dependent selectors and assertions
+- [x] 10.2 Execute `pnpm test:e2e` (agent runs it)
+- [x] 10.3 Walk landing and search with Playwright MCP at desktop and 360 px; store screenshots and outcomes in `reports/YYYY-MM-DD-step-10-e2e-and-visual-verification.md`
 
 ## 11. Final verification
 
 - [x] 11.1 `rg -i "#FFC700|#00704A|#0A0A0A|signal|sign-green" apps/web/src packages/ui/src packages/config apps/web/public apps/web/e2e` returns nothing outside design notes
-- [ ] 11.2 `node scripts/check-mvp-scope.mjs` and `openspec validate warm-palette-swap --strict` pass
-- [ ] 11.3 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
+- [x] 11.2 `node scripts/check-mvp-scope.mjs` and `openspec validate warm-palette-swap --strict` pass
+- [x] 11.3 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
 - [x] 11.4 Resolve or record answers to open questions Q2-Q6 (Q1 is settled) in `design.md` before Gate 3
