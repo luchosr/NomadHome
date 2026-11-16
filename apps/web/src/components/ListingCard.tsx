@@ -56,7 +56,9 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <div>
+        {/* Title block reserves two title lines plus the city line, so the price below sits at the
+            same y on every card in a row; the city still hugs the title. */}
+        <div className="min-h-[4.75rem]">
           <h3 className="m-0 line-clamp-2 font-display text-lg font-black leading-snug group-hover:underline group-hover:underline-offset-4">
             {listing.title}
           </h3>
@@ -65,13 +67,15 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
           </p>
         </div>
 
-        <div className="mt-auto flex flex-col gap-3">
-          <p className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-2">
-            <span className="text-3xl font-black leading-none tabular-nums">
-              {formatRate(listing.nightlyRateCents, listing.currency)}
-            </span>
-            <span className="text-sm font-bold text-fg-muted">{t("search.nightly_rate")}</span>
-          </p>
+        <p className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-2">
+          <span className="text-3xl font-black leading-none tabular-nums">
+            {formatRate(listing.nightlyRateCents, listing.currency)}
+          </span>
+          <span className="text-sm font-bold text-fg-muted">{t("search.nightly_rate")}</span>
+        </p>
+
+        {/* Amenity strip keeps its height when empty so every card ends on the same line. */}
+        <div className="mt-auto min-h-[2.25rem]">
           {labels.length > 0 && (
             <ul className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 border-t-2 border-border p-0 pt-3 text-sm font-bold">
               {labels.map((label) => (
