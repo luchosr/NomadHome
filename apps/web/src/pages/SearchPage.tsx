@@ -119,7 +119,7 @@ export function SearchPage() {
             </div>
             <Button
               ref={toggleRef}
-              className={CONTROL_H}
+              className={`${CONTROL_H} ${filtersOpen ? "" : "bg-surface"}`}
               type="button"
               variant={filtersOpen ? "primary" : "secondary"}
               aria-expanded={filtersOpen}
