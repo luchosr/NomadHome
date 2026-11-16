@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { Arrow } from "@nomadhome/ui";
+import { Arrow, Badge } from "@nomadhome/ui";
 import { WRAP, FIELD, FEATURED_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
@@ -50,11 +50,7 @@ export function FeaturedStaysSection() {
                   <p className="mt-3 text-sm font-medium">{t(card.metaKey)}</p>
                   <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <span className="text-xl font-black">{t(card.priceKey)}</span>
-                    <span className="border-2 border-current px-2 py-0.5 text-sm font-bold">
-                      {"tagKey" in card
-                        ? `${t(card.tagKey)} · ${t(card.leftKey)}`
-                        : t(card.leftKey)}
-                    </span>
+                    <Badge tone={card.tagTone}>{t(card.tagKey)}</Badge>
                   </div>
                 </div>
               </Link>

@@ -22,8 +22,9 @@ export const HOW_IT_WORKS_STEPS = [
 ] as const;
 
 // SYNTHETIC (NH-118, design.md D8): the featured stays, their prices (USD), descriptions
-// and tags are invented demo records, not real listings. Replace with real data or remove
-// before public launch (change task 11.1).
+// and state tags are invented demo records, not real listings. The tags show state by
+// shape (solid = featured/available, dashed = coming soon, struck = unavailable).
+// Replace with real data or remove before public launch (change task 11.1).
 export const FEATURED_CARDS = [
   {
     img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&q=80&fit=crop",
@@ -32,7 +33,7 @@ export const FEATURED_CARDS = [
     metaKey: "home.featured.cards.oaxaca.meta",
     priceKey: "home.featured.cards.oaxaca.price",
     tagKey: "home.featured.cards.oaxaca.tag",
-    leftKey: "home.featured.cards.oaxaca.left",
+    tagTone: "accent",
   },
   {
     img: "https://picsum.photos/seed/lisboa-house/800/600",
@@ -40,7 +41,8 @@ export const FEATURED_CARDS = [
     titleKey: "home.featured.cards.lisbon.title",
     metaKey: "home.featured.cards.lisbon.meta",
     priceKey: "home.featured.cards.lisbon.price",
-    leftKey: "home.featured.cards.lisbon.left",
+    tagKey: "home.featured.cards.lisbon.tag",
+    tagTone: "success",
   },
   {
     img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80&fit=crop",
@@ -48,7 +50,8 @@ export const FEATURED_CARDS = [
     titleKey: "home.featured.cards.medellin.title",
     metaKey: "home.featured.cards.medellin.meta",
     priceKey: "home.featured.cards.medellin.price",
-    leftKey: "home.featured.cards.medellin.left",
+    tagKey: "home.featured.cards.medellin.tag",
+    tagTone: "warning",
   },
 ] as const;
 

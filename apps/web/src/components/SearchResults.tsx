@@ -47,7 +47,10 @@ export function SearchResults({ isLoading, isError, data, onReset, panelOpen }: 
 
   if (isError) {
     return (
-      <div role="alert" className="flex flex-col gap-3 border-2 border-danger bg-danger-bg p-6">
+      <div
+        role="alert"
+        className="flex flex-col gap-3 border-2 border-solid border-danger bg-danger-bg p-6"
+      >
         <h2 className="m-0 font-display text-2xl font-black leading-solid text-danger">
           {t("search.error_title")}
         </h2>
@@ -59,7 +62,7 @@ export function SearchResults({ isLoading, isError, data, onReset, panelOpen }: 
 
   if (!data || data.data.length === 0) {
     return (
-      <div className="flex flex-col items-start gap-4 border-2 border-border bg-surface-inset p-6 md:p-8">
+      <div className="flex flex-col items-start gap-4 border-2 border-dashed border-border bg-surface-inset p-6 md:p-8">
         <Pictogram name="bed" className="size-12 text-fg" />
         {data && (
           <h2 className="m-0 font-display text-3xl font-black leading-solid">
