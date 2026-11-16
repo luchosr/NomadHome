@@ -57,7 +57,7 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div>
-          <h3 className="m-0 line-clamp-2 min-h-[2.5em] font-display text-lg font-black leading-snug group-hover:underline group-hover:underline-offset-4">
+          <h3 className="m-0 line-clamp-2 font-display text-lg font-black leading-snug group-hover:underline group-hover:underline-offset-4">
             {listing.title}
           </h3>
           <p className="m-0 mt-1 text-sm font-medium text-fg-muted">
