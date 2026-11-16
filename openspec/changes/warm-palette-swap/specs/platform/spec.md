@@ -8,9 +8,9 @@ The system SHALL expose the NomadHome "Gantry Signage" design tokens, in the
 warm palette, through the shared Tailwind preset
 (`packages/config/tailwind.preset.js`) so that every workspace app and the UI
 package consume one source of brand values. The preset MUST define, under
-`theme.extend`, the brand palette (terracotta panel `clay` `#A8401F`, sage
-panel `sage` `#96A8A6`, canvas `paper` `#F7F5F2`, inset `stone` `#E5E2DD`, `ink`
-`#1E1E1E`, and the `clay-light` accent `#E58A64` for text on ink), the semantic
+`theme.extend`, the brand palette (orange panel `ember` `#E65F35`, sage
+panel `sage` `#96A8A6`, canvas `paper` `#F7F5F2`, inset `stone` `#E5E2DD`, and
+`ink` `#1E1E1E`), the semantic
 color roles (e.g. surface, fg, border, action, success, warning, danger, info
 roles with fixed approved foreground pairings), the font families (`display`,
 `sans`, `mono`), a fluid sign-scale type scale, the spacing scale, the border
@@ -22,7 +22,7 @@ MUST NOT remain in the preset or be used in application source.
 #### Scenario: Brand utility classes resolve from the preset
 
 - **GIVEN** an app that extends the shared Tailwind preset
-- **WHEN** a component uses `bg-clay`, `text-fg`, `bg-sage`, `bg-paper` and `font-display`
+- **WHEN** a component uses `bg-ember`, `text-fg`, `bg-sage`, `bg-paper` and `font-display`
 - **THEN** the build resolves each to the corresponding design-token value
 - **AND** no class falls back to an undefined/empty Tailwind value
 
@@ -40,7 +40,7 @@ text family chosen outside the common default-font list, plus a mono family),
 declares the design-token CSS custom properties, and applies base element
 styles: the default canvas is the paper surface token, headings use the display
 family set solid, and interactive elements expose a visible two-layer focus
-ring that meets WCAG 2.1 AA non-text contrast on paper, stone, sage, terracotta
+ring that meets WCAG 2.1 AA non-text contrast on paper, stone, sage, orange
 and ink surfaces. The stylesheet MUST keep the `@tailwind
 base/components/utilities` directives.
 
@@ -52,7 +52,7 @@ base/components/utilities` directives.
 
 #### Scenario: Focus ring is visible on every surface
 
-- **GIVEN** an interactive element focused by keyboard on a paper, stone, sage, terracotta, or ink panel
+- **GIVEN** an interactive element focused by keyboard on a paper, stone, sage, orange, or ink panel
 - **WHEN** the focus ring is rendered
 - **THEN** it has a contrast ratio of at least 3:1 against its adjacent colors
 
@@ -83,10 +83,12 @@ alter any primitive's public props or behavior, only its styling.
 
 The system SHALL use only approved foreground/background pairings from the
 design tokens. Normal text MUST meet a contrast ratio of at least 4.5:1, large
-text and non-text UI components at least 3:1, including paper on `#A8401F`,
-ink on `#96A8A6`, ink on paper, and ink on stone. Terracotta panels MUST carry
-light (paper) text only, never ink text. Sage MUST be used only as a background
-carrying ink text, never as text or as a line colour. The role tokens
+text and non-text UI components at least 3:1, including ink on `#E65F35`
+(4.81:1), ink on `#96A8A6`, ink on paper, and ink on stone. Orange panels MUST
+carry ink text only, never paper text (3.19:1). Orange MUST NOT be used as text
+or as a line colour on paper, stone or sage. Sage MUST be used only as a
+background carrying ink text, never as text or as a line colour. Placeholder and
+secondary text on orange MUST be ink, or sit in a paper-filled field. The role tokens
 (success, warning, danger, info) and their tints MUST each meet 4.5:1 for text
 on their own tint and on paper.
 
@@ -98,7 +100,7 @@ on their own tint and on paper.
 
 #### Scenario: Disallowed pairings are not approved
 
-- **GIVEN** the pairings ink on terracotta, sage on paper, sage on stone, terracotta on ink and `clay-light` on paper
+- **GIVEN** the pairings paper on orange, orange on paper, orange on stone, orange on sage, sage on paper and sage on stone
 - **WHEN** contrast ratios are computed
 - **THEN** each is below 4.5:1 and none appears among the approved token pairings
 
@@ -106,7 +108,7 @@ on their own tint and on paper.
 
 The landing page and the search screen SHALL render the Gantry Signage
 identity in the warm palette with no behavior or API change. The landing first
-viewport MUST present a full-width terracotta panel with light text, the city
+viewport MUST present a full-width orange panel with ink text, the city
 input as the largest destination line, dates with a stay-length numeral, Live
 and Work pictograms sharing one arrow to a solid ink search-action panel, a slim
 nav, and no hero photo. The search screen MUST show comparable listing cards
@@ -140,8 +142,8 @@ through `t()`.
 - **WHEN** the cards are rendered
 - **THEN** each shows the photo, listing type, nightly price in USD, and 2-3 amenities in the same positions
 
-#### Scenario: Terracotta panels render the approved colour with light text
+#### Scenario: Orange panels render the approved colour with ink text
 
 - **GIVEN** the landing hero and the search query band
 - **WHEN** they are rendered
-- **THEN** their background resolves to `#A8401F` and their text resolves to the paper token
+- **THEN** their background resolves to `#E65F35` and their text resolves to the ink token

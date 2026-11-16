@@ -17,246 +17,258 @@ Ratios computed with the WCAG 2.1 relative-luminance formula, the same as
 `packages/ui/src/contrast.test.ts`, by a throwaway Node script (not committed;
 the committed proof is the updated `contrast.test.ts`).
 
-| Token (name)        | Value     | Role                                              |
-| ------------------- | --------- | ------------------------------------------------- |
-| ink                 | `#1E1E1E` | text, edges, action fill, inverse (dark) panels   |
-| paper               | `#F7F5F2` | canvas, light text on terracotta and ink          |
-| stone               | `#E5E2DD` | inset surface, hover fill, disabled fill          |
-| clay (terracotta)   | `#A8401F` | primary panel (hero, bands, accent badge)         |
-| sage                | `#96A8A6` | secondary panel, background only                  |
-| clay-light          | `#E58A64` | accent text/figures on ink only                   |
+| Token | Value     | Role                                                            |
+| ----- | --------- | --------------------------------------------------------------- |
+| ink   | `#1E1E1E` | text, edges, action fill, inverse (dark) panels                 |
+| paper | `#F7F5F2` | canvas, text on ink, control fill on orange                     |
+| stone | `#E5E2DD` | inset surface, card hover fill, disabled fill                   |
+| ember | `#E65F35` | primary panel (hero, bands, accent badge); orange accent on ink |
+| sage  | `#96A8A6` | secondary panel, background only                                |
 
-Terracotta is `#A8401F`, not the ticket's `#B84A27`: paper on `#B84A27` is 4.77
-(barely passing) and terracotta on stone is 4.02 (fails); `#A8401F` gives 5.65 and
-4.76. White is not part of the palette (D4).
+Orange is the user's decision (`#E65F35`, chosen after a comparison with a
+darkened terracotta). There is no separate light accent: orange on ink is 4.81:1.
 
-| Pairing (foreground on background)         | Ratio | Requirement | Result       |
-| ------------------------------------------ | ----- | ----------- | ------------ |
-| ink on paper                               | 15.32 | text 4.5    | pass         |
-| ink on stone                               | 12.90 | text 4.5    | pass         |
-| ink on sage `#96A8A6`                      | 6.71  | text 4.5    | pass         |
-| paper on clay `#A8401F`                    | 5.65  | text 4.5    | pass         |
-| (white on clay, for reference)             | 6.14  | text 4.5    | pass, unused |
-| paper on ink                               | 15.32 | text 4.5    | pass         |
-| clay-light `#E58A64` on ink                | 6.47  | text 4.5    | pass         |
-| clay on paper (text/link)                  | 5.65  | text 4.5    | pass         |
-| clay on stone (text/link)                  | 4.76  | text 4.5    | pass         |
-| fg-muted `#3F3B37` on paper                | 10.20 | text 4.5    | pass         |
-| fg-muted on stone                          | 8.59  | text 4.5    | pass         |
-| fg-subtle `#57534E` on paper               | 7.01  | text 4.5    | pass         |
-| fg-subtle on stone                         | 5.91  | text 4.5    | pass         |
-| border-muted `#6F6A63` on paper            | 4.93  | UI 3        | pass         |
-| border-muted on stone                      | 4.15  | UI 3        | pass         |
-| paper on action-hover `#333333`            | 11.61 | text 4.5    | pass         |
-| success `#2F5F3E` on success-bg `#E4EEE5`  | 6.25  | text 4.5    | pass         |
-| success on paper                           | 6.83  | text 4.5    | pass         |
-| warning `#7A4A00` on warning-bg `#F6E7C1`  | 6.10  | text 4.5    | pass         |
-| warning on paper                           | 6.87  | text 4.5    | pass         |
-| danger `#9B1C2E` on danger-bg `#F8E1E0`    | 6.48  | text 4.5    | pass         |
-| danger on paper                            | 7.42  | text 4.5    | pass         |
-| paper on danger (filled destructive)       | 7.42  | text 4.5    | pass         |
-| paper on danger-hover `#7E1625`            | 9.51  | text 4.5    | pass         |
-| info `#1F4E79` on info-bg `#E1EBF3`        | 7.17  | text 4.5    | pass         |
-| info on paper                              | 7.96  | text 4.5    | pass         |
+Approved pairings:
 
-Disallowed pairings (never used for text, asserted below 4.5 by the test so a
-future edit cannot silently approve them):
+| Pairing (foreground on background)        | Ratio | Requirement | Result     |
+| ----------------------------------------- | ----- | ----------- | ---------- |
+| ink on paper                              | 15.32 | text 4.5    | pass       |
+| ink on stone                              | 12.90 | text 4.5    | pass       |
+| ink on sage `#96A8A6`                     | 6.71  | text 4.5    | pass       |
+| ink on ember `#E65F35`                    | 4.81  | text 4.5    | pass       |
+| ink edge (2 px) on ember                  | 4.81  | UI 3        | pass       |
+| paper on ink                              | 15.32 | text 4.5    | pass       |
+| ember on ink (accent text, 18 px bold up) | 4.81  | text 4.5    | pass, thin |
+| fg-muted `#3F3B37` on paper               | 10.20 | text 4.5    | pass       |
+| fg-muted on stone                         | 8.59  | text 4.5    | pass       |
+| fg-subtle `#57534E` on paper              | 7.01  | text 4.5    | pass       |
+| fg-subtle on stone                        | 5.91  | text 4.5    | pass       |
+| border-muted `#6F6A63` on paper           | 4.93  | UI 3        | pass       |
+| border-muted on stone                     | 4.15  | UI 3        | pass       |
+| paper on action-hover `#333333`           | 11.61 | text 4.5    | pass       |
+| success `#2F5F3E` on success-bg `#E4EEE5` | 6.25  | text 4.5    | pass       |
+| success on paper                          | 6.83  | text 4.5    | pass       |
+| warning `#7A4A00` on warning-bg `#F6E7C1` | 6.10  | text 4.5    | pass       |
+| warning on paper                          | 6.87  | text 4.5    | pass       |
+| danger `#9B1C2E` on danger-bg `#F8E1E0`   | 6.48  | text 4.5    | pass       |
+| danger on paper                           | 7.42  | text 4.5    | pass       |
+| paper on danger (filled destructive)      | 7.42  | text 4.5    | pass       |
+| paper on danger-hover `#7E1625`           | 9.51  | text 4.5    | pass       |
+| info `#1F4E79` on info-bg `#E1EBF3`       | 7.17  | text 4.5    | pass       |
+| info on paper                             | 7.96  | text 4.5    | pass       |
 
-| Pairing                         | Ratio | Why it matters                                   |
-| ------------------------------- | ----- | ------------------------------------------------ |
-| ink on clay                     | 2.71  | the old yellow-panel habit; ticket value was 3.21 |
-| clay on ink                     | 2.71  | accent on dark panels uses clay-light instead    |
-| sage on paper / paper on sage   | 2.28  | sage is never text or a line                     |
-| sage on stone                   | 1.92  |                                                  |
-| clay on sage                    | 2.47  |                                                  |
-| clay-light on paper             | 2.37  | clay-light is for ink fields only                |
-| clay-light on clay              | 2.38  | hover rows must switch text to paper             |
-| paper on stone                  | 1.19  |                                                  |
-| fg-muted on sage                | 4.47  | misses AA by 0.03; no muted text on sage         |
+Disallowed pairings (never used for text or lines; the test asserts each is
+below 4.5 so a future edit cannot silently approve them):
 
-Consequence: panels are the pairing, not the use site. A clay panel carries
-paper text; a sage panel carries ink text; an ink panel carries paper text with
-clay-light for accents; paper and stone carry ink, muted, subtle.
+| Pairing                         | Ratio | Why it matters                                                          |
+| ------------------------------- | ----- | ----------------------------------------------------------------------- |
+| paper on ember                  | 3.19  | the habit from the first (terracotta) draft; light text on orange fails |
+| ember on paper                  | 3.19  | orange is never text or a link colour on paper                          |
+| ember on stone / stone on ember | 2.69  |                                                                         |
+| white on ember                  | 3.47  | white is not in the palette and does not fix it                         |
+| ember on sage / sage on ember   | 1.40  |                                                                         |
+| sage on paper / paper on sage   | 2.28  | sage is never text or a line                                            |
+| sage on stone                   | 1.92  |                                                                         |
+| fg-muted on ember               | 3.20  | muted text on orange is forbidden                                       |
+| fg-subtle on ember              | 2.20  | the NH-118 hero placeholder; fails here                                 |
+| danger on ember                 | 2.33  | no error text on orange panels                                          |
+| ember on danger-bg              | 2.78  |                                                                         |
+| fg-muted on sage                | 4.47  | misses AA by 0.03; no muted text on sage                                |
+| paper on stone                  | 1.19  |                                                                         |
+
+Consequence: the panel is the pairing. An orange panel carries ink text and ink
+2 px edges; a sage panel carries ink text; an ink panel carries paper text, with
+orange allowed for large accents; paper and stone carry ink, muted, subtle.
 
 ## D3. Token naming (smallest migration that fails loudly)
 
-Decision: rename the raw palette tokens and the two panel roles, keep every
-other semantic role name.
+Decision: rename the raw palette tokens and the two panel roles, keep every other
+semantic role name.
 
 - Removed: `signal`, `sign-green`, `black`, `white`, `surface.signal`,
-  `surface.green`, and CSS vars `--signal`, `--sign-green`, `--black`,
-  `--white`.
-- Added: `clay`, `clay-light`, `sage`, `paper`, `stone`, `ink`; roles
-  `surface.clay`, `surface.sage`, `surface.inset` (stone), `surface.DEFAULT`
-  (paper), `surface.inverse` (ink); CSS vars `--clay`, `--clay-light`,
-  `--sage`, `--paper`, `--stone`, `--ink`.
+  `surface.green`, and CSS vars `--signal`, `--sign-green`, `--black`, `--white`.
+- Added: `ember`, `sage`, `paper`, `stone`, `ink`; roles `surface.ember`,
+  `surface.sage`, `surface.inset` (stone), `surface.DEFAULT` (paper),
+  `surface.inverse` (ink); CSS vars `--ember`, `--sage`, `--paper`, `--stone`,
+  `--ink`.
 - Kept names, re-pointed values: `fg`, `fg-muted`, `fg-subtle`, `fg-inverse`
   (paper), `border`, `border-muted`, `action`, `action-hover`, `action-fg`
-  (paper), `success`, `warning`, `danger`, `info` and their `bg`/`hover`
-  variants. These are the supported API, so most consumers need no edit.
-- Not chosen: keep `signal`/`sign-green`/`black`/`white` and only swap values.
-  That is the smallest diff but lies about the colour (`bg-signal` would be
-  terracotta) and would let a stale `text-fg` on a former yellow panel pass
-  review, which the contrast numbers show is a failure (2.71). Renaming makes
-  every site that mentions a panel colour a compile-visible edit.
-- `terracotta` is deliberately not reused as a token name: NH-118 removed
-  `terracotta-<n>` and its guard test and spec scenario still reference that
-  scale. `ink` is reused only as a bare name (the old `ink-<n>` numeric scale
-  stays forbidden; the existing regexes require a numeric suffix).
-- Tailwind's built-in `white` and `black` still resolve even when removed from
+  (paper), `success`, `warning`, `danger`, `info` and their `bg`/`hover` variants.
+- Why `ember` and not `orange`: Tailwind ships a built-in `orange` scale, and an
+  `extend.colors.orange` string would shadow it and make `orange-500` and friends
+  silently undefined for anyone who reaches for them. `ember` names the colour
+  without colliding with the default palette, and no old scale (`sand`, `ink-n`,
+  `forest`, `terracotta-n`) uses it.
+- Why not keep `signal`: the name would lie (`bg-signal` is orange, a "signal"
+  that is not yellow) and would let stale usages pass review. Renaming makes
+  every site that names a panel colour a visible edit. It is not a contrast
+  trap this time (ink text stays on the orange panel), so this is chosen for
+  honesty and loudness, not safety.
+- `ink` is reused only as a bare name; the old `ink-<n>` numeric scale stays
+  forbidden (existing regexes need a numeric suffix). `terracotta` is not reused.
+- Tailwind's built-in `white` and `black` still resolve when removed from
   `theme.extend`, so removal alone does not fail loudly. A source-scan test
   forbids `-white`/`-black` colour utilities (including `bg-black/40` in
-  `Modal.tsx` and `text-white` in `ErrorPage.tsx`, which are re-pointed to
-  `bg-ink/40` and `text-fg-inverse`) and hex literals outside the preset and
-  CSS variable block.
+  `Modal.tsx` and `text-white` in `ErrorPage.tsx`, re-pointed to `bg-ink/40` and
+  `text-fg-inverse`) and hex literals outside the preset and CSS variable block.
 
-## D4. Is white still available?
+## D4. White
 
-No. Every use of white (cards, canvas, inverse text) maps to paper or stone. The
-palette is closed at six colours plus the role tints. Pure white would only add
-a seventh surface that clashes with warm paper; paper on clay already passes
-(5.65). Revisit only if the product owner asks for a white card on paper.
+White is not part of the palette (white on ember is 3.47, so it would not fix
+anything). Every white use maps to paper or stone. Revisit only if the product
+owner asks for a white card on paper (Q5).
 
-## D5. Panel text inversion
+## D5. Panel text rules and sites to change
 
-Former yellow panels (`bg-signal` + ink text) become clay panels with paper
-text. Sites to flip (from a source scan; the build/tests must confirm):
-`HeroSection`, `CtaBandSection`, `LocationsSection`, `SearchPage` query band,
-`WorkspaceSection` panel and marker, `HowItWorksSection` step tiles,
-`FeaturedStaysSection` code tiles, `Badge` accent, `Layout` nav button
-(`signalButton`), `ListingCard` hover, `::selection`.
+Former yellow panels keep ink text, so `text-fg` stays. What changes:
 
-- Controls on clay (city input, date fields) keep a paper fill with an ink edge:
-  the control boundary is identified by paper vs clay (5.65), not by ink vs clay
-  (2.71, below the 3:1 UI minimum).
-- Former sign-green panels (`CoLivingSection`, `TestimonialSection`, the hero
-  facts list) become sage with ink text; their `text-signal` pictogram and
-  figures become ink.
-- On ink panels (`Layout` nav, `HomeFooter`, departure board, stats, primary
-  button) former `text-signal` accents become `text-clay-light`; hover rows that
-  fill clay switch the text to paper (clay-light on clay is 2.38).
-- Primary button: ink fill with paper lettering (was black with signal).
-- Card hover fill: stone, not sage, because cards carry fg-subtle text and
-  fg-muted/fg-subtle do not reach AA on sage (4.47 and 3.07). Departure-board
-  row hover and destination-index hover use clay fill with paper text.
-  Open question Q3.
+- **Hero city input** (`HeroSection.tsx`): a transparent field with
+  `placeholder:text-fg-subtle` on orange is 2.20:1. Requirement: either a
+  paper-filled field (fg-subtle on paper 7.01) or `placeholder:text-fg` (ink on
+  orange 4.81). The stay-length "empty" state and date placeholders use
+  `text-fg-muted`/`text-fg-subtle`; they sit in the paper `bg-surface` panel so
+  they stay at 10.20 and 7.01. Nothing in an orange panel may use fg-muted or
+  fg-subtle.
+- **Controls on orange** keep a paper fill with ink text and an ink edge.
+- **Former green panels** (`CoLivingSection`, `TestimonialSection`, the hero facts
+  list) become sage with ink text: `text-fg-inverse` becomes `text-fg`, and
+  pictogram/figure `text-signal` becomes `text-fg`.
+- **Ink panels** (`Layout` nav, `HomeFooter`, departure board, stats, primary
+  button): former `text-signal` accents become `text-ember` only at 18 px bold or
+  larger (prices, stat figures, footer headings); smaller text on ink (nav email,
+  mobile menu email) uses paper. Ember on ink is 4.81:1: passing but thin.
+  Primary button: ink fill, paper lettering.
+- **Hover**: departure-board rows and destination-index rows fill orange with ink
+  text (4.81); the price text on a hovering row switches from ember to ink.
+  Listing-card hover fill is stone, not orange or sage, because cards hold
+  fg-subtle text (2.20 on orange, 3.07 on sage). Open question Q2.
+- **Nav button** (`signalButton`, renamed): orange fill, ink text, hover paper.
+- `::selection`: ember background with ink text (4.81).
+- Accent `Badge`: ember fill, ink text, ink edge.
 
 ## D6. Neutrals and role tokens
 
 Warm-tinted neutrals replace the cool greys: `fg-muted` `#3F3B37`, `fg-subtle`
 `#57534E`, `border-muted` `#6F6A63`, `action-hover` `#333333`, `surface.inset`
-stone. Role tokens are redefined inside the warm palette (table in D2):
-success `#2F5F3E`/`#E4EEE5` (a deep forest green, deliberately not sage so a
-sage panel never reads as "success"), warning `#7A4A00`/`#F6E7C1`, danger
-`#9B1C2E` (hover `#7E1625`)/`#F8E1E0`, info `#1F4E79`/`#E1EBF3`. Tints against
-paper are about 1.1:1, so as in NH-118 they only appear inside badges and error
-text that keep a 2 px edge; state stays carried by shape (D8).
+stone. Role tokens are redefined inside the warm palette (table in D2): success
+`#2F5F3E`/`#E4EEE5` (deep green, deliberately not sage so a sage panel never
+reads as success), warning `#7A4A00`/`#F6E7C1`, danger `#9B1C2E` (hover
+`#7E1625`)/`#F8E1E0`, info `#1F4E79`/`#E1EBF3`. Tints against paper are about
+1.1:1, so as in NH-118 they only appear inside badges and error text that keep a
+2 px edge.
+
+Danger vs orange: hue 351 (crimson) vs 14 (orange), 23 degrees apart, and danger
+on orange is 2.33:1, so error text and destructive buttons never sit on an
+orange panel; errors render in paper-filled areas. Contrast is not the
+issue (danger is far darker than ember); perception on adjacent surfaces is, and
+state stays carried by shape (solid plus struck). Open question Q3.
 
 ## D7. Focus ring
 
-Two layers as in NH-118, re-pointed (outline 3 px at 2 px offset, plus a 2 px
-zero-blur gap shadow):
+Two layers as in NH-118: 3 px outline at 2 px offset plus a 2 px zero-blur gap
+shadow, re-pointed:
 
-| Field          | Outline (`--focus`) | Gap (`--focus-gap`) | Outline vs field | Outline vs gap |
-| -------------- | ------------------- | ------------------- | ---------------- | -------------- |
-| paper          | ink                 | paper               | 15.32            | 15.32          |
-| stone          | ink                 | paper               | 12.90            | 15.32          |
-| sage           | ink                 | paper               | 6.71             | 15.32          |
-| clay           | paper               | ink                 | 5.65             | 15.32          |
-| ink            | paper               | ink                 | 15.32            | 15.32          |
+| Field | Outline (`--focus`) | Gap (`--focus-gap`) | Outline vs field | Outline vs gap | Gap vs field            |
+| ----- | ------------------- | ------------------- | ---------------- | -------------- | ----------------------- |
+| paper | ink                 | paper               | 15.32            | 15.32          | n/a (same)              |
+| stone | ink                 | paper               | 12.90            | 15.32          | 1.19 (decorative layer) |
+| sage  | ink                 | paper               | 6.71             | 15.32          | 2.28 (decorative layer) |
+| ember | ink                 | paper               | 4.81             | 15.32          | 3.19                    |
+| ink   | paper               | ink                 | 15.32            | 15.32          | n/a (same)              |
 
-Default is ink/paper; `[--focus:var(--paper)] [--focus-gap:var(--ink)]` on clay
-and ink fields replaces today's `[--focus:var(--signal)]` on dark fields. Every
-field keeps one layer at 4.5:1 or better, and both layers at 3:1 or better.
-`contrast.test.ts` asserts the table, including that the gap CSS variable is
-declared and used.
+Default is ink/paper, so orange needs no override. Ink fields override with
+`[--focus:var(--paper)] [--focus-gap:var(--ink)]` (replacing today's
+`[--focus:var(--signal)]`). An ember outline on ink with an ink gap also works
+(4.81 against both) but paper is chosen for headroom (15.32). On every field one
+layer reaches at least 4.81:1 against its neighbour and the outline is always at
+least 4.5:1, so the ring clears the 3:1 UI minimum with margin. The gap column is
+a visual separator only; the outline is the compliant layer. `contrast.test.ts`
+asserts the table and that the gap variable is declared and used.
 
 ## D8. State by shape (unchanged)
 
 Solid/dashed/struck grammar, disabled controls (dashed border on stone fill with
 subdued text, struck tertiary) and Badge tones are unchanged in structure; only
-their colour tokens re-point. Disabled text uses fg-subtle on stone (5.91).
-Danger (crimson) and clay (orange-brown) are close in hue family, so shape, not
-colour, keeps carrying error state; see risk in the proposal and Q4.
+colour tokens re-point. Disabled text uses fg-subtle on stone (5.91).
 
-## D9. Accent for text on ink
+## D9. No extra accent token
 
-Clay is 2.71:1 on ink, so the departure-board price, stat figures, footer
-headings and nav email lose their brand accent unless a lighter tone exists.
-One extra token, `clay-light` `#E58A64` (6.47:1 on ink), is proposed, strictly
-for ink fields. The alternative is plain paper for those accents (no new
-token, less brand colour). See Q2.
+The first draft proposed a lighter accent for text on ink. With orange, ember on
+ink is already 4.81:1, so no extra token is added. The thin margin is handled by
+the size rule in D5 (orange text on ink at 18 px bold or larger; smaller text
+uses paper).
 
 ## D10. Hard-coded colour inventory
 
 Found by repo scan; each is a task.
 
-- `packages/ui/src/assets/{favicon,logo-mark,logo-wordmark,logo-wordmark-light}.svg`
-  and `apps/web/public/favicon.svg` (manual copy) and the inline SVG in
-  `apps/web/src/components/Logo.tsx`: `#FFC700` square and `#0A0A0A` arch/base
-  become clay `#A8401F` square with a paper `#F7F5F2` arch and base (paper on
-  clay 5.65; ink on clay would be 2.71); wordmark text ink `#1E1E1E` (light
-  variant paper). Shapes and text paths are unchanged.
-- `apps/web/src/components/DateRangePicker.tsx`: `--rdp-accent-color`
-  `#2E4A3F` and `--rdp-accent-background-color` `#e8f0ed` are stale colours
-  from the pre-NH-118 forest scale that NH-118 missed. They become clay
-  `#A8401F` and stone `#E5E2DD` (selected-day paper text on clay 5.65).
+- `packages/ui/src/assets/{favicon,logo-mark,logo-wordmark,logo-wordmark-light}.svg`,
+  `apps/web/public/favicon.svg` (manual copy) and the inline SVG in
+  `apps/web/src/components/Logo.tsx`: `#FFC700` becomes ember `#E65F35`;
+  `#0A0A0A` arch/base becomes ink `#1E1E1E` (ink on ember 4.81 is above the 3:1
+  graphical-object minimum); wordmark text ink, light variant paper. Shapes and
+  paths unchanged.
+- `apps/web/src/components/DateRangePicker.tsx`: `--rdp-accent-color` `#2E4A3F`
+  and `--rdp-accent-background-color` `#e8f0ed` are stale colours from the
+  pre-NH-118 forest scale that NH-118 missed. They become ember `#E65F35` and
+  stone `#E5E2DD`. The selected-day text must be ink (paper on ember is 3.19), so
+  the task must check what colour the picker draws and override it if needed.
 - `apps/web/e2e/layout.spec.ts`: `SIGNAL_RGB = "rgb(255, 199, 0)"`, two
-  assertions and two test titles ("signal yellow") become the clay RGB
-  `rgb(168, 64, 31)` and "terracotta"; the `section.bg-signal` locator becomes
-  `section.bg-clay`.
+  assertions and two test titles ("signal yellow") become `rgb(230, 95, 53)` and
+  "orange"; the `section.bg-signal` locator becomes `section.bg-ember`.
 - `packages/ui/src/tokens.test.ts` and `contrast.test.ts`: hex and token names.
-- `globals.css` `::selection` and box-shadow elevations in the preset
+- `globals.css` `::selection` and the preset box-shadow elevations
   (`0 1px 0 0 #0A0A0A` and similar): ink `#1E1E1E`.
 - `Modal.tsx` (`bg-black/40`) and `ErrorPage.tsx` (`text-white`), see D3.
 - Docs naming the old palette: `apps/web/DESIGN.md` (regenerated),
   `apps/web/.impeccable/surfaces/src-pages-homepage-tsx.md`, and any hit from a
-  final `rg` over `README.md`, `docs/` and `openspec/project.md` (a prior scan
-  found none for the hex values).
+  final `rg` over `README.md`, `docs/` and `openspec/project.md`.
 
 ## D11. Verification plan
 
-No new visual-regression baseline is added (same stance as NH-118 D6). The
-contrast test is the hard gate; e2e `layout.spec.ts` keeps its screenshots and
-RGB checks with new values. A manual Playwright MCP walk at 360 px and desktop
-covers landing and search, including keyboard focus on a clay field and an ink
-field, and the screenshots are stored in the change `reports/` folder.
+No new visual-regression baseline (same stance as NH-118 D6). The contrast test is
+the hard gate; e2e `layout.spec.ts` keeps its screenshots and RGB checks with new
+values. A manual Playwright MCP walk at 360 px and desktop covers landing and
+search, including the hero placeholder, keyboard focus on an orange field and an
+ink field, and hover rows; screenshots go in the change `reports/` folder.
 
 ## D12. Spec dependency on the NH-118 archive
 
-The `MODIFIED` requirements in `specs/platform/spec.md` copy the text from the
-NH-118 delta (`refresh-visual-identity`), because the NH-118 archive commit
+The `MODIFIED` requirements copy the text from the NH-118 delta
+(`refresh-visual-identity`), because the NH-118 archive commit
 (`chore/NH-118-archive-refresh-visual-identity`) was not on `origin/main` when this
-change was written, so `openspec/specs/platform/spec.md` still carries the
-pre-Gantry wording. `openspec archive warm-palette-swap` requires the NH-118
-archive to be merged first; otherwise the "Brand colour pairings" and "Landing
-and search" headers will not be found. If the archive merges with edits,
-re-copy the final text before Gate 2.
+change was written, so `openspec/specs/platform/spec.md` still carries pre-Gantry
+wording. `openspec archive warm-palette-swap` requires the NH-118 archive to be
+merged first; otherwise the "Brand colour pairings" and "Landing and search"
+headers will not be found. If that archive merges with edits, re-copy the text
+before Gate 2.
 
 ## D13. Out of scope
 
-Layout, copy, typography, spacing, radii, pictogram geometry, dark mode, new
-state treatments, redesign of host/admin/booking/auth/listing-detail screens,
+Layout, copy, typography, spacing, radii, pictogram geometry, dark mode, new state
+treatments, redesign of host/admin/booking/auth/listing-detail screens,
 synthetic-content replacement, search API, `openspec/specs/search`, and any
 colour work beyond the tokens listed here.
 
 ## D14. Mandatory-step applicability
 
 This change touches no backend, API, schema or data. The DB-state steps and the
-curl endpoint step from `docs/openspec-tasks-mandatory-steps.md` are therefore
-N/A and are recorded as such in `tasks.md`; unit tests, the full unit suite,
+curl endpoint step from `docs/openspec-tasks-mandatory-steps.md` are therefore N/A
+and are recorded as such in `tasks.md`; unit tests, the full unit suite,
 Playwright E2E and documentation updates still apply.
 
 ## Open questions (need a human decision)
 
-- Q1. Confirm terracotta `#A8401F` (darkened) instead of `#B84A27`, and sage
-  `#96A8A6`, paper `#F7F5F2`, stone `#E5E2DD`, ink `#1E1E1E` as final values.
-- Q2. Accept the extra accent `clay-light` `#E58A64` for text on ink (D9), or
-  use plain paper for those accents?
-- Q3. Card hover fill: stone (proposed) or sage with ink-only text? Board and
-  destination-index hover use clay with paper text.
-- Q4. Danger crimson `#9B1C2E` next to terracotta: acceptable, or move the error
-  role to a more distinct hue? (Contrast is fine; this is a perception risk.)
-- Q5. Pure white is dropped (D4); confirm no white surface is wanted.
-- Q6. Light text on large terracotta panels replaces black-on-yellow
-  "signal" contrast; confirm after seeing screenshots at Gate 3.
+- Q1. Settled: accent is orange `#E65F35` with ink text, decided by the user
+  after a comparison. Sage `#96A8A6`, paper `#F7F5F2`, stone `#E5E2DD` and ink
+  `#1E1E1E` are taken as final unless the user says otherwise.
+- Q2. Listing-card hover fill: stone (proposed) or sage with ink-only text? Board
+  and destination-index hover use orange with ink text.
+- Q3. Danger crimson `#9B1C2E` is 23 degrees of hue from orange. Acceptable with
+  the rule that errors never sit on orange, or move the error role?
+- Q4. Sage reads flat next to the vivid orange. Proposed: use sage sparingly (for
+  example only the co-living field and the testimonial, not the hero facts list).
+  Which sage panels to keep?
+- Q5. No white surface (D4); confirm.
+- Q6. Confirm the look after screenshots at Gate 3, including ember accents on
+  ink at 4.81:1.
