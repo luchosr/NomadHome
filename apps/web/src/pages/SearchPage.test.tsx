@@ -1,8 +1,9 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { t } from "@nomadhome/shared";
 import { SearchPage } from "./SearchPage.js";
 
 const mockSearch = vi.fn();
@@ -173,5 +174,25 @@ describe("SearchPage", () => {
         capacity: 2,
       }),
     );
+  });
+
+  // Spec: "Search filters adapt by viewport" - one container, side panel on desktop, sheet on mobile.
+  it("renders filters in a labelled side-panel landmark that is a sheet below md", async () => {
+    renderSearch();
+    await userEvent.click(screen.getByRole("button", { name: /filters/i }));
+    const panel = screen.getByRole("complementary", { name: t("search.filter_title") });
+    expect(panel).toHaveClass("fixed"); // mobile sheet
+    expect(panel.className).toMatch(/\bmd:(static|sticky|relative)\b/); // desktop side panel
+  });
+
+  it("keeps the same filter set inside the panel", async () => {
+    renderSearch();
+    await userEvent.click(screen.getByRole("button", { name: /filters/i }));
+    const panel = screen.getByRole("complementary", { name: t("search.filter_title") });
+    expect(within(panel).getByLabelText(/type/i)).toBeInTheDocument();
+    expect(within(panel).getByLabelText(/min price/i)).toBeInTheDocument();
+    expect(within(panel).getByLabelText(/max price/i)).toBeInTheDocument();
+    expect(within(panel).getByLabelText(/min guests/i)).toBeInTheDocument();
+    expect(within(panel).getByLabelText(t("search.filter_amenity_wifi"))).toBeInTheDocument();
   });
 });
