@@ -17,8 +17,8 @@ as NH-118: a `specs/<change>/` folder without `spec.md` would break validation).
 
 ## 1. Red tests: tokens and contrast
 
-- [ ] 1.1 Red: rewrite `packages/ui/src/tokens.test.ts` for the new palette (`ember` `#E65F35`, `sage`, `paper`, `stone`, `ink` exact hex) and add a source scan that fails on `signal`, `sign-green`, `surface-green`, `-black`, `-white` colour utilities and stray hex literals outside the preset and the CSS variable block in `apps/web/src` and `packages/ui/src`
-- [ ] 1.2 Red: rewrite `packages/ui/src/contrast.test.ts` with the approved-pairing table and the disallowed-pairing assertions from design.md D2 (paper on ember 3.19, ember on paper, ember on stone, ember on sage, fg-muted/fg-subtle on ember, danger on ember, sage on paper/stone all asserted below 4.5), role-token pairings, and the focus table from D7 (all five fields, outline and gap layers)
+- [x] 1.1 Red: rewrite `packages/ui/src/tokens.test.ts` for the new palette (`ember` `#E65F35`, `sage`, `paper`, `stone`, `ink` exact hex) and add a source scan that fails on `signal`, `sign-green`, `surface-green`, `-black`, `-white` colour utilities and stray hex literals outside the preset and the CSS variable block in `apps/web/src` and `packages/ui/src`
+- [x] 1.2 Red: rewrite `packages/ui/src/contrast.test.ts` with the approved-pairing table and the disallowed-pairing assertions from design.md D2 (paper on ember 3.19, ember on paper, ember on stone, ember on sage, fg-muted/fg-subtle on ember, danger on ember, sage on paper/stone all asserted below 4.5), role-token pairings, and the focus table from D7 (all five fields, outline and gap layers)
 
 ## 2. Token swap
 
