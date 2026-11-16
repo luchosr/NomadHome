@@ -10,6 +10,18 @@ describe("Card", () => {
     expect(screen.getByText("A quiet desk")).toHaveClass("border");
   });
 
+  it("uses no old Gantry palette classes, including when interactive", () => {
+    render(
+      <>
+        <Card>Plain</Card>
+        <Card interactive>Tappable</Card>
+      </>,
+    );
+    const re = /(?:^|[\s:])[a-z-]*-(?:signal|sign-green|black|white)\b|surface-(?:signal|green)/;
+    expect(screen.getByText("Plain").className).not.toMatch(re);
+    expect(screen.getByText("Tappable").className).not.toMatch(re);
+  });
+
   it("uses no legacy scale classes, including when interactive", () => {
     render(
       <>

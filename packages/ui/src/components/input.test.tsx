@@ -15,6 +15,13 @@ describe("Input", () => {
     expect(screen.getByRole("textbox")).toHaveValue("CDMX");
   });
 
+  it("uses no old Gantry palette classes", () => {
+    render(<Input aria-label="City" />);
+    expect(screen.getByRole("textbox").className).not.toMatch(
+      /(?:^|[\s:])[a-z-]*-(?:signal|sign-green|black|white)\b|surface-(?:signal|green)/,
+    );
+  });
+
   it("uses no legacy scale classes and merges caller classes", () => {
     render(<Input aria-label="City" className="w-24" />);
     const el = screen.getByRole("textbox");
