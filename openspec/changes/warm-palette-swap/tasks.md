@@ -22,34 +22,34 @@ as NH-118: a `specs/<change>/` folder without `spec.md` would break validation).
 
 ## 2. Token swap
 
-- [ ] 2.1 Replace palette, `surface`, `fg`, `border`, `action` and role values in `packages/config/tailwind.preset.js` per design.md D2/D3/D6; update the elevation shadows to `#1E1E1E`
-- [ ] 2.2 Update `packages/ui/src/styles/globals.css`: CSS variables (`--ember`, `--sage`, `--paper`, `--stone`, `--ink`, neutrals), paper canvas, `::selection` (ink on ember), focus variables (ink/paper default) and the ink-field override (paper outline, ink gap) per design.md D7; keep `@tailwind` directives
-- [ ] 2.3 Verify the red tests from 1.1 and 1.2 now fail only on leftover usages (expected list of files from design.md D5/D10)
+- [x] 2.1 Replace palette, `surface`, `fg`, `border`, `action` and role values in `packages/config/tailwind.preset.js` per design.md D2/D3/D6; update the elevation shadows to `#1E1E1E`
+- [x] 2.2 Update `packages/ui/src/styles/globals.css`: CSS variables (`--ember`, `--sage`, `--paper`, `--stone`, `--ink`, neutrals), paper canvas, `::selection` (ink on ember), focus variables (ink/paper default) and the ink-field override (paper outline, ink gap) per design.md D7; keep `@tailwind` directives
+- [x] 2.3 Verify the red tests from 1.1 and 1.2 now fail only on leftover usages (expected list of files from design.md D5/D10)
 
 ## 3. Primitives, logos, favicon, stray colours
 
-- [ ] 3.1 Re-point `Button`, `Badge` (accent to ember with ink text), `Input`, `Card`, `Skeleton`, `Pictogram`, `Arrow` in `packages/ui/src/components/` (no prop or behavior change); update their tests that assert colour classes
-- [ ] 3.2 Re-colour `packages/ui/src/assets/{favicon,logo-mark,logo-wordmark,logo-wordmark-light}.svg`, `apps/web/public/favicon.svg` (keep it in sync with the UI asset) and the inline SVG in `apps/web/src/components/Logo.tsx` per design.md D10 (ember square, ink arch and base, ink wordmark, paper in the light variant; paths unchanged)
-- [ ] 3.3 Replace the hard-coded `--rdp-*` accent colours in `apps/web/src/components/DateRangePicker.tsx` with the ember and stone values and make the selected-day text ink (paper on ember is 3.19); re-point `Modal.tsx` (`bg-ink/40`) and `ErrorPage.tsx` (`text-fg-inverse`)
-- [ ] 3.4 Update `Layout.tsx` (nav, `signalButton` renamed), `HomeFooter.tsx` and every other `apps/web/src` site listed in design.md D5, applying the panel text rules (ink on ember and sage, paper on ink, ember text on ink only at 18 px bold or larger); no fg-muted/fg-subtle on orange or sage; controls on orange keep a paper fill with ink text and an ink edge
+- [x] 3.1 Re-point `Button`, `Badge` (accent to ember with ink text), `Input`, `Card`, `Skeleton`, `Pictogram`, `Arrow` in `packages/ui/src/components/` (no prop or behavior change); update their tests that assert colour classes
+- [x] 3.2 Re-colour `packages/ui/src/assets/{favicon,logo-mark,logo-wordmark,logo-wordmark-light}.svg`, `apps/web/public/favicon.svg` (keep it in sync with the UI asset) and the inline SVG in `apps/web/src/components/Logo.tsx` per design.md D10 (ember square, ink arch and base, ink wordmark, paper in the light variant; paths unchanged)
+- [x] 3.3 Replace the hard-coded `--rdp-*` accent colours in `apps/web/src/components/DateRangePicker.tsx` with the ember and stone values and make the selected-day text ink (paper on ember is 3.19); re-point `Modal.tsx` (`bg-ink/40`) and `ErrorPage.tsx` (`text-fg-inverse`)
+- [x] 3.4 Update `Layout.tsx` (nav, `signalButton` renamed), `HomeFooter.tsx` and every other `apps/web/src` site listed in design.md D5, applying the panel text rules (ink on ember and sage, paper on ink, ember text on ink only at 18 px bold or larger); no fg-muted/fg-subtle on orange or sage; controls on orange keep a paper fill with ink text and an ink edge
 - [ ] 3.5 Fix the hero city input: paper-filled field or `placeholder:text-fg` (ink on ember 4.81), never `placeholder:text-fg-subtle` on orange (2.20); verify with a computed-style check that placeholder and typed text reach 4.5:1
-- [ ] 3.6 Re-point hover states: departure-board and destination-index rows fill ember with ink text (price text switches ember to ink); listing-card hover fill stone (open question Q2)
+- [x] 3.6 Re-point hover states: departure-board and destination-index rows fill ember with ink text (price text switches ember to ink); listing-card hover fill stone (open question Q2)
 
 ## 4. Landing and search verification
 
-- [ ] 4.1 Update `apps/web` landing and search unit tests whose assertions name old colour classes; keep behavior assertions intact
+- [x] 4.1 Update `apps/web` landing and search unit tests whose assertions name old colour classes; keep behavior assertions intact
 - [ ] 4.2 Verify landing at 360 px and desktop: every former yellow panel (now orange) shows ink text, every former green panel (now sage) shows ink text, and the hero placeholder is legible, no clipped text, no horizontal scroll; capture screenshots
 - [ ] 4.3 Verify search at 360 px and desktop (query band, filter panel and sheet, cards, hover and focus states, empty/loading/error states); capture screenshots
 - [ ] 4.4 Keyboard-focus pass on an orange field, a sage field, an ink field and a paper field; confirm the ring is visible on each
 
 ## 5. Contrast test update (green)
 
-- [ ] 5.1 Run `pnpm --filter @nomadhome/ui test`; fix tokens, not thresholds, until the tests from 1.1 and 1.2 pass
-- [ ] 5.2 Update `apps/web/e2e/layout.spec.ts`: `SIGNAL_RGB` to `rgb(230, 95, 53)` (renamed), `section.bg-signal` locator to `section.bg-ember`, test titles to "orange"; keep layout and overlap assertions unchanged
+- [x] 5.1 Run `pnpm --filter @nomadhome/ui test`; fix tokens, not thresholds, until the tests from 1.1 and 1.2 pass
+- [x] 5.2 Update `apps/web/e2e/layout.spec.ts`: `SIGNAL_RGB` to `rgb(230, 95, 53)` (renamed), `section.bg-signal` locator to `section.bg-ember`, test titles to "orange"; keep layout and overlap assertions unchanged
 
 ## 6. Review and update existing unit tests (MANDATORY)
 
-- [ ] 6.1 Review all existing tests affected by the token renames across `packages/ui` and `apps/web`; update stale assertions without weakening them
+- [x] 6.1 Review all existing tests affected by the token renames across `packages/ui` and `apps/web`; update stale assertions without weakening them
 
 ## 7. Docs (MANDATORY)
 
