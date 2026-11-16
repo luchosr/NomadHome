@@ -1,59 +1,65 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T20:18:05.687138Z",
+  "generatedAt": "2026-11-16T23:08:05.548Z",
   "title": "Design System: NomadHome",
   "extensions": {
     "colorMeta": {
-      "signal": {
+      "ember": {
         "role": "primary",
-        "displayName": "Signal Yellow",
-        "canonical": "#FFC700",
+        "displayName": "Ember",
+        "canonical": "#E65F35",
         "tonalRamp": [
-          "#3D2F00",
-          "#665000",
-          "#8F7000",
-          "#B89000",
-          "#FFC700",
-          "#FFD633",
-          "#FFE266",
-          "#FFF1B8"
+          "#2E1208",
+          "#5C2410",
+          "#8A3718",
+          "#B84A22",
+          "#E65F35",
+          "#EE8562",
+          "#F4AC90",
+          "#FAD6C8"
         ]
       },
-      "sign-green": {
+      "sage": {
         "role": "secondary",
-        "displayName": "Sign Green",
-        "canonical": "#00704A",
+        "displayName": "Sage",
+        "canonical": "#96A8A6",
         "tonalRamp": [
-          "#00241A",
-          "#003D29",
-          "#00573A",
-          "#00704A",
-          "#2E8F68",
-          "#66AF92",
-          "#A3CFBD",
-          "#E3F1EA"
+          "#1F2827",
+          "#364240",
+          "#4F5F5D",
+          "#6B7E7C",
+          "#96A8A6",
+          "#B0BFBD",
+          "#CBD6D5",
+          "#E6ECEB"
         ]
       },
-      "black": {
+      "ink": {
         "role": "neutral",
-        "displayName": "Gantry Black",
-        "canonical": "#0A0A0A",
+        "displayName": "Ink",
+        "canonical": "#1E1E1E",
         "tonalRamp": [
-          "#0A0A0A",
-          "#1A1A1A",
-          "#2B2B2B",
-          "#404040",
-          "#545454",
-          "#767676",
-          "#B5B5B5",
-          "#F2F2F2"
+          "#1E1E1E",
+          "#333333",
+          "#3F3B37",
+          "#57534E",
+          "#6F6A63",
+          "#A8A39C",
+          "#CFCBC5",
+          "#E5E2DD"
         ]
       },
-      "white": {
+      "paper": {
         "role": "neutral",
-        "displayName": "Sign White",
-        "canonical": "#FFFFFF",
-        "tonalRamp": ["#F2F2F2", "#F7F7F7", "#FFFFFF"]
+        "displayName": "Paper",
+        "canonical": "#F7F5F2",
+        "tonalRamp": ["#E5E2DD", "#EFEDE8", "#F7F5F2"]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone",
+        "canonical": "#E5E2DD",
+        "tonalRamp": ["#C9C5BE", "#D8D4CE", "#E5E2DD", "#EFEDE8"]
       }
     },
     "typographyMeta": {
@@ -85,7 +91,7 @@
     "shadows": [
       {
         "name": "hard-bar-reserved",
-        "value": "0 4px 0 0 #0A0A0A",
+        "value": "0 4px 0 0 #1E1E1E",
         "purpose": "Defined in the preset (xs 1px, sm 2px, md 4px, lg 6px), unused by surveyed components."
       }
     ],
@@ -122,17 +128,17 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Black action panel with signal lettering; dashed when disabled.",
+      "description": "Ink action panel with paper lettering; dashed when disabled.",
       "html": "<button class=\"ds-btn-primary\">Search</button> <button class=\"ds-btn-primary\" disabled>Search</button>",
-      "css": ".ds-btn-primary{font:700 14px/1.25 'Overpass Variable',sans-serif;background:#0A0A0A;color:#FFC700;border:2px solid #0A0A0A;border-radius:2px;padding:14px 22px;cursor:pointer;transition:background-color 220ms cubic-bezier(.22,.61,.36,1)}.ds-btn-primary:hover{background:#2B2B2B}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:3px solid #0A0A0A;outline-offset:2px;box-shadow:0 0 0 2px #fff}.ds-btn-primary:disabled{border-style:dashed;border-color:#767676;background:#F2F2F2;color:#545454;pointer-events:none}"
+      "css": ".ds-btn-primary{font:700 14px/1.25 'Overpass Variable',sans-serif;background:#1E1E1E;color:#F7F5F2;border:2px solid #1E1E1E;border-radius:2px;padding:14px 22px;cursor:pointer;transition:background-color 220ms cubic-bezier(.22,.61,.36,1)}.ds-btn-primary:hover{background:#333333}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:3px solid #1E1E1E;outline-offset:2px;box-shadow:0 0 0 2px #F7F5F2}.ds-btn-primary:disabled{border-style:dashed;border-color:#6F6A63;background:#E5E2DD;color:#57534E;pointer-events:none}"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Outlined panel on white.",
+      "description": "Outlined panel on paper.",
       "html": "<button class=\"ds-btn-secondary\">Clear filters</button>",
-      "css": ".ds-btn-secondary{font:700 14px/1.25 'Overpass Variable',sans-serif;background:transparent;color:#0A0A0A;border:2px solid #0A0A0A;border-radius:2px;padding:14px 22px;cursor:pointer;transition:background-color 220ms}.ds-btn-secondary:hover{background:#F2F2F2}.ds-btn-secondary:focus-visible{outline:3px solid #0A0A0A;outline-offset:2px;box-shadow:0 0 0 2px #fff}"
+      "css": ".ds-btn-secondary{font:700 14px/1.25 'Overpass Variable',sans-serif;background:transparent;color:#1E1E1E;border:2px solid #1E1E1E;border-radius:2px;padding:14px 22px;cursor:pointer;transition:background-color 220ms}.ds-btn-secondary:hover{background:#E5E2DD}.ds-btn-secondary:focus-visible{outline:3px solid #1E1E1E;outline-offset:2px;box-shadow:0 0 0 2px #F7F5F2}"
     },
     {
       "name": "Text Input",
@@ -140,7 +146,7 @@
       "refersTo": "input",
       "description": "2px black edge, flat; invalid uses the danger edge.",
       "html": "<input class=\"ds-input\" placeholder=\"Check-in\"> <input class=\"ds-input\" disabled placeholder=\"Disabled\">",
-      "css": ".ds-input{font:400 16px 'Overpass Variable',sans-serif;width:200px;background:#fff;color:#0A0A0A;border:2px solid #0A0A0A;border-radius:2px;padding:12px 16px;transition:background-color 140ms}.ds-input::placeholder{color:#545454}.ds-input:focus-visible{outline:3px solid #0A0A0A;outline-offset:2px;box-shadow:0 0 0 2px #fff}.ds-input:disabled{border-style:dashed;border-color:#767676;background:#F2F2F2;color:#545454}"
+      "css": ".ds-input{font:400 16px 'Overpass Variable',sans-serif;width:200px;background:#F7F5F2;color:#1E1E1E;border:2px solid #1E1E1E;border-radius:2px;padding:12px 16px;transition:background-color 140ms}.ds-input::placeholder{color:#57534E}.ds-input:focus-visible{outline:3px solid #1E1E1E;outline-offset:2px;box-shadow:0 0 0 2px #F7F5F2}.ds-input:disabled{border-style:dashed;border-color:#6F6A63;background:#E5E2DD;color:#57534E}"
     },
     {
       "name": "Status Badges",
@@ -148,52 +154,73 @@
       "refersTo": "badge-accent",
       "description": "State by outline: solid, dashed, struck.",
       "html": "<span class=\"ds-badge ds-b-ok\">Available</span> <span class=\"ds-badge ds-b-warn\">Filling soon</span> <span class=\"ds-badge ds-b-no\">Full</span> <span class=\"ds-badge ds-b-acc\">Workspace</span>",
-      "css": ".ds-badge{display:inline-flex;font:700 12px 'Overpass Variable',sans-serif;border:2px solid;border-radius:4px;padding:4px 12px}.ds-b-ok{border-color:#00704A;background:#E3F1EA;color:#00704A}.ds-b-warn{border-style:dashed;border-color:#7A4F00;background:#FFF1B8;color:#7A4F00}.ds-b-no{border-color:#B00020;background:#FBE3E6;color:#B00020;text-decoration:line-through}.ds-b-acc{border-color:#0A0A0A;background:#FFC700;color:#0A0A0A}"
+      "css": ".ds-badge{display:inline-flex;font:700 12px 'Overpass Variable',sans-serif;border:2px solid;border-radius:4px;padding:4px 12px}.ds-b-ok{border-color:#2F5F3E;background:#E4EEE5;color:#2F5F3E}.ds-b-warn{border-style:dashed;border-color:#7A4A00;background:#F6E7C1;color:#7A4A00}.ds-b-no{border-color:#9B1C2E;background:#F8E1E0;color:#9B1C2E;text-decoration:line-through}.ds-b-acc{border-color:#1E1E1E;background:#E65F35;color:#1E1E1E}"
     },
     {
       "name": "Result Card",
       "kind": "card",
       "refersTo": "listing-card-hover",
-      "description": "Search result panel: photo well, title, city, price, amenities; fills signal on hover.",
+      "description": "Search result panel: photo well, title, city, price, amenities; fills stone on hover.",
       "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-card-img\">Photo</div><div class=\"ds-card-body\"><h3>Casa del Fig</h3><p class=\"ds-city\">Oaxaca, Mexico</p><p><span class=\"ds-price\">$85</span> <b>/ night</b></p></div></a>",
-      "css": ".ds-card{display:block;width:260px;border:2px solid #0A0A0A;background:#fff;color:#0A0A0A;text-decoration:none;font-family:'Overpass Variable',sans-serif;transition:background-color 220ms}.ds-card:hover,.ds-card:focus-visible{background:#FFC700}.ds-card-img{aspect-ratio:4/3;background:#F2F2F2;border-bottom:2px solid #0A0A0A;display:flex;align-items:center;justify-content:center;color:#545454}.ds-card-body{padding:16px}.ds-card h3{margin:0;font-weight:900;font-size:18px;line-height:1.25}.ds-city{margin:4px 0 12px;font-size:14px;font-weight:500;color:#404040}.ds-price{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}"
+      "css": ".ds-card{display:block;width:260px;border:2px solid #1E1E1E;background:#F7F5F2;color:#1E1E1E;text-decoration:none;font-family:'Overpass Variable',sans-serif;transition:background-color 220ms}.ds-card:hover,.ds-card:focus-visible{background:#E5E2DD}.ds-card-img{aspect-ratio:4/3;background:#E5E2DD;border-bottom:2px solid #1E1E1E;display:flex;align-items:center;justify-content:center;color:#57534E}.ds-card-body{padding:16px}.ds-card h3{margin:0;font-weight:900;font-size:18px;line-height:1.25}.ds-city{margin:4px 0 12px;font-size:14px;font-weight:500;color:#3F3B37}.ds-price{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}"
     },
     {
       "name": "Departure Board Row",
       "kind": "custom",
       "refersTo": "nav",
-      "description": "Signature: black board row with signal code tile, title, signal price and arrow tile; inverts to signal on hover.",
+      "description": "Signature: ink board row with ember code tile, title, ember price and arrow tile; inverts to ember with ink text on hover.",
       "html": "<a class=\"ds-row\" href=\"#\"><span class=\"ds-code\">OAX</span><span class=\"ds-title\">Casa del Fig</span><span class=\"ds-rprice\">$1,100 / mo</span><span class=\"ds-arrow\"><svg viewBox=\"0 0 32 32\" width=\"24\" height=\"24\" fill=\"currentColor\"><path d=\"M3 12h14V4l13 12-13 12v-8H3z\"/></svg></span></a>",
-      "css": ".ds-row{display:flex;align-items:center;gap:16px;width:560px;max-width:100%;box-sizing:border-box;padding:16px;background:#0A0A0A;color:#fff;border:2px solid #0A0A0A;text-decoration:none;font-family:'Overpass Variable',sans-serif;transition:background-color 220ms}.ds-code{display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:#FFC700;color:#0A0A0A;font-weight:900;font-size:24px}.ds-title{flex:1;font-weight:900;font-size:28px;line-height:.92}.ds-rprice{font-weight:900;font-size:24px;color:#FFC700}.ds-arrow{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:2px solid #fff}.ds-row:hover{background:#FFC700;color:#0A0A0A}.ds-row:hover .ds-code{background:#0A0A0A;color:#FFC700}.ds-row:hover .ds-rprice{color:#0A0A0A}.ds-row:hover .ds-arrow{border-color:#0A0A0A;background:#0A0A0A;color:#FFC700}"
+      "css": ".ds-row{display:flex;align-items:center;gap:16px;width:560px;max-width:100%;box-sizing:border-box;padding:16px;background:#1E1E1E;color:#F7F5F2;border:2px solid #1E1E1E;text-decoration:none;font-family:'Overpass Variable',sans-serif;transition:background-color 220ms}.ds-code{display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:#E65F35;color:#1E1E1E;font-weight:900;font-size:24px}.ds-title{flex:1;font-weight:900;font-size:28px;line-height:.92}.ds-rprice{font-weight:900;font-size:24px;color:#E65F35}.ds-arrow{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:2px solid #F7F5F2}.ds-row:hover{background:#E65F35;color:#1E1E1E}.ds-row:hover .ds-code{background:#1E1E1E;color:#E65F35}.ds-row:hover .ds-rprice{color:#1E1E1E}.ds-row:hover .ds-arrow{border-color:#1E1E1E;background:#1E1E1E;color:#E65F35}"
     },
     {
       "name": "Pictogram Panel",
       "kind": "custom",
       "refersTo": "button-primary",
-      "description": "Bed and desk pictograms on sign green, joined to the action by an arrow.",
+      "description": "Bed pictogram in ember on an ink panel (the sign panel carried by the sage co-living field).",
       "html": "<div class=\"ds-pic\"><svg viewBox=\"0 0 32 32\" width=\"40\" height=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"square\" stroke-linejoin=\"miter\"><path d=\"M4 5v22\"/><path d=\"M4 22h24v5\"/><rect x=\"4\" y=\"15\" width=\"24\" height=\"7\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7\" y=\"10\" width=\"8\" height=\"5\" fill=\"currentColor\" stroke=\"none\"/></svg><b>Live</b></div>",
-      "css": ".ds-pic{display:inline-flex;align-items:center;gap:12px;background:#00704A;color:#fff;border:2px solid #0A0A0A;padding:12px 16px;font:900 18px 'Overpass Variable',sans-serif}"
+      "css": ".ds-pic{display:inline-flex;align-items:center;gap:12px;background:#1E1E1E;color:#E65F35;border:2px solid #1E1E1E;padding:12px 16px;font:900 18px 'Overpass Variable',sans-serif}"
     }
   ],
   "narrative": {
     "northStar": "Gantry Signage",
-    "overview": "The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from four materials, signal yellow, black, white and sign green, each held by a 2px black edge. Nothing floats and nothing blurs. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count. Meaning travels by shape before colour: a state is a solid, dashed or struck outline, a connector is an arrow, a kind of space is a drawn pictogram.",
+    "overview": "The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from a warm palette, ember orange, ink, paper and sage with stone as the inset, each held by a 2px ink edge. Nothing floats and nothing blurs. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count. Meaning travels by shape before colour: a state is a solid, dashed or struck outline, a connector is an arrow, a kind of space is a drawn pictogram.",
     "keyCharacteristics": [
-      "Four materials only: signal yellow, black, white, sign green; fields are full-bleed and separated by a 2px black rule.",
-      "2px black edge on every panel, 0 to 4px corners, zero blur shadows.",
+      "Five palette names only: ember, sage, paper, stone, ink. There is no white surface.",
+      "Fields are full-bleed and separated by a 2px ink rule; every panel carries a 2px ink edge.",
+      "0 to 4px corners, zero blur shadows.",
       "Overpass Variable throughout; Black (900) set solid for display and numerals.",
       "State by outline shape: solid, dashed, struck.",
       "Authored SVG pictograms and a solid arrow replace icon libraries."
     ],
     "rules": [
       {
-        "name": "The Four Materials Rule",
-        "body": "Backgrounds are signal, black, white or sign green. Status tints appear only inside badges and error text.",
+        "name": "The Panel Is The Pairing Rule",
+        "body": "Ember and sage panels carry ink text and ink 2px edges; ink panels carry paper text; paper and stone carry ink, muted or subtle ink. Controls on orange take a paper fill with ink text and an ink edge.",
         "section": "colors"
       },
       {
-        "name": "The Ink-On-Field Rule",
-        "body": "Black text on signal and white; signal text on black; white text on green. Signal never sits on white as text.",
+        "name": "The Ember Text Rule",
+        "body": "Ember is text only on ink and only at 18px bold or larger (4.81:1). Never ember text on paper, stone or sage.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Muted On Colour Rule",
+        "body": "fg-muted and fg-subtle never sit on ember or sage.",
+        "section": "colors"
+      },
+      {
+        "name": "The Danger Rule",
+        "body": "Danger crimson (#9B1C2E) text and destructive buttons never sit on an orange panel; state stays carried by shape.",
+        "section": "colors"
+      },
+      {
+        "name": "The No White Rule",
+        "body": "White is not in the palette; every light surface is paper or stone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sage Sparingly Rule",
+        "body": "Sage is background only, used for the co-living field, the testimonial field and the hero facts list, and never as a bare block without an ink panel or paper card on it.",
         "section": "colors"
       },
       {
@@ -208,22 +235,27 @@
       },
       {
         "name": "The Flat Panel Rule",
-        "body": "A raised surface is a white or coloured panel with a 2px black edge. Hover changes fill, never adds a shadow.",
+        "body": "A raised surface is a paper or coloured panel with a 2px ink edge. Hover changes fill, never adds a shadow.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do separate sections with full-bleed colour fields and a 2px black rule.",
+      "Do separate sections with full-bleed colour fields and a 2px ink rule.",
+      "Do put ink text and ink edges on ember and sage; put paper-filled controls on orange.",
+      "Do use ember as text only on ink and only at 18px bold or larger.",
       "Do carry state by outline shape (solid, dashed, struck) as well as colour.",
       "Do set places, prices and counts in Black weight, solid leading, tabular numerals.",
       "Do use the authored Pictogram and Arrow components for kind-of-space and connection; add glyphs to the same 32 grid.",
-      "Do keep every focus ring two-layer, and flip the focus colour to the field's contrast partner.",
+      "Do keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.",
       "Do write user-facing strings through t()."
     ],
     "donts": [
+      "Don't use fg-muted or fg-subtle on ember or sage.",
+      "Don't put danger text or destructive buttons on an orange panel.",
+      "Don't introduce a white surface, a sixth palette colour or colour-only status.",
+      "Don't use sage as text or a line, or as a bare block with nothing on it.",
+      "Don't put ember text on paper, stone or sage.",
       "Don't add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.",
-      "Don't introduce a fifth surface colour or colour-only status.",
-      "Don't put signal-coloured text on white.",
       "Don't use icon fonts or third-party icon sets for wayfinding glyphs."
     ]
   }

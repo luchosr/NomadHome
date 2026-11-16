@@ -1,24 +1,25 @@
 ---
 name: NomadHome
-description: Gantry signage for long stays; flat black-edged panels, signal yellow, solid Black-weight type, state by shape.
+description: Gantry signage for long stays in a warm palette; flat ink-edged panels, ember orange, sage and paper, solid Black-weight type, state by shape.
 colors:
-  signal: "#FFC700"
-  black: "#0A0A0A"
-  white: "#FFFFFF"
-  sign-green: "#00704A"
-  surface-inset: "#F2F2F2"
-  action-hover: "#2B2B2B"
-  fg-muted: "#404040"
-  fg-subtle: "#545454"
-  border-muted: "#767676"
-  success-bg: "#E3F1EA"
-  warning: "#7A4F00"
-  warning-bg: "#FFF1B8"
-  danger: "#B00020"
-  danger-hover: "#8A0019"
-  danger-bg: "#FBE3E6"
-  info: "#00508C"
-  info-bg: "#E1EDF7"
+  ember: "#E65F35"
+  sage: "#96A8A6"
+  paper: "#F7F5F2"
+  stone: "#E5E2DD"
+  ink: "#1E1E1E"
+  fg-muted: "#3F3B37"
+  fg-subtle: "#57534E"
+  border-muted: "#6F6A63"
+  action-hover: "#333333"
+  success: "#2F5F3E"
+  success-bg: "#E4EEE5"
+  warning: "#7A4A00"
+  warning-bg: "#F6E7C1"
+  danger: "#9B1C2E"
+  danger-hover: "#7E1625"
+  danger-bg: "#F8E1E0"
+  info: "#1F4E79"
+  info-bg: "#E1EBF3"
 typography:
   display:
     fontFamily: "Overpass Variable, Overpass, -apple-system, Segoe UI, sans-serif"
@@ -72,60 +73,60 @@ spacing:
   24: "96px"
 components:
   button-primary:
-    backgroundColor: "{colors.black}"
-    textColor: "{colors.signal}"
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
     rounded: "{rounded.sm}"
     padding: "14px 22px"
     typography: "{typography.label}"
   button-primary-hover:
     backgroundColor: "{colors.action-hover}"
   button-primary-disabled:
-    backgroundColor: "{colors.surface-inset}"
+    backgroundColor: "{colors.stone}"
     textColor: "{colors.fg-subtle}"
   button-secondary:
-    backgroundColor: "{colors.white}"
-    textColor: "{colors.black}"
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.sm}"
     padding: "14px 22px"
   button-secondary-hover:
-    backgroundColor: "{colors.surface-inset}"
+    backgroundColor: "{colors.stone}"
   button-destructive:
     backgroundColor: "{colors.danger}"
-    textColor: "{colors.white}"
+    textColor: "{colors.paper}"
     rounded: "{rounded.sm}"
     padding: "14px 22px"
   button-destructive-hover:
     backgroundColor: "{colors.danger-hover}"
   input:
-    backgroundColor: "{colors.white}"
-    textColor: "{colors.black}"
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.sm}"
     padding: "12px 16px"
   input-disabled:
-    backgroundColor: "{colors.surface-inset}"
+    backgroundColor: "{colors.stone}"
     textColor: "{colors.fg-subtle}"
   badge-accent:
-    backgroundColor: "{colors.signal}"
-    textColor: "{colors.black}"
+    backgroundColor: "{colors.ember}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.card}"
     padding: "4px 12px"
   badge-success:
     backgroundColor: "{colors.success-bg}"
-    textColor: "{colors.sign-green}"
+    textColor: "{colors.success}"
     rounded: "{rounded.card}"
     padding: "4px 12px"
   card:
-    backgroundColor: "{colors.white}"
-    textColor: "{colors.black}"
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.card}"
     padding: "20px"
   nav:
-    backgroundColor: "{colors.black}"
-    textColor: "{colors.white}"
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
     height: "58px"
   listing-card-hover:
-    backgroundColor: "{colors.signal}"
-    textColor: "{colors.black}"
+    backgroundColor: "{colors.stone}"
+    textColor: "{colors.ink}"
 ---
 
 # Design System: NomadHome
@@ -134,48 +135,53 @@ components:
 
 **Creative North Star: "Gantry Signage"**
 
-The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from four materials, signal yellow, black, white and sign green, each held by a 2px black edge. Nothing floats and nothing blurs; depth is a hard bar or an edge, never a glow. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count, so the page scans like a board rather than a brochure.
+The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from a warm palette, ember orange, ink, paper and sage with stone as the inset, each held by a 2px ink edge. Nothing floats and nothing blurs; depth is a hard bar or an edge, never a glow. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count, so the page scans like a board rather than a brochure.
 
-Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on a yellow hero that works as a departure form, then continues as a black departure board of stays, a black three-step strip, a green co-living field, a destination index on yellow, and a black stat strip. Search keeps the same signs at a calmer density: a yellow query band, a white filter panel, and bordered result panels.
+Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on an ember hero that works as a departure form, then continues as an ink departure board of stays, an ink three-step strip, a sage co-living field carrying a paper sign panel, an ember destination index, and an ink stat strip. Search keeps the same signs at a calmer density: an ember query band, a paper filter panel, and bordered result panels.
 
-This file records what shipped. It describes the replacement of the earlier sand, forest and terracotta look only by absence; none of those values remain.
+This file records what shipped. The earlier yellow, black and green palette is gone; none of its values remain in source except as negative guards in tests.
 
 **Key Characteristics:**
 
-- Four materials only: signal yellow, black, white, sign green; fields are full-bleed and separated by a 2px black rule.
-- 2px black edge on every panel, 0 to 4px corners, zero blur shadows.
+- Five palette names only: ember, sage, paper, stone, ink. There is no white surface.
+- Fields are full-bleed and separated by a 2px ink rule; every panel carries a 2px ink edge.
+- 0 to 4px corners, zero blur shadows.
 - Overpass Variable throughout; Black (900) set solid for display and numerals.
 - State by outline shape: solid, dashed, struck.
 - Authored SVG pictograms and a solid arrow replace icon libraries.
 
 ## Colors
 
-A four-material signage palette with black as the structural ink and a small set of tonal status colours darkened for AA text on their pale fills.
+A warm palette with ink as the structural colour. The panel is the pairing: each field has exactly one approved text colour (ratios computed with the WCAG 2.1 formula, asserted in packages/ui/src/contrast.test.ts).
 
 ### Primary
 
-- **Signal Yellow** (#FFC700): hero, destination index and CTA fields; the accent badge; lettering on black panels (prices, codes, primary button text); hover fill for result cards and departure-board rows; text selection.
+- **Ember** (#E65F35): hero, destination index, query band and CTA fields; the accent badge; the selection highlight; hover fill for departure-board rows and unchecked filter chips; large accent text on ink panels (prices, stat figures, footer headings, step numerals, pictograms) at 18px bold or larger.
 
 ### Secondary
 
-- **Sign Green** (#00704A): the co-living field, the live/work pictogram panel, success text and edge. White text sits on it.
+- **Sage** (#96A8A6): the co-living field, the testimonial field and the hero facts list. Background only: never text, never a line, never a bare block. A sage field always holds ink text and, for anything substantial, an ink panel or a paper card.
 
 ### Neutral
 
-- **Black** (#0A0A0A): nav, departure board, stat tiles, primary button fill, every panel edge, body text.
-- **White** (#FFFFFF): the canvas and every raised panel.
-- **Inset Grey** (#F2F2F2): image wells, disabled fills, secondary and card hover.
-- **Muted Ink** (#404040) and **Subtle Ink** (#545454): secondary text and placeholders; **Muted Edge** (#767676) for neutral badge edges and disabled outlines.
-- **Action Hover** (#2B2B2B): primary button hover.
+- **Ink** (#1E1E1E): nav, departure board, stat tiles, primary button fill, every panel edge, body text, the default focus outline.
+- **Paper** (#F7F5F2): the canvas, every raised panel and every control fill, including controls on orange; text on ink.
+- **Stone** (#E5E2DD): image wells, disabled fills, secondary-button, interactive-card and listing-card hover.
+- **Muted Ink** (#3F3B37) and **Subtle Ink** (#57534E): secondary text and placeholders on paper and stone only; **Muted Edge** (#6F6A63) for neutral badge edges and disabled outlines.
+- **Action Hover** (#333333): primary button hover.
 
 ### Status (badges, errors)
 
-- Success: Sign Green on #E3F1EA. Warning: #7A4F00 on #FFF1B8. Danger: #B00020 (hover #8A0019) on #FBE3E6. Info: #00508C on #E1EDF7.
+- Success: #2F5F3E on #E4EEE5 (a deep green, deliberately not sage). Warning: #7A4A00 on #F6E7C1. Danger: #9B1C2E (hover #7E1625) on #F8E1E0. Info: #1F4E79 on #E1EBF3. Tints sit near 1.1:1 against paper, so they appear only inside badges and error text that keep a 2px edge.
 
 ### Named Rules
 
-**The Four Materials Rule.** Backgrounds are signal, black, white or sign green. Status tints appear only inside badges and error text.
-**The Ink-On-Field Rule.** Black text on signal and white; signal text on black; white text on green. Signal never sits on white as text.
+**The Panel Is The Pairing Rule.** Ember and sage panels carry ink text and ink 2px edges (ink on ember 4.81, ink on sage 6.71). Ink panels carry paper text (15.32). Paper and stone carry ink, muted or subtle ink. Controls on orange take a paper fill with ink text and an ink edge.
+**The Ember Text Rule.** Ember is text only on ink, and only at 18px bold or larger (4.81, thin). Ember on paper is 3.19, on stone 2.69, on sage 1.40: never text, never a link colour on a light surface. Smaller text on ink is paper.
+**The No Muted On Colour Rule.** fg-muted and fg-subtle never sit on ember (3.20, 2.20) or sage (4.47, 3.07). The hero city placeholder is ink for that reason.
+**The Danger Rule.** Danger crimson (#9B1C2E) is 23 degrees of hue from ember and 2.33:1 on it: error text and destructive buttons never sit on an orange panel; errors render in paper areas and state stays carried by shape (solid plus struck).
+**The No White Rule.** White is not in the palette (white on ember is 3.47). Every light surface is paper or stone.
+**The Sage Sparingly Rule.** Use sage for the co-living field, the testimonial field and the hero facts list; never as a bare block without an ink panel or paper card on it.
 
 ## Typography
 
@@ -201,57 +207,62 @@ A four-material signage palette with black as the structural ink and a small set
 
 ## Layout
 
-Content sits in a centred 1280px wrapper with 24px gutters (48px from md). Sections are full-bleed colour fields with 64px (96px from md) vertical padding, separated by a 2px black rule. The hero is a two-column form at lg (fluid destination left, 26rem white date panel right, a full-width action row below with pictogram panel, arrow and a 80px-tall Search button) and stacks below. The departure board is a CSS grid whose areas reflow between a three-column mobile layout and a five-column lg row (code, thumbnail, city and title, price, arrow). Search places a 18rem sticky filter panel beside results at md, and turns it into a bottom sheet with a scrim below md. The spacing scale is 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96px. Mobile holds down to 360px. The nav is sticky at 58px (56px plus a 2px bottom rule) and scroll padding is 4.5rem so focus stays clear of it.
+Content sits in a centred 1280px wrapper with 24px gutters (48px from md). Sections are full-bleed colour fields with 64px (96px from md) vertical padding, separated by a 2px ink rule. The hero is a two-column form at lg (fluid destination left, 26rem paper date panel right, a full-width action row below with pictogram panel, arrow and a 80px-tall Search button) and stacks below. The departure board is a CSS grid whose areas reflow between a three-column mobile layout and a five-column lg row (code, thumbnail, city and title, price, arrow). Search places a 18rem sticky filter panel beside results at md, and turns it into a bottom sheet with a scrim below md. The spacing scale is 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96px. Mobile holds down to 360px. The nav is sticky at 58px (56px plus a 2px bottom rule) and scroll padding is 4.5rem so focus stays clear of it.
 
 ## Elevation & Depth
 
-Flat. Depth comes from edges, field colour changes and inversion on hover, not blur. The preset defines hard-bar shadows (0 1px, 2px, 4px, 6px offset, zero blur, black) but the surveyed components use none of them; treat them as reserved. No gradients, no glass.
+Flat. Depth comes from edges, field colour changes and inversion on hover, not blur. The preset defines hard-bar shadows (0 1px, 2px, 4px, 6px offset, zero blur, ink) but the surveyed components use none of them; treat them as reserved. No gradients, no glass.
 
 ### Named Rules
 
-**The Flat Panel Rule.** A raised surface is a white or coloured panel with a 2px black edge. Hover changes fill (to signal, inset grey or black), never adds a shadow.
+**The Flat Panel Rule.** A raised surface is a paper or coloured panel with a 2px ink edge. Hover changes fill (to ember, ink, stone), never adds a shadow.
 
 ## Shapes
 
-Square signs. Radius is 0 for the hero destination field and image-bearing badges inside cards, 2px for buttons and inputs, 4px for cards and badges; board rows, stat tiles and index rows are square. The 2px edge is drawn as a 2px border, or as a 1px border plus 1px inset ring on secondary buttons and Card, which is how the primitives keep a 2px edge. Pictograms share a 32 grid with 3-unit strokes, square caps and mitred joins, filled masses in currentColor; the arrow is a solid right-pointing block arrow. The logo is a signal square with a black arch over a base bar.
+Square signs. Radius is 0 for the hero destination field and image-bearing badges inside cards, 2px for buttons and inputs, 4px for cards and badges; board rows, stat tiles and index rows are square. The 2px edge is drawn as a 2px border, or as a 1px border plus 1px inset ring on secondary buttons and Card, which is how the primitives keep a 2px edge. Pictograms share a 32 grid with 3-unit strokes, square caps and mitred joins, filled masses in currentColor; the arrow is a solid right-pointing block arrow. The logo is an ember square with an ink arch over a base bar.
 
 ## Components
 
 ### Buttons
 
-- **Primary:** black fill, signal lettering, 2px black border, 2px radius, 14px 22px padding, 14px bold. Hover #2B2B2B; active nudges 1px down. The hero submit enlarges it to 80px minimum height and up to 2.25rem lettering.
-- **Secondary:** transparent, black text, 2px black edge, hover inset grey.
+- **Primary:** ink fill, paper lettering, 2px ink border, 2px radius, 14px 22px padding, 14px bold. Hover #333333; active nudges 1px down. The hero submit enlarges it to 80px minimum height and up to 2.25rem lettering.
+- **Secondary:** transparent, ink text, 2px ink edge, hover stone.
 - **Tertiary:** text-only link style, underline on hover.
-- **Destructive:** danger fill, white text, darker on hover.
-- **Disabled:** shape change, not only colour. Primary and secondary become dashed muted-edge on inset grey with subtle ink; tertiary is struck through.
+- **Destructive:** danger fill, paper text, darker on hover; never on an orange panel.
+- **Disabled:** shape change, not only colour. Primary and secondary become dashed muted-edge on stone with subtle ink; tertiary is struck through.
 
 ### Inputs
 
-- 2px black edge, white fill, 2px radius, 12px 16px padding, subtle-ink placeholder. Focus turns the fill white and applies the focus ring. Invalid swaps the edge to danger; disabled is dashed on inset grey. The hero city field is the exception: borderless with a 4px bottom rule that is dashed while empty and carries Black display type, and its focus ring replaces the rule colour.
+- 2px ink edge, paper fill, 2px radius, 12px 16px padding, subtle-ink placeholder. Invalid swaps the edge to danger; disabled is dashed on stone. The hero city field is the exception: borderless and transparent on the ember panel with a 4px bottom rule that is dashed while empty and carries Black display type; its placeholder is the same ink as typed text (4.81), told apart by the dashed rule, and its focus ring replaces the rule colour.
 
 ### Badges
 
-- Tone is carried by outline: neutral, success and info solid; warning dashed; danger solid and struck; accent is signal fill with black edge. Over images the accent badge is square and pinned to the top-left corner with right and bottom edges only.
+- Tone is carried by outline: neutral, success and info solid; warning dashed; danger solid and struck; accent is ember fill, ink text and ink edge. Over images the accent badge is square and pinned to the top-left corner with right and bottom edges only.
 
 ### Cards and panels
 
-- **Card primitive:** white, 4px radius, 2px edge, 20px padding, no shadow; interactive variant fills inset grey on hover.
-- **Result card (Search):** link panel with a 2px edge, 4:3 photo well (bed or desk pictogram when there is no photo), title (900, clamp to two lines), city, 30px price with tabular numerals, up to three amenities with square 8px markers. Hover and focus fill signal. Fixed title and amenity heights keep prices aligned across a row.
-- **Departure board row:** black board of full-width link rows divided by 2px white rules; each row has a signal code tile, thumbnail, city, large title, signal price, tone badge and an arrow tile. Hover and focus invert to signal fill with black text and a black focus ring.
-- **Destination index row:** city names at up to 8rem on yellow with a trailing arrow; hover inverts to black with signal text.
-- **Stat tile and step tile:** black tile with signal figure or numbered signal square.
+- **Card primitive:** paper, 4px radius, 2px edge, 20px padding, no shadow; interactive variant fills stone on hover.
+- **Result card (Search):** link panel with a 2px edge, 4:3 photo well on stone (bed or desk pictogram when there is no photo), title (900, clamp to two lines), city, 30px price with tabular numerals, up to three amenities with square 8px markers. Hover and focus fill stone (the card holds fg-muted and fg-subtle, which fail on ember and sage). Fixed title and amenity heights keep prices aligned across a row.
+- **Departure board row:** ink board of full-width link rows divided by 2px paper rules; each row has an ember code tile, thumbnail, city, large title, ember price, tone badge and an arrow tile. Hover and focus invert to ember fill with ink text; the price and code tile switch to ink and the arrow tile to ink with an ember arrow. On a hovered row the accent badge keeps only its ink outline.
+- **Destination index row:** city names at up to 8rem on ember with a trailing arrow; hover and focus invert to ink with paper text (not orange, because the band is already orange).
+- **Stat tile and step tile:** ink tile with ember figure or numbered ember square carrying ink digits.
+- **Sign panel on sage:** the co-living field holds a paper panel whose left half is ink, carrying an ember pictogram and ember rate figure.
 
 ### Navigation
 
-- Sticky, black, 2px bottom rule, 1280px inner wrapper. Logo mark plus name in 900 at 1.25rem. Links 14px bold white, underline on hover. Primary action is a signal button (hover to white); secondary is a white-outlined button inverting on hover. Logged-in mobile collapses to a bordered menu toggle and a dropdown under a white rule. The focus colour on the nav is signal.
+- Sticky, ink, 2px bottom rule, 1280px inner wrapper. Logo mark plus name in 900 at 1.25rem. Links 14px bold paper, underline on hover. Primary action is an ember button with ink text (hover to paper); secondary is a paper-outlined button inverting on hover. Logged-in mobile collapses to a bordered menu toggle and a dropdown under a paper rule. The focus outline on the nav is paper.
 
 ### Filter chips (Search)
 
-- Bordered 2px chips, white, hover signal, checked black with signal text and a check mark.
+- Bordered 2px chips, paper, hover ember, checked ink with paper text and a check mark.
 
 ### Focus
 
-- Two layers: a 3px outline in the focus colour at 2px offset plus a 2px white gap ring. The focus colour is black by default and flips to signal on black or green fields; board rows flip back to black when they turn signal.
+- Two layers: a 3px outline at 2px offset plus a 2px zero-blur gap ring. Default is an ink outline with a paper gap, which serves paper (15.32), stone (12.90), sage (6.71) and ember (4.81). Ink fields override to a paper outline with an ink gap (15.32). Board rows turn ember on focus and keep the ink outline inset; destination rows turn ink and flip to a paper outline. Secondary buttons use a 1px inset ring that replaces the gap layer; the outline layer alone still passes. The native date-picker indicator keeps Chrome's own focus ring.
+
+### Hover grammar
+
+- Board rows: ember fill, ink text. Destination rows: ink fill, paper text. Cards: stone. Primary buttons: #333333. Secondary buttons: stone. Unchecked chips: ember with ink text. A hovered fill is always a colour whose approved text pairing is already in the rows above.
 
 ### Motion
 
@@ -261,20 +272,29 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 
 ### Do:
 
-- **Do** separate sections with full-bleed colour fields and a 2px black rule.
+- **Do** separate sections with full-bleed colour fields and a 2px ink rule.
+- **Do** put ink text and ink edges on ember and sage; put paper-filled controls on orange.
+- **Do** use ember as text only on ink and only at 18px bold or larger.
 - **Do** carry state by outline shape (solid, dashed, struck) as well as colour.
 - **Do** set places, prices and counts in Black weight, solid leading, tabular numerals.
 - **Do** use the authored Pictogram and Arrow components for kind-of-space and connection; add glyphs to the same 32 grid.
-- **Do** keep every focus ring two-layer, and flip the focus colour to the field's contrast partner.
-- **Do** write user-facing strings through `t()`.
+- **Do** keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.
+- **Do** write user-facing strings through t().
 
 ### Don't:
 
+- **Don't** use fg-muted or fg-subtle on ember or sage.
+- **Don't** put danger text or destructive buttons on an orange panel.
+- **Don't** introduce a white surface, a sixth palette colour or colour-only status.
+- **Don't** use sage as text or a line, or as a bare block with nothing on it.
+- **Don't** put ember text on paper, stone or sage.
 - **Don't** add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.
-- **Don't** introduce a fifth surface colour or colour-only status.
-- **Don't** put signal-coloured text on white.
 - **Don't** use icon fonts or third-party icon sets for wayfinding glyphs.
+
+## Known build notes (not rules)
+
+Accepted at the finish review (disposition ship), recorded in openspec/changes/warm-palette-swap/design.md: the hero 0-nights numeral is fg-subtle on paper (7.01) and may be quieted later; the error state was not visually captured; the date-input calendar icon keeps the native focus ring.
 
 ## Disclosed placeholders (not brand rules)
 
-The following are synthetic demo content in the build, flagged in source and in openspec/changes/refresh-visual-identity/design.md (D8, D9), and must be replaced or removed before public launch; they are not design-system content and must not be reused as patterns of truth: the stats strip (4 cities, 142 rooms, 92%, +62 NPS), the testimonial and its attribution, the featured stays (codes, titles, prices, state tags), the destination index entries and details, the co-living example monthly rate, and the remote Unsplash photos. PRODUCT.md forbids fabricated testimonials or usage statistics; the board's tag tones (available, featured, filling soon) illustrate badge shapes only.
+The following are synthetic demo content in the build, flagged in source and in openspec/changes/refresh-visual-identity/design.md (D8, D9), unchanged by warm-palette-swap, and must be replaced or removed before public launch; they are not design-system content and must not be reused as patterns of truth: the stats strip (4 cities, 142 rooms, 92%, +62 NPS), the testimonial and its attribution, the featured stays (codes, titles, prices, state tags), the destination index entries and details, the co-living example monthly rate, and the remote Unsplash photos. PRODUCT.md forbids fabricated testimonials or usage statistics; the board's tag tones (available, featured, filling soon) illustrate badge shapes only.
