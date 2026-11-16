@@ -123,6 +123,15 @@ Each must carry a code comment marking it synthetic. They MUST be replaced with
 real data or removed before public launch (task 11.1); presenting them as real
 metrics or testimonials is a trust and legal risk.
 
+The landing's featured-stay, co-living, workspace and location **photos** are
+also placeholders: remote Unsplash and picsum.photos URLs (some are random
+picsum seeds), unchanged from before NH-118. They are kept by explicit user
+decision, carry no provenance or licence guarantee, depend on network access,
+and are not the product's own photography. They MUST be replaced with the
+product's real or properly licensed, self-hosted photography before public
+launch (task 11.1). The photos in screenshots of the search results come from a
+mocked payload, not from product data.
+
 ## D9. Out of scope / follow-ups
 
 Follow-up tickets (to be created after this change): host dashboard and
