@@ -53,8 +53,8 @@ as NH-118: a `specs/<change>/` folder without `spec.md` would break validation).
 
 ## 7. Docs (MANDATORY)
 
-- [ ] 7.1 Regenerate `apps/web/DESIGN.md` with Impeccable `document` from the shipped build (new palette names, contrast rules, "Four Materials" and "Ink-On-Field" rules rewritten for the warm palette, including that orange is never text on light surfaces)
-- [ ] 7.2 Update `apps/web/.impeccable/surfaces/src-pages-homepage-tsx.md` and any hit from `rg -i "FFC700|signal yellow|sign green|00704A" README.md docs openspec/project.md apps/web` (excluding archived changes)
+- [x] 7.1 Regenerate `apps/web/DESIGN.md` with Impeccable `document` from the shipped build (new palette names, contrast rules, "Four Materials" and "Ink-On-Field" rules rewritten for the warm palette, including that orange is never text on light surfaces)
+- [x] 7.2 Update `apps/web/.impeccable/surfaces/src-pages-homepage-tsx.md` and any hit from `rg -i "FFC700|signal yellow|sign green|00704A" README.md docs openspec/project.md apps/web` (excluding archived changes)
 
 ## 8. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
@@ -74,7 +74,7 @@ as NH-118: a `specs/<change>/` folder without `spec.md` would break validation).
 
 ## 11. Final verification
 
-- [ ] 11.1 `rg -i "#FFC700|#00704A|#0A0A0A|signal|sign-green" apps/web/src packages/ui/src packages/config apps/web/public apps/web/e2e` returns nothing outside design notes
+- [x] 11.1 `rg -i "#FFC700|#00704A|#0A0A0A|signal|sign-green" apps/web/src packages/ui/src packages/config apps/web/public apps/web/e2e` returns nothing outside design notes
 - [ ] 11.2 `node scripts/check-mvp-scope.mjs` and `openspec validate warm-palette-swap --strict` pass
 - [ ] 11.3 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
-- [ ] 11.4 Resolve or record answers to open questions Q2-Q6 (Q1 is settled) in `design.md` before Gate 3
+- [x] 11.4 Resolve or record answers to open questions Q2-Q6 (Q1 is settled) in `design.md` before Gate 3

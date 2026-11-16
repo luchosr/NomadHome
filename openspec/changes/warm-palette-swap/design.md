@@ -262,13 +262,36 @@ Playwright E2E and documentation updates still apply.
 - Q1. Settled: accent is orange `#E65F35` with ink text, decided by the user
   after a comparison. Sage `#96A8A6`, paper `#F7F5F2`, stone `#E5E2DD` and ink
   `#1E1E1E` are taken as final unless the user says otherwise.
-- Q2. Listing-card hover fill: stone (proposed) or sage with ink-only text? Board
-  and destination-index hover use orange with ink text.
-- Q3. Danger crimson `#9B1C2E` is 23 degrees of hue from orange. Acceptable with
-  the rule that errors never sit on orange, or move the error role?
-- Q4. Sage reads flat next to the vivid orange. Proposed: use sage sparingly (for
-  example only the co-living field and the testimonial, not the hero facts list).
-  Which sage panels to keep?
-- Q5. No white surface (D4); confirm.
-- Q6. Confirm the look after screenshots at Gate 3, including ember accents on
-  ink at 4.81:1.
+- Q2. DECISION: listing-card hover fill is stone with ink text. Board rows and
+  destination-index rows keep their own hover fills (see the accepted notes).
+- Q3. DECISION: danger crimson `#9B1C2E` is accepted, with the rule that danger
+  text and destructive buttons never sit on an orange panel (D6).
+- Q4. DECISION: sage is used sparingly (co-living field, testimonial field, hero
+  facts list) and never as a bare block: it always has an ink panel or a paper
+  card on it.
+- Q5. DECISION: no white surface (D4). Every light surface is paper or stone.
+- Q6. DECISION: the look is confirmed, including ember accents on ink at 4.81:1,
+  through the independent finish review (disposition `ship`) and the focus and
+  hover verification report
+  (`reports/2026-11-17-focus-hover-verification.md`).
+
+## Accepted notes at the finish review
+
+Recorded as accepted, not defects:
+
+- Destination-index rows hover to ink with paper text, not orange, because the
+  band is already orange (an orange hover would be invisible).
+- The hero 0-nights numeral is fg-subtle on paper (7.01) and may be quieted later.
+- The hero city placeholder is the same ink as typed text (4.81 on ember); the
+  dashed underline tells them apart (D5 option). A paper-filled field is the
+  alternative if this is revisited.
+- On hovered board rows the accent badge keeps only its ink outline.
+- The date-input native calendar icon keeps Chrome's native focus ring (not
+  measured numerically, not tokenised).
+- The Filters toggle and panel Close use `ring-1 ring-inset`, which replaces the
+  gap layer, so only the outline layer shows; it still passes (ink on ember 4.81,
+  ink on paper 15.32).
+- The error state was not visually captured; it is covered by unit tests and the
+  role pairings in `contrast.test.ts`.
+- Pre-existing and unrelated: the e2e `us-4.1-booking.spec.ts` hardcodes
+  `localhost:5173` in a mocked checkout URL. Follow-up, not part of this change.
