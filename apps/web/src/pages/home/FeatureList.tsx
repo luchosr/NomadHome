@@ -8,7 +8,7 @@ interface Props {
   className?: string;
 }
 
-/** Ruled list that inherits the field's text colour, so it reads on white and on sign green. */
+/** Ruled list that inherits the field's text colour, so it reads on paper and on sage. */
 export function FeatureList({ features, flush = false, className = "mt-8" }: Props) {
   return (
     <ul
