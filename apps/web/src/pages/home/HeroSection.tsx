@@ -27,7 +27,7 @@ export function HeroSection() {
     useHomeSearch();
 
   return (
-    <section aria-labelledby="hero-title" className="border-b-2 border-border bg-signal">
+    <section aria-labelledby="hero-title" className="border-b-2 border-border bg-ember">
       <div className={`${WRAP} py-10 md:py-16`}>
         <form
           className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]"
@@ -50,7 +50,7 @@ export function HeroSection() {
               <Input
                 id="city-search"
                 autoComplete="off"
-                className={`rounded-none border-0 border-b-4 bg-transparent px-0 py-0 font-display font-black leading-[0.85] tracking-tight placeholder:text-fg-subtle focus-visible:border-transparent focus-visible:bg-transparent ${city ? "" : "border-dashed"}`}
+                className={`rounded-none border-0 border-b-4 bg-transparent px-0 py-0 font-display font-black leading-[0.85] tracking-tight placeholder:text-fg focus-visible:border-transparent focus-visible:bg-transparent ${city ? "" : "border-dashed"}`}
                 style={{ fontSize: destinationSize(city.length) }}
                 placeholder={t("home.hero.search_placeholder")}
                 value={city}
@@ -105,7 +105,7 @@ export function HeroSection() {
           </div>
 
           <div className="flex items-stretch gap-3 sm:gap-5 lg:col-span-2">
-            <ul className="m-0 flex list-none flex-col justify-center gap-3 border-2 border-border bg-sign-green px-4 py-3 text-fg-inverse">
+            <ul className="m-0 flex list-none flex-col justify-center gap-3 border-2 border-border bg-sage px-4 py-3 text-fg">
               <li className="flex items-center gap-3 text-lg font-black">
                 <Pictogram name="bed" className="size-9 shrink-0 sm:size-10" />
                 {t("home.hero.live_label")}

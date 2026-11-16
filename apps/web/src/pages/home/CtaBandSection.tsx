@@ -8,7 +8,7 @@ export function CtaBandSection() {
   const { user } = useAuth();
 
   return (
-    <section className={`${FIELD} bg-signal`}>
+    <section className={`${FIELD} bg-ember`}>
       <div className={WRAP}>
         <h2 className="m-0 max-w-[16ch] text-5xl font-black leading-solid">
           {t("home.cta.headline_pre")} {t("home.cta.headline_em")}.
@@ -19,7 +19,7 @@ export function CtaBandSection() {
         <div className="mt-10 flex flex-wrap gap-4">
           <Link
             to="/search"
-            className="inline-flex items-center gap-4 border-2 border-border bg-action px-8 py-5 text-2xl font-black text-signal no-underline transition-colors hover:bg-action-hover"
+            className="inline-flex items-center gap-4 border-2 border-border bg-action px-8 py-5 text-2xl font-black text-action-fg no-underline transition-colors hover:bg-action-hover"
           >
             {t("search.submit")}
             <Arrow className="size-7" />
@@ -27,7 +27,7 @@ export function CtaBandSection() {
           {!user && (
             <Link
               to="/register"
-              className="inline-flex items-center border-2 border-border px-8 py-5 text-2xl font-black text-fg no-underline transition-colors hover:bg-action hover:text-signal"
+              className="inline-flex items-center border-2 border-border bg-surface px-8 py-5 text-2xl font-black text-fg no-underline transition-colors hover:bg-action hover:text-action-fg"
             >
               {t("nav.register")}
             </Link>

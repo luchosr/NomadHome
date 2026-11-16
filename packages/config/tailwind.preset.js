@@ -2,52 +2,54 @@
  * Shared Tailwind preset for the NomadHome workspace.
  * Apps and the UI package extend this via `presets: [nomadhomePreset]`.
  *
- * Gantry Signage tokens: signal yellow, black, white and sign green.
- * Semantic roles (surface, fg, border, action, success) are the supported
- * API; the raw palette names exist so roles can reference them.
+ * Gantry Signage tokens in the warm palette: ember (orange panel), sage, paper,
+ * stone and ink. Semantic roles (surface, fg, border, action, success) are the
+ * supported API; the raw palette names exist so roles can reference them.
  */
-const BLACK = "#0A0A0A";
-const WHITE = "#FFFFFF";
-const SIGNAL = "#FFC700";
-const SIGN_GREEN = "#00704A";
+const INK = "#1E1E1E";
+const PAPER = "#F7F5F2";
+const STONE = "#E5E2DD";
+const EMBER = "#E65F35";
+const SAGE = "#96A8A6";
 
 export default {
   theme: {
     extend: {
       colors: {
         // Brand palette
-        signal: SIGNAL,
-        "sign-green": SIGN_GREEN,
-        black: BLACK,
-        white: WHITE,
+        ember: EMBER,
+        sage: SAGE,
+        paper: PAPER,
+        stone: STONE,
+        ink: INK,
         // Semantic roles
         surface: {
-          DEFAULT: WHITE,
-          raised: WHITE,
-          inset: "#F2F2F2",
-          inverse: BLACK,
-          signal: SIGNAL,
-          green: SIGN_GREEN,
+          DEFAULT: PAPER,
+          raised: PAPER,
+          inset: STONE,
+          inverse: INK,
+          ember: EMBER,
+          sage: SAGE,
         },
         fg: {
-          DEFAULT: BLACK,
-          muted: "#404040",
-          subtle: "#545454",
-          inverse: WHITE,
+          DEFAULT: INK,
+          muted: "#3F3B37",
+          subtle: "#57534E",
+          inverse: PAPER,
         },
         border: {
-          DEFAULT: BLACK,
-          muted: "#767676",
+          DEFAULT: INK,
+          muted: "#6F6A63",
         },
         action: {
-          DEFAULT: BLACK,
-          hover: "#2B2B2B",
-          fg: WHITE,
+          DEFAULT: INK,
+          hover: "#333333",
+          fg: PAPER,
         },
-        success: { DEFAULT: SIGN_GREEN, bg: "#E3F1EA" },
-        warning: { DEFAULT: "#7A4F00", bg: "#FFF1B8" },
-        danger: { DEFAULT: "#B00020", hover: "#8A0019", bg: "#FBE3E6" },
-        info: { DEFAULT: "#00508C", bg: "#E1EDF7" },
+        success: { DEFAULT: "#2F5F3E", bg: "#E4EEE5" },
+        warning: { DEFAULT: "#7A4A00", bg: "#F6E7C1" },
+        danger: { DEFAULT: "#9B1C2E", hover: "#7E1625", bg: "#F8E1E0" },
+        info: { DEFAULT: "#1F4E79", bg: "#E1EBF3" },
       },
       fontFamily: {
         display: ['"Overpass Variable"', "Overpass", "-apple-system", '"Segoe UI"', "sans-serif"],
@@ -107,10 +109,10 @@ export default {
       },
       // Flat elevations: a hard bar under the panel, zero blur.
       boxShadow: {
-        xs: "0 1px 0 0 #0A0A0A",
-        sm: "0 2px 0 0 #0A0A0A",
-        md: "0 4px 0 0 #0A0A0A",
-        lg: "0 6px 0 0 #0A0A0A",
+        xs: "0 1px 0 0 #1E1E1E",
+        sm: "0 2px 0 0 #1E1E1E",
+        md: "0 4px 0 0 #1E1E1E",
+        lg: "0 6px 0 0 #1E1E1E",
       },
       transitionTimingFunction: {
         out: "cubic-bezier(0.22, 0.61, 0.36, 1)",

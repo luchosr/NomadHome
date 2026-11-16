@@ -25,18 +25,18 @@ export function FeaturedStaysSection() {
           </Link>
         </div>
 
-        {/* Departure board: one full-width black row per stay. Rows are real links and invert to
-            signal on hover and focus. The focus ring flips to black because the row turns signal. */}
+        {/* Departure board: one full-width ink row per stay. Rows are real links and invert to
+            ember on hover and focus. The focus ring stays ink because the row turns ember. */}
         <ul className="m-0 mt-12 list-none border-2 border-border bg-surface-inverse p-0 text-fg-inverse">
           {FEATURED_CARDS.map((card, i) => (
             <li key={card.titleKey} className={i > 0 ? "border-t-2 border-fg-inverse" : undefined}>
               <Link
                 to="/search"
-                className="group grid items-center gap-x-4 gap-y-3 p-4 text-fg-inverse no-underline transition-colors duration-med ease-out [grid-template-areas:'code_city_arrow''thumb_info_info''price_price_price'] [grid-template-columns:6rem_minmax(0,1fr)_auto] hover:bg-signal hover:text-fg focus-visible:bg-signal focus-visible:text-fg focus-visible:[--focus:var(--black)] focus-visible:-outline-offset-[5px] lg:gap-x-6 lg:gap-y-0 lg:p-5 lg:[grid-template-areas:'code_thumb_city_price_arrow''code_thumb_info_price_arrow'] lg:[grid-template-columns:4.5rem_9rem_minmax(0,1fr)_auto_2.75rem]"
+                className="group grid items-center gap-x-4 gap-y-3 p-4 text-fg-inverse no-underline transition-colors duration-med ease-out [grid-template-areas:'code_city_arrow''thumb_info_info''price_price_price'] [grid-template-columns:6rem_minmax(0,1fr)_auto] hover:bg-ember hover:text-fg focus-visible:bg-ember focus-visible:text-fg focus-visible:[--focus:var(--ink)] focus-visible:-outline-offset-[5px] lg:gap-x-6 lg:gap-y-0 lg:p-5 lg:[grid-template-areas:'code_thumb_city_price_arrow''code_thumb_info_price_arrow'] lg:[grid-template-columns:4.5rem_9rem_minmax(0,1fr)_auto_2.75rem]"
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-16 items-center justify-center bg-signal font-display text-2xl font-black leading-none text-fg transition-colors group-hover:bg-surface-inverse group-hover:text-signal group-focus-visible:bg-surface-inverse group-focus-visible:text-signal [grid-area:code] lg:size-[4.5rem]"
+                  className="flex size-16 items-center justify-center bg-ember font-display text-2xl font-black leading-none text-fg transition-colors group-hover:bg-surface-inverse group-hover:text-ember group-focus-visible:bg-surface-inverse group-focus-visible:text-ember [grid-area:code] lg:size-[4.5rem]"
                 >
                   {t(card.codeKey)}
                 </span>
@@ -56,14 +56,14 @@ export function FeaturedStaysSection() {
                   <p className="m-0 mt-2 text-sm font-medium">{t(card.metaKey)}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 [grid-area:price] lg:flex-col lg:items-end">
-                  <span className="whitespace-nowrap font-display text-3xl font-black leading-none text-signal transition-colors group-hover:text-fg group-focus-visible:text-fg lg:text-4xl">
+                  <span className="whitespace-nowrap font-display text-3xl font-black leading-none text-ember transition-colors group-hover:text-fg group-focus-visible:text-fg lg:text-4xl">
                     {t(card.priceKey)}
                   </span>
                   <Badge tone={card.tagTone}>{t(card.tagKey)}</Badge>
                 </div>
                 <span
                   aria-hidden="true"
-                  className="flex size-11 items-center justify-center border-2 border-fg-inverse transition-colors group-hover:border-border group-hover:bg-surface-inverse group-hover:text-signal group-focus-visible:border-border group-focus-visible:bg-surface-inverse group-focus-visible:text-signal [grid-area:arrow] lg:size-11"
+                  className="flex size-11 items-center justify-center border-2 border-fg-inverse transition-colors group-hover:border-border group-hover:bg-surface-inverse group-hover:text-ember group-focus-visible:border-border group-focus-visible:bg-surface-inverse group-focus-visible:text-ember [grid-area:arrow] lg:size-11"
                 >
                   <Arrow className="size-6" />
                 </span>

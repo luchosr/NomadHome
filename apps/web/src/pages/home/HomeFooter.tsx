@@ -7,7 +7,7 @@ const footerLink =
 
 export function HomeFooter() {
   return (
-    <footer className="bg-surface-inverse pb-10 pt-16 text-fg-inverse [--focus:var(--signal)]">
+    <footer className="bg-surface-inverse pb-10 pt-16 text-fg-inverse [--focus:var(--paper)] [--focus-gap:var(--ink)]">
       <div className={WRAP}>
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
@@ -16,7 +16,7 @@ export function HomeFooter() {
           </div>
           {FOOTER_NAV_COLS.map((col) => (
             <div key={col.hKey}>
-              <h3 className="mb-3 text-base font-black text-signal">{t(col.hKey)}</h3>
+              <h3 className="mb-3 text-lg font-black text-ember">{t(col.hKey)}</h3>
               {col.links.map((l) => (
                 <a key={l} href="#" className={footerLink}>
                   {t(l)}

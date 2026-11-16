@@ -33,7 +33,7 @@ export function WorkspaceSection() {
               loading="lazy"
             />
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-2 border-border bg-surface-inverse px-6 py-5 text-fg-inverse">
-              <span aria-hidden="true" className="h-4 w-4 shrink-0 bg-signal" />
+              <span aria-hidden="true" className="h-4 w-4 shrink-0 bg-ember" />
               <p className="m-0 text-lg font-black">{t("home.workspace.status_open")}</p>
               <p className="m-0 text-base font-bold sm:ml-auto">
                 {t("home.workspace.status_desks")}
@@ -43,7 +43,7 @@ export function WorkspaceSection() {
           <div aria-hidden="true" className="flex justify-center py-3">
             <Arrow className="size-12 rotate-90" />
           </div>
-          <div className="overflow-hidden border-2 border-border bg-signal text-fg">
+          <div className="overflow-hidden border-2 border-border bg-ember text-fg">
             <FeatureList features={WORKSPACE_FEATURES} flush />
           </div>
         </div>

@@ -6,7 +6,7 @@ export type CardProps = HTMLAttributes<HTMLDivElement> & {
   interactive?: boolean;
 };
 
-/** Flat sign panel: 2px black edge, no shadow, no gradient. */
+/** Flat sign panel: 2px ink edge, no shadow, no gradient. */
 export function Card({ className, interactive = false, ...props }: CardProps) {
   return (
     <div

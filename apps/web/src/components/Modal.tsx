@@ -8,7 +8,7 @@ interface Props {
 export function Modal({ labelledBy, children }: Props) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40"
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledBy}

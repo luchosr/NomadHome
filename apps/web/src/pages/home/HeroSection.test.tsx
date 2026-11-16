@@ -57,6 +57,34 @@ describe("HeroSection first viewport", () => {
   });
 });
 
+// Spec (warm-palette-swap): placeholder text on orange is ink or sits in a paper field;
+// fg-subtle on ember is 2.20:1 and fg-muted 3.20:1 (design.md D2/D5).
+describe("HeroSection placeholder legibility on the orange panel", () => {
+  it("never styles the city placeholder with fg-subtle or fg-muted directly on orange", () => {
+    renderHero();
+    const input = screen.getByLabelText(t("home.hero.search_label"));
+    const cls = input.className;
+    const paperFilled = /(?:^|\s)bg-surface(?:\s|$)/.test(cls);
+    const inkPlaceholder = /placeholder:text-fg(?:\s|$)/.test(cls);
+    expect(paperFilled || inkPlaceholder).toBe(true);
+    if (!paperFilled) expect(cls).not.toMatch(/placeholder:text-fg-(?:subtle|muted)/);
+  });
+
+  it("uses no old Gantry palette classes in the hero", () => {
+    const { container } = renderHero();
+    expect(container.innerHTML).not.toMatch(
+      /(?:^|[\s"':])(?:bg|text|border|ring|outline|fill|stroke|from|to|via|divide|placeholder|decoration|shadow|accent|caret)-(?:signal|sign-green|black|white)\b|surface-(?:signal|green)/,
+    );
+  });
+
+  it("puts the hero on the ember panel with ink text", () => {
+    const { container } = renderHero();
+    const section = container.querySelector("section")!;
+    expect(section).toHaveClass("bg-ember");
+    expect(section.className).not.toMatch(/text-fg-inverse/);
+  });
+});
+
 describe("HeroSection search submit (behavior unchanged)", () => {
   it("navigates to /search with the city query param", async () => {
     renderHero();

@@ -69,7 +69,7 @@ export function SearchPage() {
 
   return (
     <form onSubmit={onSubmit}>
-      <section className="border-b-2 border-border bg-signal">
+      <section className="border-b-2 border-border bg-ember">
         <div className={`${WRAP} py-5 md:py-10`}>
           <h1 className="m-0 mb-4 text-2xl font-black leading-tight text-fg md:mb-6 md:text-3xl">
             {t("search.page_title")}
@@ -88,7 +88,9 @@ export function SearchPage() {
                 {...register("city")}
               />
               {errors.city && (
-                <p className="mt-1 text-sm font-bold text-danger">{errors.city.message}</p>
+                <p className="m-0 mt-1 inline-block border-2 border-danger bg-danger-bg px-3 py-1 text-sm font-bold text-danger">
+                  {errors.city.message}
+                </p>
               )}
             </div>
             <div>

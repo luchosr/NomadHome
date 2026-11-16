@@ -32,7 +32,7 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
   return (
     <Link
       to={`/listings/${listing.id}`}
-      className="group flex h-full flex-col border-2 border-border bg-surface text-fg no-underline transition-colors duration-med ease-out hover:bg-signal focus-visible:bg-signal"
+      className="group flex h-full flex-col border-2 border-border bg-surface text-fg no-underline transition-colors duration-med ease-out hover:bg-surface-inset focus-visible:bg-surface-inset"
     >
       <div className="border-b-2 border-border">
         <div className="relative aspect-[4/3] bg-surface-inset">

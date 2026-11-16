@@ -4,6 +4,9 @@ import { Badge } from "./badge.js";
 
 const LEGACY_SCALE_CLASS = /(?:^|[\s:])[a-z-]*-(?:sand|ink|forest|terracotta)-\d+/;
 
+const OLD_GANTRY_CLASS =
+  /(?:^|[\s:])[a-z-]*-(?:signal|sign-green|black|white)\b|surface-(?:signal|green)/;
+
 describe("Badge", () => {
   it("renders its children", () => {
     render(<Badge>Resident</Badge>);
@@ -20,6 +23,20 @@ describe("Badge", () => {
     (tone) => {
       render(<Badge tone={tone}>{tone}</Badge>);
       expect(screen.getByText(tone).className).not.toMatch(LEGACY_SCALE_CLASS);
+    },
+  );
+
+  // Spec (warm-palette-swap): accent badge is ember fill, ink text, ink edge.
+  it("renders the accent tone as an ember fill with ink text and an ink edge", () => {
+    render(<Badge tone="accent">New</Badge>);
+    expect(screen.getByText("New")).toHaveClass("bg-ember", "text-fg", "border-border");
+  });
+
+  it.each(["neutral", "success", "warning", "danger", "info", "accent"] as const)(
+    "tone %s uses no old Gantry palette classes",
+    (tone) => {
+      render(<Badge tone={tone}>{tone}</Badge>);
+      expect(screen.getByText(tone).className).not.toMatch(OLD_GANTRY_CLASS);
     },
   );
 

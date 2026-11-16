@@ -149,3 +149,4 @@ vite.config.ts.timestamp-*
 packages/db/generated/
 .deepsec/
 apps/web/test-results/
+apps/web/.impeccable/review/

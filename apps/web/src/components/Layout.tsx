@@ -13,8 +13,8 @@ function HomeLogo() {
 }
 
 const navLink = "text-sm font-bold text-fg-inverse underline-offset-4 no-underline hover:underline";
-const signalButton =
-  "rounded-sm border-2 border-signal bg-signal px-4 py-2 text-sm font-bold text-fg no-underline transition-colors hover:bg-fg-inverse hover:border-fg-inverse";
+const emberButton =
+  "rounded-sm border-2 border-ember bg-ember px-4 py-2 text-sm font-bold text-fg no-underline transition-colors hover:border-fg-inverse hover:bg-fg-inverse";
 const outlineButton =
   "rounded-sm border-2 border-fg-inverse px-4 py-2 text-sm font-bold text-fg-inverse transition-colors hover:bg-fg-inverse hover:text-fg";
 
@@ -37,7 +37,7 @@ export function Layout() {
       {navigation.state === "loading" && (
         <div className="fixed inset-x-0 top-0 z-50 h-0.5 animate-pulse bg-action" />
       )}
-      <header className="sticky top-0 z-50 border-b-2 border-border bg-surface-inverse text-fg-inverse [--focus:var(--signal)]">
+      <header className="sticky top-0 z-50 border-b-2 border-border bg-surface-inverse text-fg-inverse [--focus:var(--paper)] [--focus-gap:var(--ink)]">
         <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-4 md:px-12">
           <HomeLogo />
 
@@ -47,7 +47,7 @@ export function Layout() {
               <div className="hidden items-center gap-6 md:flex">
                 {user ? (
                   <>
-                    <span className="text-sm font-bold text-signal">{user.email}</span>
+                    <span className="text-sm font-bold text-fg-inverse">{user.email}</span>
                     {user.roles.includes("host") ? (
                       <Link to="/host/listings" className={navLink}>
                         {t("nav.host_dashboard")}
@@ -79,7 +79,7 @@ export function Layout() {
                     <Link to="/login" className={navLink}>
                       {t("nav.login")}
                     </Link>
-                    <Link to="/register" className={signalButton}>
+                    <Link to="/register" className={emberButton}>
                       {t("nav.register")}
                     </Link>
                   </>
@@ -117,7 +117,7 @@ export function Layout() {
                     <Link to="/login" className={navLink}>
                       {t("nav.login")}
                     </Link>
-                    <Link to="/register" className={signalButton}>
+                    <Link to="/register" className={emberButton}>
                       {t("nav.register")}
                     </Link>
                   </>
@@ -130,7 +130,7 @@ export function Layout() {
         {/* Mobile dropdown menu (logged-in only) */}
         {menuOpen && user && (
           <div className="border-t-2 border-fg-inverse px-4 py-4 md:hidden">
-            <p className="mb-3 text-xs font-bold text-signal">{user.email}</p>
+            <p className="mb-3 text-xs font-bold text-fg-inverse">{user.email}</p>
             <nav className="flex flex-col gap-1">
               {user.roles.includes("host") ? (
                 <Link to="/host/listings" className={`${navLink} py-2`} onClick={close}>
