@@ -123,6 +123,16 @@ Each must carry a code comment marking it synthetic. They MUST be replaced with
 real data or removed before public launch (task 11.1); presenting them as real
 metrics or testimonials is a trust and legal risk.
 
+The landing's demo content is **synthetic** too, by the same decision ("honest
+placeholders"): the three featured stays (names, descriptions, USD monthly
+prices and the Featured / Available / Coming soon state tags), the co-living
+example monthly rate, the workspace status strip (a dedicated desk and Wi-Fi),
+the four location tiles and the stat figures (including the city count of 4,
+which mirrors the tiles). Each is marked with a `SYNTHETIC` code comment in
+`apps/web/src/pages/home/` and must be replaced with real listings and rates,
+or removed, before public launch (task 11.1). All prices are USD; copy makes no
+availability, scarcity, amenity or network claim beyond what the product does.
+
 The landing's featured-stay, co-living, workspace and location **photos** are
 also placeholders: remote Unsplash and picsum.photos URLs (some are random
 picsum seeds), unchanged from before NH-118. They are kept by explicit user
