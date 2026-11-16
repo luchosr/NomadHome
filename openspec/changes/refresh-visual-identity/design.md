@@ -18,11 +18,48 @@ distinctive versus generic travel-marketplace styling.
 | White      | `#FFFFFF`                         | Secondary panels, cards         |
 | Sign green | `#00704A`                         | Secondary panels, success state |
 
-Pairings are fixed in tokens, not chosen per use:
-black on `#FFC700` (about 14:1, passes AA and AAA), white on `#00704A`
-(about 5.9:1, passes AA for normal text), black on white. Anything not in the
-pairing table is disallowed. Task 6.1 verifies the computed ratios rather than
-trusting these estimates.
+Pairings are fixed in tokens, not chosen per use. Anything not in the table
+below is disallowed. Ratios are computed with the WCAG 2.1 relative-luminance
+formula (same as `packages/ui/src/contrast.test.ts`, which asserts the
+thresholds). Black is `#0A0A0A`.
+
+| Pairing (foreground on background)        | Ratio | Requirement | Result     |
+| ----------------------------------------- | ----- | ----------- | ---------- |
+| black on signal `#FFC700`                 | 12.65 | text 4.5    | pass       |
+| signal on black                           | 12.65 | text 4.5    | pass       |
+| white on sign green `#00704A`             | 6.15  | text 4.5    | pass       |
+| sign green on white                       | 6.15  | text 4.5    | pass       |
+| black on white                            | 19.80 | text 4.5    | pass       |
+| white on black                            | 19.80 | text 4.5    | pass       |
+| fg-muted `#404040` on white               | 10.37 | text 4.5    | pass       |
+| fg-muted on surface-inset `#F2F2F2`       | 9.26  | text 4.5    | pass       |
+| fg-muted on signal                        | 6.63  | text 4.5    | pass       |
+| fg-subtle `#545454` on white              | 7.57  | text 4.5    | pass       |
+| fg-subtle on surface-inset                | 6.76  | text 4.5    | pass       |
+| fg-subtle on signal (card hover)          | 4.84  | text 4.5    | pass       |
+| border-muted `#767676` on white           | 4.54  | UI 3        | pass       |
+| border-muted on surface-inset             | 4.06  | UI 3        | pass       |
+| white on danger `#B00020`                 | 7.33  | text 4.5    | pass       |
+| danger on danger-bg `#FBE3E6`             | 6.01  | text 4.5    | pass       |
+| warning `#7A4F00` on warning-bg `#FFF1B8` | 6.29  | text 4.5    | pass       |
+| info `#00508C` on info-bg `#E1EDF7`       | 6.99  | text 4.5    | pass       |
+| sign green on success-bg `#E3F1EA`        | 5.28  | text 4.5    | pass       |
+| black on sign green (focus layer alone)   | 3.22  | UI 3        | pass, thin |
+
+Disallowed pairings (never used for text): white or signal on the opposite
+light colour (white on signal 1.56, signal on white 1.56), and sign green on
+signal (3.93, below 4.5).
+
+**Finding fixed during task 6.1:** `fg-subtle` was `#595959`, which measured
+4.48:1 on signal (the hover colour of listing cards) and missed AA by 0.02. It
+is now `#545454` (4.84:1 on signal, 7.57:1 on white).
+
+**Focus ring.** A single black outline reached only 3.22:1 on sign green, too
+little headroom. The ring is now two layers: a 3 px outline in `--focus` (black
+by default, signal on dark and green fields) plus a 2 px white gap
+(`--focus-gap`) drawn with a zero-blur `box-shadow`. One layer is always at
+least 4.5:1 against every field: black on signal 12.65 and on white 19.80,
+white on sign green 6.15 and on black 19.80. `contrast.test.ts` asserts this.
 
 ## D3. Token migration
 
