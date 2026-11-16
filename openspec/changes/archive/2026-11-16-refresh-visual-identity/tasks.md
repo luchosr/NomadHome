@@ -84,8 +84,8 @@ break `openspec validate`).
 
 ## 11. Pre-launch follow-ups
 
-- [ ] 11.1 Replace or remove synthetic `StatsSection` and `TestimonialSection` content, and replace the remote placeholder landing photos (Unsplash/picsum) with real or licensed self-hosted photography, with real data before public launch (design.md D8); track as a pre-launch ticket
-- [ ] 11.2 Create follow-up tickets for host, admin, booking, auth and listing-detail screens
+- [x] 11.1 Replace or remove synthetic `StatsSection` and `TestimonialSection` content, and replace the remote placeholder landing photos (Unsplash/picsum) with real or licensed self-hosted photography, with real data before public launch (design.md D8); track as a pre-launch ticket (tracked in #121)
+- [x] 11.2 Create follow-up tickets for host, admin, booking, auth and listing-detail screens (#122-#126)
 
 ## 12. Docs
 
