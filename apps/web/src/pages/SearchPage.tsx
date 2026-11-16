@@ -28,7 +28,11 @@ function formatDates(checkIn: string | null, checkOut: string | null): string {
 }
 
 function Fact({ children }: { children: string }) {
-  return <p className="m-0 px-4 py-2 text-base font-black text-fg">{children}</p>;
+  return (
+    <p className="m-0 border-2 border-border px-3 py-1 text-sm font-black text-fg sm:border-0 sm:px-4 sm:py-2 sm:text-base">
+      {children}
+    </p>
+  );
 }
 
 export function SearchPage() {
@@ -66,12 +70,12 @@ export function SearchPage() {
   return (
     <form onSubmit={onSubmit}>
       <section className="border-b-2 border-border bg-signal">
-        <div className={`${WRAP} py-8 md:py-10`}>
-          <h1 className="m-0 mb-6 text-3xl font-black leading-tight text-fg">
+        <div className={`${WRAP} py-5 md:py-10`}>
+          <h1 className="m-0 mb-4 text-2xl font-black leading-tight text-fg md:mb-6 md:text-3xl">
             {t("search.page_title")}
           </h1>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_1fr_1fr_auto_auto] lg:items-end">
-            <div className="md:col-span-2 lg:col-span-1">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-[minmax(0,2fr)_1fr_1fr_auto_auto] lg:items-end">
+            <div className="col-span-2 lg:col-span-1">
               <label htmlFor="city" className={fieldLabel}>
                 {t("search.city_label")}
               </label>
@@ -139,11 +143,11 @@ export function SearchPage() {
         </div>
       </section>
 
-      <div className={`${WRAP} py-8 md:py-10`}>
+      <div className={`${WRAP} py-5 md:py-10`}>
         {data && (
           <section
             aria-label={t("search.summary_label")}
-            className="mb-6 flex flex-col sm:w-fit divide-y-2 divide-border border-2 border-border sm:flex-row sm:divide-x-2 sm:divide-y-0"
+            className="mb-4 flex flex-wrap gap-2 sm:mb-6 sm:w-fit sm:gap-0 sm:divide-x-2 sm:divide-border sm:border-2 sm:border-border"
           >
             <Fact>{city}</Fact>
             <Fact>{formatDates(searchParams.get("checkIn"), searchParams.get("checkOut"))}</Fact>
