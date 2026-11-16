@@ -3,7 +3,7 @@ import { cn } from "../lib/cn.js";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
-/** Sign-panel text input: 2px black edge, flat. Disabled is dashed and inset; invalid uses the danger edge. */
+/** Sign-panel text input: 2px ink edge, flat. Disabled is dashed and inset; invalid uses the danger edge. */
 export function Input({ className, ...props }: InputProps) {
   return (
     <input

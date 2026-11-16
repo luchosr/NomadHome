@@ -9,16 +9,16 @@ const button = cva(
   {
     variants: {
       variant: {
-        // black action panel, signal lettering
-        primary: "border-border bg-action text-signal hover:bg-action-hover",
-        // outlined panel on white
+        // ink action panel, paper lettering
+        primary: "border-border bg-action text-action-fg hover:bg-action-hover",
+        // outlined panel on paper
         // 1px border plus a 1px inset ring keeps the 2px panel edge
         secondary:
           "border border-border bg-transparent text-fg ring-1 ring-inset ring-border hover:bg-surface-inset disabled:ring-0",
         // link-style, underline on hover only
         tertiary:
           "border-transparent bg-transparent px-0 py-0 text-fg underline-offset-4 hover:underline disabled:border-transparent disabled:bg-transparent disabled:line-through",
-        // danger panel, white lettering
+        // danger panel, paper lettering
         destructive:
           "border-danger bg-danger text-fg-inverse hover:border-danger-hover hover:bg-danger-hover",
       },

@@ -12,7 +12,7 @@ const badge = cva("inline-flex items-center rounded-pill border-2 px-3 py-1 text
       warning: "border-dashed border-warning bg-warning-bg text-warning",
       danger: "border-solid border-danger bg-danger-bg text-danger line-through",
       info: "border-solid border-info bg-info-bg text-info",
-      accent: "border-solid border-border bg-signal text-fg",
+      accent: "border-solid border-border bg-ember text-fg",
     },
   },
   defaultVariants: { tone: "neutral" },
