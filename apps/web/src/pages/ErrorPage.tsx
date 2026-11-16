@@ -38,7 +38,7 @@ export function ErrorPage() {
         </button>
         <button
           onClick={() => navigate("/")}
-          className="rounded-lg bg-action px-4 py-2 text-sm text-white hover:bg-action-hover"
+          className="rounded-lg bg-action px-4 py-2 text-sm text-action-fg hover:bg-action-hover"
         >
           {t("error.go_home")}
         </button>

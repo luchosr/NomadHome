@@ -44,8 +44,13 @@ export function DateRangePicker({ checkIn, checkOut, blockedRanges, onChange }: 
     <div
       style={
         {
-          "--rdp-accent-color": "#2E4A3F",
-          "--rdp-accent-background-color": "#e8f0ed",
+          // Ember accent with stone range fill; text on ember is ink (paper on ember is 3.19:1)
+          // and today's date is ink, because orange is never a text colour on paper.
+          "--rdp-accent-color": "var(--ember)",
+          "--rdp-accent-background-color": "var(--stone)",
+          "--rdp-range_start-color": "var(--ink)",
+          "--rdp-range_end-color": "var(--ink)",
+          "--rdp-today-color": "var(--ink)",
         } as React.CSSProperties
       }
     >
