@@ -9,3 +9,5 @@ export type { CardProps } from "./components/card.js";
 export { Skeleton } from "./components/skeleton.js";
 export type { SkeletonProps } from "./components/skeleton.js";
 export { cn } from "./lib/cn.js";
+export { Pictogram, Arrow } from "./components/pictogram.js";
+export type { PictogramProps, ArrowProps } from "./components/pictogram.js";

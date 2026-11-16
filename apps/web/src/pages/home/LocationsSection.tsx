@@ -1,64 +1,48 @@
 import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { WRAP, GRADIENTS, LOCATION_CARDS } from "./constants.js";
+import { Arrow } from "@nomadhome/ui";
+import { WRAP, FIELD, LOCATION_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
+// SYNTHETIC (NH-118, design.md D8): the city rows come from LOCATION_CARDS (demo data).
+// Replace before public launch (task 11.1).
 export function LocationsSection() {
   return (
-    <section className="border-y border-sand-300 bg-sand-50 py-20">
+    <section className={`${FIELD} bg-signal`}>
       <div className={WRAP}>
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <SectionHeading
-              eyebrow={t("home.locations.eyebrow")}
-              pre={t("home.locations.headline_pre")}
-              em={t("home.locations.headline_em")}
-            />
-          </div>
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <SectionHeading
+            pre={t("home.locations.headline_pre")}
+            em={t("home.locations.headline_em")}
+          />
           <Link
             to="/search"
-            className="flex shrink-0 items-center gap-2 text-sm font-medium text-forest-700 hover:text-forest-900"
+            className="inline-flex shrink-0 items-center gap-3 self-start border-2 border-border px-5 py-3 text-base font-bold text-fg no-underline transition-colors hover:bg-action hover:text-signal md:self-auto"
           >
             {t("home.locations.explore_all")}
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <Arrow className="size-5" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {/* Destination index: city names are the largest type on the page. Each row links to the
+            search page with that city preselected (the page reads the `city` query param). */}
+        <ul className="m-0 mt-12 list-none border-t-2 border-border p-0">
           {LOCATION_CARDS.map((loc) => (
-            <div
-              key={loc.city}
-              className={`group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-2xl ${GRADIENTS[loc.grad]}`}
-            >
-              <img
-                src={loc.img}
-                alt={loc.city}
-                className="absolute inset-0 h-full w-full object-cover"
-                loading="lazy"
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: "linear-gradient(to top, rgba(28,46,39,0.7) 0%, transparent 55%)",
-                }}
-              />
-              <div className="absolute bottom-4 left-4 right-4 text-sand-50">
-                <p className="font-serif text-2xl leading-tight group-hover:underline">
-                  {loc.city}
-                </p>
-                <p className="mt-0.5 text-sm opacity-85">{loc.ct}</p>
-              </div>
-            </div>
+            <li key={loc.cityKey} className="border-b-2 border-border">
+              <Link
+                to={`/search?city=${encodeURIComponent(t(loc.cityKey))}`}
+                className="group flex items-center gap-x-6 py-5 text-fg no-underline transition-colors duration-med ease-out hover:bg-action hover:text-signal focus-visible:bg-action focus-visible:text-signal focus-visible:[--focus:var(--signal)] focus-visible:-outline-offset-[5px] px-4 md:py-6"
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-1 md:flex-row md:items-baseline md:gap-x-8">
+                  <span className="break-words font-display text-5xl font-black leading-solid md:text-7xl lg:text-8xl">
+                    {t(loc.cityKey)}
+                  </span>
+                  <span className="text-base font-bold">{t(loc.detailKey)}</span>
+                </span>
+                <Arrow className="size-10 shrink-0 md:size-16" />
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

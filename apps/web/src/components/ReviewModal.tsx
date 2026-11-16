@@ -40,7 +40,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
 
   return (
     <Modal labelledBy="review-modal-title">
-      <h2 id="review-modal-title" className="mb-4 text-xl font-semibold text-fg-1">
+      <h2 id="review-modal-title" className="mb-4 text-xl font-semibold text-fg">
         {t("booking.dashboard.review_modal_title")}
       </h2>
 
@@ -49,7 +49,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
       ) : (
         <>
           <div className="mb-4">
-            <p className="mb-2 text-sm font-medium text-fg-2">
+            <p className="mb-2 text-sm font-medium text-fg-muted">
               {t("booking.dashboard.review_rating_label")}
             </p>
             <div
@@ -69,7 +69,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
                     onClick={() => setRating(starValue)}
                     onMouseEnter={() => setHovered(starValue)}
                     onMouseLeave={() => setHovered(0)}
-                    className="text-2xl text-warning transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-500 focus-visible:ring-offset-2"
+                    className="text-2xl text-warning transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2"
                   >
                     {filled ? "★" : "☆"}
                   </button>
@@ -79,7 +79,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="review-text" className="mb-1 block text-sm font-medium text-fg-2">
+            <label htmlFor="review-text" className="mb-1 block text-sm font-medium text-fg-muted">
               {t("booking.dashboard.review_text_label")}
             </label>
             <textarea
@@ -89,7 +89,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
               maxLength={2000}
               rows={4}
               placeholder={t("booking.dashboard.review_text_placeholder")}
-              className="w-full rounded-md border border-muted bg-elevated px-4 py-3 text-base text-fg-1 placeholder:text-fg-muted focus-visible:border-forest-500 focus-visible:outline-none"
+              className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle focus-visible:border-border focus-visible:outline-none"
             />
           </div>
 

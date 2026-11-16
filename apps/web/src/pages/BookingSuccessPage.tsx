@@ -61,7 +61,7 @@ export function BookingSuccessPage() {
   if (waiting) {
     return (
       <div className="mx-auto max-w-lg py-12 text-center">
-        <p className="mb-6 text-fg-2">{t("booking.ui.processing")}</p>
+        <p className="mb-6 text-fg-muted">{t("booking.ui.processing")}</p>
         <div className="space-y-3">
           <Skeleton className="mx-auto h-8 w-2/3" />
           <Skeleton className="mx-auto h-4 w-1/2" />
@@ -73,9 +73,9 @@ export function BookingSuccessPage() {
 
   return (
     <div className="mx-auto max-w-lg py-12 text-center">
-      <h1 className="mb-4 text-2xl font-bold text-fg-1">{t("booking.ui.success_title")}</h1>
-      <p className="text-fg-2">{t("booking.ui.success_message")}</p>
-      {bookingId && <p className="mt-2 text-sm text-fg-muted">#{bookingId}</p>}
+      <h1 className="mb-4 text-2xl font-bold text-fg">{t("booking.ui.success_title")}</h1>
+      <p className="text-fg-muted">{t("booking.ui.success_message")}</p>
+      {bookingId && <p className="mt-2 text-sm text-fg-subtle">#{bookingId}</p>}
       <div className="mt-8">
         <Link to="/bookings">
           <Button>{t("booking.ui.view_bookings")}</Button>

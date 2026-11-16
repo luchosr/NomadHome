@@ -60,6 +60,10 @@ export class SearchRepository {
             orderBy: { position: "asc" },
             take: 1,
           },
+          amenities: {
+            select: { amenityCode: true },
+            orderBy: { amenityCode: "asc" },
+          },
         },
         orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         skip: (page - 1) * pageSize,
@@ -78,6 +82,7 @@ export class SearchRepository {
       currency: l.currency,
       totalCents: l.nightlyRateCents * nights,
       primaryPhotoUrl: l.photos[0]?.url ?? null,
+      amenities: l.amenities.map((a) => a.amenityCode),
     }));
 
     return { rows, total };

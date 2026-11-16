@@ -41,6 +41,7 @@ export const SearchResultItemSchema = z.object({
   currency: z.string(),
   totalCents: z.number().int(),
   primaryPhotoUrl: z.string().nullable(),
+  amenities: z.array(z.string()).optional(),
 });
 
 export type SearchResultItem = z.infer<typeof SearchResultItemSchema>;

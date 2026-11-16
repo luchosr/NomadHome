@@ -2,36 +2,21 @@ import { useState } from "react";
 import { Link, Outlet, useNavigate, useNavigation } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { useAuth } from "../contexts/auth.js";
+import { Logo } from "./Logo.js";
 
-function Logo() {
+function HomeLogo() {
   return (
-    <Link to="/" className="flex items-center gap-3 no-underline">
-      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-        <rect width="64" height="64" rx="14" fill="#2E4A3F" />
-        <path
-          d="M18 44 V32 a14 14 0 0 1 28 0 V44"
-          stroke="#F5F0E8"
-          strokeWidth="3"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <line
-          x1="12"
-          y1="48"
-          x2="52"
-          y2="48"
-          stroke="#D97757"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="font-serif text-[26px] leading-none text-ink-900">NomadHome</span>
+    <Link to="/" className="flex items-center text-fg-inverse no-underline">
+      <Logo />
     </Link>
   );
 }
 
-const navLink =
-  "text-sm font-medium text-ink-700 transition-colors hover:text-forest-700 no-underline";
+const navLink = "text-sm font-bold text-fg-inverse underline-offset-4 no-underline hover:underline";
+const signalButton =
+  "rounded-sm border-2 border-signal bg-signal px-4 py-2 text-sm font-bold text-fg no-underline transition-colors hover:bg-fg-inverse hover:border-fg-inverse";
+const outlineButton =
+  "rounded-sm border-2 border-fg-inverse px-4 py-2 text-sm font-bold text-fg-inverse transition-colors hover:bg-fg-inverse hover:text-fg";
 
 export function Layout() {
   const { user, isLoading, logout } = useAuth();
@@ -48,23 +33,13 @@ export function Layout() {
   const close = () => setMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-sand-100">
+    <div className="min-h-screen bg-surface">
       {navigation.state === "loading" && (
-        <div className="fixed inset-x-0 top-0 z-50 h-0.5 animate-pulse bg-forest-700" />
+        <div className="fixed inset-x-0 top-0 z-50 h-0.5 animate-pulse bg-action" />
       )}
-      <header
-        className="sticky top-0 z-50 border-b border-sand-300"
-        style={{
-          background: "rgba(245, 240, 232, 0.85)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-        }}
-      >
-        <div
-          className="mx-auto flex max-w-[1280px] items-center justify-between px-6 py-0 md:px-12"
-          style={{ height: "72px" }}
-        >
-          <Logo />
+      <header className="sticky top-0 z-50 border-b-2 border-border bg-surface-inverse text-fg-inverse [--focus:var(--signal)]">
+        <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-4 md:px-12">
+          <HomeLogo />
 
           {!isLoading && (
             <>
@@ -72,7 +47,7 @@ export function Layout() {
               <div className="hidden items-center gap-6 md:flex">
                 {user ? (
                   <>
-                    <span className="text-sm font-medium text-forest-700">{user.email}</span>
+                    <span className="text-sm font-bold text-signal">{user.email}</span>
                     {user.roles.includes("host") ? (
                       <Link to="/host/listings" className={navLink}>
                         {t("nav.host_dashboard")}
@@ -95,10 +70,7 @@ export function Layout() {
                     <Link to="/bookings" className={navLink}>
                       {t("nav.my_bookings")}
                     </Link>
-                    <button
-                      onClick={() => void handleLogout()}
-                      className="rounded-xl border border-forest-700 px-4 py-2 text-sm font-medium text-forest-700 transition-colors hover:bg-sand-200"
-                    >
+                    <button onClick={() => void handleLogout()} className={outlineButton}>
                       {t("nav.logout")}
                     </button>
                   </>
@@ -107,10 +79,7 @@ export function Layout() {
                     <Link to="/login" className={navLink}>
                       {t("nav.login")}
                     </Link>
-                    <Link
-                      to="/register"
-                      className="rounded-xl bg-forest-700 px-4 py-2 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
-                    >
+                    <Link to="/register" className={signalButton}>
                       {t("nav.register")}
                     </Link>
                   </>
@@ -122,8 +91,8 @@ export function Layout() {
                 {user ? (
                   <button
                     onClick={() => setMenuOpen((o) => !o)}
-                    aria-label="Toggle menu"
-                    className="rounded-lg p-2 text-ink-700 hover:bg-sand-200"
+                    aria-label={t("nav.menu_toggle")}
+                    className="rounded-sm border-2 border-fg-inverse p-2 text-fg-inverse hover:bg-fg-inverse hover:text-fg"
                   >
                     {menuOpen ? (
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -148,10 +117,7 @@ export function Layout() {
                     <Link to="/login" className={navLink}>
                       {t("nav.login")}
                     </Link>
-                    <Link
-                      to="/register"
-                      className="rounded-xl bg-forest-700 px-4 py-2 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
-                    >
+                    <Link to="/register" className={signalButton}>
                       {t("nav.register")}
                     </Link>
                   </>
@@ -163,8 +129,8 @@ export function Layout() {
 
         {/* Mobile dropdown menu (logged-in only) */}
         {menuOpen && user && (
-          <div className="border-t border-sand-300 px-6 py-4 md:hidden">
-            <p className="mb-3 text-xs font-medium text-forest-700">{user.email}</p>
+          <div className="border-t-2 border-fg-inverse px-4 py-4 md:hidden">
+            <p className="mb-3 text-xs font-bold text-signal">{user.email}</p>
             <nav className="flex flex-col gap-1">
               {user.roles.includes("host") ? (
                 <Link to="/host/listings" className={`${navLink} py-2`} onClick={close}>
@@ -190,7 +156,7 @@ export function Layout() {
               </Link>
               <button
                 onClick={() => void handleLogout()}
-                className="mt-2 w-full rounded-xl border border-forest-700 px-4 py-2 text-sm font-medium text-forest-700 transition-colors hover:bg-sand-200"
+                className={`${outlineButton} mt-2 w-full`}
               >
                 {t("nav.logout")}
               </button>

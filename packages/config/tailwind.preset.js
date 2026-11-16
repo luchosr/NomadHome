@@ -2,97 +2,82 @@
  * Shared Tailwind preset for the NomadHome workspace.
  * Apps and the UI package extend this via `presets: [nomadhomePreset]`.
  *
- * Tokens mirror the NomadHome design system (`colors_and_type.css`):
- * warm editorial hospitality — sand surfaces, forest brand, terracotta accent.
+ * Gantry Signage tokens: signal yellow, black, white and sign green.
+ * Semantic roles (surface, fg, border, action, success) are the supported
+ * API; the raw palette names exist so roles can reference them.
  */
+const BLACK = "#0A0A0A";
+const WHITE = "#FFFFFF";
+const SIGNAL = "#FFC700";
+const SIGN_GREEN = "#00704A";
+
 export default {
   theme: {
     extend: {
       colors: {
-        sand: {
-          50: "#FBF8F2",
-          100: "#F5F0E8",
-          200: "#ECE4D5",
-          300: "#DDD2BE",
-          400: "#C4B59B",
+        // Brand palette
+        signal: SIGNAL,
+        "sign-green": SIGN_GREEN,
+        black: BLACK,
+        white: WHITE,
+        // Semantic roles
+        surface: {
+          DEFAULT: WHITE,
+          raised: WHITE,
+          inset: "#F2F2F2",
+          inverse: BLACK,
+          signal: SIGNAL,
+          green: SIGN_GREEN,
         },
-        ink: {
-          900: "#1A1A1A",
-          700: "#3D3A35",
-          500: "#6B665E",
-          300: "#A39E92",
-          100: "#D8D3C7",
+        fg: {
+          DEFAULT: BLACK,
+          muted: "#404040",
+          subtle: "#545454",
+          inverse: WHITE,
         },
-        forest: {
-          900: "#1C2E27",
-          700: "#2E4A3F",
-          500: "#4A6F61",
-          200: "#B8C9C1",
-          50: "#E8EFEB",
+        border: {
+          DEFAULT: BLACK,
+          muted: "#767676",
         },
-        terracotta: {
-          900: "#8C3E20",
-          700: "#B85A36",
-          500: "#D97757",
-          200: "#F2C9B5",
-          50: "#FBEDE4",
+        action: {
+          DEFAULT: BLACK,
+          hover: "#2B2B2B",
+          fg: WHITE,
         },
-        success: { DEFAULT: "#5B7F5B", bg: "#E5EDE2" },
-        warning: { DEFAULT: "#C68A1B", bg: "#F7ECCC" },
-        danger: { DEFAULT: "#B04A3A", bg: "#F4DDD5" },
-        info: { DEFAULT: "#3A6B8C", bg: "#DDE8EF" },
-        // Semantic roles — reference brand scales via CSS vars so themes can override.
-        brand: {
-          primary: "var(--brand-primary)",
-          "primary-hover": "var(--brand-primary-hover)",
-          accent: "var(--brand-accent)",
-          "accent-hover": "var(--brand-accent-hover)",
-        },
-      },
-      backgroundColor: {
-        app: "var(--bg-app)",
-        elevated: "var(--bg-elevated)",
-        inset: "var(--bg-inset)",
-        inverse: "var(--bg-inverse)",
-      },
-      textColor: {
-        "fg-1": "var(--fg-1)",
-        "fg-2": "var(--fg-2)",
-        "fg-3": "var(--fg-3)",
-        "fg-muted": "var(--fg-muted)",
-        "fg-inverse": "var(--fg-inverse)",
-      },
-      borderColor: {
-        // role names avoid colliding with Tailwind border-WIDTH utilities (border-1/2)
-        subtle: "var(--border-1)", // hairline on cream surfaces
-        muted: "var(--border-2)", // hairline on white surfaces
-        strong: "var(--border-strong)",
+        success: { DEFAULT: SIGN_GREEN, bg: "#E3F1EA" },
+        warning: { DEFAULT: "#7A4F00", bg: "#FFF1B8" },
+        danger: { DEFAULT: "#B00020", hover: "#8A0019", bg: "#FBE3E6" },
+        info: { DEFAULT: "#00508C", bg: "#E1EDF7" },
       },
       fontFamily: {
-        serif: ['"Instrument Serif"', '"Cormorant Garamond"', "Georgia", "serif"],
-        sans: ['"DM Sans"', "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "sans-serif"],
-        mono: ['"JetBrains Mono"', "ui-monospace", '"SF Mono"', "Menlo", "monospace"],
+        display: ['"Overpass Variable"', "Overpass", "-apple-system", '"Segoe UI"', "sans-serif"],
+        sans: ['"Overpass Variable"', "Overpass", "-apple-system", '"Segoe UI"', "sans-serif"],
+        mono: ["ui-monospace", '"SF Mono"', "Menlo", "Consolas", "monospace"],
       },
+      // Fluid sign scale: the larger steps use clamp() and hold at a 360 px viewport.
       fontSize: {
-        xs: "12px",
-        sm: "14px",
-        base: "16px",
-        md: "18px",
-        lg: "20px",
-        xl: "24px",
-        "2xl": "32px",
-        "3xl": "44px",
-        "4xl": "60px",
-        "5xl": "80px",
+        xs: "0.75rem",
+        sm: "0.875rem",
+        base: "1rem",
+        md: "1.125rem",
+        lg: "1.25rem",
+        xl: "1.5rem",
+        "2xl": "clamp(1.5rem, 1.2rem + 1.4vw, 2rem)",
+        "3xl": "clamp(1.75rem, 1.3rem + 2.2vw, 2.75rem)",
+        "4xl": "clamp(2.25rem, 1.5rem + 3.6vw, 3.75rem)",
+        "5xl": "clamp(2.5rem, 1.6rem + 4.4vw, 5rem)",
+        "sign-xl": "clamp(2.75rem, 1.9rem + 4.8vw, 6rem)",
+        "sign-numeral": "clamp(3.5rem, 2rem + 7vw, 6rem)",
       },
       lineHeight: {
-        tight: "1.1",
+        solid: "0.92",
+        tight: "1.05",
         snug: "1.25",
         body: "1.55",
         loose: "1.7",
       },
       letterSpacing: {
-        tight: "-0.02em",
+        tight: "-0.03em",
         snug: "-0.01em",
         wide: "0.08em",
       },
@@ -110,20 +95,22 @@ export default {
         20: "80px",
         24: "96px",
       },
+      // Sign panels are square or near-square.
       borderRadius: {
-        xs: "4px",
-        sm: "8px",
-        md: "12px",
-        lg: "16px",
-        card: "16px",
-        xl: "24px",
-        pill: "999px",
+        xs: "0px",
+        sm: "2px",
+        md: "2px",
+        lg: "4px",
+        card: "4px",
+        xl: "4px",
+        pill: "4px",
       },
+      // Flat elevations: a hard bar under the panel, zero blur.
       boxShadow: {
-        xs: "0 1px 2px rgba(28, 46, 39, 0.04)",
-        sm: "0 2px 6px rgba(28, 46, 39, 0.05), 0 1px 2px rgba(28, 46, 39, 0.04)",
-        md: "0 6px 18px rgba(28, 46, 39, 0.07), 0 2px 4px rgba(28, 46, 39, 0.04)",
-        lg: "0 18px 40px rgba(28, 46, 39, 0.10), 0 4px 10px rgba(28, 46, 39, 0.05)",
+        xs: "0 1px 0 0 #0A0A0A",
+        sm: "0 2px 0 0 #0A0A0A",
+        md: "0 4px 0 0 #0A0A0A",
+        lg: "0 6px 0 0 #0A0A0A",
       },
       transitionTimingFunction: {
         out: "cubic-bezier(0.22, 0.61, 0.36, 1)",

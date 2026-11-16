@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-16T20:18:05.687138Z",
+  "title": "Design System: NomadHome",
+  "extensions": {
+    "colorMeta": {
+      "signal": {
+        "role": "primary",
+        "displayName": "Signal Yellow",
+        "canonical": "#FFC700",
+        "tonalRamp": [
+          "#3D2F00",
+          "#665000",
+          "#8F7000",
+          "#B89000",
+          "#FFC700",
+          "#FFD633",
+          "#FFE266",
+          "#FFF1B8"
+        ]
+      },
+      "sign-green": {
+        "role": "secondary",
+        "displayName": "Sign Green",
+        "canonical": "#00704A",
+        "tonalRamp": [
+          "#00241A",
+          "#003D29",
+          "#00573A",
+          "#00704A",
+          "#2E8F68",
+          "#66AF92",
+          "#A3CFBD",
+          "#E3F1EA"
+        ]
+      },
+      "black": {
+        "role": "neutral",
+        "displayName": "Gantry Black",
+        "canonical": "#0A0A0A",
+        "tonalRamp": [
+          "#0A0A0A",
+          "#1A1A1A",
+          "#2B2B2B",
+          "#404040",
+          "#545454",
+          "#767676",
+          "#B5B5B5",
+          "#F2F2F2"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "Sign White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#F2F2F2", "#F7F7F7", "#FFFFFF"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "H1/H2 and section titles, Black weight set solid."
+      },
+      "sign-numeral": {
+        "displayName": "Sign numeral",
+        "purpose": "Night count and stat figures, tabular."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings (3xl step)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "H3 and card titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Copy at 1rem/1.55."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, field labels, badges, nav links."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hard-bar-reserved",
+        "value": "0 4px 0 0 #0A0A0A",
+        "purpose": "Defined in the preset (xs 1px, sm 2px, md 4px, lg 6px), unused by surveyed components."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 0.61, 0.36, 1)",
+        "purpose": "Default easing for colour transitions."
+      },
+      {
+        "name": "duration-fast",
+        "value": "140ms",
+        "purpose": "Inputs and chips."
+      },
+      {
+        "name": "duration-med",
+        "value": "220ms",
+        "purpose": "Panels, rows, buttons."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Black action panel with signal lettering; dashed when disabled.",
+      "html": "<button class=\"ds-btn-primary\">Search</button> <button class=\"ds-btn-primary\" disabled>Search</button>",
+      "css": ".ds-btn-primary{font:700 14px/1.25 'Overpass Variable',sans-serif;background:#0A0A0A;color:#FFC700;border:2px solid #0A0A0A;border-radius:2px;padding:14px 22px;cursor:pointer;transition:background-color 220ms cubic-bezier(.22,.61,.36,1)}.ds-btn-primary:hover{background:#2B2B2B}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:3px solid #0A0A0A;outline-offset:2px;box-shadow:0 0 0 2px #fff}.ds-btn-primary:disabled{border-style:dashed;border-color:#767676;background:#F2F2F2;color:#545454;pointer-events:none}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined panel on white.",
+      "html": "<button class=\"ds-btn-secondary\">Clear filters</button>",
+      "css": ".ds-btn-secondary{font:700 14px/1.25 'Overpass Variable',sans-serif;background:transparent;color:#0A0A0A;border:2px solid #0A0A0A;border-radius:2px;padding:14px 22px;cursor:pointer;transition:background-color 220ms}.ds-btn-secondary:hover{background:#F2F2F2}.ds-btn-secondary:focus-visible{outline:3px solid #0A0A0A;outline-offset:2px;box-shadow:0 0 0 2px #fff}"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "2px black edge, flat; invalid uses the danger edge.",
+      "html": "<input class=\"ds-input\" placeholder=\"Check-in\"> <input class=\"ds-input\" disabled placeholder=\"Disabled\">",
+      "css": ".ds-input{font:400 16px 'Overpass Variable',sans-serif;width:200px;background:#fff;color:#0A0A0A;border:2px solid #0A0A0A;border-radius:2px;padding:12px 16px;transition:background-color 140ms}.ds-input::placeholder{color:#545454}.ds-input:focus-visible{outline:3px solid #0A0A0A;outline-offset:2px;box-shadow:0 0 0 2px #fff}.ds-input:disabled{border-style:dashed;border-color:#767676;background:#F2F2F2;color:#545454}"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge-accent",
+      "description": "State by outline: solid, dashed, struck.",
+      "html": "<span class=\"ds-badge ds-b-ok\">Available</span> <span class=\"ds-badge ds-b-warn\">Filling soon</span> <span class=\"ds-badge ds-b-no\">Full</span> <span class=\"ds-badge ds-b-acc\">Workspace</span>",
+      "css": ".ds-badge{display:inline-flex;font:700 12px 'Overpass Variable',sans-serif;border:2px solid;border-radius:4px;padding:4px 12px}.ds-b-ok{border-color:#00704A;background:#E3F1EA;color:#00704A}.ds-b-warn{border-style:dashed;border-color:#7A4F00;background:#FFF1B8;color:#7A4F00}.ds-b-no{border-color:#B00020;background:#FBE3E6;color:#B00020;text-decoration:line-through}.ds-b-acc{border-color:#0A0A0A;background:#FFC700;color:#0A0A0A}"
+    },
+    {
+      "name": "Result Card",
+      "kind": "card",
+      "refersTo": "listing-card-hover",
+      "description": "Search result panel: photo well, title, city, price, amenities; fills signal on hover.",
+      "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-card-img\">Photo</div><div class=\"ds-card-body\"><h3>Casa del Fig</h3><p class=\"ds-city\">Oaxaca, Mexico</p><p><span class=\"ds-price\">$85</span> <b>/ night</b></p></div></a>",
+      "css": ".ds-card{display:block;width:260px;border:2px solid #0A0A0A;background:#fff;color:#0A0A0A;text-decoration:none;font-family:'Overpass Variable',sans-serif;transition:background-color 220ms}.ds-card:hover,.ds-card:focus-visible{background:#FFC700}.ds-card-img{aspect-ratio:4/3;background:#F2F2F2;border-bottom:2px solid #0A0A0A;display:flex;align-items:center;justify-content:center;color:#545454}.ds-card-body{padding:16px}.ds-card h3{margin:0;font-weight:900;font-size:18px;line-height:1.25}.ds-city{margin:4px 0 12px;font-size:14px;font-weight:500;color:#404040}.ds-price{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Departure Board Row",
+      "kind": "custom",
+      "refersTo": "nav",
+      "description": "Signature: black board row with signal code tile, title, signal price and arrow tile; inverts to signal on hover.",
+      "html": "<a class=\"ds-row\" href=\"#\"><span class=\"ds-code\">OAX</span><span class=\"ds-title\">Casa del Fig</span><span class=\"ds-rprice\">$1,100 / mo</span><span class=\"ds-arrow\"><svg viewBox=\"0 0 32 32\" width=\"24\" height=\"24\" fill=\"currentColor\"><path d=\"M3 12h14V4l13 12-13 12v-8H3z\"/></svg></span></a>",
+      "css": ".ds-row{display:flex;align-items:center;gap:16px;width:560px;max-width:100%;box-sizing:border-box;padding:16px;background:#0A0A0A;color:#fff;border:2px solid #0A0A0A;text-decoration:none;font-family:'Overpass Variable',sans-serif;transition:background-color 220ms}.ds-code{display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:#FFC700;color:#0A0A0A;font-weight:900;font-size:24px}.ds-title{flex:1;font-weight:900;font-size:28px;line-height:.92}.ds-rprice{font-weight:900;font-size:24px;color:#FFC700}.ds-arrow{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:2px solid #fff}.ds-row:hover{background:#FFC700;color:#0A0A0A}.ds-row:hover .ds-code{background:#0A0A0A;color:#FFC700}.ds-row:hover .ds-rprice{color:#0A0A0A}.ds-row:hover .ds-arrow{border-color:#0A0A0A;background:#0A0A0A;color:#FFC700}"
+    },
+    {
+      "name": "Pictogram Panel",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "Bed and desk pictograms on sign green, joined to the action by an arrow.",
+      "html": "<div class=\"ds-pic\"><svg viewBox=\"0 0 32 32\" width=\"40\" height=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"square\" stroke-linejoin=\"miter\"><path d=\"M4 5v22\"/><path d=\"M4 22h24v5\"/><rect x=\"4\" y=\"15\" width=\"24\" height=\"7\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7\" y=\"10\" width=\"8\" height=\"5\" fill=\"currentColor\" stroke=\"none\"/></svg><b>Live</b></div>",
+      "css": ".ds-pic{display:inline-flex;align-items:center;gap:12px;background:#00704A;color:#fff;border:2px solid #0A0A0A;padding:12px 16px;font:900 18px 'Overpass Variable',sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Gantry Signage",
+    "overview": "The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from four materials, signal yellow, black, white and sign green, each held by a 2px black edge. Nothing floats and nothing blurs. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count. Meaning travels by shape before colour: a state is a solid, dashed or struck outline, a connector is an arrow, a kind of space is a drawn pictogram.",
+    "keyCharacteristics": [
+      "Four materials only: signal yellow, black, white, sign green; fields are full-bleed and separated by a 2px black rule.",
+      "2px black edge on every panel, 0 to 4px corners, zero blur shadows.",
+      "Overpass Variable throughout; Black (900) set solid for display and numerals.",
+      "State by outline shape: solid, dashed, struck.",
+      "Authored SVG pictograms and a solid arrow replace icon libraries."
+    ],
+    "rules": [
+      {
+        "name": "The Four Materials Rule",
+        "body": "Backgrounds are signal, black, white or sign green. Status tints appear only inside badges and error text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-On-Field Rule",
+        "body": "Black text on signal and white; signal text on black; white text on green. Signal never sits on white as text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Solid Setting Rule",
+        "body": "Anything that names a place, price or count is Black weight with leading at or below 1.05 and tracking -0.03em.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Number Rule",
+        "body": "Prices, night counts and stat figures use tabular numerals.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Panel Rule",
+        "body": "A raised surface is a white or coloured panel with a 2px black edge. Hover changes fill, never adds a shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do separate sections with full-bleed colour fields and a 2px black rule.",
+      "Do carry state by outline shape (solid, dashed, struck) as well as colour.",
+      "Do set places, prices and counts in Black weight, solid leading, tabular numerals.",
+      "Do use the authored Pictogram and Arrow components for kind-of-space and connection; add glyphs to the same 32 grid.",
+      "Do keep every focus ring two-layer, and flip the focus colour to the field's contrast partner.",
+      "Do write user-facing strings through t()."
+    ],
+    "donts": [
+      "Don't add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.",
+      "Don't introduce a fifth surface colour or colour-only status.",
+      "Don't put signal-coloured text on white.",
+      "Don't use icon fonts or third-party icon sets for wayfinding glyphs."
+    ]
+  }
+}

@@ -352,15 +352,13 @@ describe.skipIf(!hasDatabase)("GET /search", () => {
       await createListing(hostId, { city: "Lisbon", title: `Listing ${i}` });
     }
 
-    const res = await request(app)
-      .get("/search")
-      .query({
-        city: "Lisbon",
-        checkIn: "2027-07-01",
-        checkOut: "2027-07-05",
-        page: 1,
-        pageSize: 3,
-      });
+    const res = await request(app).get("/search").query({
+      city: "Lisbon",
+      checkIn: "2027-07-01",
+      checkOut: "2027-07-05",
+      page: 1,
+      pageSize: 3,
+    });
 
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(3);
@@ -396,15 +394,13 @@ describe.skipIf(!hasDatabase)("GET /search", () => {
     }
 
     // last page for pageSize=3 is page 2 (items 4 and 5)
-    const res = await request(app)
-      .get("/search")
-      .query({
-        city: "Lisbon",
-        checkIn: "2027-07-01",
-        checkOut: "2027-07-05",
-        page: 2,
-        pageSize: 3,
-      });
+    const res = await request(app).get("/search").query({
+      city: "Lisbon",
+      checkIn: "2027-07-01",
+      checkOut: "2027-07-05",
+      page: 2,
+      pageSize: 3,
+    });
 
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(2);
@@ -419,25 +415,21 @@ describe.skipIf(!hasDatabase)("GET /search", () => {
       await createListing(hostId, { city: "Lisbon", title: `Listing ${i}` });
     }
 
-    const page1 = await request(app)
-      .get("/search")
-      .query({
-        city: "Lisbon",
-        checkIn: "2027-07-01",
-        checkOut: "2027-07-05",
-        page: 1,
-        pageSize: 3,
-      });
+    const page1 = await request(app).get("/search").query({
+      city: "Lisbon",
+      checkIn: "2027-07-01",
+      checkOut: "2027-07-05",
+      page: 1,
+      pageSize: 3,
+    });
 
-    const page2 = await request(app)
-      .get("/search")
-      .query({
-        city: "Lisbon",
-        checkIn: "2027-07-01",
-        checkOut: "2027-07-05",
-        page: 2,
-        pageSize: 3,
-      });
+    const page2 = await request(app).get("/search").query({
+      city: "Lisbon",
+      checkIn: "2027-07-01",
+      checkOut: "2027-07-05",
+      page: 2,
+      pageSize: 3,
+    });
 
     expect(page1.status).toBe(200);
     expect(page2.status).toBe(200);
@@ -550,14 +542,12 @@ describe.skipIf(!hasDatabase)("GET /search", () => {
       .get("/search")
       .query({ city: "Lisbon", checkIn: "2027-07-01", checkOut: "2027-07-05" });
 
-    const withSort = await request(app)
-      .get("/search")
-      .query({
-        city: "Lisbon",
-        checkIn: "2027-07-01",
-        checkOut: "2027-07-05",
-        sort: "nightlyRate",
-      });
+    const withSort = await request(app).get("/search").query({
+      city: "Lisbon",
+      checkIn: "2027-07-01",
+      checkOut: "2027-07-05",
+      sort: "nightlyRate",
+    });
 
     expect(withoutSort.status).toBe(200);
     expect(withSort.status).toBe(200);
@@ -579,5 +569,31 @@ describe.skipIf(!hasDatabase)("GET /search", () => {
     // No Authorization header set
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // 21. Amenity codes returned on each result item (NH-118)
+  // -------------------------------------------------------------------------
+  it("returns amenity codes sorted alphabetically on each result item", async () => {
+    await createListing(hostId, {
+      city: "Lisbon",
+      amenityCodes: ["wifi", "ac", "kitchen"],
+    });
+
+    const res = await request(app).get("/search").query({ city: "Lisbon" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].amenities).toEqual(["ac", "kitchen", "wifi"]);
+  });
+
+  it("returns an empty amenities array for a listing without amenities", async () => {
+    await createListing(hostId, { city: "Lisbon" });
+
+    const res = await request(app).get("/search").query({ city: "Lisbon" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].amenities).toEqual([]);
   });
 });

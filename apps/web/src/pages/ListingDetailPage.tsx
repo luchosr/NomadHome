@@ -57,7 +57,7 @@ export function ListingDetailPage() {
             </div>
           </div>
           <div className="md:w-96">
-            <div className="rounded-xl border border-muted p-6 shadow-sm">
+            <div className="rounded-xl border border-border-muted p-6 shadow-sm">
               <Skeleton className="h-8 w-32" />
               <Skeleton className="mt-4 h-10 w-full" />
               <Skeleton className="mt-3 h-10 w-full" />
@@ -69,7 +69,7 @@ export function ListingDetailPage() {
   }
 
   if (error instanceof ApiError && error.status === 404) {
-    return <p className="text-fg-3">{t("listings.detail.not_found")}</p>;
+    return <p className="text-fg-subtle">{t("listings.detail.not_found")}</p>;
   }
 
   if (error || !listing) {
@@ -118,22 +118,22 @@ export function ListingDetailPage() {
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Main content */}
         <div className="flex-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-fg-3">
+          <span className="text-xs font-medium uppercase tracking-wide text-fg-subtle">
             {listing.type === "PROPERTY"
               ? t("host.listings.type_property")
               : t("host.listings.type_workspace")}
           </span>
-          <h1 className="mt-1 text-2xl font-bold text-fg-1">{listing.title}</h1>
-          <p className="mt-1 text-sm text-fg-3">
+          <h1 className="mt-1 text-2xl font-bold text-fg">{listing.title}</h1>
+          <p className="mt-1 text-sm text-fg-subtle">
             {listing.city}, {listing.country}
           </p>
-          <p className="text-sm text-fg-muted">{listing.addressLine}</p>
+          <p className="text-sm text-fg-subtle">{listing.addressLine}</p>
 
-          <p className="mt-4 leading-relaxed text-fg-2">{listing.description}</p>
+          <p className="mt-4 leading-relaxed text-fg-muted">{listing.description}</p>
 
           {listing.amenities.length > 0 && (
             <div className="mt-6">
-              <h2 className="mb-2 text-lg font-semibold text-fg-1">
+              <h2 className="mb-2 text-lg font-semibold text-fg">
                 {t("listings.detail.amenities")}
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -142,7 +142,7 @@ export function ListingDetailPage() {
                   return (
                     <span
                       key={a.amenityCode}
-                      className="rounded-full bg-surface px-3 py-1 text-sm text-fg-2"
+                      className="rounded-full bg-surface px-3 py-1 text-sm text-fg-muted"
                     >
                       {entry ? t(entry.labelKey) : a.amenityCode}
                     </span>
@@ -153,19 +153,19 @@ export function ListingDetailPage() {
           )}
 
           <div className="mt-6">
-            <h2 className="mb-1 text-lg font-semibold text-fg-1">{t("listings.detail.rating")}</h2>
+            <h2 className="mb-1 text-lg font-semibold text-fg">{t("listings.detail.rating")}</h2>
             {listing.avgRating !== null ? (
-              <p className="text-fg-2">
+              <p className="text-fg-muted">
                 ⭐ {listing.avgRating.toFixed(1)} / 5 ({listing._count.reviews}{" "}
                 {t("listings.detail.reviews").toLowerCase()})
               </p>
             ) : (
-              <p className="text-fg-3">{t("listings.detail.no_reviews")}</p>
+              <p className="text-fg-subtle">{t("listings.detail.no_reviews")}</p>
             )}
           </div>
 
           <div className="mt-6">
-            <p className="text-sm text-fg-3">
+            <p className="text-sm text-fg-subtle">
               {t("listings.detail.capacity")}: {listing.capacity} {t("listings.detail.guests")}
             </p>
           </div>
@@ -173,10 +173,10 @@ export function ListingDetailPage() {
 
         {/* Booking sidebar */}
         <div className="md:w-96">
-          <div className="rounded-xl border border-muted p-6 shadow-sm md:sticky md:top-8">
-            <p className="text-2xl font-bold text-fg-1">
+          <div className="rounded-xl border border-border-muted p-6 shadow-sm md:sticky md:top-8">
+            <p className="text-2xl font-bold text-fg">
               {formatRate(listing.nightlyRateCents, listing.currency)}
-              <span className="text-base font-normal text-fg-3"> {t("search.per_night")}</span>
+              <span className="text-base font-normal text-fg-subtle"> {t("search.per_night")}</span>
             </p>
 
             {isGuest && (

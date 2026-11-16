@@ -36,7 +36,7 @@ export function AdminUsersPage() {
         <Skeleton className="mb-6 h-8 w-44" />
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-muted pb-3">
+            <div key={i} className="flex items-center gap-4 border-b border-border-muted pb-3">
               <Skeleton className="h-4 w-1/3" />
               <Skeleton className="h-4 w-1/5" />
               <Skeleton className="h-6 w-16 rounded-pill" />
@@ -58,15 +58,15 @@ export function AdminUsersPage() {
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("admin.users.title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg">{t("admin.users.title")}</h1>
 
       {data.data.length === 0 ? (
-        <p className="text-fg-2">{t("admin.users.no_users")}</p>
+        <p className="text-fg-muted">{t("admin.users.no_users")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-muted text-left text-fg-3">
+              <tr className="border-b border-border-muted text-left text-fg-subtle">
                 <th className="pb-2 pr-4 font-medium">{t("admin.users.email_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.users.roles_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.users.status_col")}</th>
@@ -75,9 +75,9 @@ export function AdminUsersPage() {
             </thead>
             <tbody>
               {data.data.map((user: AdminUser) => (
-                <tr key={user.id} className="border-b border-muted last:border-0">
-                  <td className="py-3 pr-4 text-fg-1">{user.email}</td>
-                  <td className="py-3 pr-4 text-fg-2">{user.roles.join(", ")}</td>
+                <tr key={user.id} className="border-b border-border-muted last:border-0">
+                  <td className="py-3 pr-4 text-fg">{user.email}</td>
+                  <td className="py-3 pr-4 text-fg-muted">{user.roles.join(", ")}</td>
                   <td className="py-3 pr-4">
                     <Badge tone={userStatusTone(user.disabledAt)}>
                       {userStatusLabel(user.disabledAt)}

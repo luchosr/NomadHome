@@ -27,18 +27,18 @@ export function ErrorPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-8 text-center">
-      <h1 className="font-serif text-3xl text-ink-900">{t("error.title")}</h1>
-      <p className="max-w-md text-ink-500">{message}</p>
+      <h1 className="font-display text-3xl text-fg">{t("error.title")}</h1>
+      <p className="max-w-md text-fg-subtle">{message}</p>
       <div className="flex gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="rounded-lg border border-ink-200 px-4 py-2 text-sm text-ink-700 hover:bg-ink-50"
+          className="rounded-lg border border-border-muted px-4 py-2 text-sm text-fg-muted hover:bg-surface-inset"
         >
           {t("error.go_back")}
         </button>
         <button
           onClick={() => navigate("/")}
-          className="rounded-lg bg-forest-700 px-4 py-2 text-sm text-white hover:bg-forest-900"
+          className="rounded-lg bg-action px-4 py-2 text-sm text-white hover:bg-action-hover"
         >
           {t("error.go_home")}
         </button>

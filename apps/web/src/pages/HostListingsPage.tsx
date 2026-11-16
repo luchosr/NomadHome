@@ -71,21 +71,21 @@ export function HostListingsPage() {
   return (
     <PageWrapper>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-fg-1">{t("host.listings.title")}</h1>
+        <h1 className="text-2xl font-bold text-fg">{t("host.listings.title")}</h1>
         <Link to="/host/listings/new">
           <Button>{t("host.listings.new_listing")}</Button>
         </Link>
       </div>
 
       {data.length === 0 ? (
-        <p className="text-fg-2">{t("host.listings.no_listings")}</p>
+        <p className="text-fg-muted">{t("host.listings.no_listings")}</p>
       ) : (
         <div className="space-y-4">
           {data.map((listing) => (
             <Card key={listing.id}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-1 items-center gap-4">
-                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-inset">
+                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-inset">
                     {listing.primaryPhotoUrl && (
                       <img
                         src={listing.primaryPhotoUrl}
@@ -95,8 +95,8 @@ export function HostListingsPage() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-fg-1">{listing.title}</p>
-                    <p className="mt-1 text-sm text-fg-3">
+                    <p className="font-semibold text-fg">{listing.title}</p>
+                    <p className="mt-1 text-sm text-fg-subtle">
                       {listing.type === "PROPERTY"
                         ? t("host.listings.type_property")
                         : t("host.listings.type_workspace")}

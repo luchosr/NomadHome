@@ -8,8 +8,8 @@ export function BookingCancelPage() {
 
   return (
     <div className="mx-auto max-w-lg py-12 text-center">
-      <h1 className="mb-4 text-2xl font-bold text-fg-1">{t("booking.ui.cancel_title")}</h1>
-      <p className="text-fg-2">{t("booking.ui.cancel_message")}</p>
+      <h1 className="mb-4 text-2xl font-bold text-fg">{t("booking.ui.cancel_title")}</h1>
+      <p className="text-fg-muted">{t("booking.ui.cancel_message")}</p>
       <div className="mt-8">
         {listingId ? (
           <Link to={`/listings/${listingId}`}>

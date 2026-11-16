@@ -1,15 +1,7 @@
 export const WRAP = "mx-auto w-full max-w-[1280px] px-6 md:px-12";
 
-export const GRADIENTS: Record<string, string> = {
-  twilight: "bg-gradient-to-br from-[#D97757] via-[#8C3E20] to-[#2E4A3F]",
-  forest: "bg-gradient-to-br from-[#B8C9C1] via-[#4A6F61] to-[#1C2E27]",
-  morning: "bg-gradient-to-b from-[#F2C9B5] via-[#FBF8F2] to-[#B8C9C1]",
-  night: "bg-gradient-to-br from-[#4A6F61] via-[#2E4A3F] to-[#1A1A1A]",
-  sand: "bg-gradient-to-br from-[#FBF8F2] via-[#DDD2BE] to-[#C4B59B]",
-  terracotta: "bg-gradient-to-br from-[#F2C9B5] via-[#D97757] to-[#8C3E20]",
-};
-
-export const STAR_RATING = Array.from({ length: 5 }, (_, i) => i);
+/** Full-width gantry field: fixed vertical rhythm and a 2px black edge between fields. */
+export const FIELD = "border-b-2 border-border py-16 md:py-24";
 
 export const COLIVING_FEATURES = [
   "home.coliving.feature_1",
@@ -29,66 +21,68 @@ export const HOW_IT_WORKS_STEPS = [
   { n: "03", hKey: "home.how_it_works.step_03_heading", pKey: "home.how_it_works.step_03_body" },
 ] as const;
 
+// SYNTHETIC (NH-118, design.md D8): the featured stays, their prices (USD), descriptions
+// and state tags are invented demo records, not real listings. The tags show state by
+// shape (solid = featured/available, dashed = coming soon, struck = unavailable).
+// Replace with real data or remove before public launch (change task 11.1).
 export const FEATURED_CARDS = [
   {
-    grad: "twilight",
     img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&q=80&fit=crop",
-    city: "Oaxaca · MX",
-    title: "Casa del Fig",
-    meta: "6 rooms · coworking · courtyard with a fig tree",
-    price: "MX$ 18,500 / mo",
-    tag: "Featured",
-    left: "3 rooms left",
+    codeKey: "home.featured.cards.oaxaca.code",
+    cityKey: "home.featured.cards.oaxaca.city",
+    titleKey: "home.featured.cards.oaxaca.title",
+    metaKey: "home.featured.cards.oaxaca.meta",
+    priceKey: "home.featured.cards.oaxaca.price",
+    tagKey: "home.featured.cards.oaxaca.tag",
+    tagTone: "accent",
   },
   {
-    grad: "forest",
     img: "https://picsum.photos/seed/lisboa-house/800/600",
-    city: "Lisboa · PT",
-    title: "A Quinta",
-    meta: "4 rooms · garden · 10 min from the beach",
-    price: "€ 1,250 / mo",
-    left: "4 rooms left",
+    codeKey: "home.featured.cards.lisbon.code",
+    cityKey: "home.featured.cards.lisbon.city",
+    titleKey: "home.featured.cards.lisbon.title",
+    metaKey: "home.featured.cards.lisbon.meta",
+    priceKey: "home.featured.cards.lisbon.price",
+    tagKey: "home.featured.cards.lisbon.tag",
+    tagTone: "success",
   },
   {
-    grad: "morning",
     img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80&fit=crop",
-    city: "Medellín · CO",
-    title: "El Poblado",
-    meta: "8 rooms · big coworking · rooftop pool",
-    price: "COP 3.2M / mo",
-    left: "Waitlist",
+    codeKey: "home.featured.cards.medellin.code",
+    cityKey: "home.featured.cards.medellin.city",
+    titleKey: "home.featured.cards.medellin.title",
+    metaKey: "home.featured.cards.medellin.meta",
+    priceKey: "home.featured.cards.medellin.price",
+    tagKey: "home.featured.cards.medellin.tag",
+    tagTone: "warning",
   },
 ] as const;
 
+// SYNTHETIC (NH-118, design.md D8): the four cities are demo rows, not a statement of
+// where inventory exists. Replace with real data before public launch (task 11.1).
 export const LOCATION_CARDS = [
   {
-    grad: "twilight",
-    img: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=800&q=80&fit=crop",
-    city: "Oaxaca",
-    ct: "México · 2 houses",
+    cityKey: "home.locations.cards.oaxaca.city",
+    detailKey: "home.locations.cards.oaxaca.detail",
   },
   {
-    grad: "forest",
-    img: "https://picsum.photos/seed/lisboa-city/800/600",
-    city: "Lisboa",
-    ct: "Portugal · 1 house",
+    cityKey: "home.locations.cards.lisbon.city",
+    detailKey: "home.locations.cards.lisbon.detail",
   },
   {
-    grad: "night",
-    img: "https://picsum.photos/seed/medellin/800/600",
-    city: "Medellín",
-    ct: "Colombia · 1 house",
+    cityKey: "home.locations.cards.medellin.city",
+    detailKey: "home.locations.cards.medellin.detail",
   },
   {
-    grad: "terracotta",
-    img: "https://images.unsplash.com/photo-1574936145840-28808d77a0b6?w=800&q=80&fit=crop",
-    city: "CDMX",
-    ct: "México · 1 house",
+    cityKey: "home.locations.cards.mexico_city.city",
+    detailKey: "home.locations.cards.mexico_city.detail",
   },
 ] as const;
 
+// SYNTHETIC (NH-118, design.md D8): invented figures, no real source. Replace or remove
+// before public launch (task 11.1). The city count mirrors the four LOCATION_CARDS.
 export const STAT_ITEMS = [
-  { v: "9", lKey: "home.stats.cities_label" },
+  { v: "4", lKey: "home.stats.cities_label" },
   { v: "142", lKey: "home.stats.rooms_label" },
   { v: "92%", lKey: "home.stats.occupancy_label" },
   { v: "+62", lKey: "home.stats.nps_label" },
@@ -106,15 +100,10 @@ export const FOOTER_NAV_COLS = [
   },
   {
     hKey: "home.footer.nav_company",
-    links: [
-      "home.footer.link_about",
-      "home.footer.link_become_host",
-      "home.footer.link_community",
-      "home.footer.link_careers",
-    ],
+    links: ["home.footer.link_about", "home.footer.link_become_host", "home.footer.link_careers"],
   },
   {
     hKey: "home.footer.nav_support",
-    links: ["home.footer.link_help", "home.footer.link_house_rules", "home.footer.link_contact"],
+    links: ["home.footer.link_help", "home.footer.link_contact"],
   },
 ] as const;

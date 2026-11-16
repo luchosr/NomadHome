@@ -54,7 +54,7 @@ export function AdminListingsPage() {
         <Skeleton className="mb-6 h-8 w-48" />
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-muted pb-3">
+            <div key={i} className="flex items-center gap-4 border-b border-border-muted pb-3">
               <Skeleton className="h-4 w-1/4" />
               <Skeleton className="h-4 w-1/6" />
               <Skeleton className="h-4 w-1/6" />
@@ -78,15 +78,15 @@ export function AdminListingsPage() {
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("admin.listings.title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg">{t("admin.listings.title")}</h1>
 
       {data.data.length === 0 ? (
-        <p className="text-fg-2">{t("admin.listings.no_listings")}</p>
+        <p className="text-fg-muted">{t("admin.listings.no_listings")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-muted text-left text-fg-3">
+              <tr className="border-b border-border-muted text-left text-fg-subtle">
                 <th className="pb-2 pr-4 font-medium">{t("admin.listings.title_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.listings.type_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("admin.listings.city_col")}</th>
@@ -97,11 +97,11 @@ export function AdminListingsPage() {
             </thead>
             <tbody>
               {data.data.map((listing: AdminListing) => (
-                <tr key={listing.id} className="border-b border-muted last:border-0">
-                  <td className="py-3 pr-4 text-fg-1">{listing.title}</td>
-                  <td className="py-3 pr-4 text-fg-2">{listingTypeLabel(listing.type)}</td>
-                  <td className="py-3 pr-4 text-fg-2">{listing.city}</td>
-                  <td className="py-3 pr-4 text-fg-2">{listing.host.email}</td>
+                <tr key={listing.id} className="border-b border-border-muted last:border-0">
+                  <td className="py-3 pr-4 text-fg">{listing.title}</td>
+                  <td className="py-3 pr-4 text-fg-muted">{listingTypeLabel(listing.type)}</td>
+                  <td className="py-3 pr-4 text-fg-muted">{listing.city}</td>
+                  <td className="py-3 pr-4 text-fg-muted">{listing.host.email}</td>
                   <td className="py-3 pr-4">
                     <Badge tone={listingStatusTone(listing.status)}>
                       {listingStatusLabel(listing.status)}

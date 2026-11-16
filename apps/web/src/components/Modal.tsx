@@ -13,7 +13,9 @@ export function Modal({ labelledBy, children }: Props) {
       aria-modal="true"
       aria-labelledby={labelledBy}
     >
-      <div className="mx-4 w-full max-w-md rounded-card bg-elevated p-6 shadow-md">{children}</div>
+      <div className="mx-4 w-full max-w-md rounded-card bg-surface-raised p-6 shadow-md">
+        {children}
+      </div>
     </div>
   );
 }
