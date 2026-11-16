@@ -18,9 +18,9 @@ break `openspec validate`).
 ## 1. Tokens and fonts
 
 - [ ] 1.1 Red: add Vitest/static checks (token resolution, legacy scale absence per spec scenarios) in `packages/ui` or `packages/config` that fail against the current preset
-- [ ] 1.2 Replace `sand`/`ink`/`forest`/`terracotta` with Gantry tokens (signal, black, white, sign-green, semantic roles, `display`/`sans`/`mono`, fluid sign-scale type, radii, flat elevations) in `packages/config/tailwind.preset.js`; re-point leftover old-scale class usages across `apps/web/src` and `packages/ui/src` to semantic roles
+- [x] 1.2 Replace `sand`/`ink`/`forest`/`terracotta` with Gantry tokens (signal, black, white, sign-green, semantic roles, `display`/`sans`/`mono`, fluid sign-scale type, radii, flat elevations) in `packages/config/tailwind.preset.js`; re-point leftover old-scale class usages across `apps/web/src` and `packages/ui/src` to semantic roles
 - [x] 1.3 Choose the display/text typeface per design.md D4, self-host it, and record the choice and licence in `design.md`
-- [ ] 1.4 Rewrite `packages/ui/src/styles/globals.css`: font loading, token CSS variables, white canvas, display headings set solid, AA-compliant focus ring; keep `@tailwind` directives; refresh logo SVGs in `packages/ui/src/assets/` for the new identity
+- [x] 1.4 Rewrite `packages/ui/src/styles/globals.css`: font loading, token CSS variables, white canvas, display headings set solid, AA-compliant focus ring; keep `@tailwind` directives; refresh logo SVGs in `packages/ui/src/assets/` for the new identity
 
 ## 2. UI primitives (same APIs)
 
