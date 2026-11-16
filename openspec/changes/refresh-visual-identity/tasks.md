@@ -25,10 +25,10 @@ break `openspec validate`).
 ## 2. UI primitives (same APIs)
 
 - [ ] 2.1 Red: update `button`, `badge`, `input`, `card`, `skeleton` tests to assert the new variants and unchanged prop surfaces; add failing tests for `Pictogram` and `Arrow`
-- [ ] 2.2 Restyle `Button`, `Input` in `packages/ui/src/components/` (no prop changes)
-- [ ] 2.3 Restyle `Badge` (solid/dashed/struck states), `Card`, `Skeleton`
-- [ ] 2.4 Add `Pictogram` (bed, desk) and `Arrow` SVG primitives and export all from `packages/ui/src/index.ts`
-- [ ] 2.5 Verify: `pnpm --filter @nomadhome/ui test && pnpm lint && pnpm typecheck` green
+- [x] 2.2 Restyle `Button`, `Input` in `packages/ui/src/components/` (no prop changes)
+- [x] 2.3 Restyle `Badge` (solid/dashed/struck states), `Card`, `Skeleton`
+- [x] 2.4 Add `Pictogram` (bed, desk) and `Arrow` SVG primitives and export all from `packages/ui/src/index.ts`
+- [x] 2.5 Verify: `pnpm --filter @nomadhome/ui test && pnpm lint && pnpm typecheck` green
 
 ## 3. Landing migration
 
