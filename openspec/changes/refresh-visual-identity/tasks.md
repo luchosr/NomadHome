@@ -60,27 +60,27 @@ break `openspec validate`).
 
 ## 7. Review and update existing unit tests (MANDATORY)
 
-- [ ] 7.1 Review all existing tests affected by class/markup changes across `packages/ui` and `apps/web`; update stale assertions without weakening them
+- [x] 7.1 Review all existing tests affected by class/markup changes across `packages/ui` and `apps/web`; update stale assertions without weakening them
 
 ## 8. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 8.1 Run targeted tests for changed modules, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`
-- [ ] 8.2 Database state: before and after the test run, capture `Listing`, `ListingAmenity` and `Amenity` row counts via Prisma/psql; confirm unchanged (search is read-only; restore any test data if not)
-- [ ] 8.3 Create report `openspec/changes/refresh-visual-identity/reports/YYYY-MM-DD-step-8-unit-test-and-db-verification.md` with commands, results, and the DB pre/post comparison
+- [x] 8.1 Run targeted tests for changed modules, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`
+- [x] 8.2 Database state: before and after the test run, capture `Listing`, `ListingAmenity` and `Amenity` row counts via Prisma/psql; confirm unchanged (search is read-only; restore any test data if not)
+- [x] 8.3 Create report `openspec/changes/refresh-visual-identity/reports/YYYY-MM-DD-step-8-unit-test-and-db-verification.md` with commands, results, and the DB pre/post comparison
 
 ## 9. Manual endpoint testing with curl (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 9.1 Start the API against the dev database; run `curl -s "http://localhost:<api-port>/api/search?city=<seeded-city>"` (confirm route prefix in `apps/api/src/routes/search.ts`) and verify HTTP 200, the `{ data, pagination }` envelope, and `amenities` (sorted codes) on each item
-- [ ] 9.2 curl a listing without amenities (or seed one temporarily) and verify `amenities: []`; curl with an invalid `page=0` and verify HTTP 400 is unchanged
-- [ ] 9.3 Restore database state (remove any temporary listing/amenity rows) and re-check row counts match the 8.2 baseline
-- [ ] 9.4 Append all curl commands, responses and cleanup actions to `openspec/changes/refresh-visual-identity/reports/YYYY-MM-DD-step-9-curl-verification.md`
+- [x] 9.1 Start the API against the dev database; run `curl -s "http://localhost:<api-port>/api/search?city=<seeded-city>"` (confirm route prefix in `apps/api/src/routes/search.ts`) and verify HTTP 200, the `{ data, pagination }` envelope, and `amenities` (sorted codes) on each item
+- [x] 9.2 curl a listing without amenities (or seed one temporarily) and verify `amenities: []`; curl with an invalid `page=0` and verify HTTP 400 is unchanged
+- [x] 9.3 Restore database state (remove any temporary listing/amenity rows) and re-check row counts match the 8.2 baseline
+- [x] 9.4 Append all curl commands, responses and cleanup actions to `openspec/changes/refresh-visual-identity/reports/YYYY-MM-DD-step-9-curl-verification.md`
 
 ## 10. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 10.1 Inspect existing Playwright specs (`apps/web/e2e/search.spec.ts` and others touching landing/search); update selectors broken by the redesign, keep behavior assertions intact
-- [ ] 10.2 Execute `pnpm test:e2e` (agent runs it; restore test data afterwards)
-- [ ] 10.3 Add one desktop and one 360 px screenshot assertion each for landing and search (no baseline exists today; see design.md D6)
-- [ ] 10.4 Walk landing and search with Playwright MCP at desktop and 360 px; record outcomes in the report
+- [x] 10.1 Inspect existing Playwright specs (`apps/web/e2e/search.spec.ts` and others touching landing/search); update selectors broken by the redesign, keep behavior assertions intact
+- [x] 10.2 Execute `pnpm test:e2e` (agent runs it; restore test data afterwards)
+- [x] 10.3 Add one desktop and one 360 px screenshot assertion each for landing and search (no baseline exists today; see design.md D6)
+- [x] 10.4 Walk landing and search with Playwright MCP at desktop and 360 px; record outcomes in the report
 
 ## 11. Pre-launch follow-ups
 
