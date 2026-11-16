@@ -32,7 +32,7 @@ export default {
         fg: {
           DEFAULT: BLACK,
           muted: "#404040",
-          subtle: "#595959",
+          subtle: "#545454",
           inverse: WHITE,
         },
         border: {

@@ -70,4 +70,40 @@ describe("token pairing contrast (WCAG 2.1 AA)", () => {
       expect(best).toBeGreaterThanOrEqual(3);
     }
   });
+
+  it("the focus ring has headroom (>= 4.5:1 for one layer) on signal, white, green and black", async () => {
+    const c = await loadColors();
+    for (const surface of [c.signal, c.white, c["sign-green"], c.black]) {
+      const best = Math.max(
+        ratio(hexOf(c.black), hexOf(surface)),
+        ratio(hexOf(c.white), hexOf(surface)),
+      );
+      expect(best).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("the focus ring adds a white gap layer so it never relies on blur or one colour", () => {
+    const css = readFileSync(join(repoRoot, "packages/ui/src/styles/globals.css"), "utf8");
+    const rule = /:focus-visible\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
+    expect(rule).toMatch(/box-shadow:\s*0 0 0 2px var\(--focus-gap\)/);
+    expect(css).toMatch(/--focus-gap:\s*var\(--white\)/);
+  });
+
+  it("every other brand pairing the UI uses reaches AA", async () => {
+    const c = await loadColors();
+    const pairs: Array<[unknown, unknown, number]> = [
+      [c.signal, c.black, 4.5],
+      [(c.fg as Dict).muted, c.white, 4.5],
+      [(c.fg as Dict).muted, (c.surface as Dict).inset, 4.5],
+      [(c.fg as Dict).subtle, c.signal, 4.5],
+      [(c.fg as Dict).subtle, c.white, 4.5],
+      [(c.fg as Dict).subtle, (c.surface as Dict).inset, 4.5],
+      [(c.border as Dict).muted, c.white, 3],
+      [(c.border as Dict).muted, (c.surface as Dict).inset, 3],
+      [c.white, c.danger, 4.5],
+    ];
+    for (const [a, b, min] of pairs) {
+      expect(ratio(hexOf(a), hexOf(b))).toBeGreaterThanOrEqual(min);
+    }
+  });
 });

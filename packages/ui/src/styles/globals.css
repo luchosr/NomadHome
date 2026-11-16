@@ -18,7 +18,7 @@
 
   --fg: var(--black);
   --fg-muted: #404040;
-  --fg-subtle: #595959;
+  --fg-subtle: #545454;
   --fg-inverse: var(--white);
 
   --border: var(--black);
@@ -28,8 +28,14 @@
   --action-hover: #2b2b2b;
   --action-fg: var(--white);
 
-  /* Black reaches 3:1 or better on signal, white and sign green. */
+  /*
+   * Two-layer focus ring: a 3px outline in --focus with a 2px white gap
+   * (--focus-gap) between it and the element. Black outline wins on white and
+   * signal; the white gap wins on sign green and black (dark surfaces also
+   * switch --focus to signal), so every field keeps >= 3:1 with headroom.
+   */
   --focus: var(--black);
+  --focus-gap: var(--white);
 }
 
 @layer base {
@@ -67,5 +73,18 @@
   :focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--focus-gap);
+  }
+}
+
+/* Honour reduced motion: no animation, no transition, no smooth scroll. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
