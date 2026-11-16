@@ -22,14 +22,23 @@ const LISTING = {
   city: "Lisbon",
   country: "PT",
   nightlyRateCents: 7500,
-  currency: "EUR",
+  currency: "USD",
   totalCents: 52500,
   primaryPhotoUrl: null,
   amenities: ["ac", "kitchen", "wifi"],
 };
 
 const RESULTS = {
-  data: [LISTING, { ...LISTING, id: "listing-2", title: "Porto Desk", type: "WORKSPACE" }],
+  data: [
+    { ...LISTING, amenities: [] },
+    {
+      ...LISTING,
+      id: "listing-2",
+      title: "Porto Desk Suite with a long title that wraps onto a second line",
+      type: "WORKSPACE",
+      amenities: ["wifi", "ac"],
+    },
+  ],
   pagination: { total: 2, page: 1, pageSize: 20, hasMore: false },
 };
 
@@ -121,7 +130,8 @@ for (const vp of VIEWPORTS) {
       const cards = page.locator('a[href^="/listings/"]');
       await expect(cards).toHaveCount(2);
       await expect(cards.first()).toContainText("Lisbon Studio");
-      await expect(cards.first()).toContainText(/wi-?fi/i);
+      await expect(cards.first()).toContainText("$75");
+      await expect(cards.nth(1)).toContainText(/wi-?fi/i);
 
       const city = await box(page.locator("#city"));
       const action = await box(page.locator('form button[type="submit"]'));
