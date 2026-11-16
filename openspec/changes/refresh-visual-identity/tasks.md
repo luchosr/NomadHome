@@ -33,7 +33,7 @@ break `openspec validate`).
 ## 3. Landing migration
 
 - [ ] 3.1 Red: update `apps/web` landing tests/selectors for the new structure (first-viewport elements, search submit unchanged); add `t()` keys under existing top-level domains only
-- [ ] 3.2 Rebuild `HeroSection.tsx` and `useHomeSearch.ts` presentation: yellow panel, city input as largest line, dates plus stay-length numeral, Live/Work pictograms with shared arrow to the black search panel; slim nav styling in `Layout.tsx`; no hero photo
+- [x] 3.2 Rebuild `HeroSection.tsx` and `useHomeSearch.ts` presentation: yellow panel, city input as largest line, dates plus stay-length numeral, Live/Work pictograms with shared arrow to the black search panel; slim nav styling in `Layout.tsx`; no hero photo
 - [ ] 3.3 Migrate remaining sections in `apps/web/src/pages/home/` (`HowItWorksSection`, `CoLivingSection`, `WorkspaceSection`, `FeaturedStaysSection`, `LocationsSection`, `CtaBandSection`, `SectionHeading`, `FeatureList`, `CheckIcon`, `HomeFooter`) to one-panel-one-fact composition
 - [ ] 3.4 Mark `StatsSection` and `TestimonialSection` as synthetic placeholders (code comment per design.md D8), restyled only
 - [ ] 3.5 Verify at 360 px and desktop: no horizontal scroll, no clipping; `pnpm test` green
