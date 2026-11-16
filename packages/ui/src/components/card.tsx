@@ -2,18 +2,18 @@ import type { HTMLAttributes } from "react";
 import { cn } from "../lib/cn.js";
 
 export type CardProps = HTMLAttributes<HTMLDivElement> & {
-  /** Lift on hover for clickable cards. */
+  /** Invert to the inset surface on hover for clickable cards. */
   interactive?: boolean;
 };
 
-/** Elevated surface — 16px radius, hairline border, soft shadow. */
+/** Flat sign panel: 2px black edge, no shadow, no gradient. */
 export function Card({ className, interactive = false, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-card border border-border-muted bg-surface-raised p-5 shadow-sm",
+        "rounded-card border border-border bg-surface-raised p-5 ring-1 ring-inset ring-border",
         interactive &&
-          "cursor-pointer transition duration-med ease-out hover:-translate-y-0.5 hover:shadow-md",
+          "cursor-pointer transition-colors duration-med ease-out hover:bg-surface-inset",
         className,
       )}
       {...props}
