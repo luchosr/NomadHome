@@ -57,6 +57,11 @@ struck = unavailable / cancelled. Colour reinforces but never alone carries
 state (WCAG 1.4.1). Applies to `Badge`, availability indicators in listing
 cards and filter chips.
 
+Disabled controls follow the same grammar: disabled = dashed border on an
+inset fill with subdued text (`Button`, `Input`); a disabled tertiary
+(link-style) `Button` is struck through. This was added during task 2.x and
+accepted by the user.
+
 ## D6. Pictograms and verification
 
 `Pictogram` (bed, desk) and `Arrow` are custom inline SVG in `packages/ui`,
