@@ -415,6 +415,30 @@ export const en = {
       headline_em: "recommend",
       headline_post: "right now.",
       see_all: "See all stays",
+      cards: {
+        oaxaca: {
+          city: "Oaxaca · MX",
+          title: "Casa del Fig",
+          meta: "6 rooms · coworking · courtyard with a fig tree",
+          price: "MX$ 18,500 / mo",
+          tag: "Featured",
+          left: "3 rooms left",
+        },
+        lisbon: {
+          city: "Lisbon · PT",
+          title: "A Quinta",
+          meta: "4 rooms · garden · 10 min from the beach",
+          price: "€ 1,250 / mo",
+          left: "4 rooms left",
+        },
+        medellin: {
+          city: "Medellín · CO",
+          title: "El Poblado",
+          meta: "8 rooms · big coworking · rooftop pool",
+          price: "COP 3.2M / mo",
+          left: "Waitlist",
+        },
+      },
     },
     how_it_works: {
       headline_pre: "Three steps to your",
@@ -457,6 +481,12 @@ export const en = {
       headline_pre: "Stay in one. Belong to",
       headline_em: "all of them",
       explore_all: "Explore all",
+      cards: {
+        oaxaca: { city: "Oaxaca", detail: "Mexico · 2 houses" },
+        lisbon: { city: "Lisbon", detail: "Portugal · 1 house" },
+        medellin: { city: "Medellín", detail: "Colombia · 1 house" },
+        mexico_city: { city: "Mexico City", detail: "Mexico · 1 house" },
+      },
     },
     stats: {
       cities_label: "cities, and counting",
@@ -479,7 +509,7 @@ export const en = {
     footer: {
       tagline:
         "Co-living and workspaces for people who’d rather live in a few places than visit many.",
-      copyright: "© 2026 NomadHome · Una red de casas y espacios de trabajo",
+      copyright: "© 2026 NomadHome · A network of homes and workspaces",
       privacy: "Privacy",
       terms: "Terms",
       cookies: "Cookies",

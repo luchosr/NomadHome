@@ -23,18 +23,18 @@ export function LocationsSection() {
         </div>
         <ul className="m-0 mt-12 grid list-none grid-cols-2 gap-4 p-0 lg:grid-cols-4">
           {LOCATION_CARDS.map((loc) => (
-            <li key={loc.city} className="border-2 border-border bg-surface-inverse">
+            <li key={loc.cityKey} className="border-2 border-border bg-surface-inverse">
               <img
                 src={loc.img}
-                alt={loc.city}
+                alt={t(loc.cityKey)}
                 className="aspect-[4/3] w-full border-b-2 border-border object-cover"
                 loading="lazy"
               />
               <div className="p-4 text-fg-inverse">
                 <p className="m-0 break-words font-display text-2xl font-black leading-solid text-signal lg:text-3xl">
-                  {loc.city}
+                  {t(loc.cityKey)}
                 </p>
-                <p className="m-0 mt-2 text-sm font-medium">{loc.ct}</p>
+                <p className="m-0 mt-2 text-sm font-medium">{t(loc.detailKey)}</p>
               </div>
             </li>
           ))}

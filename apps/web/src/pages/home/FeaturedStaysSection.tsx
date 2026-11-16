@@ -25,7 +25,7 @@ export function FeaturedStaysSection() {
 
         <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {FEATURED_CARDS.map((card) => (
-            <article key={card.title} className="border-2 border-border">
+            <article key={card.titleKey} className="border-2 border-border">
               <Link
                 to="/search"
                 className="group block h-full bg-surface text-fg no-underline transition-colors hover:bg-signal"
@@ -33,23 +33,25 @@ export function FeaturedStaysSection() {
                 <div className="relative">
                   <img
                     src={card.img}
-                    alt={card.title}
+                    alt={t(card.titleKey)}
                     className="aspect-[4/3] w-full object-cover"
                     loading="lazy"
                   />
                   <p className="absolute left-0 top-0 m-0 border-b-2 border-r-2 border-border bg-signal px-4 py-2 text-sm font-black text-fg">
-                    {card.city}
+                    {t(card.cityKey)}
                   </p>
                 </div>
                 <div className="border-t-2 border-border p-5">
                   <p className="m-0 font-display text-3xl font-black leading-solid group-hover:underline group-hover:underline-offset-4">
-                    {card.title}
+                    {t(card.titleKey)}
                   </p>
-                  <p className="mt-3 text-sm font-medium">{card.meta}</p>
+                  <p className="mt-3 text-sm font-medium">{t(card.metaKey)}</p>
                   <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <span className="text-xl font-black">{card.price}</span>
+                    <span className="text-xl font-black">{t(card.priceKey)}</span>
                     <span className="border-2 border-current px-2 py-0.5 text-sm font-bold">
-                      {"tag" in card && card.tag ? `${card.tag} · ${card.left}` : card.left}
+                      {"tagKey" in card
+                        ? `${t(card.tagKey)} · ${t(card.leftKey)}`
+                        : t(card.leftKey)}
                     </span>
                   </div>
                 </div>
