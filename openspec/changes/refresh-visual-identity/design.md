@@ -149,6 +149,23 @@ listing forms, admin screens, booking and payment flow, auth screens, listing
 detail page. They inherit tokens and primitives automatically but receive no
 bespoke composition work here.
 
+Accepted limitations at the finish review (explicit user decisions or deferred
+by the user; carried to follow-up work, none blocks this change):
+
+- The desktop filter panel starts closed at every width and opens from the
+  Filters toggle; the brief asked for an always-visible side panel at md and
+  up. Deferred (an existing test requires hidden-until-opened).
+- Search has no pagination or "load more" (the data hook sends no page
+  parameter) and the error state has no retry button (no `refetch` exposed).
+- The mobile filter sheet traps Tab but the page behind it is not `inert`.
+- Footer links are `href="#"` placeholders, unchanged from before this change.
+- The landing location rows link to `/search?city=<name>`; the accented
+  spelling (for example "Medellín") only matches listings stored with the same
+  accent because the search uses a case-insensitive but accent-sensitive match.
+- The synthetic testimonial keeps its Spanish original quote with an English
+  translation (deliberate placeholder content, see D8).
+- `apps/web/public/favicon.svg` is a manual copy of the `packages/ui` asset.
+
 ## D10. Search results return amenity codes (additive API field)
 
 Context: the spec and brief require result cards to show 2-3 amenities, but
