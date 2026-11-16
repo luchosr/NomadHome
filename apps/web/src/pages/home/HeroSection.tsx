@@ -89,7 +89,7 @@ export function HeroSection() {
               <p className="m-0 flex items-baseline gap-3" aria-live="polite">
                 <span
                   data-testid="stay-length"
-                  className="font-display font-black leading-solid tabular-nums text-fg"
+                  className={`font-display font-black leading-solid tabular-nums ${nights === null ? "text-fg-muted" : "text-fg"}`}
                   style={{ fontSize: numeralSize(String(nights ?? "").length) }}
                 >
                   {nights ?? t("home.hero.stay_empty")}
