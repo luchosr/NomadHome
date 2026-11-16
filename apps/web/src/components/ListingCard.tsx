@@ -11,7 +11,7 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
   return (
     <Link to={`/listings/${listing.id}`} className="block">
       <Card interactive className="overflow-hidden p-0">
-        <div className="aspect-video bg-inset">
+        <div className="aspect-video bg-surface-inset">
           {listing.primaryPhotoUrl && (
             <img
               src={listing.primaryPhotoUrl}
@@ -21,18 +21,18 @@ export function ListingCard({ listing }: { listing: SearchResultItem }) {
           )}
         </div>
         <div className="p-4">
-          <span className="text-xs font-medium uppercase tracking-wide text-fg-3">
+          <span className="text-xs font-medium uppercase tracking-wide text-fg-subtle">
             {listing.type === "PROPERTY"
               ? t("host.listings.type_property")
               : t("host.listings.type_workspace")}
           </span>
-          <h3 className="mt-1 line-clamp-2 font-semibold text-fg-1">{listing.title}</h3>
-          <p className="text-sm text-fg-3">
+          <h3 className="mt-1 line-clamp-2 font-semibold text-fg">{listing.title}</h3>
+          <p className="text-sm text-fg-subtle">
             {listing.city}, {listing.country}
           </p>
-          <p className="mt-2 font-semibold text-fg-1">
+          <p className="mt-2 font-semibold text-fg">
             {formatRate(listing.nightlyRateCents, listing.currency)}
-            <span className="text-sm font-normal text-fg-3"> {t("search.nightly_rate")}</span>
+            <span className="text-sm font-normal text-fg-subtle"> {t("search.nightly_rate")}</span>
           </p>
         </div>
       </Card>

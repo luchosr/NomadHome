@@ -15,12 +15,12 @@ export function SearchPage() {
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("search.page_title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg">{t("search.page_title")}</h1>
 
       <form onSubmit={(e) => void submit(e)} className="mb-8 space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label htmlFor="city" className="mb-1 block text-sm font-medium text-fg-2">
+            <label htmlFor="city" className="mb-1 block text-sm font-medium text-fg-muted">
               {t("search.city_label")}
             </label>
             <Input
@@ -33,7 +33,7 @@ export function SearchPage() {
             {errors.city && <p className="mt-1 text-xs text-danger">{errors.city.message}</p>}
           </div>
           <div>
-            <label htmlFor="checkIn" className="mb-1 block text-sm font-medium text-fg-2">
+            <label htmlFor="checkIn" className="mb-1 block text-sm font-medium text-fg-muted">
               {t("search.checkin_label")}
             </label>
             <Input
@@ -45,7 +45,7 @@ export function SearchPage() {
             />
           </div>
           <div>
-            <label htmlFor="checkOut" className="mb-1 block text-sm font-medium text-fg-2">
+            <label htmlFor="checkOut" className="mb-1 block text-sm font-medium text-fg-muted">
               {t("search.checkout_label")}
             </label>
             <Input
@@ -60,7 +60,7 @@ export function SearchPage() {
             <button
               type="button"
               onClick={() => setFiltersOpen((o) => !o)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-muted bg-elevated px-[22px] py-[14px] text-sm font-medium text-fg-2 hover:bg-inset sm:w-auto"
+              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border-muted bg-surface-raised px-[22px] py-[14px] text-sm font-medium text-fg-muted hover:bg-surface-inset sm:w-auto"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

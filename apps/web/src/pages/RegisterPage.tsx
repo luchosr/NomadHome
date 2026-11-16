@@ -17,8 +17,8 @@ export function RegisterPage() {
   return (
     <div className="mx-auto max-w-sm px-4 py-8">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-fg-1">{t("auth.register.title")}</h1>
-        <p className="mt-1 text-sm text-fg-3">{t("auth.register.subtitle")}</p>
+        <h1 className="text-2xl font-bold text-fg">{t("auth.register.title")}</h1>
+        <p className="mt-1 text-sm text-fg-subtle">{t("auth.register.subtitle")}</p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-4">
@@ -67,9 +67,9 @@ export function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-fg-3">
+      <p className="mt-6 text-center text-sm text-fg-subtle">
         {t("auth.register.have_account")}{" "}
-        <Link to="/login" className="font-medium text-fg-1 hover:underline">
+        <Link to="/login" className="font-medium text-fg hover:underline">
           {t("auth.register.login_link")}
         </Link>
       </p>

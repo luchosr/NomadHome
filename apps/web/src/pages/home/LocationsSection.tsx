@@ -5,7 +5,7 @@ import { SectionHeading } from "./SectionHeading.js";
 
 export function LocationsSection() {
   return (
-    <section className="border-y border-sand-300 bg-sand-50 py-20">
+    <section className="border-y border-border-muted bg-surface-inset py-20">
       <div className={WRAP}>
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
@@ -17,7 +17,7 @@ export function LocationsSection() {
           </div>
           <Link
             to="/search"
-            className="flex shrink-0 items-center gap-2 text-sm font-medium text-forest-700 hover:text-forest-900"
+            className="flex shrink-0 items-center gap-2 text-sm font-medium text-fg hover:text-fg"
           >
             {t("home.locations.explore_all")}
             <svg
@@ -47,11 +47,11 @@ export function LocationsSection() {
               <div
                 className="absolute inset-0"
                 style={{
-                  background: "linear-gradient(to top, rgba(28,46,39,0.7) 0%, transparent 55%)",
+                  background: "linear-gradient(to top, rgba(10,10,10,0.7) 0%, transparent 55%)",
                 }}
               />
-              <div className="absolute bottom-4 left-4 right-4 text-sand-50">
-                <p className="font-serif text-2xl leading-tight group-hover:underline">
+              <div className="absolute bottom-4 left-4 right-4 text-fg-inverse">
+                <p className="font-display text-2xl leading-tight group-hover:underline">
                   {loc.city}
                 </p>
                 <p className="mt-0.5 text-sm opacity-85">{loc.ct}</p>

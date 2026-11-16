@@ -52,7 +52,7 @@ export function HostUpcomingPage() {
         <Skeleton className="mb-6 h-8 w-40" />
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-muted pb-3">
+            <div key={i} className="flex items-center gap-4 border-b border-border-muted pb-3">
               <Skeleton className="h-4 w-1/5" />
               <Skeleton className="h-4 w-1/5" />
               <Skeleton className="h-4 w-1/6" />
@@ -75,7 +75,7 @@ export function HostUpcomingPage() {
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("host.bookings.title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg">{t("host.bookings.title")}</h1>
 
       {data.length === 0 ? (
         <EmptyState
@@ -87,7 +87,7 @@ export function HostUpcomingPage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-muted text-left text-fg-3">
+              <tr className="border-b border-border-muted text-left text-fg-subtle">
                 <th className="pb-2 pr-4 font-medium">{t("host.bookings.listing_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("host.bookings.guest_col")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("host.bookings.checkin_col")}</th>
@@ -98,15 +98,15 @@ export function HostUpcomingPage() {
             </thead>
             <tbody>
               {data.map((booking) => (
-                <tr key={booking.id} className="border-b border-muted last:border-0">
-                  <td className="py-3 pr-4 text-fg-1">{booking.listing.title}</td>
-                  <td className="py-3 pr-4 text-fg-2">{booking.guest.email}</td>
-                  <td className="py-3 pr-4 text-fg-2">{formatDate(booking.checkIn)}</td>
-                  <td className="py-3 pr-4 text-fg-2">{formatDate(booking.checkOut)}</td>
+                <tr key={booking.id} className="border-b border-border-muted last:border-0">
+                  <td className="py-3 pr-4 text-fg">{booking.listing.title}</td>
+                  <td className="py-3 pr-4 text-fg-muted">{booking.guest.email}</td>
+                  <td className="py-3 pr-4 text-fg-muted">{formatDate(booking.checkIn)}</td>
+                  <td className="py-3 pr-4 text-fg-muted">{formatDate(booking.checkOut)}</td>
                   <td className="py-3 pr-4">
                     <Badge tone={statusTone(booking.status)}>{statusLabel(booking.status)}</Badge>
                   </td>
-                  <td className="py-3 text-fg-2">
+                  <td className="py-3 text-fg-muted">
                     {formatAmount(booking.totalCents, booking.currency)}
                   </td>
                 </tr>

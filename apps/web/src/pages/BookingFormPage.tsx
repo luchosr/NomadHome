@@ -60,7 +60,7 @@ export function BookingFormPage() {
   if (!hasDates) {
     return (
       <div className="mx-auto max-w-lg py-12 text-center">
-        <p className="text-fg-2">{t("booking.ui.select_dates")}</p>
+        <p className="text-fg-muted">{t("booking.ui.select_dates")}</p>
         <div className="mt-4">
           <Link to={id ? `/listings/${id}` : "/search"}>
             <Button variant="secondary">{t("booking.ui.back_to_listing")}</Button>
@@ -74,7 +74,7 @@ export function BookingFormPage() {
     return (
       <div className="mx-auto max-w-xl px-4 py-8">
         <Skeleton className="mb-6 h-8 w-48" />
-        <div className="overflow-hidden rounded-xl border border-subtle bg-elevated shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-border-muted bg-surface-raised shadow-sm">
           <Skeleton className="h-40 w-full rounded-none" />
           <div className="space-y-4 p-6">
             <Skeleton className="h-5 w-2/3" />
@@ -144,46 +144,46 @@ export function BookingFormPage() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("booking.ui.form_title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg">{t("booking.ui.form_title")}</h1>
 
-      <div className="overflow-hidden rounded-xl border border-subtle bg-elevated shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border-muted bg-surface-raised shadow-sm">
         {primaryPhoto && (
           <img src={primaryPhoto.url} alt={listing.title} className="h-40 w-full object-cover" />
         )}
         <div className="space-y-4 p-6">
           <div>
-            <p className="text-lg font-semibold text-fg-1">{listing.title}</p>
-            <p className="text-sm text-fg-3">
+            <p className="text-lg font-semibold text-fg">{listing.title}</p>
+            <p className="text-sm text-fg-subtle">
               {listing.city}, {listing.country}
             </p>
           </div>
 
-          <div className="flex justify-between text-sm text-fg-2">
+          <div className="flex justify-between text-sm text-fg-muted">
             <span>{t("booking.ui.checkin_label")}</span>
-            <span className="font-medium text-fg-1">{checkIn}</span>
+            <span className="font-medium text-fg">{checkIn}</span>
           </div>
 
-          <div className="flex justify-between text-sm text-fg-2">
+          <div className="flex justify-between text-sm text-fg-muted">
             <span>{t("booking.ui.checkout_label")}</span>
-            <span className="font-medium text-fg-1">{checkOut}</span>
+            <span className="font-medium text-fg">{checkOut}</span>
           </div>
 
-          <div className="flex justify-between text-sm text-fg-2">
+          <div className="flex justify-between text-sm text-fg-muted">
             <span>
               {nightlyRate} &times; {nights}{" "}
               {nights === 1 ? t("booking.ui.night") : t("booking.ui.nights")}
             </span>
-            <span className="font-medium text-fg-1">{subtotal}</span>
+            <span className="font-medium text-fg">{subtotal}</span>
           </div>
 
-          <div className="flex justify-between text-sm text-fg-2">
+          <div className="flex justify-between text-sm text-fg-muted">
             <span>{t("booking.ui.service_fee")}</span>
-            <span className="font-medium text-fg-1">{serviceFee}</span>
+            <span className="font-medium text-fg">{serviceFee}</span>
           </div>
 
-          <div className="flex justify-between border-t border-subtle pt-4">
-            <span className="font-semibold text-fg-1">{t("booking.ui.total")}</span>
-            <span className="font-bold text-fg-1">{total}</span>
+          <div className="flex justify-between border-t border-border-muted pt-4">
+            <span className="font-semibold text-fg">{t("booking.ui.total")}</span>
+            <span className="font-bold text-fg">{total}</span>
           </div>
         </div>
       </div>

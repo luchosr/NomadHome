@@ -10,9 +10,9 @@ interface Props {
 /** Bare-message placeholder for an empty list, with an optional next-step CTA. */
 export function EmptyState({ message, ctaLabel, ctaTo }: Props) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border border-subtle bg-elevated px-6 py-12 text-center">
+    <div className="flex flex-col items-center gap-4 rounded-xl border border-border-muted bg-surface-raised px-6 py-12 text-center">
       <svg
-        className="h-10 w-10 text-fg-muted"
+        className="h-10 w-10 text-fg-subtle"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -23,7 +23,7 @@ export function EmptyState({ message, ctaLabel, ctaTo }: Props) {
         <rect x="3" y="7" width="18" height="14" rx="2" />
         <path d="M8 3v6M16 3v6M3 11h18" />
       </svg>
-      <p className="text-fg-2">{message}</p>
+      <p className="text-fg-muted">{message}</p>
       {ctaLabel && ctaTo && (
         <Link to={ctaTo}>
           <Button variant="secondary">{ctaLabel}</Button>

@@ -5,12 +5,12 @@ import { cn } from "../lib/cn.js";
 const badge = cva("inline-flex items-center rounded-pill px-3 py-1 text-xs font-medium", {
   variants: {
     tone: {
-      neutral: "bg-sand-200 text-ink-700",
+      neutral: "bg-surface-inset text-fg-muted",
       success: "bg-success-bg text-success",
       warning: "bg-warning-bg text-warning",
       danger: "bg-danger-bg text-danger",
       info: "bg-info-bg text-info",
-      accent: "bg-terracotta-50 text-terracotta-700",
+      accent: "bg-signal text-fg",
     },
   },
   defaultVariants: { tone: "neutral" },

@@ -13,7 +13,7 @@ export function CoLivingSection() {
             pre={t("home.coliving.headline_pre")}
             em={t("home.coliving.headline_em")}
           />
-          <p className="mt-5 text-lg leading-relaxed text-ink-700">{t("home.coliving.body")}</p>
+          <p className="mt-5 text-lg leading-relaxed text-fg-muted">{t("home.coliving.body")}</p>
           <FeatureList features={COLIVING_FEATURES} />
         </div>
         <div
@@ -26,13 +26,13 @@ export function CoLivingSection() {
             loading="lazy"
           />
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.25)" }} />
-          <div className="absolute bottom-5 left-5 rounded-xl border border-ink-100 bg-white px-4 py-3 shadow-md">
-            <p className="text-[11px] font-medium uppercase tracking-widest text-ink-500">
+          <div className="absolute bottom-5 left-5 rounded-xl border border-border-muted bg-white px-4 py-3 shadow-md">
+            <p className="text-[11px] font-medium uppercase tracking-widest text-fg-subtle">
               {t("home.coliving.price_label")}
             </p>
-            <p className="mt-1 font-serif text-2xl leading-tight text-ink-900">
+            <p className="mt-1 font-display text-2xl leading-tight text-fg">
               {t("home.coliving.price_value")}
-              <span className="ml-1 font-sans text-sm text-ink-500">
+              <span className="ml-1 font-sans text-sm text-fg-subtle">
                 {t("home.coliving.price_period")}
               </span>
             </p>

@@ -18,7 +18,7 @@ export function FeaturedStaysSection() {
           </div>
           <Link
             to="/search"
-            className="flex shrink-0 items-center gap-2 text-sm font-medium text-forest-700 hover:text-forest-900"
+            className="flex shrink-0 items-center gap-2 text-sm font-medium text-fg hover:text-fg"
           >
             {t("home.featured.see_all")}
             <svg
@@ -38,7 +38,7 @@ export function FeaturedStaysSection() {
           {FEATURED_CARDS.map((card) => (
             <article
               key={card.title}
-              className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
+              className="overflow-hidden rounded-2xl border border-border-muted bg-white shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
             >
               <Link to="/search" className="block no-underline">
                 <div className={`relative aspect-[4/3] ${GRADIENTS[card.grad]}`}>
@@ -56,24 +56,24 @@ export function FeaturedStaysSection() {
                   />
                   <div className="absolute left-3.5 top-3.5 flex gap-1.5">
                     <span
-                      className="rounded-full px-3 py-1 text-xs font-medium text-sand-50"
-                      style={{ background: "rgba(28,46,39,0.82)", backdropFilter: "blur(8px)" }}
+                      className="rounded-full px-3 py-1 text-xs font-medium text-fg-inverse"
+                      style={{ background: "rgba(10,10,10,0.82)", backdropFilter: "blur(8px)" }}
                     >
                       {card.city}
                     </span>
                     {"tag" in card && card.tag && (
-                      <span className="rounded-full bg-terracotta-50 px-3 py-1 text-xs font-medium text-terracotta-900">
+                      <span className="rounded-full bg-danger-bg px-3 py-1 text-xs font-medium text-danger">
                         {card.tag}
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="px-[18px] pb-[18px] pt-4">
-                  <p className="font-serif text-2xl leading-tight text-ink-900">{card.title}</p>
-                  <p className="mt-1 text-sm text-ink-500">{card.meta}</p>
+                  <p className="font-display text-2xl leading-tight text-fg">{card.title}</p>
+                  <p className="mt-1 text-sm text-fg-subtle">{card.meta}</p>
                   <div className="mt-3.5 flex items-baseline justify-between">
-                    <span className="text-base font-medium text-ink-900">{card.price}</span>
-                    <span className="text-sm font-medium text-terracotta-700">{card.left}</span>
+                    <span className="text-base font-medium text-fg">{card.price}</span>
+                    <span className="text-sm font-medium text-danger">{card.left}</span>
                   </div>
                 </div>
               </Link>

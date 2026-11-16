@@ -31,12 +31,12 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
 
   return (
     <Modal labelledBy="cancel-modal-title">
-      <h2 id="cancel-modal-title" className="mb-2 text-xl font-semibold text-fg-1">
+      <h2 id="cancel-modal-title" className="mb-2 text-xl font-semibold text-fg">
         {t("booking.dashboard.cancel_modal_title")}
       </h2>
-      <p className="mb-4 text-fg-2">{t("booking.dashboard.cancel_modal_body")}</p>
+      <p className="mb-4 text-fg-muted">{t("booking.dashboard.cancel_modal_body")}</p>
 
-      <label htmlFor="cancel-reason" className="mb-1 block text-sm font-medium text-fg-2">
+      <label htmlFor="cancel-reason" className="mb-1 block text-sm font-medium text-fg-muted">
         {t("booking.dashboard.cancel_reason_label")}
       </label>
       <textarea
@@ -46,7 +46,7 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
         maxLength={500}
         rows={3}
         placeholder={t("booking.dashboard.cancel_reason_placeholder")}
-        className="w-full rounded-md border border-muted bg-elevated px-4 py-3 text-base text-fg-1 placeholder:text-fg-muted focus-visible:border-forest-500 focus-visible:outline-none"
+        className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle focus-visible:border-border focus-visible:outline-none"
       />
 
       {error && (

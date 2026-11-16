@@ -26,13 +26,13 @@ export function VerifyEmailPage() {
     <div className="flex min-h-[60vh] items-center justify-center px-6">
       <div className="w-full max-w-md text-center">
         {status === "pending" && (
-          <p className="text-ink-500">{t("identity.verify_email.pending")}</p>
+          <p className="text-fg-subtle">{t("identity.verify_email.pending")}</p>
         )}
         {status === "success" && (
           <>
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-forest-50">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-success-bg">
               <svg
-                className="h-8 w-8 text-forest-700"
+                className="h-8 w-8 text-success"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -42,13 +42,13 @@ export function VerifyEmailPage() {
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </div>
-            <h1 className="font-serif text-3xl text-ink-900">
+            <h1 className="font-display text-3xl text-fg">
               {t("identity.verify_email.success_title")}
             </h1>
-            <p className="mt-3 text-ink-500">{t("identity.verify_email.success_body")}</p>
+            <p className="mt-3 text-fg-subtle">{t("identity.verify_email.success_body")}</p>
             <Link
               to="/login"
-              className="mt-8 inline-block rounded-xl bg-forest-700 px-8 py-3 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
+              className="mt-8 inline-block rounded-xl bg-action px-8 py-3 text-sm font-medium text-fg-inverse transition-colors hover:bg-action-hover no-underline"
             >
               {t("identity.verify_email.success_cta")}
             </Link>
@@ -56,9 +56,9 @@ export function VerifyEmailPage() {
         )}
         {status === "error" && (
           <>
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-terracotta-50">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-danger-bg">
               <svg
-                className="h-8 w-8 text-terracotta-700"
+                className="h-8 w-8 text-danger"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -68,13 +68,13 @@ export function VerifyEmailPage() {
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="font-serif text-3xl text-ink-900">
+            <h1 className="font-display text-3xl text-fg">
               {t("identity.verify_email.error_title")}
             </h1>
-            <p className="mt-3 text-ink-500">{t("identity.verify_email.error_body")}</p>
+            <p className="mt-3 text-fg-subtle">{t("identity.verify_email.error_body")}</p>
             <Link
               to="/register"
-              className="mt-8 inline-block rounded-xl bg-forest-700 px-8 py-3 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
+              className="mt-8 inline-block rounded-xl bg-action px-8 py-3 text-sm font-medium text-fg-inverse transition-colors hover:bg-action-hover no-underline"
             >
               {t("identity.verify_email.error_cta")}
             </Link>

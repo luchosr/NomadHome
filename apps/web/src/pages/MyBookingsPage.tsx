@@ -107,7 +107,7 @@ export function MyBookingsPage() {
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("booking.dashboard.title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg">{t("booking.dashboard.title")}</h1>
 
       {data.data.length === 0 ? (
         <EmptyState
@@ -128,13 +128,13 @@ export function MyBookingsPage() {
                   <div className="flex-1">
                     <Link
                       to={`/listings/${booking.listingId}`}
-                      className="font-semibold text-fg-1 hover:underline"
+                      className="font-semibold text-fg hover:underline"
                     >
                       {booking.listing.title}
                     </Link>
-                    <p className="mt-1 text-sm text-fg-2">
+                    <p className="mt-1 text-sm text-fg-muted">
                       {formatDate(booking.checkIn)} – {formatDate(booking.checkOut)}{" "}
-                      <span className="text-fg-muted">
+                      <span className="text-fg-subtle">
                         ({nights}{" "}
                         {nights === 1
                           ? t("booking.dashboard.night")

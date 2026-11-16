@@ -8,13 +8,13 @@ const button = cva(
     variants: {
       variant: {
         // forest fill, sand text — the default CTA
-        primary: "bg-forest-700 text-sand-50 hover:bg-forest-900",
+        primary: "bg-action text-fg-inverse hover:bg-action-hover",
         // transparent with forest border
-        secondary: "border border-forest-700 bg-transparent text-forest-700 hover:bg-sand-200",
+        secondary: "border border-border bg-transparent text-fg hover:bg-surface-inset",
         // link-style, underline on hover only
-        tertiary: "bg-transparent px-0 py-0 text-forest-700 hover:underline",
+        tertiary: "bg-transparent px-0 py-0 text-fg hover:underline",
         // terracotta — used sparingly
-        destructive: "bg-terracotta-500 text-sand-50 hover:bg-terracotta-700",
+        destructive: "bg-danger text-fg-inverse hover:bg-danger-hover",
       },
     },
     defaultVariants: { variant: "primary" },

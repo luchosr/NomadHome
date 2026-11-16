@@ -7,11 +7,11 @@ import { GroupedSelect } from "./GroupedSelect.js";
 import { AmenityCheckboxGrid } from "./AmenityCheckboxGrid.js";
 
 const SELECT_CLASS =
-  "w-full rounded-md border border-muted bg-elevated px-4 py-3 text-base text-fg-1 focus-visible:border-forest-500 focus-visible:outline-none";
+  "w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg focus-visible:border-border focus-visible:outline-none";
 
 function FieldHint({ error, hint }: { error?: string; hint: string }) {
   if (error) return <p className="mt-1 text-xs text-danger">{error}</p>;
-  return <p className="mt-1 text-xs text-fg-3">{hint}</p>;
+  return <p className="mt-1 text-xs text-fg-subtle">{hint}</p>;
 }
 
 interface Props {
@@ -37,7 +37,7 @@ export function CreateListingForm({
   return (
     <form onSubmit={(e) => void submit(e)} className="space-y-5" noValidate>
       <div>
-        <label htmlFor="title" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="title" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_title")}
         </label>
         <Input id="title" {...register("title")} aria-invalid={!!errors.title} />
@@ -45,7 +45,7 @@ export function CreateListingForm({
       </div>
 
       <div>
-        <label htmlFor="description" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="description" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_description")}
         </label>
         <textarea
@@ -53,13 +53,13 @@ export function CreateListingForm({
           {...register("description")}
           rows={4}
           aria-invalid={!!errors.description}
-          className="w-full rounded-md border border-muted bg-elevated px-4 py-3 text-base text-fg-1 placeholder:text-fg-muted transition-colors duration-fast ease-out focus-visible:border-forest-500 focus-visible:outline-none"
+          className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle transition-colors duration-fast ease-out focus-visible:border-border focus-visible:outline-none"
         />
         <FieldHint error={errors.description?.message} hint={t("host.listings.hint_description")} />
       </div>
 
       <div>
-        <label htmlFor="type" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="type" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_type")}
         </label>
         <select id="type" {...register("type")} className={SELECT_CLASS}>
@@ -70,7 +70,7 @@ export function CreateListingForm({
       </div>
 
       <div>
-        <label htmlFor="city" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="city" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_city")}
         </label>
         <Input id="city" {...register("city")} aria-invalid={!!errors.city} />
@@ -78,7 +78,7 @@ export function CreateListingForm({
       </div>
 
       <div>
-        <label htmlFor="country" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="country" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_country")}
         </label>
         <GroupedSelect
@@ -93,7 +93,7 @@ export function CreateListingForm({
       </div>
 
       <div>
-        <label htmlFor="addressLine" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="addressLine" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_address")}
         </label>
         <Input id="addressLine" {...register("addressLine")} aria-invalid={!!errors.addressLine} />
@@ -101,7 +101,7 @@ export function CreateListingForm({
       </div>
 
       <div>
-        <label htmlFor="capacity" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="capacity" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_capacity")}
         </label>
         <Input
@@ -115,7 +115,7 @@ export function CreateListingForm({
       </div>
 
       <div>
-        <label htmlFor="nightlyRate" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="nightlyRate" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_rate")}
         </label>
         <Input
@@ -130,7 +130,7 @@ export function CreateListingForm({
       </div>
 
       <div>
-        <label htmlFor="currency" className="mb-1 block text-sm font-medium text-fg-2">
+        <label htmlFor="currency" className="mb-1 block text-sm font-medium text-fg-muted">
           {t("host.listings.field_currency")}
         </label>
         <GroupedSelect
@@ -144,10 +144,10 @@ export function CreateListingForm({
       </div>
 
       <fieldset>
-        <legend className="mb-1 text-sm font-medium text-fg-2">
+        <legend className="mb-1 text-sm font-medium text-fg-muted">
           {t("host.listings.field_amenities")}
         </legend>
-        <p className="mb-2 text-xs text-fg-3">{t("host.listings.hint_amenities")}</p>
+        <p className="mb-2 text-xs text-fg-subtle">{t("host.listings.hint_amenities")}</p>
         <AmenityCheckboxGrid
           amenities={AMENITIES}
           selected={selectedAmenities}

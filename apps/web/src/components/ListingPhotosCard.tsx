@@ -31,9 +31,9 @@ export function ListingPhotosCard({
 
   return (
     <Card>
-      <h2 className="mb-4 text-lg font-semibold text-fg-1">{t("host.photos.title")}</h2>
+      <h2 className="mb-4 text-lg font-semibold text-fg">{t("host.photos.title")}</h2>
       {photos.length === 0 ? (
-        <p className="text-fg-3">{t("host.photos.no_photos")}</p>
+        <p className="text-fg-subtle">{t("host.photos.no_photos")}</p>
       ) : (
         <div className="grid grid-cols-3 gap-3">
           {photos.map((photo, index) => (

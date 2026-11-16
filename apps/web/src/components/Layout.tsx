@@ -25,13 +25,12 @@ function Logo() {
           strokeLinecap="round"
         />
       </svg>
-      <span className="font-serif text-[26px] leading-none text-ink-900">NomadHome</span>
+      <span className="font-display text-[26px] leading-none text-fg">NomadHome</span>
     </Link>
   );
 }
 
-const navLink =
-  "text-sm font-medium text-ink-700 transition-colors hover:text-forest-700 no-underline";
+const navLink = "text-sm font-medium text-fg-muted transition-colors hover:text-fg no-underline";
 
 export function Layout() {
   const { user, isLoading, logout } = useAuth();
@@ -48,12 +47,12 @@ export function Layout() {
   const close = () => setMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-sand-100">
+    <div className="min-h-screen bg-surface">
       {navigation.state === "loading" && (
-        <div className="fixed inset-x-0 top-0 z-50 h-0.5 animate-pulse bg-forest-700" />
+        <div className="fixed inset-x-0 top-0 z-50 h-0.5 animate-pulse bg-action" />
       )}
       <header
-        className="sticky top-0 z-50 border-b border-sand-300"
+        className="sticky top-0 z-50 border-b border-border-muted"
         style={{
           background: "rgba(245, 240, 232, 0.85)",
           backdropFilter: "blur(20px)",
@@ -72,7 +71,7 @@ export function Layout() {
               <div className="hidden items-center gap-6 md:flex">
                 {user ? (
                   <>
-                    <span className="text-sm font-medium text-forest-700">{user.email}</span>
+                    <span className="text-sm font-medium text-fg">{user.email}</span>
                     {user.roles.includes("host") ? (
                       <Link to="/host/listings" className={navLink}>
                         {t("nav.host_dashboard")}
@@ -97,7 +96,7 @@ export function Layout() {
                     </Link>
                     <button
                       onClick={() => void handleLogout()}
-                      className="rounded-xl border border-forest-700 px-4 py-2 text-sm font-medium text-forest-700 transition-colors hover:bg-sand-200"
+                      className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-fg transition-colors hover:bg-surface-inset"
                     >
                       {t("nav.logout")}
                     </button>
@@ -109,7 +108,7 @@ export function Layout() {
                     </Link>
                     <Link
                       to="/register"
-                      className="rounded-xl bg-forest-700 px-4 py-2 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
+                      className="rounded-xl bg-action px-4 py-2 text-sm font-medium text-fg-inverse transition-colors hover:bg-action-hover no-underline"
                     >
                       {t("nav.register")}
                     </Link>
@@ -123,7 +122,7 @@ export function Layout() {
                   <button
                     onClick={() => setMenuOpen((o) => !o)}
                     aria-label="Toggle menu"
-                    className="rounded-lg p-2 text-ink-700 hover:bg-sand-200"
+                    className="rounded-lg p-2 text-fg-muted hover:bg-surface-inset"
                   >
                     {menuOpen ? (
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -150,7 +149,7 @@ export function Layout() {
                     </Link>
                     <Link
                       to="/register"
-                      className="rounded-xl bg-forest-700 px-4 py-2 text-sm font-medium text-sand-50 transition-colors hover:bg-forest-900 no-underline"
+                      className="rounded-xl bg-action px-4 py-2 text-sm font-medium text-fg-inverse transition-colors hover:bg-action-hover no-underline"
                     >
                       {t("nav.register")}
                     </Link>
@@ -163,8 +162,8 @@ export function Layout() {
 
         {/* Mobile dropdown menu (logged-in only) */}
         {menuOpen && user && (
-          <div className="border-t border-sand-300 px-6 py-4 md:hidden">
-            <p className="mb-3 text-xs font-medium text-forest-700">{user.email}</p>
+          <div className="border-t border-border-muted px-6 py-4 md:hidden">
+            <p className="mb-3 text-xs font-medium text-fg">{user.email}</p>
             <nav className="flex flex-col gap-1">
               {user.roles.includes("host") ? (
                 <Link to="/host/listings" className={`${navLink} py-2`} onClick={close}>
@@ -190,7 +189,7 @@ export function Layout() {
               </Link>
               <button
                 onClick={() => void handleLogout()}
-                className="mt-2 w-full rounded-xl border border-forest-700 px-4 py-2 text-sm font-medium text-forest-700 transition-colors hover:bg-sand-200"
+                className="mt-2 w-full rounded-xl border border-border px-4 py-2 text-sm font-medium text-fg transition-colors hover:bg-surface-inset"
               >
                 {t("nav.logout")}
               </button>

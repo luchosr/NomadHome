@@ -7,7 +7,7 @@ export function CreateListingPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold text-fg-1">{t("host.listings.create_title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-fg">{t("host.listings.create_title")}</h1>
       <CreateListingForm
         form={form}
         selectedAmenities={selectedAmenities}

@@ -33,8 +33,8 @@ export function BecomeHostPage() {
   return (
     <div className="mx-auto max-w-sm px-4 py-8">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-fg-1">{t("identity.become_host.title")}</h1>
-        <p className="mt-1 text-sm text-fg-3">{t("identity.become_host.subtitle")}</p>
+        <h1 className="text-2xl font-bold text-fg">{t("identity.become_host.title")}</h1>
+        <p className="mt-1 text-sm text-fg-subtle">{t("identity.become_host.subtitle")}</p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-4">
@@ -67,10 +67,10 @@ export function BecomeHostPage() {
           <input
             id="acceptedTerms"
             type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-muted"
+            className="mt-0.5 h-4 w-4 rounded border-border-muted"
             {...register("acceptedTerms")}
           />
-          <label htmlFor="acceptedTerms" className="text-sm text-fg-2">
+          <label htmlFor="acceptedTerms" className="text-sm text-fg-muted">
             {t("identity.become_host.terms_label")}
           </label>
         </div>
