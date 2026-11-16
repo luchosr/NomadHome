@@ -12,19 +12,19 @@ break `openspec validate`).
 
 ## 0. Setup (MANDATORY - FIRST STEP)
 
-- [ ] 0.1 Confirm work is on branch `feature/NH-118-refresh-visual-identity` (worktree `../nomadhome-worktrees/NH-118`) created from `origin/main`
-- [ ] 0.2 Verify current branch and clean baseline: `pnpm lint && pnpm typecheck && pnpm test` green before changes
+- [x] 0.1 Confirm work is on branch `feature/NH-118-refresh-visual-identity` (worktree `../nomadhome-worktrees/NH-118`) created from `origin/main`
+- [x] 0.2 Verify current branch and clean baseline: `pnpm lint && pnpm typecheck && pnpm test` green before changes
 
 ## 1. Tokens and fonts
 
-- [ ] 1.1 Red: add Vitest/static checks (token resolution, legacy scale absence per spec scenarios) in `packages/ui` or `packages/config` that fail against the current preset
+- [x] 1.1 Red: add Vitest/static checks (token resolution, legacy scale absence per spec scenarios) in `packages/ui` or `packages/config` that fail against the current preset
 - [x] 1.2 Replace `sand`/`ink`/`forest`/`terracotta` with Gantry tokens (signal, black, white, sign-green, semantic roles, `display`/`sans`/`mono`, fluid sign-scale type, radii, flat elevations) in `packages/config/tailwind.preset.js`; re-point leftover old-scale class usages across `apps/web/src` and `packages/ui/src` to semantic roles
 - [x] 1.3 Choose the display/text typeface per design.md D4, self-host it, and record the choice and licence in `design.md`
 - [ ] 1.4 (partial: tokens and base styles done; logo SVG refresh still pending) Rewrite `packages/ui/src/styles/globals.css`: font loading, token CSS variables, white canvas, display headings set solid, AA-compliant focus ring; keep `@tailwind` directives; refresh logo SVGs in `packages/ui/src/assets/` for the new identity
 
 ## 2. UI primitives (same APIs)
 
-- [ ] 2.1 Red: update `button`, `badge`, `input`, `card`, `skeleton` tests to assert the new variants and unchanged prop surfaces; add failing tests for `Pictogram` and `Arrow`
+- [x] 2.1 Red: update `button`, `badge`, `input`, `card`, `skeleton` tests to assert the new variants and unchanged prop surfaces; add failing tests for `Pictogram` and `Arrow`
 - [x] 2.2 Restyle `Button`, `Input` in `packages/ui/src/components/` (no prop changes)
 - [x] 2.3 Restyle `Badge` (solid/dashed/struck states), `Card`, `Skeleton`
 - [x] 2.4 Add `Pictogram` (bed, desk) and `Arrow` SVG primitives and export all from `packages/ui/src/index.ts`
@@ -32,10 +32,10 @@ break `openspec validate`).
 
 ## 3. Landing migration
 
-- [ ] 3.1 Red: update `apps/web` landing tests/selectors for the new structure (first-viewport elements, search submit unchanged); add `t()` keys under existing top-level domains only
+- [x] 3.1 Red: update `apps/web` landing tests/selectors for the new structure (first-viewport elements, search submit unchanged); add `t()` keys under existing top-level domains only
 - [x] 3.2 Rebuild `HeroSection.tsx` and `useHomeSearch.ts` presentation: yellow panel, city input as largest line, dates plus stay-length numeral, Live/Work pictograms with shared arrow to the black search panel; slim nav styling in `Layout.tsx`; no hero photo
-- [ ] 3.3 Migrate remaining sections in `apps/web/src/pages/home/` (`HowItWorksSection`, `CoLivingSection`, `WorkspaceSection`, `FeaturedStaysSection`, `LocationsSection`, `CtaBandSection`, `SectionHeading`, `FeatureList`, `CheckIcon`, `HomeFooter`) to one-panel-one-fact composition
-- [ ] 3.4 Mark `StatsSection` and `TestimonialSection` as synthetic placeholders (code comment per design.md D8), restyled only
+- [x] 3.3 Migrate remaining sections in `apps/web/src/pages/home/` (`HowItWorksSection`, `CoLivingSection`, `WorkspaceSection`, `FeaturedStaysSection`, `LocationsSection`, `CtaBandSection`, `SectionHeading`, `FeatureList`, `CheckIcon`, `HomeFooter`) to one-panel-one-fact composition
+- [x] 3.4 Mark `StatsSection` and `TestimonialSection` as synthetic placeholders (code comment per design.md D8), restyled only
 - [ ] 3.5 Verify at 360 px and desktop: no horizontal scroll, no clipping; `pnpm test` green
 
 ## 4. Search API: amenities in results (backend, additive)
