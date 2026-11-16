@@ -18,12 +18,14 @@ export function WorkspaceSection() {
             className="aspect-[5/4] w-full object-cover"
             loading="lazy"
           />
-          <div className="flex items-center gap-4 border-t-2 border-border bg-surface-inverse px-6 py-5 text-fg-inverse">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-2 border-border bg-surface-inverse px-6 py-5 text-fg-inverse">
             <span aria-hidden="true" className="h-4 w-4 shrink-0 bg-signal" />
             <p className="m-0 whitespace-nowrap text-lg font-black">
               {t("home.workspace.status_open")}
             </p>
-            <p className="m-0 ml-auto text-base font-bold">{t("home.workspace.status_desks")}</p>
+            <p className="m-0 ml-auto text-base font-bold whitespace-nowrap">
+              {t("home.workspace.status_desks")}
+            </p>
           </div>
         </div>
         <div>
