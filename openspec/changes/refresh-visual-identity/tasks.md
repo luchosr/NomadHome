@@ -89,11 +89,11 @@ break `openspec validate`).
 
 ## 12. Docs
 
-- [ ] 12.1 Run Impeccable `document` to generate `DESIGN.md` from the shipped build
-- [ ] 12.2 Update documentation referencing old tokens/fonts (README, `openspec/project.md` design notes, `docs/` where relevant) (MANDATORY)
+- [x] 12.1 Run Impeccable `document` to generate `DESIGN.md` from the shipped build
+- [x] 12.2 Update documentation referencing old tokens/fonts (README, `openspec/project.md` design notes, `docs/` where relevant) (MANDATORY)
 
 ## 13. Final verification
 
-- [ ] 13.1 Run the Impeccable detector over landing and search; fix or document findings
-- [ ] 13.2 `node scripts/check-mvp-scope.mjs` and `openspec validate refresh-visual-identity --strict` pass
-- [ ] 13.3 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
+- [x] 13.1 Run the Impeccable detector over landing and search; fix or document findings
+- [x] 13.2 `node scripts/check-mvp-scope.mjs` and `openspec validate refresh-visual-identity --strict` pass
+- [x] 13.3 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
