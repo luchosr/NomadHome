@@ -58,26 +58,22 @@ export const FEATURED_CARDS = [
   },
 ] as const;
 
-// SYNTHETIC (NH-118, design.md D8): the four cities are demo tiles, not a statement of
+// SYNTHETIC (NH-118, design.md D8): the four cities are demo rows, not a statement of
 // where inventory exists. Replace with real data before public launch (task 11.1).
 export const LOCATION_CARDS = [
   {
-    img: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=800&q=80&fit=crop",
     cityKey: "home.locations.cards.oaxaca.city",
     detailKey: "home.locations.cards.oaxaca.detail",
   },
   {
-    img: "https://picsum.photos/seed/lisboa-city/800/600",
     cityKey: "home.locations.cards.lisbon.city",
     detailKey: "home.locations.cards.lisbon.detail",
   },
   {
-    img: "https://picsum.photos/seed/medellin/800/600",
     cityKey: "home.locations.cards.medellin.city",
     detailKey: "home.locations.cards.medellin.detail",
   },
   {
-    img: "https://images.unsplash.com/photo-1574936145840-28808d77a0b6?w=800&q=80&fit=crop",
     cityKey: "home.locations.cards.mexico_city.city",
     detailKey: "home.locations.cards.mexico_city.detail",
   },

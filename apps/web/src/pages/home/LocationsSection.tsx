@@ -4,7 +4,7 @@ import { Arrow } from "@nomadhome/ui";
 import { WRAP, FIELD, LOCATION_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
-// SYNTHETIC (NH-118, design.md D8): the city tiles come from LOCATION_CARDS (demo data).
+// SYNTHETIC (NH-118, design.md D8): the city rows come from LOCATION_CARDS (demo data).
 // Replace before public launch (task 11.1).
 export function LocationsSection() {
   return (
@@ -23,21 +23,23 @@ export function LocationsSection() {
             <Arrow className="size-5" />
           </Link>
         </div>
-        <ul className="m-0 mt-12 grid list-none grid-cols-2 gap-4 p-0 lg:grid-cols-4">
+        {/* Destination index: city names are the largest type on the page. Each row links to the
+            search page with that city preselected (the page reads the `city` query param). */}
+        <ul className="m-0 mt-12 list-none border-t-2 border-border p-0">
           {LOCATION_CARDS.map((loc) => (
-            <li key={loc.cityKey} className="border-2 border-border bg-surface-inverse">
-              <img
-                src={loc.img}
-                alt={t(loc.cityKey)}
-                className="aspect-[4/3] w-full border-b-2 border-border object-cover"
-                loading="lazy"
-              />
-              <div className="p-4 text-fg-inverse">
-                <p className="m-0 break-words font-display text-2xl font-black leading-solid text-signal lg:text-3xl">
-                  {t(loc.cityKey)}
-                </p>
-                <p className="m-0 mt-2 text-sm font-medium">{t(loc.detailKey)}</p>
-              </div>
+            <li key={loc.cityKey} className="border-b-2 border-border">
+              <Link
+                to={`/search?city=${encodeURIComponent(t(loc.cityKey))}`}
+                className="group flex items-center gap-x-6 py-5 text-fg no-underline transition-colors duration-med ease-out hover:bg-action hover:text-signal focus-visible:bg-action focus-visible:text-signal focus-visible:[--focus:var(--signal)] focus-visible:-outline-offset-[5px] px-4 md:py-6"
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-1 md:flex-row md:items-baseline md:gap-x-8">
+                  <span className="break-words font-display text-5xl font-black leading-solid md:text-7xl lg:text-8xl">
+                    {t(loc.cityKey)}
+                  </span>
+                  <span className="text-base font-bold">{t(loc.detailKey)}</span>
+                </span>
+                <Arrow className="size-10 shrink-0 md:size-16" />
+              </Link>
             </li>
           ))}
         </ul>
