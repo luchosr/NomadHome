@@ -417,6 +417,7 @@ export const en = {
       see_all: "See all stays",
       cards: {
         oaxaca: {
+          code: "OAX",
           city: "Oaxaca · MX",
           title: "Casa del Fig",
           meta: "6 rooms · coworking · courtyard with a fig tree",
@@ -424,6 +425,7 @@ export const en = {
           tag: "Featured",
         },
         lisbon: {
+          code: "LIS",
           city: "Lisbon · PT",
           title: "A Quinta",
           meta: "4 rooms · garden · 10 min from the beach",
@@ -431,6 +433,7 @@ export const en = {
           tag: "Available",
         },
         medellin: {
+          code: "MDE",
           city: "Medellín · CO",
           title: "El Poblado",
           meta: "8 rooms · big coworking · rooftop pool",

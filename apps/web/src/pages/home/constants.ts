@@ -28,6 +28,7 @@ export const HOW_IT_WORKS_STEPS = [
 export const FEATURED_CARDS = [
   {
     img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&q=80&fit=crop",
+    codeKey: "home.featured.cards.oaxaca.code",
     cityKey: "home.featured.cards.oaxaca.city",
     titleKey: "home.featured.cards.oaxaca.title",
     metaKey: "home.featured.cards.oaxaca.meta",
@@ -37,6 +38,7 @@ export const FEATURED_CARDS = [
   },
   {
     img: "https://picsum.photos/seed/lisboa-house/800/600",
+    codeKey: "home.featured.cards.lisbon.code",
     cityKey: "home.featured.cards.lisbon.city",
     titleKey: "home.featured.cards.lisbon.title",
     metaKey: "home.featured.cards.lisbon.meta",
@@ -46,6 +48,7 @@ export const FEATURED_CARDS = [
   },
   {
     img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80&fit=crop",
+    codeKey: "home.featured.cards.medellin.code",
     cityKey: "home.featured.cards.medellin.city",
     titleKey: "home.featured.cards.medellin.title",
     metaKey: "home.featured.cards.medellin.meta",
