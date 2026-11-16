@@ -1,65 +1,54 @@
 import { t } from "@nomadhome/shared";
 import { WRAP, FOOTER_NAV_COLS } from "./constants.js";
 
+const footerLink =
+  "block py-1 text-sm font-medium text-fg-inverse underline-offset-4 no-underline hover:underline";
+
 export function HomeFooter() {
   return (
-    <footer className="border-t border-border-muted bg-surface-inset pb-10 pt-16">
+    <footer className="bg-surface-inverse pb-10 pt-16 text-fg-inverse [--focus:var(--signal)]">
       <div className={WRAP}>
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:gap-10">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
-            <div className="flex items-center gap-2.5">
-              <svg width="30" height="30" viewBox="0 0 64 64">
-                <rect width="64" height="64" rx="14" fill="#0A0A0A" />
+            <div className="flex items-center gap-3">
+              <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true">
+                <rect width="64" height="64" fill="#FFC700" />
                 <path
-                  d="M18 44 V32 a14 14 0 0 1 28 0 V44"
-                  stroke="#FFFFFF"
-                  strokeWidth="3"
-                  strokeLinecap="round"
+                  d="M16 46 V30 a16 16 0 0 1 32 0 V46"
+                  stroke="#0A0A0A"
+                  strokeWidth="6"
+                  strokeLinecap="square"
                   fill="none"
                 />
-                <line
-                  x1="12"
-                  y1="48"
-                  x2="52"
-                  y2="48"
-                  stroke="#FFC700"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
+                <rect x="10" y="46" width="44" height="6" fill="#0A0A0A" />
               </svg>
-              <span className="font-display text-2xl text-fg">NomadHome</span>
+              <span className="font-display text-xl font-black leading-none tracking-tight">
+                {t("common.app.name")}
+              </span>
             </div>
-            <p className="mt-3.5 max-w-[30ch] text-sm leading-relaxed text-fg-subtle">
-              {t("home.footer.tagline")}
-            </p>
+            <p className="mt-4 max-w-[30ch] text-sm leading-relaxed">{t("home.footer.tagline")}</p>
           </div>
           {FOOTER_NAV_COLS.map((col) => (
             <div key={col.hKey}>
-              <h4 className="mb-4 text-xs font-medium uppercase tracking-widest text-fg-subtle">
-                {t(col.hKey)}
-              </h4>
+              <h3 className="mb-3 text-base font-black text-signal">{t(col.hKey)}</h3>
               {col.links.map((l) => (
-                <a
-                  key={l}
-                  href="#"
-                  className="mb-2.5 block text-sm text-fg-muted no-underline transition-colors hover:text-fg"
-                >
+                <a key={l} href="#" className={footerLink}>
                   {t(l)}
                 </a>
               ))}
             </div>
           ))}
         </div>
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border-muted pt-6 text-xs text-fg-subtle">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t-2 border-fg-inverse pt-6 text-sm">
           <span>{t("home.footer.copyright")}</span>
-          <span className="flex gap-4">
-            <a href="#" className="text-fg-subtle no-underline hover:text-fg">
+          <span className="flex gap-6">
+            <a href="#" className={footerLink}>
               {t("home.footer.privacy")}
             </a>
-            <a href="#" className="text-fg-subtle no-underline hover:text-fg">
+            <a href="#" className={footerLink}>
               {t("home.footer.terms")}
             </a>
-            <a href="#" className="text-fg-subtle no-underline hover:text-fg">
+            <a href="#" className={footerLink}>
               {t("home.footer.cookies")}
             </a>
           </span>
