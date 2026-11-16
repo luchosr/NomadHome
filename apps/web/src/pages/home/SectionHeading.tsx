@@ -1,20 +1,16 @@
 interface Props {
-  eyebrow: string;
   pre: string;
   em: string;
   post?: string;
+  className?: string;
 }
 
-export function SectionHeading({ eyebrow, pre, em, post }: Props) {
+/** Section title set solid. The heading carries the section on its own: no kicker above it. */
+export function SectionHeading({ pre, em, post, className = "" }: Props) {
   return (
-    <>
-      <p className="eyebrow mb-2 text-xs font-medium uppercase tracking-widest text-fg-subtle">
-        {eyebrow}
-      </p>
-      <h2 className="m-0 font-display text-4xl font-normal leading-tight tracking-tight text-fg md:text-5xl">
-        {pre} <em className="not-italic text-fg">{em}</em>
-        {post ? ` ${post}` : "."}
-      </h2>
-    </>
+    <h2 className={`m-0 max-w-[20ch] text-4xl font-black leading-solid ${className}`}>
+      {pre} {em}
+      {post ? ` ${post}` : "."}
+    </h2>
   );
 }

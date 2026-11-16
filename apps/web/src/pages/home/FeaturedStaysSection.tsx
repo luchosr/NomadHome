@@ -1,79 +1,56 @@
 import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { WRAP, GRADIENTS, FEATURED_CARDS } from "./constants.js";
+import { Arrow } from "@nomadhome/ui";
+import { WRAP, FIELD, FEATURED_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
 export function FeaturedStaysSection() {
   return (
-    <section className="py-20">
+    <section className={`${FIELD} bg-surface`}>
       <div className={WRAP}>
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <SectionHeading
-              eyebrow={t("home.featured.eyebrow")}
-              pre={t("home.featured.headline_pre")}
-              em={t("home.featured.headline_em")}
-              post={t("home.featured.headline_post")}
-            />
-          </div>
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <SectionHeading
+            pre={t("home.featured.headline_pre")}
+            em={t("home.featured.headline_em")}
+            post={t("home.featured.headline_post")}
+          />
           <Link
             to="/search"
-            className="flex shrink-0 items-center gap-2 text-sm font-medium text-fg hover:text-fg"
+            className="inline-flex shrink-0 items-center gap-3 self-start border-2 border-border px-5 py-3 text-base font-bold text-fg no-underline transition-colors hover:bg-action hover:text-fg-inverse md:self-auto"
           >
             {t("home.featured.see_all")}
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <Arrow className="size-5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {FEATURED_CARDS.map((card) => (
-            <article
-              key={card.title}
-              className="overflow-hidden rounded-2xl border border-border-muted bg-white shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
-            >
-              <Link to="/search" className="block no-underline">
-                <div className={`relative aspect-[4/3] ${GRADIENTS[card.grad]}`}>
+            <article key={card.title} className="border-2 border-border">
+              <Link
+                to="/search"
+                className="group block h-full bg-surface text-fg no-underline transition-colors hover:bg-signal"
+              >
+                <div className="relative">
                   <img
                     src={card.img}
                     alt={card.title}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="aspect-[4/3] w-full object-cover"
                     loading="lazy"
                   />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: "linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%)",
-                    }}
-                  />
-                  <div className="absolute left-3.5 top-3.5 flex gap-1.5">
-                    <span
-                      className="rounded-full px-3 py-1 text-xs font-medium text-fg-inverse"
-                      style={{ background: "rgba(10,10,10,0.82)", backdropFilter: "blur(8px)" }}
-                    >
-                      {card.city}
-                    </span>
-                    {"tag" in card && card.tag && (
-                      <span className="rounded-full bg-danger-bg px-3 py-1 text-xs font-medium text-danger">
-                        {card.tag}
-                      </span>
-                    )}
-                  </div>
+                  <p className="absolute left-0 top-0 m-0 border-b-2 border-r-2 border-border bg-signal px-4 py-2 text-sm font-black text-fg">
+                    {card.city}
+                  </p>
                 </div>
-                <div className="px-[18px] pb-[18px] pt-4">
-                  <p className="font-display text-2xl leading-tight text-fg">{card.title}</p>
-                  <p className="mt-1 text-sm text-fg-subtle">{card.meta}</p>
-                  <div className="mt-3.5 flex items-baseline justify-between">
-                    <span className="text-base font-medium text-fg">{card.price}</span>
-                    <span className="text-sm font-medium text-danger">{card.left}</span>
+                <div className="border-t-2 border-border p-5">
+                  <p className="m-0 font-display text-3xl font-black leading-solid group-hover:underline group-hover:underline-offset-4">
+                    {card.title}
+                  </p>
+                  <p className="mt-3 text-sm font-medium">{card.meta}</p>
+                  <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <span className="text-xl font-black">{card.price}</span>
+                    <span className="border-2 border-current px-2 py-0.5 text-sm font-bold">
+                      {"tag" in card && card.tag ? `${card.tag} · ${card.left}` : card.left}
+                    </span>
                   </div>
                 </div>
               </Link>

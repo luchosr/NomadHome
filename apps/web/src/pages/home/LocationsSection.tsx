@@ -1,64 +1,44 @@
 import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { WRAP, GRADIENTS, LOCATION_CARDS } from "./constants.js";
+import { Arrow } from "@nomadhome/ui";
+import { WRAP, FIELD, LOCATION_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
 export function LocationsSection() {
   return (
-    <section className="border-y border-border-muted bg-surface-inset py-20">
+    <section className={`${FIELD} bg-signal`}>
       <div className={WRAP}>
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <SectionHeading
-              eyebrow={t("home.locations.eyebrow")}
-              pre={t("home.locations.headline_pre")}
-              em={t("home.locations.headline_em")}
-            />
-          </div>
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <SectionHeading
+            pre={t("home.locations.headline_pre")}
+            em={t("home.locations.headline_em")}
+          />
           <Link
             to="/search"
-            className="flex shrink-0 items-center gap-2 text-sm font-medium text-fg hover:text-fg"
+            className="inline-flex shrink-0 items-center gap-3 self-start border-2 border-border px-5 py-3 text-base font-bold text-fg no-underline transition-colors hover:bg-action hover:text-signal md:self-auto"
           >
             {t("home.locations.explore_all")}
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <Arrow className="size-5" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <ul className="m-0 mt-12 grid list-none grid-cols-2 gap-4 p-0 lg:grid-cols-4">
           {LOCATION_CARDS.map((loc) => (
-            <div
-              key={loc.city}
-              className={`group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-2xl ${GRADIENTS[loc.grad]}`}
-            >
+            <li key={loc.city} className="border-2 border-border bg-surface-inverse">
               <img
                 src={loc.img}
                 alt={loc.city}
-                className="absolute inset-0 h-full w-full object-cover"
+                className="aspect-[4/3] w-full border-b-2 border-border object-cover"
                 loading="lazy"
               />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: "linear-gradient(to top, rgba(10,10,10,0.7) 0%, transparent 55%)",
-                }}
-              />
-              <div className="absolute bottom-4 left-4 right-4 text-fg-inverse">
-                <p className="font-display text-2xl leading-tight group-hover:underline">
+              <div className="p-4 text-fg-inverse">
+                <p className="m-0 break-words font-display text-2xl font-black leading-solid text-signal lg:text-3xl">
                   {loc.city}
                 </p>
-                <p className="mt-0.5 text-sm opacity-85">{loc.ct}</p>
+                <p className="m-0 mt-2 text-sm font-medium">{loc.ct}</p>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

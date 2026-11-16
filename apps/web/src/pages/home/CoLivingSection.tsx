@@ -1,38 +1,35 @@
 import { t } from "@nomadhome/shared";
-import { WRAP, GRADIENTS, COLIVING_FEATURES } from "./constants.js";
+import { Pictogram } from "@nomadhome/ui";
+import { WRAP, FIELD, COLIVING_FEATURES } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 import { FeatureList } from "./FeatureList.js";
 
 export function CoLivingSection() {
   return (
-    <section className="py-20">
-      <div className={`${WRAP} grid grid-cols-1 items-center gap-14 lg:grid-cols-2`}>
+    <section className={`${FIELD} bg-sign-green text-fg-inverse [--focus:var(--signal)]`}>
+      <div className={`${WRAP} grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start`}>
         <div>
+          <Pictogram name="bed" className="mb-6 size-16" />
           <SectionHeading
-            eyebrow={t("home.coliving.eyebrow")}
             pre={t("home.coliving.headline_pre")}
             em={t("home.coliving.headline_em")}
+            className="max-w-[16ch]"
           />
-          <p className="mt-5 text-lg leading-relaxed text-fg-muted">{t("home.coliving.body")}</p>
+          <p className="mt-6 max-w-[56ch] text-lg leading-relaxed">{t("home.coliving.body")}</p>
           <FeatureList features={COLIVING_FEATURES} />
         </div>
-        <div
-          className={`relative aspect-[5/4] overflow-hidden rounded-3xl shadow-lg ${GRADIENTS.night}`}
-        >
+        <div className="border-2 border-border bg-surface text-fg">
           <img
             src="https://images.unsplash.com/photo-1560184897-ae75f418493e?w=1200&q=80&fit=crop"
-            alt="Co-living shared space"
-            className="absolute inset-0 h-full w-full object-cover"
+            alt={t("home.coliving.image_alt")}
+            className="aspect-[5/4] w-full object-cover"
             loading="lazy"
           />
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.25)" }} />
-          <div className="absolute bottom-5 left-5 rounded-xl border border-border-muted bg-white px-4 py-3 shadow-md">
-            <p className="text-[11px] font-medium uppercase tracking-widest text-fg-subtle">
-              {t("home.coliving.price_label")}
-            </p>
-            <p className="mt-1 font-display text-2xl leading-tight text-fg">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-t-2 border-border px-6 py-5">
+            <p className="m-0 text-lg font-bold">{t("home.coliving.price_label")}</p>
+            <p className="m-0 font-display text-4xl font-black leading-none">
               {t("home.coliving.price_value")}
-              <span className="ml-1 font-sans text-sm text-fg-subtle">
+              <span className="ml-2 font-sans text-base font-bold">
                 {t("home.coliving.price_period")}
               </span>
             </p>

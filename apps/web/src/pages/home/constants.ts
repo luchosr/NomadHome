@@ -1,15 +1,7 @@
 export const WRAP = "mx-auto w-full max-w-[1280px] px-6 md:px-12";
 
-export const GRADIENTS: Record<string, string> = {
-  twilight: "bg-gradient-to-br from-[#D97757] via-[#8C3E20] to-[#2E4A3F]",
-  forest: "bg-gradient-to-br from-[#B8C9C1] via-[#4A6F61] to-[#1C2E27]",
-  morning: "bg-gradient-to-b from-[#F2C9B5] via-[#FBF8F2] to-[#B8C9C1]",
-  night: "bg-gradient-to-br from-[#4A6F61] via-[#2E4A3F] to-[#1A1A1A]",
-  sand: "bg-gradient-to-br from-[#FBF8F2] via-[#DDD2BE] to-[#C4B59B]",
-  terracotta: "bg-gradient-to-br from-[#F2C9B5] via-[#D97757] to-[#8C3E20]",
-};
-
-export const STAR_RATING = Array.from({ length: 5 }, (_, i) => i);
+/** Full-width gantry field: fixed vertical rhythm and a 2px black edge between fields. */
+export const FIELD = "border-b-2 border-border py-16 md:py-24";
 
 export const COLIVING_FEATURES = [
   "home.coliving.feature_1",
@@ -31,7 +23,6 @@ export const HOW_IT_WORKS_STEPS = [
 
 export const FEATURED_CARDS = [
   {
-    grad: "twilight",
     img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&q=80&fit=crop",
     city: "Oaxaca · MX",
     title: "Casa del Fig",
@@ -41,7 +32,6 @@ export const FEATURED_CARDS = [
     left: "3 rooms left",
   },
   {
-    grad: "forest",
     img: "https://picsum.photos/seed/lisboa-house/800/600",
     city: "Lisboa · PT",
     title: "A Quinta",
@@ -50,7 +40,6 @@ export const FEATURED_CARDS = [
     left: "4 rooms left",
   },
   {
-    grad: "morning",
     img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80&fit=crop",
     city: "Medellín · CO",
     title: "El Poblado",
@@ -62,25 +51,21 @@ export const FEATURED_CARDS = [
 
 export const LOCATION_CARDS = [
   {
-    grad: "twilight",
     img: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=800&q=80&fit=crop",
     city: "Oaxaca",
     ct: "México · 2 houses",
   },
   {
-    grad: "forest",
     img: "https://picsum.photos/seed/lisboa-city/800/600",
     city: "Lisboa",
     ct: "Portugal · 1 house",
   },
   {
-    grad: "night",
     img: "https://picsum.photos/seed/medellin/800/600",
     city: "Medellín",
     ct: "Colombia · 1 house",
   },
   {
-    grad: "terracotta",
     img: "https://images.unsplash.com/photo-1574936145840-28808d77a0b6?w=800&q=80&fit=crop",
     city: "CDMX",
     ct: "México · 1 house",
