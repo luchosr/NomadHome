@@ -2,24 +2,12 @@ import { useState } from "react";
 import { Link, Outlet, useNavigate, useNavigation } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { useAuth } from "../contexts/auth.js";
+import { Logo } from "./Logo.js";
 
-function Logo() {
+function HomeLogo() {
   return (
-    <Link to="/" className="flex items-center gap-3 text-fg-inverse no-underline">
-      <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true">
-        <rect width="64" height="64" fill="#FFC700" />
-        <path
-          d="M16 46 V30 a16 16 0 0 1 32 0 V46"
-          stroke="#0A0A0A"
-          strokeWidth="6"
-          strokeLinecap="square"
-          fill="none"
-        />
-        <rect x="10" y="46" width="44" height="6" fill="#0A0A0A" />
-      </svg>
-      <span className="font-display text-xl font-black leading-none tracking-tight">
-        {t("common.app.name")}
-      </span>
+    <Link to="/" className="flex items-center text-fg-inverse no-underline">
+      <Logo />
     </Link>
   );
 }
@@ -51,7 +39,7 @@ export function Layout() {
       )}
       <header className="sticky top-0 z-50 border-b-2 border-border bg-surface-inverse text-fg-inverse [--focus:var(--signal)]">
         <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-4 md:px-12">
-          <Logo />
+          <HomeLogo />
 
           {!isLoading && (
             <>
