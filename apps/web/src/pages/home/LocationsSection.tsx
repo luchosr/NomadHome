@@ -4,11 +4,9 @@ import { Arrow } from "@nomadhome/ui";
 import { WRAP, FIELD, LOCATION_CARDS } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 
-// SYNTHETIC (NH-118, design.md D8): the city rows come from LOCATION_CARDS (demo data).
-// Replace before public launch (task 11.1).
 export function LocationsSection() {
   return (
-    <section className={`${FIELD} bg-ember`}>
+    <section className={`${FIELD} bg-surface-inset`}>
       <div className={WRAP}>
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeading

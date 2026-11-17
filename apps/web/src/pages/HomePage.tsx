@@ -16,12 +16,6 @@ const WorkspaceSection = lazy(() =>
 const LocationsSection = lazy(() =>
   import("./home/LocationsSection.js").then((m) => ({ default: m.LocationsSection })),
 );
-const StatsSection = lazy(() =>
-  import("./home/StatsSection.js").then((m) => ({ default: m.StatsSection })),
-);
-const TestimonialSection = lazy(() =>
-  import("./home/TestimonialSection.js").then((m) => ({ default: m.TestimonialSection })),
-);
 const CtaBandSection = lazy(() =>
   import("./home/CtaBandSection.js").then((m) => ({ default: m.CtaBandSection })),
 );
@@ -56,14 +50,6 @@ export function HomePage() {
 
       <Suspense fallback={<SectionSkeleton minHeight="480px" />}>
         <LocationsSection />
-      </Suspense>
-
-      <Suspense fallback={<SectionSkeleton minHeight="240px" />}>
-        <StatsSection />
-      </Suspense>
-
-      <Suspense fallback={<SectionSkeleton minHeight="320px" />}>
-        <TestimonialSection />
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton minHeight="400px" />}>
