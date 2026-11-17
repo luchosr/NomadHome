@@ -18,33 +18,33 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 0. Setup (MANDATORY - FIRST STEP)
 
-- [ ] 0.1 Confirm work is on branch `feature/NH-126-listing-detail-identity` (worktree `../nomadhome-worktrees/NH-126`) created from `origin/main`
-- [ ] 0.2 `pnpm install` inside the worktree, then verify a clean baseline: `pnpm lint && pnpm typecheck && pnpm test` green before any change
-- [ ] 0.3 Capture the baseline: `rg -n "ListingDetailPage|listing-detail-skeleton|listings.detail" apps/web/src apps/web/e2e` and the current text and role queries in `ListingDetailPage.test.tsx` and in `apps/web/e2e/us-4.1-booking.spec.ts`; confirm the page is the only user of the code to be restyled (nothing shared is changed)
+- [x] 0.1 Confirm work is on branch `feature/NH-126-listing-detail-identity` (worktree `../nomadhome-worktrees/NH-126`) created from `origin/main`
+- [x] 0.2 `pnpm install` inside the worktree, then verify a clean baseline: `pnpm lint && pnpm typecheck && pnpm test` green before any change
+- [x] 0.3 Capture the baseline: `rg -n "ListingDetailPage|listing-detail-skeleton|listings.detail" apps/web/src apps/web/e2e` and the current text and role queries in `ListingDetailPage.test.tsx` and in `apps/web/e2e/us-4.1-booking.spec.ts`; confirm the page is the only user of the code to be restyled (nothing shared is changed)
 
 ## 1. Red tests (unit, Vitest + Testing Library)
 
-- [ ] 1.1 Red: extend `apps/web/src/pages/ListingDetailPage.test.tsx` (add `getBlockedDates` to the `listingsApi` mock): the loaded state has exactly one `h1` (the title) and the amenities and rating `h2`s; the type text, `city, country` text and address text render; the type tag carries a 2px border class and no pill radius
-- [ ] 1.2 Red: gallery: the primary photo carries the 2px ink edge and no radius classes; thumbnails render with the same classes, are not links or buttons, and none has an `onClick`-driven role or `tabindex`; with no photos the dashed stone placeholder renders (dashed 2px edge, stone fill, no text) and `bg-slate-100` and `rounded-xl` are gone
-- [ ] 1.3 Red: amenities render as a `list` with one `listitem` per amenity, each tagged with the 2px border class and no `rounded-full`; the existing label assertions (`WIFI`, `KITCHEN`) still resolve to one node each
-- [ ] 1.4 Red: rating: the text `4.5 / 5 (3 reviews)` is present, the ⭐ character is absent from the document, and one `svg` marked `aria-hidden="true"` precedes the text; with `avgRating: null` the no-reviews string renders and no star is drawn
-- [ ] 1.5 Red: booking panel: the price band contains the price and the per-night unit and carries the ember background and ink text classes (no `text-fg-muted`, `text-fg-subtle` or `text-fg-inverse` inside it); the panel has the 2px ink edge, no `shadow`, and `md:sticky`; the guest (with and without dates), host and visitor branches render exactly as before (existing assertions kept, plus: disabled Book now when dates are missing)
-- [ ] 1.6 Red: loading: the container keeps `data-testid="listing-detail-skeleton"`, has `aria-busy="true"`, contains no `h1`, and no block uses `rounded-xl` or `rounded-pill`
-- [ ] 1.7 Red: not-found (404): exactly one `h1` with `t("listings.detail.not_found")`, paper panel classes, an `aria-hidden` ink tile, and no `role="alert"`
-- [ ] 1.8 Red: error (non-404): exactly one `role="alert"` containing exactly one `h1` with `t("error.generic.unexpected")`, solid danger edge, danger tint fill and an `aria-hidden` filled tile
-- [ ] 1.9 Red: dictionary-unchanged test: snapshot as literals the values of `listings.detail.*`, `host.listings.type_property`, `host.listings.type_workspace`, `search.per_night` and `error.generic.unexpected` at baseline and assert they equal `t()` output and that every key the page reads exists
-- [ ] 1.10 Run the new and extended tests and record that they fail for the right reason (missing structure, classes and roles, not a typo)
+- [x] 1.1 Red: extend `apps/web/src/pages/ListingDetailPage.test.tsx` (add `getBlockedDates` to the `listingsApi` mock): the loaded state has exactly one `h1` (the title) and the amenities and rating `h2`s; the type text, `city, country` text and address text render; the type tag carries a 2px border class and no pill radius
+- [x] 1.2 Red: gallery: the primary photo carries the 2px ink edge and no radius classes; thumbnails render with the same classes, are not links or buttons, and none has an `onClick`-driven role or `tabindex`; with no photos the dashed stone placeholder renders (dashed 2px edge, stone fill, no text) and `bg-slate-100` and `rounded-xl` are gone
+- [x] 1.3 Red: amenities render as a `list` with one `listitem` per amenity, each tagged with the 2px border class and no `rounded-full`; the existing label assertions (`WIFI`, `KITCHEN`) still resolve to one node each
+- [x] 1.4 Red: rating: the text `4.5 / 5 (3 reviews)` is present, the ⭐ character is absent from the document, and one `svg` marked `aria-hidden="true"` precedes the text; with `avgRating: null` the no-reviews string renders and no star is drawn
+- [x] 1.5 Red: booking panel: the price band contains the price and the per-night unit and carries the ember background and ink text classes (no `text-fg-muted`, `text-fg-subtle` or `text-fg-inverse` inside it); the panel has the 2px ink edge, no `shadow`, and `md:sticky`; the guest (with and without dates), host and visitor branches render exactly as before (existing assertions kept, plus: disabled Book now when dates are missing)
+- [x] 1.6 Red: loading: the container keeps `data-testid="listing-detail-skeleton"`, has `aria-busy="true"`, contains no `h1`, and no block uses `rounded-xl` or `rounded-pill`
+- [x] 1.7 Red: not-found (404): exactly one `h1` with `t("listings.detail.not_found")`, paper panel classes, an `aria-hidden` ink tile, and no `role="alert"`
+- [x] 1.8 Red: error (non-404): exactly one `role="alert"` containing exactly one `h1` with `t("error.generic.unexpected")`, solid danger edge, danger tint fill and an `aria-hidden` filled tile
+- [x] 1.9 Red: dictionary-unchanged test: snapshot as literals the values of `listings.detail.*`, `host.listings.type_property`, `host.listings.type_workspace`, `search.per_night` and `error.generic.unexpected` at baseline and assert they equal `t()` output and that every key the page reads exists
+- [x] 1.10 Run the new and extended tests and record that they fail for the right reason (missing structure, classes and roles, not a typo)
 
 ## 2. Red tests (e2e, Playwright, mocked API)
 
-- [ ] 2.1 Red: add `apps/web/e2e/listing-detail-identity.spec.ts` patterned on `layout.spec.ts` (mock `http://localhost:3000/listings/:id` and `/listings/:id/blocked-dates`; helpers for no-overflow, inside-viewport and screenshot attach) at 1440x900 and 360x800: primary photo border 2px and radius 0; `h1` font family contains Overpass and weight 900; type tag border 2px; amenity tags border 2px and radius not 9999px; no element with a box shadow or gradient
-- [ ] 2.2 Red: price band background `rgb(230, 95, 53)` and the computed colour of every text node inside it equals ink `rgb(30, 30, 30)`; the booking panel has a 2px ink border, a paper background and `box-shadow: none`; no input or button is a descendant of the band
-- [ ] 2.3 Red: sticky: at 1440 the panel `position` is `sticky`, and after scrolling the page its top stays at or below the nav height and inside the viewport; at 360 it is `static` and its top is below the bottom of the amenities and rating content
-- [ ] 2.4 Red: no-photo listing: placeholder `border-style: dashed`, stone background `rgb(229, 226, 221)`, radius 0; layout checks still pass
-- [ ] 2.5 Red: states: a 404 shows one `h1` and no `role="alert"`; a 500 shows one `role="alert"` with one `h1`, danger border colour `rgb(155, 28, 46)`, solid style and tint background `rgb(248, 225, 224)`; the loaded state has exactly one `h1`
-- [ ] 2.6 Red: 360 px no-overflow for loaded (very long title, city, address, description and amenity label), no-photo, not-found and error; document `scrollWidth <= innerWidth` and booking actions inside the viewport
-- [ ] 2.7 Red: keyboard: a guest with valid dates tabs to Book now and a visitor to Log in to book; the focused action shows the 3px ink outline
-- [ ] 2.8 Run the new e2e spec against an isolated server (see 9.1) and record that it fails before implementation
+- [x] 2.1 Red: add `apps/web/e2e/listing-detail-identity.spec.ts` patterned on `layout.spec.ts` (mock `http://localhost:3000/listings/:id` and `/listings/:id/blocked-dates`; helpers for no-overflow, inside-viewport and screenshot attach) at 1440x900 and 360x800: primary photo border 2px and radius 0; `h1` font family contains Overpass and weight 900; type tag border 2px; amenity tags border 2px and radius not 9999px; no element with a box shadow or gradient
+- [x] 2.2 Red: price band background `rgb(230, 95, 53)` and the computed colour of every text node inside it equals ink `rgb(30, 30, 30)`; the booking panel has a 2px ink border, a paper background and `box-shadow: none`; no input or button is a descendant of the band
+- [x] 2.3 Red: sticky: at 1440 the panel `position` is `sticky`, and after scrolling the page its top stays at or below the nav height and inside the viewport; at 360 it is `static` and its top is below the bottom of the amenities and rating content
+- [x] 2.4 Red: no-photo listing: placeholder `border-style: dashed`, stone background `rgb(229, 226, 221)`, radius 0; layout checks still pass
+- [x] 2.5 Red: states: a 404 shows one `h1` and no `role="alert"`; a 500 shows one `role="alert"` with one `h1`, danger border colour `rgb(155, 28, 46)`, solid style and tint background `rgb(248, 225, 224)`; the loaded state has exactly one `h1`
+- [x] 2.6 Red: 360 px no-overflow for loaded (very long title, city, address, description and amenity label), no-photo, not-found and error; document `scrollWidth <= innerWidth` and booking actions inside the viewport
+- [x] 2.7 Red: keyboard: a guest with valid dates tabs to Book now and a visitor to Log in to book; the focused action shows the 3px ink outline
+- [x] 2.8 Run the new e2e spec against an isolated server (see 9.1) and record that it fails before implementation
 
 ## 3. Page implementation (green)
 
