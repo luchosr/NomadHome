@@ -61,8 +61,8 @@ behaviour and tests intact and the diff reviewable.
   hover or focus state, no handler. The strip becomes `flex-wrap` (it was an
   `overflow-x-auto` scroller): a horizontally scrolling region is not
   keyboard-reachable without a tab stop, and wrapping removes it with no new
-  behaviour. `alt` stays the listing title (a distinct alt needs copy; see
-  follow-ups).
+  behaviour. They are decorative (`alt=""` and `aria-hidden="true"`); the
+  primary photo keeps the listing title as its `alt`.
 - **No-photo placeholder.** A stone panel, `border-2 border-dashed
 border-border`, same height as today (`h-64`), no radius, no text, no
   pictogram (no new asset or copy). Dashed = absent or tentative, the same shape
@@ -318,11 +318,13 @@ the palette and is removed. No new colour value is introduced.
 None blocking. Recorded follow-ups (not in scope):
 
 - Gallery interaction: selecting a thumbnail or opening a lightbox, with
-  keyboard support and distinct alt text (needs copy).
+  keyboard support. Thumbnails are decorative (alt empty, aria-hidden); gallery
+  interaction would need distinct alt text and copy.
 - `DateRangePicker` visual pass on the sign-panel grammar.
 - Book now and Log in to book render a `Button` inside a `Link` (interactive
   content nested in an anchor); replace with a link styled as the primary or
-  secondary button, as `VerifyEmailPage` does.
+  secondary button, as `VerifyEmailPage` does. Tracked in a follow-up issue,
+  together with the `Button` shadow override below.
 - The `listings` spec mentions guest reviews on the page; only the count is
   rendered today.
 - `DateRangePicker` still shows the default react-day-picker blue for today, the
@@ -333,6 +335,5 @@ None blocking. Recorded follow-ups (not in scope):
 - Centre the picker (`mx-auto`) inside the booking panel.
 - Add a `Button` variant so Log in to book needs no `border-2 ![box-shadow:none]`
   override.
-- Gallery thumbnails share the listing title as alt text; distinct alt text needs copy.
 - `Link > Button` leaves a double tab stop (pre-existing).
 - Optional heavier stroke for the error "!" glyph in the state tile.

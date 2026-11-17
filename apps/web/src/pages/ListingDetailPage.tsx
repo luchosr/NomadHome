@@ -187,7 +187,8 @@ export function ListingDetailPage() {
                 <img
                   key={photo.id}
                   src={photo.url}
-                  alt={listing.title}
+                  alt=""
+                  aria-hidden="true"
                   className="h-16 w-24 shrink-0 rounded-none border-2 border-border object-cover sm:h-20 sm:w-32"
                 />
               ))}

@@ -138,7 +138,8 @@ describe("ListingDetailPage", () => {
 
   // ---- Identity (NH-126, listing-detail-identity) -------------------------------------
   // Selector assumptions (jsdom does not compute Tailwind, so shape is asserted by class):
-  //  - primary photo = first <img> with the listing title as alt, thumbnails = the rest;
+  //  - primary photo = the only <img> with the listing title as alt; thumbnails are decorative
+  //    (alt "" + aria-hidden) and found as img[aria-hidden="true"];
   //  - placeholder (no photo) = the only element carrying `border-dashed`;
   //  - panel of a state = nearest ancestor of its h1 carrying `border-2`;
   //  - tile of a state = first [aria-hidden="true"] inside that panel;
@@ -198,17 +199,19 @@ describe("ListingDetailPage", () => {
 
   it("gallery: primary photo has the 2px ink edge and no radius class", async () => {
     await renderLoaded({ photos: THREE_PHOTOS });
-    const [primary] = screen.getAllByAltText("Sunny Lisbon Apartment");
+    const primary = screen.getByAltText("Sunny Lisbon Apartment");
     expect(primary).toHaveAttribute("src", THREE_PHOTOS[0]!.url);
     expect(primary).toHaveClass("border-2", "border-border");
     expect(radiusClasses(primary!)).toEqual([]);
   });
 
   it("gallery: thumbnails are flat, edged and not interactive", async () => {
-    await renderLoaded({ photos: THREE_PHOTOS });
-    const [, ...thumbs] = screen.getAllByAltText("Sunny Lisbon Apartment");
+    const { container } = await renderLoaded({ photos: THREE_PHOTOS });
+    expect(screen.getAllByAltText("Sunny Lisbon Apartment")).toHaveLength(1);
+    const thumbs = Array.from(container.querySelectorAll("img[aria-hidden='true']"));
     expect(thumbs).toHaveLength(2);
     for (const thumb of thumbs) {
+      expect(thumb).toHaveAttribute("alt", "");
       expect(thumb).toHaveClass("border-2", "border-border");
       expect(radiusClasses(thumb)).toEqual([]);
       expect(thumb.closest("a, button")).toBeNull();
