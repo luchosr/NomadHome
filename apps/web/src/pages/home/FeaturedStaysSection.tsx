@@ -42,7 +42,7 @@ function StayRow({ stay }: { stay: SearchResultItem }) {
   const meta = [
     isProperty ? t("host.listings.type_property") : t("host.listings.type_workspace"),
     ...amenityLabels(stay.amenities),
-  ].join(" · ");
+  ];
   const price = priceText(stay);
 
   return (
@@ -75,10 +75,22 @@ function StayRow({ stay }: { stay: SearchResultItem }) {
         {place}
       </p>
       <div className="min-w-0 [grid-area:info]">
-        <p className="m-0 line-clamp-2 break-words font-display text-2xl font-black leading-solid group-hover:underline group-hover:underline-offset-4 lg:text-4xl">
+        <p className="m-0 line-clamp-2 break-words font-display text-2xl font-black leading-[1.1] group-hover:underline group-hover:underline-offset-4 lg:text-4xl">
           {stay.title}
         </p>
-        <p className="m-0 mt-2 break-words text-sm font-medium">{meta}</p>
+        <p className="m-0 mt-2 break-words text-sm font-medium">
+          {meta.map((item, i) => (
+            <span key={item} className="whitespace-nowrap">
+              {i > 0 && (
+                <span aria-hidden="true" className="px-1.5">
+                  ·
+                </span>
+              )}
+              {i > 0 && <span className="sr-only">, </span>}
+              {item}
+            </span>
+          ))}
+        </p>
       </div>
       {price && (
         <p className="m-0 flex flex-wrap items-baseline gap-x-2 [grid-area:price] lg:justify-end">
@@ -110,7 +122,7 @@ function BoardSkeleton() {
       {Array.from({ length: SKELETON_ROWS }, (_, i) => (
         <div
           key={i}
-          className={`grid min-h-[17.5rem] items-center gap-x-4 gap-y-3 p-4 lg:min-h-[9.5rem] lg:p-5 ${ROW_GRID} ${i > 0 ? "border-t-2 border-fg-inverse" : ""}`}
+          className={`grid min-h-56 items-center gap-x-4 gap-y-3 p-4 lg:min-h-[9.5rem] lg:p-5 ${ROW_GRID} ${i > 0 ? "border-t-2 border-fg-inverse" : ""}`}
         >
           <Skeleton aria-hidden="true" className="size-16 [grid-area:code] lg:size-[4.5rem]" />
           <Skeleton aria-hidden="true" className="aspect-[4/3] w-24 [grid-area:thumb] lg:w-full" />
