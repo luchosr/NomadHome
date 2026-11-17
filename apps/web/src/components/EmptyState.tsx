@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@nomadhome/ui";
 
+// The secondary Button draws its 2px edge as a 1px border plus a 1px inset ring (a box shadow). A
+// solid 2px border gives the same edge with no shadow, so the surface stays flat.
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
+
 interface Props {
   message: string;
   ctaLabel?: string;
@@ -27,7 +31,9 @@ export function EmptyState({ message, ctaLabel, ctaTo }: Props) {
       <p className="m-0 min-w-0 break-words text-fg-muted">{message}</p>
       {ctaLabel && ctaTo && (
         <Link to={ctaTo}>
-          <Button variant="secondary">{ctaLabel}</Button>
+          <Button variant="secondary" className={FLAT_SECONDARY}>
+            {ctaLabel}
+          </Button>
         </Link>
       )}
     </div>

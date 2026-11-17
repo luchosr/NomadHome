@@ -10,6 +10,9 @@ import { PageWrapper } from "../components/PageWrapper.js";
 import { EmptyState } from "../components/EmptyState.js";
 import { formatDate } from "../lib/dates.js";
 
+// A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
+
 function statusLabel(status: BookingWithListing["status"]): string {
   switch (status) {
     case "PENDING_PAYMENT":
@@ -196,7 +199,11 @@ export function MyBookingsPage() {
                       </Button>
                     )}
                     {booking.status === "COMPLETED" && (
-                      <Button variant="secondary" onClick={() => setReviewBookingId(booking.id)}>
+                      <Button
+                        variant="secondary"
+                        className={FLAT_SECONDARY}
+                        onClick={() => setReviewBookingId(booking.id)}
+                      >
                         {t("booking.dashboard.review_button")}
                       </Button>
                     )}

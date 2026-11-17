@@ -6,6 +6,9 @@ import { getDisplayMessage } from "../api/client.js";
 import { Modal } from "./Modal.js";
 import { ServerErrorAlert } from "./ServerErrorAlert.js";
 
+// A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
+
 interface Props {
   bookingId: string;
   onSuccess: () => void;
@@ -53,7 +56,12 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
       <ServerErrorAlert error={error} className="mt-3" />
 
       <div className="mt-4 flex justify-end gap-3">
-        <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+        <Button
+          variant="secondary"
+          className={FLAT_SECONDARY}
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
           {t("common.action.close")}
         </Button>
         <Button variant="destructive" onClick={() => void handleConfirm()} disabled={isSubmitting}>
