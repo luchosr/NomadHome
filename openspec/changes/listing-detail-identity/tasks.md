@@ -58,28 +58,28 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 4. Review and update existing unit tests (MANDATORY)
 
-- [ ] 4.1 Review every test and e2e spec that renders or navigates to the page: `ListingDetailPage.test.tsx`, `apps/web/e2e/us-4.1-booking.spec.ts`, `apps/web/e2e/focus-hover.spec.ts`, `apps/web/e2e/layout.spec.ts` (and `rg -n "listings/" apps/web/e2e apps/web/src --glob "*.test.*"`); update stale class or text assumptions without weakening any assertion; confirm text queries still resolve to one node (the not-found text is now an `h1`; the price query `/90/` still matches once)
-- [ ] 4.2 Confirm `ListingCard`, `SearchResults` and the home board tests are untouched (nothing shared changed)
-- [ ] 4.3 Verify: `pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
+- [x] 4.1 Review every test and e2e spec that renders or navigates to the page: `ListingDetailPage.test.tsx`, `apps/web/e2e/us-4.1-booking.spec.ts`, `apps/web/e2e/focus-hover.spec.ts`, `apps/web/e2e/layout.spec.ts` (and `rg -n "listings/" apps/web/e2e apps/web/src --glob "*.test.*"`); update stale class or text assumptions without weakening any assertion; confirm text queries still resolve to one node (the not-found text is now an `h1`; the price query `/90/` still matches once)
+- [x] 4.2 Confirm `ListingCard`, `SearchResults` and the home board tests are untouched (nothing shared changed)
+- [x] 4.3 Verify: `pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
 
 ## 5. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 5.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`; record totals
-- [ ] 5.2 Database state: **not applicable.** The change is frontend only. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/` or `packages/shared/`, and no database is started by any step. If any such path appears, stop and reopen this task
-- [ ] 5.3 Write report `openspec/changes/listing-detail-identity/reports/YYYY-MM-DD-step-5-unit-test-verification.md` with commands, results and the not-applicable justification for the database step
+- [x] 5.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`; record totals
+- [x] 5.2 Database state: **not applicable.** The change is frontend only. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/` or `packages/shared/`, and no database is started by any step. If any such path appears, stop and reopen this task
+- [x] 5.3 Write report `openspec/changes/listing-detail-identity/reports/YYYY-MM-DD-step-5-unit-test-verification.md` with commands, results and the not-applicable justification for the database step
 
 ## 6. Manual endpoint testing with curl (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 6.1 **Not applicable.** No endpoint, request shape, response shape, status code or API client changes; the page calls the same `GET /listings/:id` and `GET /listings/:id/blocked-dates` through the unchanged `listingsApi`. Justification check: `git diff origin/main --stat -- apps/web/src/api apps/api` is empty. Record the check and the result in the step 7 report instead of a curl report
+- [x] 6.1 **Not applicable.** No endpoint, request shape, response shape, status code or API client changes; the page calls the same `GET /listings/:id` and `GET /listings/:id/blocked-dates` through the unchanged `listingsApi`. Justification check: `git diff origin/main --stat -- apps/web/src/api apps/api` is empty. Record the check and the result in the step 7 report instead of a curl report
 
 ## 7. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 7.1 Isolated run setup: pick a free port (`node -e "require('net').createServer().listen(0,function(){console.log(this.address().port);this.close()})"`), start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; API calls are mocked so no API or database runs
-- [ ] 7.2 Run `apps/web/e2e/listing-detail-identity.spec.ts`, `us-4.1-booking.spec.ts`, `focus-hover.spec.ts` and `layout.spec.ts` on the isolated port and confirm green
-- [ ] 7.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green; record any failure that is a hard-coded port 5173 URL in an unrelated spec as unchanged by this change
-- [ ] 7.4 Visual check with Playwright at 1440x900 and 360x800: loaded as guest with dates, loaded as visitor, loaded as host, no-photo, three-photo gallery, no reviews, very long strings, loading skeleton, not-found, error, and the date picker open; save PNGs to `openspec/changes/listing-detail-identity/reports/screenshots/`; confirm frame and tag alignment, board row stacking, sticky panel clearance under the nav, no overflow, star and tile glyphs read on the 24 grid, price band is ink on ember, and the not-found and error panels are distinguishable in grayscale (also capture one grayscale pass); note how `DateRangePicker` sits in the new panel (follow-up)
-- [ ] 7.5 Confirm keyboard use through Playwright key presses (Tab order, Enter on Book now, focus ring visible on paper and stone, picker keyboard use unchanged) and that no console error is logged in any state
-- [ ] 7.6 Write report `openspec/changes/listing-detail-identity/reports/YYYY-MM-DD-step-7-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 6.1 and any finding
+- [x] 7.1 Isolated run setup: pick a free port (`node -e "require('net').createServer().listen(0,function(){console.log(this.address().port);this.close()})"`), start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; API calls are mocked so no API or database runs
+- [x] 7.2 Run `apps/web/e2e/listing-detail-identity.spec.ts`, `us-4.1-booking.spec.ts`, `focus-hover.spec.ts` and `layout.spec.ts` on the isolated port and confirm green
+- [x] 7.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green; record any failure that is a hard-coded port 5173 URL in an unrelated spec as unchanged by this change
+- [x] 7.4 Visual check with Playwright at 1440x900 and 360x800: loaded as guest with dates, loaded as visitor, loaded as host, no-photo, three-photo gallery, no reviews, very long strings, loading skeleton, not-found, error, and the date picker open; save PNGs to `openspec/changes/listing-detail-identity/reports/screenshots/`; confirm frame and tag alignment, board row stacking, sticky panel clearance under the nav, no overflow, star and tile glyphs read on the 24 grid, price band is ink on ember, and the not-found and error panels are distinguishable in grayscale (also capture one grayscale pass); note how `DateRangePicker` sits in the new panel (follow-up)
+- [x] 7.5 Confirm keyboard use through Playwright key presses (Tab order, Enter on Book now, focus ring visible on paper and stone, picker keyboard use unchanged) and that no console error is logged in any state
+- [x] 7.6 Write report `openspec/changes/listing-detail-identity/reports/YYYY-MM-DD-step-7-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 6.1 and any finding
 
 ## 8. Documentation (MANDATORY)
 
@@ -94,8 +94,8 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 10. Final verification
 
-- [ ] 10.1 `node scripts/check-mvp-scope.mjs` and `openspec validate listing-detail-identity --strict` pass
-- [ ] 10.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (e2e on the isolated port; caveat as in 7.3)
-- [ ] 10.3 `rg -n "rounded-xl|rounded-lg|rounded-full|rounded-pill|shadow-sm|bg-slate|⭐|text-fg-subtle|text-fg-muted" apps/web/src/pages/ListingDetailPage.tsx` returns only intended hits (`fg-muted` and `fg-subtle` only on paper; none inside the price band; no emoji, pill, shadow or slate)
-- [ ] 10.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope"
+- [x] 10.1 `node scripts/check-mvp-scope.mjs` and `openspec validate listing-detail-identity --strict` pass
+- [x] 10.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (e2e on the isolated port; caveat as in 7.3)
+- [x] 10.3 `rg -n "rounded-xl|rounded-lg|rounded-full|rounded-pill|shadow-sm|bg-slate|⭐|text-fg-subtle|text-fg-muted" apps/web/src/pages/ListingDetailPage.tsx` returns only intended hits (`fg-muted` and `fg-subtle` only on paper; none inside the price band; no emoji, pill, shadow or slate)
+- [x] 10.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope"
 - [ ] 10.5 PR title states the user story (for example: "Let a visitor judge a stay and its price on a listing page that looks like the rest of NomadHome"), the description links the change-id and says "Refs #126; closes #126", and attaches the 1440 and 360 screenshots; commits are Conventional with the (NH-126) suffix, one per reviewable change, no AI attribution
