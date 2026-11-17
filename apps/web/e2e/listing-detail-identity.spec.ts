@@ -7,12 +7,13 @@ import { mockSession } from "./helpers/auth";
 // asserted, screenshots are attached as artifacts and never compared. Every API call is mocked.
 //
 // Selector assumptions (the page has no test ids beyond the skeleton):
-//  - primary photo = first <img> whose alt is the listing title; thumbnails = the others;
+//  - primary photo = the only <img> whose alt is the listing title; thumbnails are decorative
+//    (alt "" + aria-hidden) and found as img[aria-hidden="true"] next to it;
 //  - type tag = the element whose own text is "Property";
 //  - amenity tags = the <li> items under the "Amenities" h2's parent;
 //  - no-photo placeholder = the only element in <main> with a dashed border (visitor view);
-//  - price band = nearest ancestor of the price text with the ember background, and the
-//    booking panel = that band's parent;
+//  - price band = parent of the price text (asserted to have the ember background), and the
+//    booking panel = that band's parent (see bookingPanel);
 //  - the nav is the sticky <header>.
 
 const API = "http://localhost:3000";
@@ -162,71 +163,65 @@ async function focusRing(page: Page) {
   });
 }
 
-/** Resolve the ember price band, its panel and its text colours from the price text. */
-async function inspectBooking(page: Page) {
-  return page
-    .getByText(PRICE)
-    .first()
-    .evaluate((priceEl) => {
-      let band: Element | null = priceEl;
-      while (band && getComputedStyle(band).backgroundColor !== "rgb(230, 95, 53)") {
-        band = band.parentElement;
-      }
-      if (!band) return null;
-      const bandCs = getComputedStyle(band);
-      const panel = band.parentElement as Element;
-      const panelCs = getComputedStyle(panel);
-      const colors: string[] = [];
-      const walker = document.createTreeWalker(band, NodeFilter.SHOW_TEXT);
-      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-        if (n.textContent && n.textContent.trim() && n.parentElement) {
-          colors.push(getComputedStyle(n.parentElement).color);
-        }
-      }
-      return {
-        bandBg: bandCs.backgroundColor,
-        bandBorderBottomWidth: bandCs.borderBottomWidth,
-        bandBorderBottomColor: bandCs.borderBottomColor,
-        bandBorderBottomStyle: bandCs.borderBottomStyle,
-        bandText: band.textContent ?? "",
-        colors,
-        controls: band.querySelectorAll("input, button, a, select, textarea").length,
-        panelBg: panelCs.backgroundColor,
-        panelShadow: panelCs.boxShadow,
-        panelPosition: panelCs.position,
-        panelBorders: [
-          panelCs.borderTopWidth,
-          panelCs.borderRightWidth,
-          panelCs.borderBottomWidth,
-          panelCs.borderLeftWidth,
-        ],
-        panelBorderColor: panelCs.borderTopColor,
-        panelBorderStyle: panelCs.borderTopStyle,
-        panelMaxRadius: Math.max(
-          ...[
-            panelCs.borderTopLeftRadius,
-            panelCs.borderTopRightRadius,
-            panelCs.borderBottomRightRadius,
-            panelCs.borderBottomLeftRadius,
-          ].map((v) => parseFloat(v)),
-        ),
-      };
-    });
+/** The ember price band (parent of the price text) and its booking panel (the band's parent). */
+async function bookingPanel(page: Page) {
+  const band = page.getByText(PRICE).first().locator("..");
+  await expect(band).toHaveCSS("background-color", EMBER_RGB);
+  return { band, panel: band.locator("..") };
 }
 
-/** The panel element (parent of the ember band) as a locator-free handle for geometry. */
-async function panelTop(page: Page): Promise<number> {
-  return page
-    .getByText(PRICE)
-    .first()
-    .evaluate((priceEl) => {
-      let band: Element | null = priceEl;
-      while (band && getComputedStyle(band).backgroundColor !== "rgb(230, 95, 53)") {
-        band = band.parentElement;
+/** Read the band's and the panel's computed styles and the band's text colours. */
+async function inspectBooking(page: Page) {
+  const { band, panel } = await bookingPanel(page);
+  const bandInfo = await band.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    const colors: string[] = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (n.textContent && n.textContent.trim() && n.parentElement) {
+        colors.push(getComputedStyle(n.parentElement).color);
       }
-      if (!band?.parentElement) throw new Error("no ember band");
-      return band.parentElement.getBoundingClientRect().top;
-    });
+    }
+    return {
+      bandBg: cs.backgroundColor,
+      bandBorderBottomWidth: cs.borderBottomWidth,
+      bandBorderBottomColor: cs.borderBottomColor,
+      bandBorderBottomStyle: cs.borderBottomStyle,
+      bandText: el.textContent ?? "",
+      colors,
+      controls: el.querySelectorAll("input, button, a, select, textarea").length,
+    };
+  });
+  const panelInfo = await panel.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return {
+      panelBg: cs.backgroundColor,
+      panelShadow: cs.boxShadow,
+      panelPosition: cs.position,
+      panelBorders: [
+        cs.borderTopWidth,
+        cs.borderRightWidth,
+        cs.borderBottomWidth,
+        cs.borderLeftWidth,
+      ],
+      panelBorderColor: cs.borderTopColor,
+      panelBorderStyle: cs.borderTopStyle,
+      panelMaxRadius: Math.max(
+        ...[
+          cs.borderTopLeftRadius,
+          cs.borderTopRightRadius,
+          cs.borderBottomRightRadius,
+          cs.borderBottomLeftRadius,
+        ].map((v) => parseFloat(v)),
+      ),
+    };
+  });
+  return { ...bandInfo, ...panelInfo };
+}
+
+async function panelTop(page: Page): Promise<number> {
+  const { panel } = await bookingPanel(page);
+  return panel.evaluate((el) => el.getBoundingClientRect().top);
 }
 
 async function mainSurfacesOutsideSystem(page: Page) {
@@ -282,15 +277,17 @@ for (const vp of VIEWPORTS) {
       expect(await h1.evaluate((el) => getComputedStyle(el).fontFamily)).toContain("Overpass");
       await expect(h1).toHaveCSS("font-weight", "900");
 
-      const photos = page.getByAltText(TITLE);
-      await expect(photos).toHaveCount(3);
-      const primary = photos.first();
+      const primary = page.getByAltText(TITLE);
+      await expect(primary).toHaveCount(1);
       await expectEdge(primary, "solid");
       await expectNoRadius(primary);
-      for (const i of [1, 2]) {
-        await expectEdge(photos.nth(i), "solid");
-        await expectNoRadius(photos.nth(i));
-        expect(await photos.nth(i).evaluate((el) => el.closest("a, button") === null)).toBe(true);
+      const thumbs = primary.locator("..").locator("img[aria-hidden='true']");
+      await expect(thumbs).toHaveCount(2);
+      for (const i of [0, 1]) {
+        await expect(thumbs.nth(i)).toHaveAttribute("alt", "");
+        await expectEdge(thumbs.nth(i), "solid");
+        await expectNoRadius(thumbs.nth(i));
+        expect(await thumbs.nth(i).evaluate((el) => el.closest("a, button") === null)).toBe(true);
       }
 
       const typeTag = page.getByText("Property", { exact: true });
@@ -300,7 +297,7 @@ for (const vp of VIEWPORTS) {
 
       const amenities = page
         .getByRole("heading", { level: 2, name: "Amenities" })
-        .locator("xpath=..")
+        .locator("..")
         .locator("li");
       await expect(amenities).toHaveCount(2);
       for (let i = 0; i < 2; i += 1) {
@@ -321,21 +318,20 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText(PRICE).first()).toBeVisible();
 
       const info = await inspectBooking(page);
-      expect(info).not.toBeNull();
-      expect(info!.bandBg).toBe(EMBER_RGB);
-      expect(info!.bandBorderBottomWidth).toBe("2px");
-      expect(info!.bandBorderBottomStyle).toBe("solid");
-      expect(info!.bandBorderBottomColor).toBe(INK_RGB);
-      expect(info!.bandText).toContain("per night");
-      expect(info!.colors.length).toBeGreaterThanOrEqual(2);
-      expect(info!.colors.every((c) => c === INK_RGB)).toBe(true);
-      expect(info!.controls).toBe(0);
-      expect(info!.panelBorders).toEqual(["2px", "2px", "2px", "2px"]);
-      expect(info!.panelBorderStyle).toBe("solid");
-      expect(info!.panelBorderColor).toBe(INK_RGB);
-      expect(info!.panelBg).toBe(PAPER_RGB);
-      expect(info!.panelShadow).toBe("none");
-      expect(info!.panelMaxRadius).toBeLessThanOrEqual(4);
+      expect(info.bandBg).toBe(EMBER_RGB);
+      expect(info.bandBorderBottomWidth).toBe("2px");
+      expect(info.bandBorderBottomStyle).toBe("solid");
+      expect(info.bandBorderBottomColor).toBe(INK_RGB);
+      expect(info.bandText).toContain("per night");
+      expect(info.colors.length).toBeGreaterThanOrEqual(2);
+      expect(info.colors.every((c) => c === INK_RGB)).toBe(true);
+      expect(info.controls).toBe(0);
+      expect(info.panelBorders).toEqual(["2px", "2px", "2px", "2px"]);
+      expect(info.panelBorderStyle).toBe("solid");
+      expect(info.panelBorderColor).toBe(INK_RGB);
+      expect(info.panelBg).toBe(PAPER_RGB);
+      expect(info.panelShadow).toBe("none");
+      expect(info.panelMaxRadius).toBeLessThanOrEqual(4);
     });
 
     test("no-photo listing: dashed stone placeholder with no radius and no overflow", async ({
@@ -408,8 +404,7 @@ test.describe("Listing detail identity at desktop-1440", () => {
     await expect(page.getByText(PRICE).first()).toBeVisible();
 
     const info = await inspectBooking(page);
-    expect(info, "ember price band is present").not.toBeNull();
-    expect(info!.panelPosition).toBe("sticky");
+    expect(info.panelPosition).toBe("sticky");
 
     const nav = await box(page.locator("header").first());
     await page.evaluate(() => window.scrollTo(0, 500));
@@ -429,14 +424,11 @@ test.describe("Listing detail identity at mobile-360", () => {
     await expect(page.getByText(PRICE).first()).toBeVisible();
 
     const info = await inspectBooking(page);
-    expect(info, "ember price band is present").not.toBeNull();
-    expect(info!.panelPosition).toBe("static");
+    expect(info.panelPosition).toBe("static");
 
-    const rating = await box(
-      page.getByRole("heading", { level: 2, name: "Rating" }).locator("xpath=.."),
-    );
+    const rating = await box(page.getByRole("heading", { level: 2, name: "Rating" }).locator(".."));
     const amenities = await box(
-      page.getByRole("heading", { level: 2, name: "Amenities" }).locator("xpath=.."),
+      page.getByRole("heading", { level: 2, name: "Amenities" }).locator(".."),
     );
     // All three boxes are read at the same scroll position, so viewport coordinates compare.
     const top = await panelTop(page);
