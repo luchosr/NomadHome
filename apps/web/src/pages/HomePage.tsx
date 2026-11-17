@@ -32,7 +32,7 @@ export function HomePage() {
     <div className="w-full">
       <HeroSection />
 
-      <Suspense fallback={<SectionSkeleton minHeight="480px" />}>
+      <Suspense fallback={<SectionSkeleton minHeight="760px" />}>
         <FeaturedStaysSection />
       </Suspense>
 
