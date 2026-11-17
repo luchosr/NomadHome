@@ -51,9 +51,9 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 4. Login and Register (green)
 
-- [ ] 4.1 `LoginPage.tsx`: wrap in `AuthShell` with the existing title and subtitle keys, name the form with `aria-labelledby`, add `aria-required`, `autoCapitalize="none"`, `spellCheck={false}` on email and conditional `aria-describedby`, move the route link into the footer row (underlined, bold, 44px target); keep every handler, effect, redirect and `t()` key as is
-- [ ] 4.2 `RegisterPage.tsx`: same treatment for its three fields; keep `useRegister`, the `disabled={isSubmitting || !isValid}` rule and the payload untouched
-- [ ] 4.3 Run tasks 1.4, 1.5 and the shared parts of 1.7 green
+- [x] 4.1 `LoginPage.tsx`: wrap in `AuthShell` with the existing title and subtitle keys, name the form with `aria-labelledby`, add `aria-required`, `autoCapitalize="none"`, `spellCheck={false}` on email and conditional `aria-describedby`, move the route link into the footer row (underlined, bold, 44px target); keep every handler, effect, redirect and `t()` key as is
+- [x] 4.2 `RegisterPage.tsx`: same treatment for its three fields; keep `useRegister`, the `disabled={isSubmitting || !isValid}` rule and the payload untouched
+- [x] 4.3 Run tasks 1.4, 1.5 and the shared parts of 1.7 green
 
 ## 5. VerifyEmail (green)
 

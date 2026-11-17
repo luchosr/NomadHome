@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import { useRegister } from "../hooks/useRegister.js";
-import { FormField } from "../components/FormField.js";
+import { AuthShell } from "../components/AuthShell.js";
+import { FormField, errorIdFor } from "../components/FormField.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
 
 export function RegisterPage() {
@@ -15,19 +16,37 @@ export function RegisterPage() {
   } = useRegister();
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-8">
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-fg">{t("auth.register.title")}</h1>
-        <p className="mt-1 text-sm text-fg-subtle">{t("auth.register.subtitle")}</p>
-      </div>
-
-      <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-4">
+    <AuthShell
+      title={t("auth.register.title")}
+      titleId="auth-title"
+      subtitle={t("auth.register.subtitle")}
+      footer={
+        <p className="m-0">
+          {t("auth.register.have_account")}{" "}
+          <Link
+            to="/login"
+            className="inline-flex min-h-11 items-center font-bold text-fg underline underline-offset-4"
+          >
+            {t("auth.register.login_link")}
+          </Link>
+        </p>
+      }
+    >
+      <form
+        aria-labelledby="auth-title"
+        onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+        className="space-y-5"
+      >
         <FormField id="email" label={t("auth.register.email_label")} error={errors.email?.message}>
           <Input
             id="email"
             type="email"
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             aria-invalid={!!errors.email}
+            aria-required="true"
+            aria-describedby={errors.email ? errorIdFor("email") : undefined}
             {...register("email")}
           />
         </FormField>
@@ -42,6 +61,8 @@ export function RegisterPage() {
             type="password"
             autoComplete="new-password"
             aria-invalid={!!errors.password}
+            aria-required="true"
+            aria-describedby={errors.password ? errorIdFor("password") : undefined}
             {...register("password")}
           />
         </FormField>
@@ -56,6 +77,8 @@ export function RegisterPage() {
             type="password"
             autoComplete="new-password"
             aria-invalid={!!errors.confirmPassword}
+            aria-required="true"
+            aria-describedby={errors.confirmPassword ? errorIdFor("confirmPassword") : undefined}
             {...register("confirmPassword")}
           />
         </FormField>
@@ -66,13 +89,6 @@ export function RegisterPage() {
           {t("auth.register.submit")}
         </Button>
       </form>
-
-      <p className="mt-6 text-center text-sm text-fg-subtle">
-        {t("auth.register.have_account")}{" "}
-        <Link to="/login" className="font-medium text-fg hover:underline">
-          {t("auth.register.login_link")}
-        </Link>
-      </p>
-    </div>
+    </AuthShell>
   );
 }
