@@ -179,6 +179,30 @@
       "description": "Bed pictogram in ember on an ink panel (the sign panel carried by the sage co-living field).",
       "html": "<div class=\"ds-pic\"><svg viewBox=\"0 0 32 32\" width=\"40\" height=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"square\" stroke-linejoin=\"miter\"><path d=\"M4 5v22\"/><path d=\"M4 22h24v5\"/><rect x=\"4\" y=\"15\" width=\"24\" height=\"7\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7\" y=\"10\" width=\"8\" height=\"5\" fill=\"currentColor\" stroke=\"none\"/></svg><b>Live</b></div>",
       "css": ".ds-pic{display:inline-flex;align-items:center;gap:12px;background:#1E1E1E;color:#E65F35;border:2px solid #1E1E1E;padding:12px 16px;font:900 18px 'Overpass Variable',sans-serif}"
+    },
+    {
+      "name": "Auth Title Band",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "Ember band closed by a 2px ink rule, over one paper form panel with a stone footer row (AuthShell).",
+      "html": "<div class=\"ds-band\"><h1>Log in</h1><p>Welcome back.</p></div><div class=\"ds-form\"><div class=\"ds-formbody\">Fields</div><div class=\"ds-formfoot\">No account? <a href=\"#\">Sign up</a></div></div>",
+      "css": ".ds-band{background:#E65F35;color:#1E1E1E;border-bottom:2px solid #1E1E1E;padding:24px 16px;font-family:'Overpass Variable',sans-serif}.ds-band h1{margin:0;font-weight:900;font-size:36px;line-height:.95;letter-spacing:-.03em}.ds-band p{margin:12px 0 0;font-weight:500}.ds-form{max-width:512px;margin:24px auto;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;font-family:'Overpass Variable',sans-serif}.ds-formbody{padding:20px}.ds-formfoot{border-top:2px solid #1E1E1E;background:#E5E2DD;padding:16px 20px;font-size:14px}.ds-formfoot a{margin-left:4px;font-weight:700;color:#1E1E1E;text-decoration:underline;text-underline-offset:4px}"
+    },
+    {
+      "name": "Field and Form Error",
+      "kind": "custom",
+      "refersTo": "input",
+      "description": "Field error is a left-barred danger line; form-level error is a danger-bg panel with a filled danger tile.",
+      "html": "<p class=\"ds-ferr\">Enter a valid email.</p><div class=\"ds-serr\"><span>!</span><p>Invalid credentials.</p></div>",
+      "css": ".ds-ferr{margin:8px 0;border-left:4px solid #9B1C2E;padding-left:12px;font:700 14px 'Overpass Variable',sans-serif;color:#9B1C2E}.ds-serr{display:flex;gap:12px;border:2px solid #9B1C2E;background:#F8E1E0;padding:12px;font:700 14px 'Overpass Variable',sans-serif;color:#9B1C2E}.ds-serr span{display:flex;width:20px;height:20px;align-items:center;justify-content:center;background:#9B1C2E;color:#F7F5F2}.ds-serr p{margin:0}"
+    },
+    {
+      "name": "Verify State Tile",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "64px tile on a state panel: dashed (pending), ink-filled (success), danger-outlined (error); shape carries the state.",
+      "html": "<span class=\"ds-t ds-t-p\"></span> <span class=\"ds-t ds-t-s\"></span> <span class=\"ds-t ds-t-e\"></span>",
+      "css": ".ds-t{display:inline-block;width:64px;height:64px;box-sizing:border-box;border:2px solid #1E1E1E}.ds-t-p{border-style:dashed}.ds-t-s{background:#1E1E1E}.ds-t-e{border-color:#9B1C2E;background:#F7F5F2}"
     }
   ],
   "narrative": {
@@ -247,6 +271,7 @@
       "Do set places, prices and counts in Black weight, solid leading, tabular numerals.",
       "Do use the authored Pictogram and Arrow components for kind-of-space and connection; add glyphs to the same 32 grid.",
       "Do keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.",
+      "Do state a form error by shape: a left-barred field error, a filled-tile panel for form-level errors.",
       "Do write user-facing strings through t()."
     ],
     "donts": [
@@ -256,7 +281,8 @@
       "Don't use sage as text or a line, or as a bare block with nothing on it.",
       "Don't put ember text on paper, stone or sage.",
       "Don't add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.",
-      "Don't use icon fonts or third-party icon sets for wayfinding glyphs."
+      "Don't use icon fonts or third-party icon sets for wayfinding glyphs.",
+      "Don't put an error, danger text or muted ink on the ember title band; forms and errors stay on paper."
     ]
   }
 }

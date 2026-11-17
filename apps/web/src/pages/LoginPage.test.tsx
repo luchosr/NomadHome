@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { t } from "@nomadhome/shared";
 import { LoginPage } from "./LoginPage.js";
 import type { AuthUser } from "../api/auth.js";
 
@@ -148,5 +149,79 @@ describe("LoginPage", () => {
     await submitLoginForm();
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/bookings", { replace: true }));
+  });
+});
+
+describe("LoginPage identity structure", () => {
+  beforeEach(() => {
+    mockLogin.mockReset();
+    mockNavigate.mockReset();
+    mockUser = null;
+  });
+
+  it("renders the title as an h1 that names the form", () => {
+    renderLogin();
+    expect(
+      screen.getByRole("heading", { level: 1, name: t("auth.login.title") }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("form", { name: t("auth.login.title") })).toBeInTheDocument();
+  });
+
+  it("links the field error to the email input and does not make it an alert", async () => {
+    renderLogin();
+    await userEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    const email = screen.getByLabelText(/email/i);
+    await screen.findByText(/valid email/i);
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    const describedBy = email.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    const message = document.getElementById(describedBy ?? "");
+    expect(message).toHaveTextContent(/valid email/i);
+    expect(message).toBeVisible();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("drops the description link once the email error clears", async () => {
+    renderLogin();
+    await userEvent.click(screen.getByRole("button", { name: /log in/i }));
+    const email = screen.getByLabelText(/email/i);
+    await screen.findByText(/valid email/i);
+
+    await userEvent.type(email, "user@test.com");
+
+    await waitFor(() => expect(email).not.toHaveAttribute("aria-describedby"));
+    expect(email).not.toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("has no description link before any error", () => {
+    renderLogin();
+    expect(screen.getByLabelText(/email/i)).not.toHaveAttribute("aria-describedby");
+    expect(screen.getByLabelText(/password/i)).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("keeps the route link to /register, underlined", () => {
+    renderLogin();
+    const link = screen.getByRole("link", { name: t("auth.login.sign_up_link") });
+    expect(link).toHaveAttribute("href", "/register");
+    expect(link).toHaveClass("underline");
+  });
+
+  it("keeps the autocomplete values", () => {
+    renderLogin();
+    expect(screen.getByLabelText(/email/i)).toHaveAttribute("autocomplete", "email");
+    expect(screen.getByLabelText(/password/i)).toHaveAttribute("autocomplete", "current-password");
+  });
+
+  it("shows a rejected login as exactly one alert with the same text", async () => {
+    const { ApiError } = await import("../api/client.js");
+    mockLogin.mockRejectedValue(new ApiError(401, { message: "Invalid email or password." }));
+    renderLogin();
+
+    await submitLoginForm();
+
+    await screen.findByRole("alert");
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    expect(screen.getByRole("alert")).toHaveTextContent("Invalid email or password.");
   });
 });
