@@ -205,3 +205,25 @@ only the photos and the editorial Locations index.
   as real patterns; the board-row sample is a design-system showcase and may
   stay if clearly sample content (decide while reviewing, record the choice).
 - `openspec/changes/archive/` is not edited.
+
+## Accepted notes at the finish review
+
+- Co-living ink panel is mostly a pictogram by design (D7); the workspace left
+  column ends about 330px above the right stack at 1440 (pre-existing layout).
+  Neither is changed.
+- The hero 0-nights numeral remains by design.
+- The error state was not screenshotted; it is covered by unit tests (the
+  featured section renders nothing).
+- A one-listing featured board with the plural headline is acceptable.
+- The zero-listing collapse of the featured section is the accepted D3 shift.
+
+## Fixes after the finish review
+
+1. Mobile skeleton rows use `min-h-56` (224px) so the skeleton board is within
+   a few px of the loaded board at 360px; desktop rows stay at 9.5rem.
+2. The clamped stay title uses `leading-[1.1]` instead of `leading-solid`, so no
+   glyph of the clipped third line shows under the box.
+3. The featured Suspense fallback is `min-h-[960px] lg:min-h-[760px]`, matching
+   the skeleton section at 360 and 1440.
+4. Meta-line separators render as `aria-hidden` dot spans with padding, each item
+   `whitespace-nowrap`, plus an `sr-only` comma for screen readers.
