@@ -203,6 +203,14 @@
       "description": "64px tile on a state panel: dashed (pending), ink-filled (success), danger-outlined (error); shape carries the state.",
       "html": "<span class=\"ds-t ds-t-p\"></span> <span class=\"ds-t ds-t-s\"></span> <span class=\"ds-t ds-t-e\"></span>",
       "css": ".ds-t{display:inline-block;width:64px;height:64px;box-sizing:border-box;border:2px solid #1E1E1E}.ds-t-p{border-style:dashed}.ds-t-s{background:#1E1E1E}.ds-t-e{border-color:#9B1C2E;background:#F7F5F2}"
+    },
+    {
+      "name": "Booking Panel Price Band",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Listing detail booking panel: paper panel with a 2px ink edge, ember price band in ink closed by a 2px rule.",
+      "html": "<div class=\"ds-book\"><div class=\"ds-bookband\"><b>$120.00</b> per night</div><div class=\"ds-bookbody\">Dates</div></div>",
+      "css": ".ds-book{max-width:384px;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;font-family:'Overpass Variable',sans-serif}.ds-bookband{background:#E65F35;border-bottom:2px solid #1E1E1E;padding:16px 20px;font-weight:700}.ds-bookband b{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}.ds-bookbody{padding:20px}"
     }
   ],
   "narrative": {
