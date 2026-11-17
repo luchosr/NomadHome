@@ -57,7 +57,7 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 5. VerifyEmail (green)
 
-- [ ] 5.1 `VerifyEmailPage.tsx`: replace the three bare blocks with three sign panels per design.md D7 (stone dashed pending, ember success, paper error), a local tile component with authored 32-grid glyphs (three squares, check, cross; square caps, mitred joins, no icon library), one `h1` per state, `data-state`, polite persistent live region, `role="alert"` on the error panel, primary action links styled as the ink primary button (mirrors `Button`); keep the `useEffect`, the `called` ref, the token handling and every `t()` key
+- [x] 5.1 `VerifyEmailPage.tsx`: replace the three bare blocks with three sign panels per design.md D7 (stone dashed pending, ember success, paper error), a local tile component with authored 32-grid glyphs (three squares, check, cross; square caps, mitred joins, no icon library), one `h1` per state, `data-state`, polite persistent live region, `role="alert"` on the error panel, primary action links styled as the ink primary button (mirrors `Button`); keep the `useEffect`, the `called` ref, the token handling and every `t()` key
 - [ ] 5.2 Run task 1.6 green; run 2.x e2e green against the isolated server
 
 ## 6. Review and update existing unit tests (MANDATORY)
