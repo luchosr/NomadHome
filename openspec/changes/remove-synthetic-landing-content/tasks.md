@@ -15,7 +15,7 @@ NOT close it (photos remain, design.md D11).
 
 ## 0. Setup (MANDATORY - FIRST STEP)
 
-- [ ] 0.1 Confirm work is on branch `feature/NH-121-remove-synthetic-landing-content` (worktree `../nomadhome-worktrees/NH-121`) created from `origin/main`
+- [x] 0.1 Confirm work is on branch `feature/NH-121-remove-synthetic-landing-content` (worktree `../nomadhome-worktrees/NH-121`) created from `origin/main`
 - [ ] 0.2 Verify clean baseline in the worktree after `pnpm install`: `pnpm lint && pnpm typecheck && pnpm test` green before changes; do not start or reuse a dev server on a port shared with another worktree
 - [ ] 0.3 Capture the baseline reference list: `rg -n "StatsSection|TestimonialSection|STAT_ITEMS|FEATURED_CARDS|home\.(stats|testimonial|featured\.cards)|price_value|status_desks" apps packages --glob '!node_modules'`
 
@@ -43,7 +43,7 @@ NOT close it (photos remain, design.md D11).
 
 - [x] 4.1 `CoLivingSection.tsx`: remove the example rate block and the `SYNTHETIC` comment; keep the ink panel as a pictogram-only sign beside the checklist (design.md D7); keep body copy, features and image
 - [x] 4.2 `WorkspaceSection.tsx`: remove the inverse status strip and the `SYNTHETIC` comment; keep photo frame, arrow and checklist stack
-- [ ] 4.3 Verify no empty block or floating one-line panel at 1440 px and 360 px (finalised in section 9)
+- [x] 4.3 Verify no empty block or floating one-line panel at 1440 px and 360 px (finalised in section 9)
 
 ## 5. HomePage composition and rhythm
 
@@ -72,7 +72,7 @@ NOT close it (photos remain, design.md D11).
 
 ## 9. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 9.1 Update `apps/web/e2e/layout.spec.ts` and any spec touching the landing: `/search*` is mocked for every landing visit; keep existing hero assertions
+- [x] 9.1 Update `apps/web/e2e/layout.spec.ts` and any spec touching the landing: `/search*` is mocked for every landing visit; keep existing hero assertions
 - [ ] 9.2 Add e2e (mocked) for: two real rows render with title, city, price, link to `/listings/<id>`; empty result hides the whole section; HTTP 500 hides the section; no `NPS`, testimonial or `$1,100` text; no horizontal overflow at 1440 px and 360 px with a long-title mock
 - [x] 9.3 If the harness can run against the disposable test database with seeded listings and an isolated port, add one real-data pass and record it; otherwise record in the report why it was not feasible
 - [x] 9.4 Execute `pnpm test:e2e` on an isolated port (never another worktree's server or port 5173 if it is in use); restore test data afterwards
@@ -81,9 +81,9 @@ NOT close it (photos remain, design.md D11).
 
 ## 10. Documentation (MANDATORY)
 
-- [ ] 10.1 `apps/web/DESIGN.md`: remove the testimonial from the Sage rules (co-living field and hero facts list only) and trim the "synthetic demo content" paragraph to the remaining items (placeholder photos; the editorial Locations index is not synthetic data); note the board now renders real listings
-- [ ] 10.2 `apps/web/.impeccable/surfaces/src-pages-homepage-tsx.md`: update the "Proof" line (no stats or testimonial; featured stays are real listings); review `apps/web/.impeccable/design.json` for sample rows presented as real and decide (design.md D12)
-- [ ] 10.3 `rg -n -i "stats section|testimonial|synthetic|\$1,100" README.md docs apps/web/*.md apps/web/.impeccable openspec/project.md` and update remaining non-archive mentions; do not edit `openspec/changes/archive/` or `openspec/specs/`
+- [x] 10.1 `apps/web/DESIGN.md`: remove the testimonial from the Sage rules (co-living field and hero facts list only) and trim the "synthetic demo content" paragraph to the remaining items (placeholder photos; the editorial Locations index is not synthetic data); note the board now renders real listings
+- [x] 10.2 `apps/web/.impeccable/surfaces/src-pages-homepage-tsx.md`: update the "Proof" line (no stats or testimonial; featured stays are real listings); review `apps/web/.impeccable/design.json` for sample rows presented as real and decide (design.md D12)
+- [x] 10.3 `rg -n -i "stats section|testimonial|synthetic|\$1,100" README.md docs apps/web/*.md apps/web/.impeccable openspec/project.md` and update remaining non-archive mentions; do not edit `openspec/changes/archive/` or `openspec/specs/`
 - [ ] 10.4 Record a launch note in the PR: seed or onboard real listings before public launch, otherwise the featured section is hidden by design (design.md D9)
 
 ## 11. Memory notes
