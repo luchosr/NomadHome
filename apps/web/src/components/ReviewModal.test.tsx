@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ReviewModal } from "./ReviewModal.js";
 import { ApiError } from "../api/client.js";
 
@@ -67,6 +67,147 @@ describe("ReviewModal", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Something went wrong. Please try again.",
+    );
+  });
+});
+
+// NH-124 identity tests (booking-payment-identity, tasks 1.10 and 1.11). jsdom does not compute
+// Tailwind, so shape is asserted through class tokens. Selector assumptions:
+//  - surface = first element child of the role="dialog" element;
+//  - star glyph = the "svg[aria-hidden]" inside each star button; "filled" means the svg (or the
+//    first ancestor-or-self of its path up to the svg) carries a fill attribute other than "none" or
+//    a "fill-*" class other than "fill-none"; "outline" means fill "none" / "fill-none";
+//  - success panel = nearest ".border-2" ancestor-or-self of the success text.
+// Tests marked GUARD pass before the restyle and must keep passing.
+
+function starButtons(): HTMLElement[] {
+  return screen.getAllByRole("button", { name: /star/i });
+}
+
+function isFilled(svg: Element): boolean {
+  const shape = svg.querySelector("path, polygon") ?? svg;
+  for (let el: Element | null = shape; el; el = el.parentElement) {
+    const fill = el.getAttribute("fill");
+    if (fill !== null) return fill !== "none";
+    const cls = Array.from(el.classList).find((c) => /^fill-/.test(c));
+    if (cls) return cls !== "fill-none";
+    if (el === svg) break;
+  }
+  return false;
+}
+
+describe("ReviewModal identity", () => {
+  const onSuccess = vi.fn();
+  const onClose = vi.fn();
+
+  beforeEach(() => {
+    mockReview.mockReset();
+    onSuccess.mockReset();
+    onClose.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("dialog surface has the 2px border class and no shadow", () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    const surface = screen.getByRole("dialog").firstElementChild;
+    expect(surface).toHaveClass("border-2", "border-border");
+    expect(Array.from(surface?.classList ?? []).filter((c) => /^shadow/.test(c))).toEqual([]);
+  });
+
+  it("textarea has the 2px border class and the label is bold", () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    const textarea = screen.getByLabelText(/your review/i);
+    expect(textarea).toHaveClass("border-2", "border-border");
+    expect(textarea.className).not.toMatch(/focus-visible:outline-none/);
+    expect(screen.getByText("Your review (optional)")).toHaveClass("font-bold");
+  });
+
+  it("a failed submit renders exactly one alert with the same text and a tile", async () => {
+    mockReview.mockRejectedValue(new ApiError(422, { error: "X", message: "Not yet reviewable." }));
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    await userEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    const alert = await screen.findByRole("alert");
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    expect(alert).toHaveTextContent("Not yet reviewable.");
+    expect(alert).toHaveClass("border-2", "border-solid", "border-danger");
+    expect(alert.querySelector('[aria-hidden="true"]')).not.toBeNull();
+  });
+
+  it("GUARD: star buttons are named 1 star to 5 stars and expose aria-pressed", async () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    expect(starButtons().map((b) => b.getAttribute("aria-label"))).toEqual([
+      "1 star",
+      "2 stars",
+      "3 stars",
+      "4 stars",
+      "5 stars",
+    ]);
+    for (const b of starButtons()) expect(b).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    expect(screen.getByRole("button", { name: "4 stars" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("each star button contains one aria-hidden svg and the document has no unicode star", () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    for (const b of starButtons()) {
+      expect(b.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(1);
+    }
+    expect(document.body.textContent).not.toMatch(/[★☆]/);
+  });
+
+  it("selecting 4 stars fills four glyphs and leaves the fifth an outline", async () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    const glyphs = starButtons().map((b) => b.querySelector('svg[aria-hidden="true"]'));
+    expect(glyphs.every((g) => g !== null)).toBe(true);
+    expect(glyphs.map((g) => (g ? isFilled(g) : null))).toEqual([true, true, true, true, false]);
+  });
+
+  it("star buttons drop the old ring-offset focus combo", () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    for (const b of starButtons()) {
+      expect(b.className).not.toMatch(/ring-offset|focus-visible:outline-none|text-warning/);
+    }
+  });
+
+  it("success text renders in a flat 2px panel and onSuccess runs after 1200 ms", async () => {
+    vi.useFakeTimers();
+    mockReview.mockResolvedValue({});
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    // fireEvent: user-event awaits real timers through RTL and would hang under fake timers.
+    fireEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    fireEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    const text = screen.getByText("Review submitted!");
+    const panel = text.closest<HTMLElement>(".border-2");
+    expect(panel).not.toBeNull();
+    expect(panel).toHaveClass("border-border");
+    expect(Array.from(panel?.classList ?? []).filter((c) => /^shadow/.test(c))).toEqual([]);
+    expect(onSuccess).not.toHaveBeenCalled();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1199);
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it("GUARD: submits the trimmed text with the rating and keeps Close wired", async () => {
+    mockReview.mockResolvedValue({});
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: "5 stars" }));
+    await userEvent.type(screen.getByLabelText(/your review/i), " lovely ");
+    await userEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    await waitFor(() =>
+      expect(mockReview).toHaveBeenCalledWith("b2", { rating: 5, text: "lovely" }),
     );
   });
 });
