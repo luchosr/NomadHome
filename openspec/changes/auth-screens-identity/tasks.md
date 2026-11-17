@@ -62,28 +62,28 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 6. Review and update existing unit tests (MANDATORY)
 
-- [ ] 6.1 Review every test touching `FormField`, `ServerErrorAlert`, `LoginPage`, `RegisterPage`, `VerifyEmailPage`, `BecomeHostPage` and the e2e specs `auth.spec.ts`, `us-1.1-registration.spec.ts`, `us-1.3-become-host.spec.ts`; update stale class or text assumptions without weakening any assertion; confirm queries that match by text still resolve to one node now that title and subtitle share a band
-- [ ] 6.2 Confirm `BecomeHostPage.test.tsx` passes unchanged in behaviour (its `findByRole("alert")` assertions keep matching one element); record the visual diff of `BecomeHostPage` in the report (design.md D8)
-- [ ] 6.3 Verify: `pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
+- [x] 6.1 Review every test touching `FormField`, `ServerErrorAlert`, `LoginPage`, `RegisterPage`, `VerifyEmailPage`, `BecomeHostPage` and the e2e specs `auth.spec.ts`, `us-1.1-registration.spec.ts`, `us-1.3-become-host.spec.ts`; update stale class or text assumptions without weakening any assertion; confirm queries that match by text still resolve to one node now that title and subtitle share a band
+- [x] 6.2 Confirm `BecomeHostPage.test.tsx` passes unchanged in behaviour (its `findByRole("alert")` assertions keep matching one element); record the visual diff of `BecomeHostPage` in the report (design.md D8)
+- [x] 6.3 Verify: `pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
 
 ## 7. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 7.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`; record totals
-- [ ] 7.2 Database state: **not applicable.** The change is frontend only. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/` or `packages/shared/src/schemas/`, and no database is started by any step. If any such path appears, stop and reopen this task
-- [ ] 7.3 Write report `openspec/changes/auth-screens-identity/reports/YYYY-MM-DD-step-7-unit-test-verification.md` with commands, results and the not-applicable justification for the database step
+- [x] 7.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`; record totals
+- [x] 7.2 Database state: **not applicable.** The change is frontend only. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/` or `packages/shared/src/schemas/`, and no database is started by any step. If any such path appears, stop and reopen this task
+- [x] 7.3 Write report `openspec/changes/auth-screens-identity/reports/YYYY-MM-DD-step-7-unit-test-verification.md` with commands, results and the not-applicable justification for the database step
 
 ## 8. Manual endpoint testing with curl (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 8.1 **Not applicable.** No endpoint, request shape, response shape, status code or API client changes; the screens call the same `POST /auth/login`, `POST /auth/register` and `GET /auth/verify` through the unchanged `authApi`. Justification check: `git diff origin/main --stat -- apps/web/src/api apps/api` is empty. Record the check and the result in the step 9 report instead of a curl report
+- [x] 8.1 **Not applicable.** No endpoint, request shape, response shape, status code or API client changes; the screens call the same `POST /auth/login`, `POST /auth/register` and `GET /auth/verify` through the unchanged `authApi`. Justification check: `git diff origin/main --stat -- apps/web/src/api apps/api` is empty. Record the check and the result in the step 9 report instead of a curl report
 
 ## 9. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 9.1 Isolated run setup: pick a free port (`node -e "require('net').createServer().listen(0,function(){console.log(this.address().port);this.close()})"`), start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; API calls are mocked so no API or database runs
-- [ ] 9.2 Run `apps/web/e2e/auth-identity.spec.ts`, `auth.spec.ts`, `us-1.1-registration.spec.ts`, `us-1.3-become-host.spec.ts`, `layout.spec.ts` and `focus-hover.spec.ts` on the isolated port and confirm green
+- [x] 9.1 Isolated run setup: pick a free port (`node -e "require('net').createServer().listen(0,function(){console.log(this.address().port);this.close()})"`), start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; API calls are mocked so no API or database runs
+- [x] 9.2 Run `apps/web/e2e/auth-identity.spec.ts`, `auth.spec.ts`, `us-1.1-registration.spec.ts`, `us-1.3-become-host.spec.ts`, `layout.spec.ts` and `focus-hover.spec.ts` on the isolated port and confirm green
 - [ ] 9.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green
-- [ ] 9.4 Visual check with Playwright at 1440x900 and 360x800 (and 360x640 for Register): login empty, login with field errors, login with a long server error, register empty, register with field errors and a duplicate-email error, verify pending, verify success, verify error; save PNGs to `openspec/changes/auth-screens-identity/reports/screenshots/`; confirm band and panel alignment, no overflow, tile glyphs read on the 32 grid, the three verify states are distinguishable in grayscale (also capture one grayscale pass), and `BecomeHostPage` still reads correctly with the restyled wrappers
-- [ ] 9.5 Confirm keyboard use by hand through Playwright key presses (Tab order, Enter submits, focus ring visible on ember, paper and stone surfaces) and that no console error is logged on any of the three pages
-- [ ] 9.6 Write report `openspec/changes/auth-screens-identity/reports/YYYY-MM-DD-step-9-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 8.1 and any finding
+- [x] 9.4 Visual check with Playwright at 1440x900 and 360x800 (and 360x640 for Register): login empty, login with field errors, login with a long server error, register empty, register with field errors and a duplicate-email error, verify pending, verify success, verify error; save PNGs to `openspec/changes/auth-screens-identity/reports/screenshots/`; confirm band and panel alignment, no overflow, tile glyphs read on the 32 grid, the three verify states are distinguishable in grayscale (also capture one grayscale pass), and `BecomeHostPage` still reads correctly with the restyled wrappers
+- [x] 9.5 Confirm keyboard use by hand through Playwright key presses (Tab order, Enter submits, focus ring visible on ember, paper and stone surfaces) and that no console error is logged on any of the three pages
+- [x] 9.6 Write report `openspec/changes/auth-screens-identity/reports/YYYY-MM-DD-step-9-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 8.1 and any finding
 
 ## 10. Documentation (MANDATORY)
 
@@ -98,8 +98,8 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 12. Final verification
 
-- [ ] 12.1 `node scripts/check-mvp-scope.mjs` and `openspec validate auth-screens-identity --strict` pass
+- [x] 12.1 `node scripts/check-mvp-scope.mjs` and `openspec validate auth-screens-identity --strict` pass
 - [ ] 12.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (e2e on the isolated port)
-- [ ] 12.3 `rg -n "text-fg-subtle|text-fg-muted|rounded-xl|rounded-full|bg-danger-bg|text-danger" apps/web/src/pages/{LoginPage,RegisterPage,VerifyEmailPage}.tsx` returns only intended hits (none expected in the pages; danger tokens live in the two wrappers and the verify error tile)
-- [ ] 12.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope"
+- [x] 12.3 `rg -n "text-fg-subtle|text-fg-muted|rounded-xl|rounded-full|bg-danger-bg|text-danger" apps/web/src/pages/{LoginPage,RegisterPage,VerifyEmailPage}.tsx` returns only intended hits (none expected in the pages; danger tokens live in the two wrappers and the verify error tile)
+- [x] 12.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope"
 - [ ] 12.5 PR title states the user story (for example: "Let a visitor sign up, log in and verify their email on screens that look like the rest of NomadHome"), the description links the change-id and says "Refs #125; closes #125", and attaches the 1440 and 360 screenshots; commits are Conventional with the (NH-125) suffix, one per reviewable change, no AI attribution
