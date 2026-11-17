@@ -137,7 +137,7 @@ components:
 
 The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from a warm palette, ember orange, ink, paper and sage with stone as the inset, each held by a 2px ink edge. Nothing floats and nothing blurs; depth is a hard bar or an edge, never a glow. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count, so the page scans like a board rather than a brochure.
 
-Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on an ember hero that works as a departure form, then continues as an ink departure board of the newest real listings (hidden when there are none), an ink three-step strip, a sage co-living field carrying an ink pictogram sign beside its checklist, a workspace field, a stone destination index, and an ember closing band. Search keeps the same signs at a calmer density: an ember query band, a paper filter panel, and bordered result panels.
+Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on an ember hero that works as a departure form, then continues as an ink departure board of the newest real listings (hidden when there are none), an ink three-step strip, a sage co-living field carrying an ink pictogram sign beside its checklist, a workspace field, a stone destination index, and an ember closing band. Search keeps the same signs at a calmer density: an ember query band, a paper filter panel, and bordered result panels. The Auth screens put an ember title band over one paper form panel, and the listing detail stays on paper with a photo frame, an ink-edged header row and a booking panel whose only ember is its price band.
 
 This file records what shipped. The earlier yellow, black and green palette is gone; none of its values remain in source except as negative guards in tests.
 
@@ -257,6 +257,18 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 - **Form-level error:** a danger-bg panel with a 2px danger edge, a filled danger square tile carrying a paper exclamation, bold danger text; role alert.
 - **Verify tile (VerifyEmail):** one panel and one fact per state, with a 64px tile carrying a 32-grid glyph. Pending is a dashed stone panel with a dashed tile; success is an ember panel with an ink-filled tile and paper check; error is a paper panel with a danger-outlined tile and cross. The action is a Link styled as the primary button. BecomeHostPage inherits the restyled field and form-level error wrappers.
 
+### Listing detail
+
+Local pieces of ListingDetailPage; no ember title band (that is the Auth grammar), the page stays on paper.
+
+- **Gallery frame:** the primary photo in a 2px ink edge, square, up to 480px tall, with a 24px bottom margin. Extra photos are small non-interactive 2px-edged thumbnails that wrap beneath it. With no photo the frame is a 256px dashed-edge stone panel.
+- **Type tag:** 2px edge, paper fill, bold 12px uppercase, square corners.
+- **Header row:** Black-weight H1 set solid (headline step, 5xl from md) under the tag; city and country, then the address, in a 2px-ruled row that stacks below sm and splits with a 2px rule from sm.
+- **Amenity tags:** 2px-edged paper tags, 2px radius, bold 14px ink, in a wrapping list under an H2.
+- **Star glyph:** a drawn 24-grid star, ink fill, mitred joins, decorative; the rating text carries the value. No rating states that there are no reviews; only the review count is shown.
+- **Booking panel:** paper, 2px ink edge, 4px radius, sticky at md:top-24 beside the content, stacked below md. Ember is used only as its price band: the nightly rate in Black tabular ink with "/ night", closed by a 2px ink rule. Body padding is 16px, 20px from sm. The date picker sits in a wrapper that narrows the day cells (40px, 38px button) below sm so seven columns fit a 360px panel. Book now is the full-width primary button (disabled until dates are valid); a visitor gets a full-width secondary Log in to book with a 2px edge and no box shadow.
+- **State panels:** not-found and error share a 36rem panel with a 48px square tile and one H1. Not-found is paper with an ink-filled tile and a square outline glyph; error is danger-bg with a danger edge, a danger-filled tile and an exclamation, role alert.
+
 ### Navigation
 
 - Sticky, ink, 2px bottom rule, 1280px inner wrapper. Logo mark plus name in 900 at 1.25rem. Links 14px bold paper, underline on hover. Primary action is an ember button with ink text (hover to paper); secondary is a paper-outlined button inverting on hover. Logged-in mobile collapses to a bordered menu toggle and a dropdown under a paper rule. The focus outline on the nav is paper.
@@ -289,6 +301,8 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 - **Do** use the authored Pictogram and Arrow components for kind-of-space and connection; add glyphs to the same 32 grid.
 - **Do** keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.
 - **Do** state a form error by shape: a left-barred field error, a filled-tile panel for form-level errors.
+- **Do** set the price on an ember band in ink; ember carries the price band alone on the listing detail.
+- **Do** mark absent media with a dashed stone panel, not a slate or white block.
 - **Do** write user-facing strings through t().
 
 ### Don't:
@@ -300,6 +314,7 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 - **Don't** put ember text on paper, stone or sage.
 - **Don't** put an error, danger text or muted ink on the ember title band; forms and errors stay on paper.
 - **Don't** add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.
+- **Don't** add an ember title band to the listing detail, or put muted ink, subtle ink or danger on its price band.
 - **Don't** use icon fonts or third-party icon sets for wayfinding glyphs.
 
 ## Known build notes (not rules)
