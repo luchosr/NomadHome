@@ -39,9 +39,10 @@ below it. The title's left edge and the panel's left edge share the column.
 There is no hero photo, no illustration and no second column.
 
 - **1440 px.** Band is full width; its text sits in the 32rem column (centred).
-  The panel is the same column. Whole Login form and the Register form with
-  its three fields are visible in a 900 px tall viewport (nav 58, band about
-  190, gap 32, panel 330 to 470).
+  The panel is the same column. The whole Login form and the Register form
+  with its three fields fit in a 900 px tall viewport without a server error
+  (nav 58, band about 190, gap 32, panel 330 to 470). With a server error
+  shown, the Register footer row can fall below the fold.
 - **360 px.** Same stack, 16px gutters, band padding reduced, panel padding
   20px. Everything is one column, so there is nothing to reflow.
 
@@ -139,6 +140,8 @@ inside the paper panel. It is never rendered on the band.
   the panel, separated by a 2px ink rule, stone fill, 16px 20px padding. The
   prompt text is ink 14px; the link is ink, **bold and always underlined**
   (not weight alone, and not hover-only), with a minimum 44px tall target.
+  As shipped, the link is separated from its prompt by `ml-1` (4px), not by
+  a text space.
   Ink on stone 12.90. Hover and focus follow the global grammar (focus ring
   from the base layer; hover removes the underline offset change only, no
   colour invention).
@@ -148,7 +151,10 @@ inside the paper panel. It is never rendered on the band.
 One `h1` per state, always present (pending gets one: the existing
 `identity.verify_email.pending` string becomes the heading text; no new key).
 The container is a single centred 36rem column with 40px top padding (64px from
-md) and a persistent polite live region so the state change is announced.
+md) and a wrapper live region so the state change is announced. As shipped the
+wrapper carries `aria-live="polite"` only outside the error state (pending and
+success); in the error state the panel's own `role="alert"` announces, which
+avoids a double announcement.
 Each state is **one panel with one fact**; shape carries the state, colour is
 supplementary.
 
@@ -345,6 +351,10 @@ already exists in `DESIGN.md`.
 
 ## Open points
 
-None blocking. Recorded follow-ups (not in scope): persistent password-rule
-hint and enabling the Register submit; `aria-describedby` wiring on
-`BecomeHostPage`.
+None blocking. Recorded follow-ups (not in scope):
+
+- Persistent password-rule hint, with an enabled Register submit.
+- `aria-describedby` and the left-bar error grammar on the `BecomeHostPage`
+  terms checkbox error (still `text-xs text-danger`), and its 16px checkbox
+  target.
+- Register submit is disabled until the form is valid (pre-existing).
