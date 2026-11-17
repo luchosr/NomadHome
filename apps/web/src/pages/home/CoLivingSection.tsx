@@ -4,12 +4,9 @@ import { WRAP, COLIVING_FEATURES } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 import { FeatureList } from "./FeatureList.js";
 
-// SYNTHETIC (NH-118, design.md D8): the example monthly rate in the price panel
-// (home.coliving.price_*) is an invented USD figure. Replace with a real listing rate or
-// remove before public launch (task 11.1).
 /**
- * Full-bleed sage field: heading and body on the field, a paper sign panel carrying the
- * bed pictogram board, the example rate and the checklist, and a photo band that runs edge to edge.
+ * Full-bleed sage field: heading and body on the field, a sign panel pairing the
+ * bed pictogram board with the checklist, and a photo band that runs edge to edge.
  */
 export function CoLivingSection() {
   return (
@@ -23,17 +20,8 @@ export function CoLivingSection() {
         <p className="mt-6 max-w-[56ch] text-lg leading-relaxed">{t("home.coliving.body")}</p>
 
         <div className="mt-12 grid grid-cols-1 border-2 border-border bg-surface text-fg lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          <div className="flex flex-col justify-between gap-8 border-b-2 border-border bg-surface-inverse p-6 text-fg-inverse lg:border-b-0 lg:border-r-2 lg:p-8">
+          <div className="flex items-center justify-center border-b-2 border-border bg-surface-inverse p-8 text-fg-inverse lg:border-b-0 lg:border-r-2 lg:p-10">
             <Pictogram name="bed" className="size-24 text-ember md:size-32" />
-            <div>
-              <p className="m-0 text-lg font-bold">{t("home.coliving.price_label")}</p>
-              <p className="m-0 mt-2 font-display text-5xl font-black leading-none text-ember">
-                {t("home.coliving.price_value")}
-                <span className="ml-2 font-sans text-base font-bold text-fg-inverse">
-                  {t("home.coliving.price_period")}
-                </span>
-              </p>
-            </div>
           </div>
           <div className="flex items-center p-6 lg:p-8">
             <FeatureList features={COLIVING_FEATURES} className="mt-0 w-full" />

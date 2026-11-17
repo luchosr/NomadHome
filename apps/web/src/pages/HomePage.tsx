@@ -16,12 +16,6 @@ const WorkspaceSection = lazy(() =>
 const LocationsSection = lazy(() =>
   import("./home/LocationsSection.js").then((m) => ({ default: m.LocationsSection })),
 );
-const StatsSection = lazy(() =>
-  import("./home/StatsSection.js").then((m) => ({ default: m.StatsSection })),
-);
-const TestimonialSection = lazy(() =>
-  import("./home/TestimonialSection.js").then((m) => ({ default: m.TestimonialSection })),
-);
 const CtaBandSection = lazy(() =>
   import("./home/CtaBandSection.js").then((m) => ({ default: m.CtaBandSection })),
 );
@@ -29,8 +23,8 @@ const HomeFooter = lazy(() =>
   import("./home/HomeFooter.js").then((m) => ({ default: m.HomeFooter })),
 );
 
-function SectionSkeleton({ minHeight }: { minHeight: string }) {
-  return <div style={{ minHeight }} aria-hidden />;
+function SectionSkeleton({ minHeight, className }: { minHeight?: string; className?: string }) {
+  return <div className={className} style={minHeight ? { minHeight } : undefined} aria-hidden />;
 }
 
 export function HomePage() {
@@ -38,7 +32,7 @@ export function HomePage() {
     <div className="w-full">
       <HeroSection />
 
-      <Suspense fallback={<SectionSkeleton minHeight="480px" />}>
+      <Suspense fallback={<SectionSkeleton className="min-h-[960px] lg:min-h-[760px]" />}>
         <FeaturedStaysSection />
       </Suspense>
 
@@ -56,14 +50,6 @@ export function HomePage() {
 
       <Suspense fallback={<SectionSkeleton minHeight="480px" />}>
         <LocationsSection />
-      </Suspense>
-
-      <Suspense fallback={<SectionSkeleton minHeight="240px" />}>
-        <StatsSection />
-      </Suspense>
-
-      <Suspense fallback={<SectionSkeleton minHeight="320px" />}>
-        <TestimonialSection />
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton minHeight="400px" />}>

@@ -4,10 +4,7 @@ import { WRAP, FIELD, WORKSPACE_FEATURES } from "./constants.js";
 import { SectionHeading } from "./SectionHeading.js";
 import { FeatureList } from "./FeatureList.js";
 
-// SYNTHETIC (NH-118, design.md D8): the status strip (home.workspace.status_*) describes an
-// invented demo workspace. Replace with a real listing or remove before public launch
-// (task 11.1).
-/** Panel stack: the listing panel, a route arrow down, then the checklist sign. */
+/** Panel stack: the photo panel, a route arrow down, then the checklist sign. */
 export function WorkspaceSection() {
   return (
     <section className={`${FIELD} bg-surface`}>
@@ -32,13 +29,6 @@ export function WorkspaceSection() {
               className="aspect-[16/9] w-full object-cover"
               loading="lazy"
             />
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-2 border-border bg-surface-inverse px-6 py-5 text-fg-inverse">
-              <span aria-hidden="true" className="h-4 w-4 shrink-0 bg-ember" />
-              <p className="m-0 text-lg font-black">{t("home.workspace.status_open")}</p>
-              <p className="m-0 text-base font-bold sm:ml-auto">
-                {t("home.workspace.status_desks")}
-              </p>
-            </div>
           </div>
           <div aria-hidden="true" className="flex justify-center py-3">
             <Arrow className="size-12 rotate-90" />

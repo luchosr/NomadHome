@@ -1,14 +1,20 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { t, type LocaleKey } from "@nomadhome/shared";
+import { t, type LocaleKey, type SearchResponse, type SearchResultItem } from "@nomadhome/shared";
 import { HomePage } from "./HomePage.js";
 import { CtaBandSection } from "./home/CtaBandSection.js";
 import { SectionHeading } from "./home/SectionHeading.js";
 import { FeatureList } from "./home/FeatureList.js";
-import { LOCATION_CARDS, STAT_ITEMS, FOOTER_NAV_COLS } from "./home/constants.js";
+import { LOCATION_CARDS, FOOTER_NAV_COLS } from "./home/constants.js";
 
 vi.mock("../contexts/auth.js", () => ({ useAuth: vi.fn() }));
+
+const mockSearch = vi.fn();
+vi.mock("../api/search.js", () => ({
+  searchApi: { search: (...args: unknown[]) => mockSearch(...args) },
+}));
 import { useAuth } from "../contexts/auth.js";
 const mockUseAuth = vi.mocked(useAuth);
 
@@ -18,15 +24,62 @@ function setUser(user: unknown) {
   mockUseAuth.mockReturnValue({ user, isLoading: false } as ReturnType<typeof useAuth>);
 }
 
+const REAL_LISTINGS: SearchResultItem[] = [
+  {
+    id: "listing-a",
+    title: "Alfama Loft",
+    type: "PROPERTY",
+    city: "Lisbon",
+    country: "PT",
+    nightlyRateCents: 7500,
+    currency: "USD",
+    totalCents: 7500,
+    primaryPhotoUrl: null,
+    amenities: ["wifi"],
+  },
+  {
+    id: "listing-b",
+    title: "Mitte Desk Suite",
+    type: "WORKSPACE",
+    city: "Berlin",
+    country: "DE",
+    nightlyRateCents: 4200,
+    currency: "EUR",
+    totalCents: 4200,
+    primaryPhotoUrl: null,
+    amenities: [],
+  },
+];
+
+function searchResponse(data: SearchResultItem[]): SearchResponse {
+  return { data, pagination: { total: data.length, page: 1, pageSize: 3, hasMore: false } };
+}
+
 function renderHome() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter>
-      <HomePage />
-    </MemoryRouter>,
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
-beforeEach(() => setUser(null));
+/** Waits until every lazy section (down to the CTA band) and the search settled. */
+async function renderSettledHome() {
+  const view = renderHome();
+  await screen.findByRole("heading", { level: 2, name: new RegExp(tk("home.cta.headline_pre")) });
+  await screen.findByRole("contentinfo");
+  await waitFor(() => expect(mockSearch).toHaveBeenCalled());
+  return view;
+}
+
+beforeEach(() => {
+  setUser(null);
+  mockSearch.mockReset();
+  mockSearch.mockResolvedValue(searchResponse(REAL_LISTINGS));
+});
 
 describe("HomePage landing sections", () => {
   it("renders every section heading once lazy sections resolve", async () => {
@@ -77,37 +130,26 @@ describe("HomePage landing sections", () => {
     );
   });
 
-  it("renders featured stay rows as links to search", async () => {
+  it("renders featured stay rows from the search API as links to the listing", async () => {
     renderHome();
-    const title = await screen.findByText(tk("home.featured.cards.oaxaca.title"));
-    expect(title.closest("a")).toHaveAttribute("href", "/search");
-    expect(screen.getByText(tk("home.featured.cards.lisbon.tag"))).toBeInTheDocument();
+    const title = await screen.findByText("Alfama Loft");
+    expect(title.closest("a")).toHaveAttribute("href", "/listings/listing-a");
+    expect(screen.getByText("Mitte Desk Suite").closest("a")).toHaveAttribute(
+      "href",
+      "/listings/listing-b",
+    );
   });
 
-  it("shows co-living price panel and feature checklist", async () => {
+  it("shows the co-living feature checklist without an example rate", async () => {
     renderHome();
-    expect(await screen.findByText(tk("home.coliving.price_value"))).toBeInTheDocument();
-    expect(screen.getByText(tk("home.coliving.feature_1"))).toBeInTheDocument();
+    expect(await screen.findByText(tk("home.coliving.feature_1"))).toBeInTheDocument();
     expect(screen.getByText(tk("home.coliving.feature_3"))).toBeInTheDocument();
   });
 
-  it("shows the workspace status strip, image alt and checklist", async () => {
+  it("shows the workspace image alt and checklist without a status strip", async () => {
     renderHome();
     expect(await screen.findByAltText(tk("home.workspace.image_alt"))).toBeInTheDocument();
-    expect(screen.getByText(tk("home.workspace.status_open"))).toBeInTheDocument();
     expect(screen.getByText(tk("home.workspace.feature_2"))).toBeInTheDocument();
-  });
-
-  it("shows stats and testimonial with attribution", async () => {
-    renderHome();
-    for (const s of STAT_ITEMS) {
-      expect(await screen.findByText(tk(s.lKey))).toBeInTheDocument();
-      expect(screen.getByText(s.v, { selector: "p" })).toBeInTheDocument();
-    }
-    expect(
-      screen.getByText(new RegExp(tk("home.testimonial.quote_original_1"))),
-    ).toBeInTheDocument();
-    expect(screen.getByText(tk("home.testimonial.author_name"))).toBeInTheDocument();
   });
 
   it("renders the footer columns, links and legal row", async () => {
@@ -186,5 +228,104 @@ describe("FeatureList", () => {
   it("pads items in flush mode", () => {
     render(<FeatureList features={keys} flush />);
     expect(screen.getAllByRole("listitem")[0]).toHaveClass("px-6");
+  });
+});
+
+describe("HomePage without invented content (NH-121)", () => {
+  it("has no statistics strip, NPS figure or testimonial", async () => {
+    mockSearch.mockResolvedValue(searchResponse([]));
+    const { container } = await renderSettledHome();
+    expect(container).not.toHaveTextContent(/NPS|occupancy|private rooms/i);
+    expect(container.querySelector("blockquote, figure, figcaption, cite")).toBeNull();
+    expect(container).not.toHaveTextContent(/Andr[eé]s Soto|stayed three months|Casa del Fig/i);
+  });
+
+  it("shows no price value anywhere when there are no real listings", async () => {
+    mockSearch.mockResolvedValue(searchResponse([]));
+    const { container } = await renderSettledHome();
+    expect(container).not.toHaveTextContent(/[$€£]\s?\d|\/\s*mo\b/);
+    expect(container).not.toHaveTextContent(/workspace listing(?!s)|dedicated desk/i);
+  });
+
+  it("shows only real prices, in the API currency, when listings exist", async () => {
+    const { container } = await renderSettledHome();
+    await screen.findByText("Alfama Loft");
+    const text = container.textContent ?? "";
+    const prices = text.match(/[$€£]\s?\d[\d,]*(?:\.\d+)?/g) ?? [];
+    expect(prices.sort()).toEqual(["$75.00", "€42.00"]);
+    expect(text).not.toMatch(/\$1,100|\/\s*mo\b/);
+  });
+
+  it("hides the featured section (heading, see-all link, rows) for an empty result", async () => {
+    mockSearch.mockResolvedValue(searchResponse([]));
+    await renderSettledHome();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", {
+          level: 2,
+          name: new RegExp(tk("home.featured.headline_pre")),
+        }),
+      ).toBeNull(),
+    );
+    expect(screen.queryByRole("link", { name: tk("home.featured.see_all") })).toBeNull();
+    expect(
+      screen.queryAllByRole("link").filter((a) => a.getAttribute("href")?.startsWith("/listings/")),
+    ).toHaveLength(0);
+    // The rest of the page still renders.
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: new RegExp(tk("home.how_it_works.headline_pre")),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the featured section when the request fails, without error text", async () => {
+    mockSearch.mockRejectedValue(new Error("API 500"));
+    await renderSettledHome();
+    await waitFor(() =>
+      expect(screen.queryByRole("link", { name: tk("home.featured.see_all") })).toBeNull(),
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByText(/something went wrong|try again|retry/i)).toBeNull();
+  });
+});
+
+describe("HomePage section rhythm (NH-121)", () => {
+  const FIELD_BG = /^bg-(?:surface-inverse|surface-inset|surface|sage|ember)$/;
+
+  function fieldOf(section: Element): string {
+    const token = section.className.split(/\s+/).find((c) => FIELD_BG.test(c));
+    if (!token) throw new Error(`section without a background field: ${section.className}`);
+    return token;
+  }
+
+  async function sections(data: SearchResultItem[]) {
+    mockSearch.mockResolvedValue(searchResponse(data));
+    const { container } = await renderSettledHome();
+    if (data.length > 0) await screen.findByText(data[0]!.title);
+    else
+      await waitFor(() =>
+        expect(screen.queryByRole("link", { name: tk("home.featured.see_all") })).toBeNull(),
+      );
+    return [...container.querySelectorAll("section")];
+  }
+
+  it("renders exactly hero, featured, how-it-works, co-living, workspace, locations and CTA", async () => {
+    expect(await sections(REAL_LISTINGS)).toHaveLength(7);
+  });
+
+  it("renders six sections when the featured section is hidden", async () => {
+    expect(await sections([])).toHaveLength(6);
+  });
+
+  it.each([
+    ["with the featured section", REAL_LISTINGS],
+    ["without the featured section", [] as SearchResultItem[]],
+  ])("never repeats a background field between adjacent sections %s", async (_name, data) => {
+    const fields = (await sections(data)).map(fieldOf);
+    for (let i = 1; i < fields.length; i++) {
+      expect(fields[i], `sections ${i - 1} and ${i} share ${fields[i]}`).not.toBe(fields[i - 1]);
+    }
   });
 });

@@ -21,45 +21,8 @@ export const HOW_IT_WORKS_STEPS = [
   { n: "03", hKey: "home.how_it_works.step_03_heading", pKey: "home.how_it_works.step_03_body" },
 ] as const;
 
-// SYNTHETIC (NH-118, design.md D8): the featured stays, their prices (USD), descriptions
-// and state tags are invented demo records, not real listings. The tags show state by
-// shape (solid = featured/available, dashed = coming soon, struck = unavailable).
-// Replace with real data or remove before public launch (change task 11.1).
-export const FEATURED_CARDS = [
-  {
-    img: "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&q=80&fit=crop",
-    codeKey: "home.featured.cards.oaxaca.code",
-    cityKey: "home.featured.cards.oaxaca.city",
-    titleKey: "home.featured.cards.oaxaca.title",
-    metaKey: "home.featured.cards.oaxaca.meta",
-    priceKey: "home.featured.cards.oaxaca.price",
-    tagKey: "home.featured.cards.oaxaca.tag",
-    tagTone: "accent",
-  },
-  {
-    img: "https://picsum.photos/seed/lisboa-house/800/600",
-    codeKey: "home.featured.cards.lisbon.code",
-    cityKey: "home.featured.cards.lisbon.city",
-    titleKey: "home.featured.cards.lisbon.title",
-    metaKey: "home.featured.cards.lisbon.meta",
-    priceKey: "home.featured.cards.lisbon.price",
-    tagKey: "home.featured.cards.lisbon.tag",
-    tagTone: "success",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80&fit=crop",
-    codeKey: "home.featured.cards.medellin.code",
-    cityKey: "home.featured.cards.medellin.city",
-    titleKey: "home.featured.cards.medellin.title",
-    metaKey: "home.featured.cards.medellin.meta",
-    priceKey: "home.featured.cards.medellin.price",
-    tagKey: "home.featured.cards.medellin.tag",
-    tagTone: "warning",
-  },
-] as const;
-
-// SYNTHETIC (NH-118, design.md D8): the four cities are demo rows, not a statement of
-// where inventory exists. Replace with real data before public launch (task 11.1).
+// Editorial destination links (design.md D10): city names that preselect the search page.
+// They make no claim about inventory, price or availability.
 export const LOCATION_CARDS = [
   {
     cityKey: "home.locations.cards.oaxaca.city",
@@ -77,15 +40,6 @@ export const LOCATION_CARDS = [
     cityKey: "home.locations.cards.mexico_city.city",
     detailKey: "home.locations.cards.mexico_city.detail",
   },
-] as const;
-
-// SYNTHETIC (NH-118, design.md D8): invented figures, no real source. Replace or remove
-// before public launch (task 11.1). The city count mirrors the four LOCATION_CARDS.
-export const STAT_ITEMS = [
-  { v: "4", lKey: "home.stats.cities_label" },
-  { v: "142", lKey: "home.stats.rooms_label" },
-  { v: "92%", lKey: "home.stats.occupancy_label" },
-  { v: "+62", lKey: "home.stats.nps_label" },
 ] as const;
 
 export const FOOTER_NAV_COLS = [

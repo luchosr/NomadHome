@@ -69,7 +69,7 @@
       },
       "sign-numeral": {
         "displayName": "Sign numeral",
-        "purpose": "Night count and stat figures, tabular."
+        "purpose": "Night count and prices, tabular."
       },
       "headline": {
         "displayName": "Headline",
@@ -168,8 +168,8 @@
       "name": "Departure Board Row",
       "kind": "custom",
       "refersTo": "nav",
-      "description": "Signature: ink board row with ember code tile, title, ember price and arrow tile; inverts to ember with ink text on hover.",
-      "html": "<a class=\"ds-row\" href=\"#\"><span class=\"ds-code\">OAX</span><span class=\"ds-title\">Casa del Fig</span><span class=\"ds-rprice\">$1,100 / mo</span><span class=\"ds-arrow\"><svg viewBox=\"0 0 32 32\" width=\"24\" height=\"24\" fill=\"currentColor\"><path d=\"M3 12h14V4l13 12-13 12v-8H3z\"/></svg></span></a>",
+      "description": "Signature: ink board row for a real listing, with an ember pictogram code tile, photo (or pictogram fallback), city, title clamped to two lines, meta line, ember nightly rate with currency and / night, and arrow tile; links to /listings/<id>; inverts to ember with ink text on hover.",
+      "html": "<a class=\"ds-row\" href=\"#\"><span class=\"ds-code\"><svg viewBox=\"0 0 32 32\" width=\"40\" height=\"40\" fill=\"currentColor\"><rect x=\"4\" y=\"15\" width=\"24\" height=\"7\"/><rect x=\"7\" y=\"10\" width=\"8\" height=\"5\"/></svg></span><span class=\"ds-title\">Example stay title<br><small>Example city, Country</small></span><span class=\"ds-rprice\">$85.00 / night</span><span class=\"ds-arrow\"><svg viewBox=\"0 0 32 32\" width=\"24\" height=\"24\" fill=\"currentColor\"><path d=\"M3 12h14V4l13 12-13 12v-8H3z\"/></svg></span></a>",
       "css": ".ds-row{display:flex;align-items:center;gap:16px;width:560px;max-width:100%;box-sizing:border-box;padding:16px;background:#1E1E1E;color:#F7F5F2;border:2px solid #1E1E1E;text-decoration:none;font-family:'Overpass Variable',sans-serif;transition:background-color 220ms}.ds-code{display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:#E65F35;color:#1E1E1E;font-weight:900;font-size:24px}.ds-title{flex:1;font-weight:900;font-size:28px;line-height:.92}.ds-rprice{font-weight:900;font-size:24px;color:#E65F35}.ds-arrow{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:2px solid #F7F5F2}.ds-row:hover{background:#E65F35;color:#1E1E1E}.ds-row:hover .ds-code{background:#1E1E1E;color:#E65F35}.ds-row:hover .ds-rprice{color:#1E1E1E}.ds-row:hover .ds-arrow{border-color:#1E1E1E;background:#1E1E1E;color:#E65F35}"
     },
     {
@@ -220,7 +220,7 @@
       },
       {
         "name": "The Sage Sparingly Rule",
-        "body": "Sage is background only, used for the co-living field, the testimonial field and the hero facts list, and never as a bare block without an ink panel or paper card on it.",
+        "body": "Sage is background only, used for the co-living field and the hero facts list, and never as a bare block without an ink panel or paper card on it.",
         "section": "colors"
       },
       {
@@ -230,7 +230,7 @@
       },
       {
         "name": "The Tabular Number Rule",
-        "body": "Prices, night counts and stat figures use tabular numerals.",
+        "body": "Prices and night counts use tabular numerals.",
         "section": "typography"
       },
       {

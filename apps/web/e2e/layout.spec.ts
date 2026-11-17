@@ -119,6 +119,66 @@ for (const vp of VIEWPORTS) {
       await attachScreenshot(page, testInfo, `landing-${vp.name}`);
     });
 
+    test("landing: featured rows come from the search API and stay inside the viewport", async ({
+      page,
+    }) => {
+      await mockSearch(page);
+      await page.goto("/");
+
+      const first = page.locator('a[href="/listings/listing-1"]');
+      const second = page.locator('a[href="/listings/listing-2"]');
+      await expect(first).toContainText("Lisbon Studio");
+      await expect(first).toContainText("$75.00");
+      await expect(second).toContainText("Porto Desk Suite with a long title");
+      // Each row shows the real city and country from the API, not invented place text.
+      await expect(first).toContainText("Lisbon, PT");
+      await expect(second).toContainText("Lisbon, PT");
+      for (const row of [first, second]) await expectInsideViewport(page, await box(row));
+
+      // No invented content survives: stats, testimonial and example prices are gone.
+      await expect(page.getByText(/NPS|Andrés Soto/)).toHaveCount(0);
+      await expect(page.getByText(/\$1,100|\/ mo\b/)).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+    });
+
+    test("landing: featured section is absent when the search returns no listings", async ({
+      page,
+    }) => {
+      await page.route(`${API}/search*`, (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: [],
+            pagination: { total: 0, page: 1, pageSize: 3, hasMore: false },
+          }),
+        }),
+      );
+      await page.goto("/");
+      await expect(page.locator('section[aria-labelledby="hero-title"]')).toBeVisible();
+      await expect(page.locator('a[href^="/listings/"]')).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "See all stays" })).toHaveCount(0);
+      await expect(page.getByText(/[$€£]\s?\d/)).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+    });
+
+    test("landing: featured section is absent when the search request fails", async ({ page }) => {
+      await page.route(`${API}/search*`, (route) =>
+        route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: { code: "INTERNAL", message: "boom" } }),
+        }),
+      );
+      await page.goto("/");
+      await expect(page.locator('section[aria-labelledby="hero-title"]')).toBeVisible();
+      await expect(page.locator("#city-search")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Newly listed stays." })).toHaveCount(0);
+      await expect(page.locator('a[href^="/listings/"]')).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "See all stays" })).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+    });
+
     test("search: header band is orange, results render as non-overlapping cards", async ({
       page,
     }, testInfo) => {

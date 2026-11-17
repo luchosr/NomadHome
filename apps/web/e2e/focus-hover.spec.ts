@@ -10,14 +10,28 @@ const EMBER_RGB = "rgb(230, 95, 53)";
 const INK_RGB = "rgb(30, 30, 30)";
 const PAPER_RGB = "rgb(247, 245, 242)";
 
+// One real-shaped listing so the landing featured section (NH-121, API-driven) renders a row.
+const LISTING = {
+  id: "listing-1",
+  title: "Lisbon Studio",
+  type: "PROPERTY",
+  city: "Lisbon",
+  country: "PT",
+  nightlyRateCents: 7500,
+  currency: "USD",
+  totalCents: 7500,
+  primaryPhotoUrl: null,
+  amenities: ["wifi"],
+};
+
 async function mockSearch(page: Page) {
   await page.route(`${API}/**`, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        data: [],
-        pagination: { total: 0, page: 1, pageSize: 20, hasMore: false },
+        data: [LISTING],
+        pagination: { total: 1, page: 1, pageSize: 3, hasMore: false },
       }),
     }),
   );
@@ -78,10 +92,8 @@ test.describe("Focus, hover and motion (NH-129)", () => {
   test("departure-board row hover fills orange with ink text", async ({ page }) => {
     await mockSearch(page);
     await page.goto("/");
-    const row = page
-      .locator('a[href^="/listings/"], a[href^="/search"]')
-      .filter({ hasText: "/ mo" })
-      .first();
+    const row = page.locator('a[href="/listings/listing-1"]').filter({ hasText: "Lisbon Studio" });
+    await expect(row).toBeVisible();
     await row.hover();
     await expect(row).toHaveCSS("background-color", EMBER_RGB);
     await expect(row).toHaveCSS("color", INK_RGB);

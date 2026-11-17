@@ -13,7 +13,7 @@ Landing (HomePage): Persuade. Search (SearchPage): Operate, inheriting the same 
 
 - Audience: digital nomad deciding where to live and work for 1 week to 3 months.
 - Action: search by city and dates, in the first viewport, as a working form.
-- Proof: real listings (photo, price, type, wifi, desk). Stats and testimonial sections stay as synthetic placeholders, labeled synthetic in the brief and to be replaced before launch.
+- Proof: real listings (photo, price, type, wifi, desk). There is no stats strip or testimonial. The featured stays are real listings (the newest three published), hidden when none exist; only the remote placeholder photos on the co-living and workspace fields remain to be replaced before launch.
 - Search: compare many listings fast; cards with photo, type, nightly price, 2-3 amenities; filters in a side panel on desktop and a sheet on mobile; no map.
 - Constraints: Tailwind + shadcn/ui + packages/ui, t() for all copy, WCAG 2.1 AA, mobile down to 360 px, USD only, no post-MVP features implied.
 
