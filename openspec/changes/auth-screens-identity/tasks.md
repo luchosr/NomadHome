@@ -80,7 +80,7 @@ another worktree's port; pick a free port first; no database is started.
 
 - [x] 9.1 Isolated run setup: pick a free port (`node -e "require('net').createServer().listen(0,function(){console.log(this.address().port);this.close()})"`), start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; API calls are mocked so no API or database runs
 - [x] 9.2 Run `apps/web/e2e/auth-identity.spec.ts`, `auth.spec.ts`, `us-1.1-registration.spec.ts`, `us-1.3-become-host.spec.ts`, `layout.spec.ts` and `focus-hover.spec.ts` on the isolated port and confirm green
-- [ ] 9.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green
+- [x] 9.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green (75 of 76 on the isolated port; the one failure is `us-4.1-booking.spec.ts` with a mocked checkout URL hard-coded to port 5173, unchanged by this change and green on the repo e2e port)
 - [x] 9.4 Visual check with Playwright at 1440x900 and 360x800 (and 360x640 for Register): login empty, login with field errors, login with a long server error, register empty, register with field errors and a duplicate-email error, verify pending, verify success, verify error; save PNGs to `openspec/changes/auth-screens-identity/reports/screenshots/`; confirm band and panel alignment, no overflow, tile glyphs read on the 32 grid, the three verify states are distinguishable in grayscale (also capture one grayscale pass), and `BecomeHostPage` still reads correctly with the restyled wrappers
 - [x] 9.5 Confirm keyboard use by hand through Playwright key presses (Tab order, Enter submits, focus ring visible on ember, paper and stone surfaces) and that no console error is logged on any of the three pages
 - [x] 9.6 Write report `openspec/changes/auth-screens-identity/reports/YYYY-MM-DD-step-9-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 8.1 and any finding
@@ -94,12 +94,12 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 11. Memory notes
 
-- [ ] 11.1 Save engram notes (`mem_save`) for the decisions: title band over one paper panel (not split), field errors left-barred and not alerts, form-level error panel with filled tile, verify states dashed/solid-filled/outlined with ember success, wrappers restyled in place; then `mem_session_summary` before reporting done
+- [x] 11.1 Save engram notes (`mem_save`) for the decisions: title band over one paper panel (not split), field errors left-barred and not alerts, form-level error panel with filled tile, verify states dashed/solid-filled/outlined with ember success, wrappers restyled in place; then `mem_session_summary` before reporting done
 
 ## 12. Final verification
 
 - [x] 12.1 `node scripts/check-mvp-scope.mjs` and `openspec validate auth-screens-identity --strict` pass
-- [ ] 12.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (e2e on the isolated port)
+- [x] 12.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (e2e on the isolated port) (e2e caveat as in 9.3)
 - [x] 12.3 `rg -n "text-fg-subtle|text-fg-muted|rounded-xl|rounded-full|bg-danger-bg|text-danger" apps/web/src/pages/{LoginPage,RegisterPage,VerifyEmailPage}.tsx` returns only intended hits (none expected in the pages; danger tokens live in the two wrappers and the verify error tile)
 - [x] 12.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope"
 - [ ] 12.5 PR title states the user story (for example: "Let a visitor sign up, log in and verify their email on screens that look like the rest of NomadHome"), the description links the change-id and says "Refs #125; closes #125", and attaches the 1440 and 360 screenshots; commits are Conventional with the (NH-125) suffix, one per reviewable change, no AI attribution
