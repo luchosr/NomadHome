@@ -243,7 +243,7 @@ for (const vp of VIEWPORTS) {
           body: JSON.stringify({ status: "ok" }),
         });
       });
-      await page.goto("/verify-email?token=abc");
+      await page.goto("/verify?token=abc");
 
       const panel = page.locator('[data-state="pending"]');
       await expect(panel).toBeVisible();
@@ -265,7 +265,7 @@ for (const vp of VIEWPORTS) {
       page,
     }, testInfo) => {
       await mockVerify(page, 200);
-      await page.goto("/verify-email?token=abc");
+      await page.goto("/verify?token=abc");
 
       const panel = page.locator('[data-state="success"]');
       await expect(panel).toBeVisible();
@@ -285,8 +285,8 @@ for (const vp of VIEWPORTS) {
     });
 
     for (const scenario of [
-      { name: "rejected token", url: "/verify-email?token=bad", reject: true },
-      { name: "no token", url: "/verify-email", reject: false },
+      { name: "rejected token", url: "/verify?token=bad", reject: true },
+      { name: "no token", url: "/verify", reject: false },
     ]) {
       test(`verify email: error (${scenario.name}) is a paper panel with an outlined danger tile`, async ({
         page,
@@ -346,7 +346,7 @@ for (const vp of VIEWPORTS) {
 
     test("verify email: the success action is an ink-filled primary link", async ({ page }) => {
       await mockVerify(page, 200);
-      await page.goto("/verify-email?token=abc");
+      await page.goto("/verify?token=abc");
 
       const link = page.locator('[data-state="success"]').getByRole("link", { name: "Log in" });
       await expect(link).toHaveAttribute("href", "/login");
