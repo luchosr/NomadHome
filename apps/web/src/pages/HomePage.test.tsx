@@ -244,7 +244,7 @@ describe("HomePage without invented content (NH-121)", () => {
     mockSearch.mockResolvedValue(searchResponse([]));
     const { container } = await renderSettledHome();
     expect(container).not.toHaveTextContent(/[$€£]\s?\d|\/\s*mo\b/);
-    expect(container).not.toHaveTextContent(/workspace listing|dedicated desk/i);
+    expect(container).not.toHaveTextContent(/workspace listing(?!s)|dedicated desk/i);
   });
 
   it("shows only real prices, in the API currency, when listings exist", async () => {

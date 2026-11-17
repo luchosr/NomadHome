@@ -443,7 +443,7 @@ export const en = {
       headline_pre: "Workspace quality, shown",
       headline_em: "next to",
       headline_post: "the room.",
-      body: "Workspaces appear in the same search as co-living homes, so internet, desk and setup are as visible as the bed.",
+      body: "Workspace listings sit in the same search as co-living homes, so internet, desk and setup are as visible as the bed.",
       feature_1: "Filter by property or workspace.",
       feature_2: "See desk and Wi-Fi amenities on each listing.",
       feature_3: "Book a workspace the same way you book a room.",
