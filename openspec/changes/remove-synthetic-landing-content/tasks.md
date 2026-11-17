@@ -88,11 +88,11 @@ NOT close it (photos remain, design.md D11).
 
 ## 11. Memory notes
 
-- [ ] 11.1 Save engram notes (`mem_save`) for the decisions: featured stays = newest three via existing search endpoint, state tags and monthly rate dropped, Locations moved to stone, photos remain open under #121; then `mem_session_summary` before reporting done
+- [x] 11.1 Save engram notes (`mem_save`) for the decisions: featured stays = newest three via existing search endpoint, state tags and monthly rate dropped, Locations moved to stone, photos remain open under #121; then `mem_session_summary` before reporting done
 
 ## 12. Final verification
 
-- [ ] 12.1 `node scripts/check-mvp-scope.mjs` and `openspec validate remove-synthetic-landing-content --strict` pass
-- [ ] 12.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
-- [ ] 12.3 `rg -n "SYNTHETIC \(NH-118" apps` returns only items intentionally kept (none expected); `rg` for the removed constants and keys returns no source hits
+- [x] 12.1 `node scripts/check-mvp-scope.mjs` and `openspec validate remove-synthetic-landing-content --strict` pass
+- [x] 12.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
+- [x] 12.3 `rg -n "SYNTHETIC \(NH-118" apps` returns only items intentionally kept (none expected); `rg` for the removed constants and keys returns no source hits
 - [ ] 12.4 PR title states the user story, the description links the change-id and says "Refs #121" (no closing keyword); remaining item recorded: replace the remote Unsplash photos (co-living, workspace) with real or licensed self-hosted photography
