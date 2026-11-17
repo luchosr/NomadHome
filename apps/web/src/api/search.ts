@@ -6,6 +6,7 @@ export interface SearchParams {
   checkIn?: string;
   checkOut?: string;
   page?: number;
+  pageSize?: number;
   type?: "PROPERTY" | "WORKSPACE";
   amenities?: string[];
   minPrice?: number;
@@ -16,6 +17,7 @@ export interface SearchParams {
 export const searchApi = {
   search(params: SearchParams): Promise<SearchResponse> {
     const q = new URLSearchParams({ page: String(params.page ?? 1) });
+    if (params.pageSize !== undefined) q.set("pageSize", String(params.pageSize));
     if (params.city) q.set("city", params.city);
     if (params.checkIn) q.set("checkIn", params.checkIn);
     if (params.checkOut) q.set("checkOut", params.checkOut);

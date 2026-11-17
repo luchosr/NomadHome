@@ -2,13 +2,10 @@ import { Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 import type { SearchResultItem } from "@nomadhome/shared";
 import { Badge, Pictogram } from "@nomadhome/ui";
+import { formatRate } from "../lib/money.js";
 import { AMENITY_OPTIONS } from "../lib/searchData.js";
 
 const MAX_AMENITIES = 3;
-
-function formatRate(cents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
-}
 
 /** Amenity codes to labels through t(); unknown codes are skipped, never rendered raw. */
 function amenityLabels(codes: readonly string[] | undefined): string[] {
