@@ -57,7 +57,11 @@ function StatePanel({
           }`}
         >
           <svg {...TILE_GLYPH}>
-            {isError ? <path d="M12 5v9M12 18v1" /> : <path d="M4 6H20V20H4ZM4 11H20" />}
+            {isError ? (
+              <path d="M12 5v9M12 18v1" />
+            ) : (
+              <path d="M4 6H20V20H4ZM4 12H20M8 3V6M16 3V6" />
+            )}
           </svg>
         </span>
         <h1

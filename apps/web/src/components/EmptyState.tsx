@@ -26,7 +26,7 @@ export function EmptyState({ message, ctaLabel, ctaTo }: Props) {
         strokeLinecap="square"
         strokeLinejoin="miter"
       >
-        <path d="M4 6H20V20H4ZM4 12H20M8 3V8M16 3V8" />
+        <path d="M4 6H20V20H4ZM4 12H20M8 3V6M16 3V6" />
       </svg>
       <p className="m-0 min-w-0 break-words text-fg-muted">{message}</p>
       {ctaLabel && ctaTo && (
