@@ -51,14 +51,14 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 3. Implementation (green)
 
-- [ ] 3.1 `BookingFormPage.tsx`: add the local link constants (D1), the summary panel with the framed photo and the ember total band (D2, ink text only, same label and amount row), `ServerErrorAlert` for the server error, single-link back and no-dates actions, and local state panels with authored tile glyphs on the 24 grid; Pay now stays a `<Button>`; no query, handler, condition, redirect or `t()` change
-- [ ] 3.2 `BookingSuccessPage.tsx`: ember success panel with ink tile and ink text, paper foot with the single link CTA, dashed stone waiting panel with `role="status"` and `aria-busy`, flat skeleton; do not split the timed-out path from success; polling, sync, timeouts and state logic untouched
-- [ ] 3.3 `BookingCancelPage.tsx`: neutral paper sign panel with an outlined tile and single-link CTAs; keep roles, names and hrefs
-- [ ] 3.4 `MyBookingsPage.tsx`: flat 2px cards that keep `rounded-card`, a local `StatusTag` (shape per status plus the unchanged label text) replacing `Badge` and `statusTone`, flat skeleton, danger sign panel for the error; action buttons, conditions and handlers unchanged
-- [ ] 3.5 `Modal.tsx`: remove the shadow, add the 2px ink edge and a flat backdrop; add no handler, prop or behaviour
-- [ ] 3.6 `CancelBookingModal.tsx` and `ReviewModal.tsx`: 2px textarea, bold label, `ServerErrorAlert` for the error, local drawn `StarGlyph` (filled versus outline, `aria-hidden`, 44px buttons, aria-labels unchanged), two-layer focus ring, flat success panel; keep the `setTimeout` behaviour and all payloads
-- [ ] 3.7 `EmptyState.tsx`: flat 2px dashed panel with an authored 24-grid glyph; keep the nested `Link > Button` (issue #138) and the props
-- [ ] 3.8 Run tasks 1.1 to 1.12 green and re-run the 2.x e2e green against the isolated server
+- [x] 3.1 `BookingFormPage.tsx`: add the local link constants (D1), the summary panel with the framed photo and the ember total band (D2, ink text only, same label and amount row), `ServerErrorAlert` for the server error, single-link back and no-dates actions, and local state panels with authored tile glyphs on the 24 grid; Pay now stays a `<Button>`; no query, handler, condition, redirect or `t()` change
+- [x] 3.2 `BookingSuccessPage.tsx`: ember success panel with ink tile and ink text, paper foot with the single link CTA, dashed stone waiting panel with `role="status"` and `aria-busy`, flat skeleton; do not split the timed-out path from success; polling, sync, timeouts and state logic untouched
+- [x] 3.3 `BookingCancelPage.tsx`: neutral paper sign panel with an outlined tile and single-link CTAs; keep roles, names and hrefs
+- [x] 3.4 `MyBookingsPage.tsx`: flat 2px cards that keep `rounded-card`, a local `StatusTag` (shape per status plus the unchanged label text) replacing `Badge` and `statusTone`, flat skeleton, danger sign panel for the error; action buttons, conditions and handlers unchanged
+- [x] 3.5 `Modal.tsx`: remove the shadow, add the 2px ink edge and a flat backdrop; add no handler, prop or behaviour
+- [x] 3.6 `CancelBookingModal.tsx` and `ReviewModal.tsx`: 2px textarea, bold label, `ServerErrorAlert` for the error, local drawn `StarGlyph` (filled versus outline, `aria-hidden`, 44px buttons, aria-labels unchanged), two-layer focus ring, flat success panel; keep the `setTimeout` behaviour and all payloads
+- [x] 3.7 `EmptyState.tsx`: flat 2px dashed panel with an authored 24-grid glyph; keep the nested `Link > Button` (issue #138) and the props
+- [x] 3.8 Run tasks 1.1 to 1.12 green and re-run the 2.x e2e green against the isolated server
 
 ## 4. Review and update existing unit tests (MANDATORY)
 
