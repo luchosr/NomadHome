@@ -130,6 +130,9 @@ for (const vp of VIEWPORTS) {
       await expect(first).toContainText("Lisbon Studio");
       await expect(first).toContainText("$75.00");
       await expect(second).toContainText("Porto Desk Suite with a long title");
+      // Each row shows the real city and country from the API, not invented place text.
+      await expect(first).toContainText("Lisbon, PT");
+      await expect(second).toContainText("Lisbon, PT");
       for (const row of [first, second]) await expectInsideViewport(page, await box(row));
 
       // No invented content survives: stats, testimonial and example prices are gone.
@@ -156,6 +159,23 @@ for (const vp of VIEWPORTS) {
       await expect(page.locator('a[href^="/listings/"]')).toHaveCount(0);
       await expect(page.getByRole("link", { name: "See all stays" })).toHaveCount(0);
       await expect(page.getByText(/[$€£]\s?\d/)).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+    });
+
+    test("landing: featured section is absent when the search request fails", async ({ page }) => {
+      await page.route(`${API}/search*`, (route) =>
+        route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: { code: "INTERNAL", message: "boom" } }),
+        }),
+      );
+      await page.goto("/");
+      await expect(page.locator('section[aria-labelledby="hero-title"]')).toBeVisible();
+      await expect(page.locator("#city-search")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Newly listed stays." })).toHaveCount(0);
+      await expect(page.locator('a[href^="/listings/"]')).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "See all stays" })).toHaveCount(0);
       await expectNoHorizontalOverflow(page);
     });
 

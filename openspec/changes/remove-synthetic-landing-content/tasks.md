@@ -16,8 +16,8 @@ NOT close it (photos remain, design.md D11).
 ## 0. Setup (MANDATORY - FIRST STEP)
 
 - [x] 0.1 Confirm work is on branch `feature/NH-121-remove-synthetic-landing-content` (worktree `../nomadhome-worktrees/NH-121`) created from `origin/main`
-- [ ] 0.2 Verify clean baseline in the worktree after `pnpm install`: `pnpm lint && pnpm typecheck && pnpm test` green before changes; do not start or reuse a dev server on a port shared with another worktree
-- [ ] 0.3 Capture the baseline reference list: `rg -n "StatsSection|TestimonialSection|STAT_ITEMS|FEATURED_CARDS|home\.(stats|testimonial|featured\.cards)|price_value|status_desks" apps packages --glob '!node_modules'`
+- [x] 0.2 Verify clean baseline in the worktree after `pnpm install`: `pnpm lint && pnpm typecheck && pnpm test` green before changes; do not start or reuse a dev server on a port shared with another worktree (verified at the red phase: lint and typecheck clean and the web suite green before production changes; main CI was green at the merge of #132)
+- [x] 0.3 Capture the baseline reference list: `rg -n "StatsSection|TestimonialSection|STAT_ITEMS|FEATURED_CARDS|home\.(stats|testimonial|featured\.cards)|price_value|status_desks" apps packages --glob '!node_modules'` (reference list reconstructed from origin/main with the same rg; every hit is covered by the removal tasks and the dictionary test)
 
 ## 1. Red tests
 
@@ -73,7 +73,7 @@ NOT close it (photos remain, design.md D11).
 ## 9. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
 - [x] 9.1 Update `apps/web/e2e/layout.spec.ts` and any spec touching the landing: `/search*` is mocked for every landing visit; keep existing hero assertions
-- [ ] 9.2 Add e2e (mocked) for: two real rows render with title, city, price, link to `/listings/<id>`; empty result hides the whole section; HTTP 500 hides the section; no `NPS`, testimonial or `$1,100` text; no horizontal overflow at 1440 px and 360 px with a long-title mock
+- [x] 9.2 Add e2e (mocked) for: two real rows render with title, city, price, link to `/listings/<id>`; empty result hides the whole section; HTTP 500 hides the section; no `NPS`, testimonial or `$1,100` text; no horizontal overflow at 1440 px and 360 px with a long-title mock
 - [x] 9.3 If the harness can run against the disposable test database with seeded listings and an isolated port, add one real-data pass and record it; otherwise record in the report why it was not feasible
 - [x] 9.4 Execute `pnpm test:e2e` on an isolated port (never another worktree's server or port 5173 if it is in use); restore test data afterwards
 - [x] 9.5 Visual check at 1440 px and 360 px with Playwright (featured present, featured hidden, loading): confirm no empty gaps in co-living and workspace, board rows wrap correctly, Locations on stone reads as intended and no two adjacent fields match; attach screenshots to the report
