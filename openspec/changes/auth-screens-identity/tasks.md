@@ -44,10 +44,10 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 3. Shared components (green)
 
-- [ ] 3.1 Add `apps/web/src/components/AuthShell.tsx` per design.md D1 and D2: props `title`, `titleId`, optional `subtitle`, `children`, optional `footer`; ember band, 32rem column, paper panel with 2px ink edge and 4px radius, stone footer row with a 2px ink top rule; no `main`, no new `t()` call inside (strings come from the pages)
-- [ ] 3.2 Restyle `apps/web/src/components/FormField.tsx` per D3 and D4: bold ink label, error with id via exported `errorIdFor(id)`, 4px solid danger left rule, 14px bold danger text, not an alert; props unchanged
-- [ ] 3.3 Restyle `apps/web/src/components/ServerErrorAlert.tsx` per D5: solid danger edge, tint fill, filled marker tile with a paper mark (inline SVG, `aria-hidden`), `break-words`; props and return-null behaviour unchanged
-- [ ] 3.4 Run tasks 1.1 to 1.3 green
+- [x] 3.1 Add `apps/web/src/components/AuthShell.tsx` per design.md D1 and D2: props `title`, `titleId`, optional `subtitle`, `children`, optional `footer`; ember band, 32rem column, paper panel with 2px ink edge and 4px radius, stone footer row with a 2px ink top rule; no `main`, no new `t()` call inside (strings come from the pages)
+- [x] 3.2 Restyle `apps/web/src/components/FormField.tsx` per D3 and D4: bold ink label, error with id via exported `errorIdFor(id)`, 4px solid danger left rule, 14px bold danger text, not an alert; props unchanged
+- [x] 3.3 Restyle `apps/web/src/components/ServerErrorAlert.tsx` per D5: solid danger edge, tint fill, filled marker tile with a paper mark (inline SVG, `aria-hidden`), `break-words`; props and return-null behaviour unchanged
+- [x] 3.4 Run tasks 1.1 to 1.3 green
 
 ## 4. Login and Register (green)
 
