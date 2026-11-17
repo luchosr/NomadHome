@@ -100,16 +100,16 @@ a drawn glyph (they were never dictionary strings).
 
 ## Risks & Mitigations
 
-| Risk                                                                                    | Likelihood | Mitigation                                                                                                          |
-| --------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
-| Existing e2e/unit tests break on structure (`.rounded-card`, "Cancelled", `/cancel/`)   | Medium     | Class and text kept by design; review pass before implementation (task 4); `/cancel/` single match asserted         |
-| Total row restructure breaks `getByText(/^total$/i).closest("div")`                     | Medium     | Label and amount stay siblings in one `div`; unit test asserts the closest-div query still returns the amount       |
-| Text on the ember band (total, success panel) drifts to a muted or paper colour         | Medium     | Ink by construction; computed-colour e2e on every text node on each ember surface; contrast table N1 to N3          |
-| Status shown by colour alone after dropping `Badge`                                     | Medium     | Shape per status (dashed, solid, struck, marker) plus text; unit and e2e assert border style and text-decoration    |
-| Modal restyle is mistaken for an a11y fix                                               | Medium     | D6 and Open points state the gap explicitly; no behaviour change asserted; follow-up recorded for the PR            |
-| Single `Link` CTA loses the keyboard focus ring or target size                          | Low        | Local classes carry `min-h-11`; global two-layer ring; e2e Tab test per page                                        |
-| `us-4.1` hard-coded `localhost:5173` mocked checkout URL fails off port 5173            | Known      | Not edited; the isolated-port run records it as pre-existing and unchanged by this change (task 7.3)                |
-| Hand-drawn glyphs (check, cross, star, tiles) drift from the 24-grid stroke rules       | Low        | Authored on a 24 viewBox, square joins, reviewed in the visual check                                                |
+| Risk                                                                                  | Likelihood | Mitigation                                                                                                       |
+| ------------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| Existing e2e/unit tests break on structure (`.rounded-card`, "Cancelled", `/cancel/`) | Medium     | Class and text kept by design; review pass before implementation (task 4); `/cancel/` single match asserted      |
+| Total row restructure breaks `getByText(/^total$/i).closest("div")`                   | Medium     | Label and amount stay siblings in one `div`; unit test asserts the closest-div query still returns the amount    |
+| Text on the ember band (total, success panel) drifts to a muted or paper colour       | Medium     | Ink by construction; computed-colour e2e on every text node on each ember surface; contrast table N1 to N3       |
+| Status shown by colour alone after dropping `Badge`                                   | Medium     | Shape per status (dashed, solid, struck, marker) plus text; unit and e2e assert border style and text-decoration |
+| Modal restyle is mistaken for an a11y fix                                             | Medium     | D6 and Open points state the gap explicitly; no behaviour change asserted; follow-up recorded for the PR         |
+| Single `Link` CTA loses the keyboard focus ring or target size                        | Low        | Local classes carry `min-h-11`; global two-layer ring; e2e Tab test per page                                     |
+| `us-4.1` hard-coded `localhost:5173` mocked checkout URL fails off port 5173          | Known      | Not edited; the isolated-port run records it as pre-existing and unchanged by this change (task 7.3)             |
+| Hand-drawn glyphs (check, cross, star, tiles) drift from the 24-grid stroke rules     | Low        | Authored on a 24 viewBox, square joins, reviewed in the visual check                                             |
 
 ## Rollout
 

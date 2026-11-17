@@ -11,21 +11,21 @@ decoration or features.
 
 ## Files in scope
 
-| File                                                                    | Change                                                                       |
-| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `apps/web/src/pages/BookingFormPage.tsx`                                | Sign panel summary, framed photo, link CTAs, `ServerErrorAlert`, state panels |
-| `apps/web/src/pages/BookingSuccessPage.tsx`                             | Ember success panel, dashed waiting panel, link CTA                          |
-| `apps/web/src/pages/BookingCancelPage.tsx`                              | Paper sign panel, link CTAs                                                  |
-| `apps/web/src/pages/MyBookingsPage.tsx`                                 | Flat cards, local status tag, flat skeleton, danger error panel              |
-| `apps/web/src/components/Modal.tsx`                                     | No shadow, 2px ink edge, flat backdrop (no behaviour change)                 |
-| `apps/web/src/components/CancelBookingModal.tsx`                        | 2px textarea, bold label, `ServerErrorAlert`, two-layer focus                |
-| `apps/web/src/components/ReviewModal.tsx`                               | Drawn star glyph, 2px textarea, error, flat success panel                    |
-| `apps/web/src/components/EmptyState.tsx`                                | Flat 2px dashed edge, no `rounded-xl`                                        |
-| `apps/web/src/pages/BookingFormPage.test.tsx` and the other page and modal tests | Extend (structure, roles, states, classes, dictionary unchanged)     |
-| `apps/web/e2e/booking-payment-identity.spec.ts` (new)                   | Computed colour, border style, layout and focus checks at 1440 and 360       |
-| `apps/web/DESIGN.md`                                                    | Add the "Booking and payment" composition (what shipped)                     |
-| `apps/web/.impeccable/surfaces/src-pages-bookingformpage-tsx.md` (new)  | Surface brief                                                                |
-| `openspec/changes/booking-payment-identity/reports/*`                   | Verification reports and screenshots                                         |
+| File                                                                             | Change                                                                        |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `apps/web/src/pages/BookingFormPage.tsx`                                         | Sign panel summary, framed photo, link CTAs, `ServerErrorAlert`, state panels |
+| `apps/web/src/pages/BookingSuccessPage.tsx`                                      | Ember success panel, dashed waiting panel, link CTA                           |
+| `apps/web/src/pages/BookingCancelPage.tsx`                                       | Paper sign panel, link CTAs                                                   |
+| `apps/web/src/pages/MyBookingsPage.tsx`                                          | Flat cards, local status tag, flat skeleton, danger error panel               |
+| `apps/web/src/components/Modal.tsx`                                              | No shadow, 2px ink edge, flat backdrop (no behaviour change)                  |
+| `apps/web/src/components/CancelBookingModal.tsx`                                 | 2px textarea, bold label, `ServerErrorAlert`, two-layer focus                 |
+| `apps/web/src/components/ReviewModal.tsx`                                        | Drawn star glyph, 2px textarea, error, flat success panel                     |
+| `apps/web/src/components/EmptyState.tsx`                                         | Flat 2px dashed edge, no `rounded-xl`                                         |
+| `apps/web/src/pages/BookingFormPage.test.tsx` and the other page and modal tests | Extend (structure, roles, states, classes, dictionary unchanged)              |
+| `apps/web/e2e/booking-payment-identity.spec.ts` (new)                            | Computed colour, border style, layout and focus checks at 1440 and 360        |
+| `apps/web/DESIGN.md`                                                             | Add the "Booking and payment" composition (what shipped)                      |
+| `apps/web/.impeccable/surfaces/src-pages-bookingformpage-tsx.md` (new)           | Surface brief                                                                 |
+| `openspec/changes/booking-payment-identity/reports/*`                            | Verification reports and screenshots                                          |
 
 Read but **not** changed: `packages/ui` (`Button`, `Skeleton`, `Badge`, `Card`),
 `ServerErrorAlert.tsx`, `FormField.tsx`, `AuthShell.tsx`, `VerifyEmailPage.tsx`,
@@ -61,11 +61,11 @@ Each page declares the constants it uses at module top (the same duplication
 replaces `Link > Button`: one tab stop, valid HTML, same role and accessible
 name, same `href`. Link CTAs sit on paper or stone, never on ember.
 
-| Option                                                 | Verdict  | Why                                                                                    |
-| ------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------- |
-| Local constants per page (chosen)                      | Chosen   | Matches shipped pages, zero `packages/ui` change, one reviewable diff                  |
-| New shared `LinkButton` or `Button asChild`            | Rejected | Needs a primitive change; belongs to #138 with its five screens                        |
-| Keep `Link > Button` and only restyle                  | Rejected | Nested interactive content, double tab stop; already fixed on the sibling pages        |
+| Option                                      | Verdict  | Why                                                                             |
+| ------------------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| Local constants per page (chosen)           | Chosen   | Matches shipped pages, zero `packages/ui` change, one reviewable diff           |
+| New shared `LinkButton` or `Button asChild` | Rejected | Needs a primitive change; belongs to #138 with its five screens                 |
+| Keep `Link > Button` and only restyle       | Rejected | Nested interactive content, double tab stop; already fixed on the sibling pages |
 
 ## D2. BookingFormPage
 
@@ -86,7 +86,7 @@ server error, Pay now, back link.
   `2026-08-01` and `2026-08-04` and `/service fee/`. No `formatDate` here (that
   would be a copy and test change; recorded as follow-up).
 - **Total band.** The last child of the panel: `border-t-2 border-border
-  bg-ember text-fg`, padding 16px 20px, bottom corners `rounded-b-[2px]`. One
+bg-ember text-fg`, padding 16px 20px, bottom corners `rounded-b-[2px]`. One
   `div` row: label `t("booking.ui.total")` (16px bold ink) and amount
   (`text-2xl` Black, tabular, ink) as sibling `span`s, so
   `getByText(/^total$/i).closest("div")` still returns the row that contains the
@@ -101,12 +101,12 @@ server error, Pay now, back link.
 States (all in the same wrapper, one centred panel `max-w-[36rem]`, 2px edge,
 4px radius, no shadow, 48px tile, one `h1` where sensible without new copy):
 
-| State          | Panel                                  | Tile (48px, 2px edge, 24-grid glyph, 3-unit strokes, square caps) | Heading / text (existing string)                   | Roles                  |
-| -------------- | -------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------- | ---------------------- |
-| no dates       | solid paper                            | ink fill, paper calendar-frame glyph                              | `booking.ui.select_dates` as `h1`, ink             | none (page state)      |
-| loading        | flat skeleton in a 2px-edged panel     | none                                                              | none (no text, so no heading)                      | `aria-busy="true"`     |
-| listing 404    | `bg-danger-bg`, 2px solid danger edge  | filled danger tile, paper "!"                                     | `listings.error.not_found` as `h1`, bold danger    | `role="alert"` on panel |
-| quote / generic error | same as 404                     | same                                                              | `error.generic.unexpected` as `h1`, bold danger    | `role="alert"` on panel |
+| State                 | Panel                                 | Tile (48px, 2px edge, 24-grid glyph, 3-unit strokes, square caps) | Heading / text (existing string)                | Roles                   |
+| --------------------- | ------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------- | ----------------------- |
+| no dates              | solid paper                           | ink fill, paper calendar-frame glyph                              | `booking.ui.select_dates` as `h1`, ink          | none (page state)       |
+| loading               | flat skeleton in a 2px-edged panel    | none                                                              | none (no text, so no heading)                   | `aria-busy="true"`      |
+| listing 404           | `bg-danger-bg`, 2px solid danger edge | filled danger tile, paper "!"                                     | `listings.error.not_found` as `h1`, bold danger | `role="alert"` on panel |
+| quote / generic error | same as 404                           | same                                                              | `error.generic.unexpected` as `h1`, bold danger | `role="alert"` on panel |
 
 The no-dates panel keeps its back `Link` (`SECONDARY_CTA`, `href` unchanged)
 below the heading. The skeleton is flat: every block `rounded-none`, the summary
@@ -161,20 +161,21 @@ payment is not an error.
   `formatDate` stays.
 - **Status tag (local).** A `StatusTag` component in the page file replaces
   `Badge` and `statusTone` (removed with it). Anatomy: `inline-flex items-center
-  gap-2 rounded-sm border-2 px-2 py-1 text-xs font-bold`, label text from the
+gap-2 rounded-sm border-2 px-2 py-1 text-xs font-bold`, label text from the
   unchanged `statusLabel()`. Shape carries the status; the label is always
   present:
 
-  | Status          | Edge                  | Fill  | Text                         | Extra cue                      |
-  | --------------- | --------------------- | ----- | ---------------------------- | ------------------------------ |
-  | PENDING_PAYMENT | **dashed** ink        | paper | ink                          | none (dashed = tentative)      |
-  | CONFIRMED       | **solid** ink         | paper | ink                          | none                           |
-  | CANCELLED       | solid `border-muted`  | paper | `fg-muted`, `line-through`   | struck text                    |
-  | COMPLETED       | solid ink             | paper | ink                          | 8px filled ink square marker   |
+  | Status          | Edge                 | Fill  | Text                       | Extra cue                    |
+  | --------------- | -------------------- | ----- | -------------------------- | ---------------------------- |
+  | PENDING_PAYMENT | **dashed** ink       | paper | ink                        | none (dashed = tentative)    |
+  | CONFIRMED       | **solid** ink        | paper | ink                        | none                         |
+  | CANCELLED       | solid `border-muted` | paper | `fg-muted`, `line-through` | struck text                  |
+  | COMPLETED       | solid ink            | paper | ink                        | 8px filled ink square marker |
 
   The text node is exactly the label (for example "Cancelled"), so
   `getByText("Cancelled", { exact: true })` still resolves to one node. The
   marker is a sibling `span` with `aria-hidden`.
+
 - **Actions.** `Button` complete payment (primary), cancel (destructive) and
   review (secondary) are unchanged in role, name, condition and handler. Exactly
   one `/cancel/` button exists per cancellable card; the status tag text never
@@ -208,7 +209,7 @@ frame as an accessibility fix.
 - **Label.** Bold 14px ink (the `FormField` grammar), replaces the 11px
   `font-medium text-fg-muted` label. `htmlFor` ids unchanged.
 - **Textarea.** `w-full rounded-sm border-2 border-border bg-surface-raised
-  px-4 py-3 text-base text-fg placeholder:text-fg-subtle`, focus: the global
+px-4 py-3 text-base text-fg placeholder:text-fg-subtle`, focus: the global
   two-layer ink outline with paper gap (no `focus-visible:border-border`
   override). `maxLength`, `rows`, `placeholder` unchanged.
 - **Error.** `ServerErrorAlert` inside the dialog (one `role="alert"`, same text)
@@ -366,35 +367,35 @@ Palette: ink #1E1E1E, paper #F7F5F2, stone #E5E2DD, ember #E65F35, danger
 #9B1C2E, danger-bg #F8E1E0, fg-muted #3F3B37, fg-subtle #57534E, border-muted
 #6F6A63.
 
-| ID  | Pairing (where on these screens)                                              | Colours           | Ratio | Needs | Result                       |
-| --- | ----------------------------------------------------------------------------- | ----------------- | ----- | ----- | ---------------------------- |
-| B1  | Ink on ember: total amount (24px Black, large text)                           | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
-| B2  | Ink on ember: "Total" label, success title and message (16px bold, normal)    | #1E1E1E / #E65F35 | 4.81  | 4.5   | pass                         |
-| B3  | Ink edge on ember: band rule, success panel edge (non-text)                   | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
-| B4  | Ink on paper: titles, headings, tags, labels, dates values, card title        | #1E1E1E / #F7F5F2 | 15.32 | 4.5   | pass                         |
-| B5  | Muted ink on paper: city/country, cancel message, dates, modal body           | #3F3B37 / #F7F5F2 | 10.20 | 4.5   | pass                         |
-| B6  | Subtle ink on paper: nights count, placeholders                               | #57534E / #F7F5F2 | 7.01  | 4.5   | pass                         |
-| B7  | Muted ink on stone: waiting message, cancel foot text (if any)                | #3F3B37 / #E5E2DD | 8.59  | 4.5   | pass                         |
-| B8  | Ink on stone: waiting panel text, secondary link hover fill                   | #1E1E1E / #E5E2DD | 12.90 | 4.5   | pass                         |
-| B9  | Ink edge on paper: panels, cards, textareas, tags, modal (non-text)           | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
-| B10 | Ink dashed edge on stone: waiting panel (non-text)                            | #1E1E1E / #E5E2DD | 12.90 | 3     | pass                         |
-| B11 | Ink dashed edge on paper: pending status tag, empty state (non-text)          | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
-| B12 | Muted ink on paper, struck: cancelled status text                             | #3F3B37 / #F7F5F2 | 10.20 | 4.5   | pass                         |
-| B13 | Muted edge on paper: cancelled status tag edge (non-text)                     | #6F6A63 / #F7F5F2 | 4.93  | 3     | pass                         |
-| B14 | Paper on ink: primary CTA label and fill, success tile check glyph            | #F7F5F2 / #1E1E1E | 15.32 | 4.5   | pass                         |
-| B15 | Danger on danger-bg: error panel heading and `ServerErrorAlert` text (bold)   | #9B1C2E / #F8E1E0 | 6.48  | 4.5   | pass                         |
-| B16 | Danger edge on paper: error panel outer edge (non-text)                       | #9B1C2E / #F7F5F2 | 7.42  | 3     | pass                         |
-| B17 | Danger edge on danger-bg: error panel inner side (non-text)                   | #9B1C2E / #F8E1E0 | 6.48  | 3     | pass                         |
-| B18 | Paper "!" mark on danger tile                                                 | #F7F5F2 / #9B1C2E | 7.42  | 3     | pass                         |
-| B19 | Ink focus outline on paper, stone and ember (star, CTAs, textarea)            | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass (stone 12.90, ember 4.81) |
-| B20 | Ink star glyph, filled and outline, on paper (non-text)                       | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
-| B21 | Ink marker square in the completed status tag (non-text)                      | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
-| B22 | Subtle ink on stone: disabled `Button` label (Pay now, Complete payment)      | #57534E / #E5E2DD | 5.91  | 4.5   | pass                         |
-| B23 | Muted edge on stone: disabled `Button` dashed edge (non-text)                 | #6F6A63 / #E5E2DD | 4.15  | 3     | pass                         |
-| N1  | Not used: paper text on ember                                                 | #F7F5F2 / #E65F35 | 3.19  | 4.5   | fails, so never placed there |
-| N2  | Not used: muted ink on ember                                                  | #3F3B37 / #E65F35 | 3.20  | 4.5   | fails, so never placed there |
-| N3  | Not used: subtle ink on ember                                                 | #57534E / #E65F35 | 2.20  | 4.5   | fails, so never placed there |
-| N4  | Not used: danger on ember                                                     | #9B1C2E / #E65F35 | 2.33  | 4.5   | fails, so never placed there |
+| ID  | Pairing (where on these screens)                                            | Colours           | Ratio | Needs | Result                         |
+| --- | --------------------------------------------------------------------------- | ----------------- | ----- | ----- | ------------------------------ |
+| B1  | Ink on ember: total amount (24px Black, large text)                         | #1E1E1E / #E65F35 | 4.81  | 3     | pass                           |
+| B2  | Ink on ember: "Total" label, success title and message (16px bold, normal)  | #1E1E1E / #E65F35 | 4.81  | 4.5   | pass                           |
+| B3  | Ink edge on ember: band rule, success panel edge (non-text)                 | #1E1E1E / #E65F35 | 4.81  | 3     | pass                           |
+| B4  | Ink on paper: titles, headings, tags, labels, dates values, card title      | #1E1E1E / #F7F5F2 | 15.32 | 4.5   | pass                           |
+| B5  | Muted ink on paper: city/country, cancel message, dates, modal body         | #3F3B37 / #F7F5F2 | 10.20 | 4.5   | pass                           |
+| B6  | Subtle ink on paper: nights count, placeholders                             | #57534E / #F7F5F2 | 7.01  | 4.5   | pass                           |
+| B7  | Muted ink on stone: waiting message, cancel foot text (if any)              | #3F3B37 / #E5E2DD | 8.59  | 4.5   | pass                           |
+| B8  | Ink on stone: waiting panel text, secondary link hover fill                 | #1E1E1E / #E5E2DD | 12.90 | 4.5   | pass                           |
+| B9  | Ink edge on paper: panels, cards, textareas, tags, modal (non-text)         | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                           |
+| B10 | Ink dashed edge on stone: waiting panel (non-text)                          | #1E1E1E / #E5E2DD | 12.90 | 3     | pass                           |
+| B11 | Ink dashed edge on paper: pending status tag, empty state (non-text)        | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                           |
+| B12 | Muted ink on paper, struck: cancelled status text                           | #3F3B37 / #F7F5F2 | 10.20 | 4.5   | pass                           |
+| B13 | Muted edge on paper: cancelled status tag edge (non-text)                   | #6F6A63 / #F7F5F2 | 4.93  | 3     | pass                           |
+| B14 | Paper on ink: primary CTA label and fill, success tile check glyph          | #F7F5F2 / #1E1E1E | 15.32 | 4.5   | pass                           |
+| B15 | Danger on danger-bg: error panel heading and `ServerErrorAlert` text (bold) | #9B1C2E / #F8E1E0 | 6.48  | 4.5   | pass                           |
+| B16 | Danger edge on paper: error panel outer edge (non-text)                     | #9B1C2E / #F7F5F2 | 7.42  | 3     | pass                           |
+| B17 | Danger edge on danger-bg: error panel inner side (non-text)                 | #9B1C2E / #F8E1E0 | 6.48  | 3     | pass                           |
+| B18 | Paper "!" mark on danger tile                                               | #F7F5F2 / #9B1C2E | 7.42  | 3     | pass                           |
+| B19 | Ink focus outline on paper, stone and ember (star, CTAs, textarea)          | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass (stone 12.90, ember 4.81) |
+| B20 | Ink star glyph, filled and outline, on paper (non-text)                     | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                           |
+| B21 | Ink marker square in the completed status tag (non-text)                    | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                           |
+| B22 | Subtle ink on stone: disabled `Button` label (Pay now, Complete payment)    | #57534E / #E5E2DD | 5.91  | 4.5   | pass                           |
+| B23 | Muted edge on stone: disabled `Button` dashed edge (non-text)               | #6F6A63 / #E5E2DD | 4.15  | 3     | pass                           |
+| N1  | Not used: paper text on ember                                               | #F7F5F2 / #E65F35 | 3.19  | 4.5   | fails, so never placed there   |
+| N2  | Not used: muted ink on ember                                                | #3F3B37 / #E65F35 | 3.20  | 4.5   | fails, so never placed there   |
+| N3  | Not used: subtle ink on ember                                               | #57534E / #E65F35 | 2.20  | 4.5   | fails, so never placed there   |
+| N4  | Not used: danger on ember                                                   | #9B1C2E / #E65F35 | 2.33  | 4.5   | fails, so never placed there   |
 
 Notes: values were recomputed with the script above. B19 ember ratio is the ink
 outline against ember (nothing focusable sits on an ember surface by design).
@@ -404,14 +405,14 @@ colour value is introduced.
 
 ## Risks
 
-| Risk                                                                        | Mitigation                                                                                       |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Ember band or success panel text drifts to a muted or paper colour later    | Computed-colour e2e on every text node on each ember surface; contrast table N1 to N3            |
-| Status tag shape cues rot with Tailwind refactors                           | Assert text and roles first; classes only for shape cues; e2e asserts computed border and decoration |
-| Replacing `Card` with a `div` in MyBookingsPage drifts from the primitive   | Same tokens as the Card (paper, 2px edge, 4px radius); the primitive is untouched for other screens |
-| `EmptyState` is shared; restyle affects other lists                         | Used only with message and optional CTA; HostListingsPage tests and screenshots checked (4.2, 7.4) |
-| Modal looks finished but still has no focus trap or ESC                     | Stated in D6 and Open points; PR description lists it as the first follow-up                     |
-| `us-4.1` checkout-redirect fails off port 5173 (pre-existing)               | Not edited; recorded as unchanged in the step 7 report                                           |
+| Risk                                                                      | Mitigation                                                                                           |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Ember band or success panel text drifts to a muted or paper colour later  | Computed-colour e2e on every text node on each ember surface; contrast table N1 to N3                |
+| Status tag shape cues rot with Tailwind refactors                         | Assert text and roles first; classes only for shape cues; e2e asserts computed border and decoration |
+| Replacing `Card` with a `div` in MyBookingsPage drifts from the primitive | Same tokens as the Card (paper, 2px edge, 4px radius); the primitive is untouched for other screens  |
+| `EmptyState` is shared; restyle affects other lists                       | Used only with message and optional CTA; HostListingsPage tests and screenshots checked (4.2, 7.4)   |
+| Modal looks finished but still has no focus trap or ESC                   | Stated in D6 and Open points; PR description lists it as the first follow-up                         |
+| `us-4.1` checkout-redirect fails off port 5173 (pre-existing)             | Not edited; recorded as unchanged in the step 7 report                                               |
 
 ## Open points
 
