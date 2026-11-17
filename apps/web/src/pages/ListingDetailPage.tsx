@@ -10,6 +10,14 @@ import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
 import { AMENITIES } from "../lib/listingData.js";
 
+// Links styled as the primary and secondary Button variants, so a CTA is one
+// interactive element instead of a Button nested in a Link. Issue #138 tracks a
+// shared solution in the Button primitive and the other five screens.
+const CTA_BASE =
+  "inline-flex min-h-11 w-full items-center justify-center rounded-sm border-2 px-[22px] py-[14px] text-sm font-bold no-underline transition-colors duration-med ease-out active:translate-y-px";
+const PRIMARY_CTA = `${CTA_BASE} border-border bg-action text-action-fg hover:bg-action-hover`;
+const SECONDARY_CTA = `${CTA_BASE} border-border bg-transparent text-fg hover:bg-surface-inset`;
+
 function formatRate(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
 }
@@ -301,8 +309,9 @@ export function ListingDetailPage() {
                   {datesValid ? (
                     <Link
                       to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}
+                      className={PRIMARY_CTA}
                     >
-                      <Button className="w-full">{t("listings.detail.book_now")}</Button>
+                      {t("listings.detail.book_now")}
                     </Link>
                   ) : (
                     <Button className="w-full" disabled>
@@ -313,10 +322,8 @@ export function ListingDetailPage() {
               )}
 
               {!authLoading && !user && (
-                <Link to="/login">
-                  <Button variant="secondary" className="w-full border-2 ![box-shadow:none]">
-                    {t("listings.detail.login_to_book")}
-                  </Button>
+                <Link to="/login" className={SECONDARY_CTA}>
+                  {t("listings.detail.login_to_book")}
                 </Link>
               )}
             </div>

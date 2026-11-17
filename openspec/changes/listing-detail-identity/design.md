@@ -300,7 +300,7 @@ the palette and is removed. No new colour value is introduced.
 
 - Booking panel body padding is `p-4 sm:p-5` (16px, 20px from sm), not a flat 20px, so the panel body keeps room for the picker at 360 px.
 - The `DateRangePicker` is wrapped in a div that overrides `--rdp-day-width` and `--rdp-day_button-width` on `.rdp-root` below `sm` (40px and 38px; 44px and 42px from `sm`), so seven day columns fit the 360 px panel. The picker component itself is unchanged.
-- Log in to book carries `border-2 ![box-shadow:none]` on the secondary `Button`. `ring-0` still produced a composed box-shadow that tripped the no-shadow e2e assertion. A proper `Button` variant is a follow-up.
+- Book now (valid dates) and Log in to book render as a single `Link` styled with local button classes (`PRIMARY_CTA`, `SECONDARY_CTA`, following `PRIMARY_LINK` in `VerifyEmailPage`), not a `Button` inside a `Link`: one tab stop, valid HTML, and no `border-2 ![box-shadow:none]` override because the secondary link carries no ring. The disabled Book now stays a real `Button`.
 - The gallery wrapper (frame, thumbnails and the dashed placeholder) uses `mb-6`.
 
 ## Risks
@@ -312,7 +312,7 @@ the palette and is removed. No new colour value is introduced.
 | `DateRangePicker` looks dated next to the new panel               | Out of scope; screenshot recorded; follow-up                                               |
 | Class-name unit assertions rot with Tailwind refactors            | Assert roles and structure first; classes only for shape cues; e2e asserts computed values |
 | Wrapping thumbnails grows the page on photo-heavy listings at 360 | Thumbnails are small (64x96); acceptable; revisit with the gallery follow-up               |
-| `Link` wrapping `Button` (nested interactive) stays               | Pre-existing, behaviour-bearing; recorded as follow-up, not changed here                   |
+| `Link` wrapping `Button` (nested interactive) on this page        | Fixed here: single styled `Link`; e2e asserts one tab stop; #138 covers the primitive      |
 
 ## Open points
 
@@ -322,10 +322,10 @@ None blocking. Recorded follow-ups (not in scope):
   keyboard support. Thumbnails are decorative (alt empty, aria-hidden); gallery
   interaction would need distinct alt text and copy.
 - `DateRangePicker` visual pass on the sign-panel grammar.
-- Book now and Log in to book render a `Button` inside a `Link` (interactive
-  content nested in an anchor); replace with a link styled as the primary or
-  secondary button, as `VerifyEmailPage` does. Tracked in a follow-up issue,
-  together with the `Button` shadow override below.
+- Issue #138 tracks a shared solution in the `Button` primitive (a link-capable
+  or `asChild` variant) and the other five screens that still nest a `Button` in
+  a `Link`: HostListingsPage, BookingFormPage, BookingCancelPage,
+  BookingSuccessPage and EmptyState. This page already uses local link classes.
 - The `listings` spec mentions guest reviews on the page; only the count is
   rendered today.
 - `DateRangePicker` still shows the default react-day-picker blue for today, the
@@ -334,7 +334,4 @@ None blocking. Recorded follow-ups (not in scope):
   them to `.rdp-root` with ember and ink tokens, and capture an explicit
   selected-range state.
 - Centre the picker (`mx-auto`) inside the booking panel.
-- Add a `Button` variant so Log in to book needs no `border-2 ![box-shadow:none]`
-  override.
-- `Link > Button` leaves a double tab stop (pre-existing).
 - Optional heavier stroke for the error "!" glyph in the state tile.

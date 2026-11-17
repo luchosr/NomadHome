@@ -309,6 +309,9 @@ describe("ListingDetailPage", () => {
       "href",
       "/listings/listing-1/book?checkIn=2026-07-10&checkOut=2026-07-12",
     );
+    expect(link.tagName).toBe("A");
+    expect(link.querySelector("button")).toBeNull();
+    expect(link.closest("button")).toBeNull();
   });
 
   it("booking panel: guest without dates gets a disabled Book now", async () => {
@@ -323,7 +326,12 @@ describe("ListingDetailPage", () => {
 
   it("booking panel: visitor sees Log in to book linking to /login", async () => {
     await renderLoaded();
-    expect(screen.getByRole("link", { name: /log in to book/i })).toHaveAttribute("href", "/login");
+    const link = screen.getByRole("link", { name: /log in to book/i });
+    expect(link).toHaveAttribute("href", "/login");
+    expect(link.tagName).toBe("A");
+    expect(link.querySelector("button")).toBeNull();
+    expect(link.closest("button")).toBeNull();
+    expect(link.className).not.toMatch(/box-shadow|ring/);
   });
 
   it("loading: keeps its test id, is busy, has no h1 and no pill or xl radius", async () => {

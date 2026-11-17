@@ -151,6 +151,23 @@ async function focusUntil(page: Page, label: string): Promise<void> {
   throw new Error(`never focused "${label}"`);
 }
 
+/** The CTA is one focusable element: Tab lands on it once, the next Tab leaves it. */
+async function expectSingleTabStop(page: Page, label: string) {
+  const link = page.getByRole("link", { name: label });
+  expect(await link.evaluate((el) => el.tagName)).toBe("A");
+  expect(await link.locator("button").count()).toBe(0);
+  expect(await link.locator("a, button, input, select, textarea, [tabindex]").count()).toBe(0);
+  await focusUntil(page, label);
+  expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("A");
+  await page.keyboard.press("Tab");
+  expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).not.toBe(label);
+  await page.keyboard.press("Shift+Tab");
+  expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe(label);
+  await page.keyboard.press("Shift+Tab");
+  expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).not.toBe(label);
+  await page.keyboard.press("Tab");
+}
+
 async function focusRing(page: Page) {
   return page.evaluate(() => {
     const cs = getComputedStyle(document.activeElement as Element);
@@ -469,7 +486,16 @@ test.describe("Listing detail keyboard focus", () => {
     await page.goto(`/listings/${LISTING_ID}?checkIn=2099-07-10&checkOut=2099-07-12`);
     await expect(page.getByRole("link", { name: "Book now" })).toBeVisible();
 
-    await focusUntil(page, "Book now");
+    await expectSingleTabStop(page, "Book now");
+    await expect(page.getByRole("link", { name: "Book now" })).toHaveAttribute(
+      "href",
+      new RegExp(`^/listings/${LISTING_ID}/book\\?checkIn=2099-07-10&checkOut=2099-07-12$`),
+    );
+    expect(
+      await page
+        .getByRole("link", { name: "Book now" })
+        .evaluate((el) => el.getBoundingClientRect().height),
+    ).toBeGreaterThanOrEqual(44);
     const ring = await focusRing(page);
     expect(ring.style).toBe("solid");
     expect(ring.width).toBe("3px");
@@ -482,7 +508,16 @@ test.describe("Listing detail keyboard focus", () => {
     await page.goto(`/listings/${LISTING_ID}`);
     await expect(page.getByRole("link", { name: "Log in to book" })).toBeVisible();
 
-    await focusUntil(page, "Log in to book");
+    await expectSingleTabStop(page, "Log in to book");
+    await expect(page.getByRole("link", { name: "Log in to book" })).toHaveAttribute(
+      "href",
+      "/login",
+    );
+    expect(
+      await page
+        .getByRole("link", { name: "Log in to book" })
+        .evaluate((el) => el.getBoundingClientRect().height),
+    ).toBeGreaterThanOrEqual(44);
     const ring = await focusRing(page);
     expect(ring.style).toBe("solid");
     expect(ring.width).toBe("3px");

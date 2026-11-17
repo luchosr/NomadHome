@@ -39,8 +39,7 @@ No palette or token change. Ember appears only as the price band, and the price 
 
 - Gallery interaction: thumbnail selection or lightbox, and distinct alt text per photo (needs copy); thumbnails are non-interactive and share the title as alt text.
 - DateRangePicker still shows default react-day-picker blue for today, the nav chevrons and the selected range. Its --rdp-\* overrides in DateRangePicker.tsx sit on a wrapper that .rdp-root re-declares; scope them to .rdp-root with ember and ink tokens, and capture an explicit selected-range state. Also centre the picker (mx-auto) inside the panel.
-- Button variant that needs no box-shadow override (the Log in to book button carries border-2 ![box-shadow:none]).
-- Link wrapping Button for Book now and Log in to book yields two tab stops (pre-existing); replace with a link styled as a button, as VerifyEmailPage does.
+- Book now and Log in to book are single links styled with local button classes (no nested button, no shadow override). Issue #138 tracks a shared solution in the Button primitive and the other five screens (HostListingsPage, BookingFormPage, BookingCancelPage, BookingSuccessPage, EmptyState).
 - Guest reviews are not rendered, only the count.
 - Optional heavier stroke for the error "!" glyph in the state tile.
 - Host, admin and booking screens remain out of scope.
