@@ -15,6 +15,7 @@ shape-coded state and complete accessibility, not extra decoration or features.
 | `apps/web/src/pages/ListingDetailPage.test.tsx`                          | Extend (structure, headings, states, roles, dictionary unchanged)                     |
 | `apps/web/e2e/listing-detail-identity.spec.ts` (new)                     | Computed colour, border style, sticky, layout and focus checks at 1440 and 360        |
 | `apps/web/DESIGN.md`                                                     | Add the listing detail composition (what shipped)                                     |
+| `apps/web/.impeccable/design.json`                                       | Sidecar: booking panel price band component entry                                     |
 | `apps/web/.impeccable/surfaces/src-pages-listingdetailpage-tsx.md` (new) | Surface brief                                                                         |
 | `openspec/changes/listing-detail-identity/reports/*`                     | Verification reports and screenshots                                                  |
 
