@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { StrictMode } from "react";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -9,7 +10,7 @@ function Boom({ error }: { error: unknown }): never {
   throw error;
 }
 
-function renderWith(error: unknown) {
+function renderWith(error: unknown, strict = false) {
   const router = createMemoryRouter(
     [
       { path: "/", element: <div>home</div> },
@@ -17,7 +18,8 @@ function renderWith(error: unknown) {
     ],
     { initialEntries: ["/", "/boom"], initialIndex: 1 },
   );
-  render(<RouterProvider router={router} />);
+  const ui = <RouterProvider router={router} />;
+  render(strict ? <StrictMode>{ui}</StrictMode> : ui);
   return router;
 }
 
@@ -59,5 +61,30 @@ describe("ErrorPage", () => {
     vi.stubGlobal("location", { ...window.location, reload });
     renderWith(new TypeError("Failed to fetch dynamically imported module: /x.js"));
     expect(reload).toHaveBeenCalled();
+  });
+
+  describe("stale chunk reload guard (NH-127)", () => {
+    const chunkError = () => new TypeError("Failed to fetch dynamically imported module: /x.js");
+
+    it.each([false, true])("reloads exactly once and keeps the flag (strict=%s)", (strict) => {
+      const reload = vi.fn();
+      vi.stubGlobal("location", { ...window.location, reload });
+      renderWith(chunkError(), strict);
+      expect(reload).toHaveBeenCalledTimes(1);
+      expect(sessionStorage.getItem("nh_chunk_reload")).toBe("1");
+    });
+
+    it("shows the error UI without reloading after a failed reload", () => {
+      const reload = vi.fn();
+      vi.stubGlobal("location", { ...window.location, reload });
+      renderWith(chunkError(), true);
+      expect(reload).toHaveBeenCalledTimes(1);
+      cleanup();
+
+      // Next page load: the flag survived the reload.
+      renderWith(chunkError(), true);
+      expect(reload).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("heading", { name: t("error.title") })).toBeInTheDocument();
+    });
   });
 });
