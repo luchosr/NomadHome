@@ -9,14 +9,14 @@ shape-coded state and complete accessibility, not extra decoration or features.
 
 ## Files in scope
 
-| File                                                                      | Change                                                                                    |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `apps/web/src/pages/ListingDetailPage.tsx`                                | Restyle gallery, header, amenities, rating, booking panel, skeleton, not-found, error     |
-| `apps/web/src/pages/ListingDetailPage.test.tsx`                           | Extend (structure, headings, states, roles, dictionary unchanged)                         |
-| `apps/web/e2e/listing-detail-identity.spec.ts` (new)                      | Computed colour, border style, sticky, layout and focus checks at 1440 and 360            |
-| `apps/web/DESIGN.md`                                                      | Add the listing detail composition (what shipped)                                         |
-| `apps/web/.impeccable/surfaces/src-pages-listingdetailpage-tsx.md` (new)  | Surface brief                                                                             |
-| `openspec/changes/listing-detail-identity/reports/*`                      | Verification reports and screenshots                                                      |
+| File                                                                     | Change                                                                                |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `apps/web/src/pages/ListingDetailPage.tsx`                               | Restyle gallery, header, amenities, rating, booking panel, skeleton, not-found, error |
+| `apps/web/src/pages/ListingDetailPage.test.tsx`                          | Extend (structure, headings, states, roles, dictionary unchanged)                     |
+| `apps/web/e2e/listing-detail-identity.spec.ts` (new)                     | Computed colour, border style, sticky, layout and focus checks at 1440 and 360        |
+| `apps/web/DESIGN.md`                                                     | Add the listing detail composition (what shipped)                                     |
+| `apps/web/.impeccable/surfaces/src-pages-listingdetailpage-tsx.md` (new) | Surface brief                                                                         |
+| `openspec/changes/listing-detail-identity/reports/*`                     | Verification reports and screenshots                                                  |
 
 Read but **not** changed: `packages/ui` primitives (`Button`, `Skeleton`,
 `Badge`, `Card`), `DateRangePicker.tsx`, `Layout.tsx`, `AuthShell.tsx`,
@@ -45,11 +45,11 @@ the content so reading order equals visual order.
 identity work changes surfaces, not structure, which keeps the existing
 behaviour and tests intact and the diff reviewable.
 
-| Option                                                 | Verdict  | Why                                                                                                        |
-| ------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------- |
-| Keep frame, restyle surfaces (chosen)                  | Chosen   | Zero behaviour risk, smallest diff, same reading order at every width                                      |
-| Ember title band like Auth and Search                  | Rejected | The page has no destination line to set; a band over a photo gallery fights the photo and the price band   |
-| Move price band above the gallery on mobile            | Rejected | Reorders content for visual reasons only; breaks reading order and needs layout logic                      |
+| Option                                      | Verdict  | Why                                                                                                      |
+| ------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| Keep frame, restyle surfaces (chosen)       | Chosen   | Zero behaviour risk, smallest diff, same reading order at every width                                    |
+| Ember title band like Auth and Search       | Rejected | The page has no destination line to set; a band over a photo gallery fights the photo and the price band |
+| Move price band above the gallery on mobile | Rejected | Reorders content for visual reasons only; breaks reading order and needs layout logic                    |
 
 ## D2. Gallery
 
@@ -64,7 +64,7 @@ behaviour and tests intact and the diff reviewable.
   behaviour. `alt` stays the listing title (a distinct alt needs copy; see
   follow-ups).
 - **No-photo placeholder.** A stone panel, `border-2 border-dashed
-  border-border`, same height as today (`h-64`), no radius, no text, no
+border-border`, same height as today (`h-64`), no radius, no text, no
   pictogram (no new asset or copy). Dashed = absent or tentative, the same shape
   grammar as the pending verify panel and the disabled button. The raw
   `bg-slate-100` goes away (it was outside the palette).
@@ -72,7 +72,7 @@ behaviour and tests intact and the diff reviewable.
 ## D3. Header: type tag, title, departure-board row
 
 - **Type tag.** A square tag: `inline-flex border-2 border-border
-  bg-surface-raised px-2 py-1 text-xs font-bold uppercase tracking-wide text-fg`.
+bg-surface-raised px-2 py-1 text-xs font-bold uppercase tracking-wide text-fg`.
   It is not the `Badge` primitive (that one is a pill; changing it is out of
   scope). Text is the existing `host.listings.type_*` strings.
 - **Title.** The `h1` keeps its element and text; style becomes the Solid
@@ -94,13 +94,13 @@ behaviour and tests intact and the diff reviewable.
   under; same strings, same element.
 - **Amenity tags.** A `<ul>` (list semantics; `list-none`, `m-0 p-0`) of `<li>`
   tags: `border-2 border-border bg-surface-raised px-3 py-1 text-sm font-bold
-  text-fg rounded-sm`, `flex-wrap gap-2`. Replaces `rounded-full bg-surface
-  text-fg-muted` (pill, and a surface equal to the canvas so it had no edge).
+text-fg rounded-sm`, `flex-wrap gap-2`. Replaces `rounded-full bg-surface
+text-fg-muted` (pill, and a surface equal to the canvas so it had no edge).
   The label is still `t(entry.labelKey)` or the raw code (existing behaviour,
   asserted by the existing test through `getByText("WIFI")`).
 - **Rating.** A 20px authored star glyph (24 viewBox, ink fill, mitred joins,
   `aria-hidden`, `focusable=false`) precedes the existing text `{avg} / 5
-  ({n} {reviews})`, in `fg-muted`. The no-reviews line stays `fg-subtle` on
+({n} {reviews})`, in `fg-muted`. The no-reviews line stays `fg-subtle` on
   paper (7.01). The ⭐ literal is removed from the source; no `t()` string
   changes. The glyph is decorative: the text carries the value.
 - **Capacity**: `fg-subtle` 14px on paper (7.01), unchanged text.
@@ -145,10 +145,10 @@ Both render in the same `max-w-6xl px-4 py-8` wrapper with one centred
 panel (`max-w-[36rem]`, `mx-auto`, min-w-0), 2px edge, 4px radius, no shadow, a
 48px tile and the message set as the `h1`.
 
-| State     | Panel                                         | Tile (48px, 2px edge, glyph on a 24 grid, 3-unit strokes, square caps)             | Heading (`h1`, existing string)          | Roles                         |
-| --------- | --------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------- |
-| not-found | **solid paper**, 2px ink edge                 | **Solid ink fill**, paper empty-frame glyph (a square outline: "nothing here")     | `listings.detail.not_found`, ink, 900    | none (a page state, not live) |
-| error     | `bg-danger-bg`, 2px **solid danger** edge     | **Filled danger** tile, paper exclamation (as `ServerErrorAlert`)                  | `error.generic.unexpected`, danger, bold | `role="alert"` on the panel   |
+| State     | Panel                                     | Tile (48px, 2px edge, glyph on a 24 grid, 3-unit strokes, square caps)         | Heading (`h1`, existing string)          | Roles                         |
+| --------- | ----------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------- | ----------------------------- |
+| not-found | **solid paper**, 2px ink edge             | **Solid ink fill**, paper empty-frame glyph (a square outline: "nothing here") | `listings.detail.not_found`, ink, 900    | none (a page state, not live) |
+| error     | `bg-danger-bg`, 2px **solid danger** edge | **Filled danger** tile, paper exclamation (as `ServerErrorAlert`)              | `error.generic.unexpected`, danger, bold | `role="alert"` on the panel   |
 
 - Not-found is a destination state, not a failure of the system: ink and paper,
   no danger. Error follows the NH-125 `ServerErrorAlert` grammar (solid danger
@@ -265,46 +265,53 @@ Palette: ink #1E1E1E, paper #F7F5F2, stone #E5E2DD, ember #E65F35, danger
 #9B1C2E, danger-bg #F8E1E0, fg-muted #3F3B37, fg-subtle #57534E, border-muted
 #6F6A63.
 
-| ID  | Pairing (where on this page)                                          | Colours           | Ratio | Needs | Result                       |
-| --- | --------------------------------------------------------------------- | ----------------- | ----- | ----- | ---------------------------- |
-| L1  | Ink on ember: price (30px Black, large text)                          | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
-| L2  | Ink on ember: "/ night" unit (16px bold, normal text)                 | #1E1E1E / #E65F35 | 4.81  | 4.5   | pass                         |
-| L3  | Ink edge on ember: price band bottom rule (non-text)                  | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
-| L4  | Ink on paper: title, tags, city/country, headings, panel body         | #1E1E1E / #F7F5F2 | 15.32 | 4.5   | pass                         |
-| L5  | Muted ink on paper: description, address, rating text                 | #3F3B37 / #F7F5F2 | 10.20 | 4.5   | pass                         |
-| L6  | Subtle ink on paper: capacity, "no reviews" line                      | #57534E / #F7F5F2 | 7.01  | 4.5   | pass                         |
-| L7  | Ink edge on paper: photo, thumbnails, tags, panel, board rules        | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
-| L8  | Ink dashed edge on stone: no-photo placeholder (non-text)             | #1E1E1E / #E5E2DD | 12.90 | 3     | pass                         |
-| L9  | Ink star glyph on paper (decorative, non-text)                        | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
-| L10 | Paper on ink: primary Book now label and its ink fill                 | #F7F5F2 / #1E1E1E | 15.32 | 4.5   | pass                         |
-| L11 | Subtle ink on stone: disabled Book now label                          | #57534E / #E5E2DD | 5.91  | 4.5   | pass                         |
-| L12 | Muted edge on stone: disabled Book now dashed edge (non-text)         | #6F6A63 / #E5E2DD | 4.15  | 3     | pass                         |
-| L13 | Ink on stone: secondary-button hover fill (Log in to book)           | #1E1E1E / #E5E2DD | 12.90 | 4.5   | pass                         |
-| L14 | Paper empty-frame glyph on ink tile (not-found tile)                  | #F7F5F2 / #1E1E1E | 15.32 | 3     | pass                         |
-| L15 | Danger on danger-bg: error heading text (bold)                        | #9B1C2E / #F8E1E0 | 6.48  | 4.5   | pass                         |
-| L16 | Danger edge against paper: error panel outer edge (non-text)          | #9B1C2E / #F7F5F2 | 7.42  | 3     | pass                         |
-| L17 | Danger edge against danger-bg: error panel inner side (non-text)      | #9B1C2E / #F8E1E0 | 6.48  | 3     | pass                         |
-| L18 | Paper "!" mark on danger tile                                         | #F7F5F2 / #9B1C2E | 7.42  | 3     | pass                         |
-| L19 | Ink focus outline on ember (nothing focusable on the band; kept)      | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
-| L20 | Ink focus outline on paper and stone (Book now, login link, picker)   | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
-| N1  | Not used: paper text on ember (price band)                            | #F7F5F2 / #E65F35 | 3.19  | 4.5   | fails, so never placed there |
-| N2  | Not used: muted ink on ember                                          | #3F3B37 / #E65F35 | 3.20  | 4.5   | fails, so never placed there |
-| N3  | Not used: subtle ink on ember                                         | #57534E / #E65F35 | 2.20  | 4.5   | fails, so never placed there |
-| N4  | Not used: danger on ember                                             | #9B1C2E / #E65F35 | 2.33  | 4.5   | fails, so never placed there |
+| ID  | Pairing (where on this page)                                        | Colours           | Ratio | Needs | Result                       |
+| --- | ------------------------------------------------------------------- | ----------------- | ----- | ----- | ---------------------------- |
+| L1  | Ink on ember: price (30px Black, large text)                        | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
+| L2  | Ink on ember: "/ night" unit (16px bold, normal text)               | #1E1E1E / #E65F35 | 4.81  | 4.5   | pass                         |
+| L3  | Ink edge on ember: price band bottom rule (non-text)                | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
+| L4  | Ink on paper: title, tags, city/country, headings, panel body       | #1E1E1E / #F7F5F2 | 15.32 | 4.5   | pass                         |
+| L5  | Muted ink on paper: description, address, rating text               | #3F3B37 / #F7F5F2 | 10.20 | 4.5   | pass                         |
+| L6  | Subtle ink on paper: capacity, "no reviews" line                    | #57534E / #F7F5F2 | 7.01  | 4.5   | pass                         |
+| L7  | Ink edge on paper: photo, thumbnails, tags, panel, board rules      | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
+| L8  | Ink dashed edge on stone: no-photo placeholder (non-text)           | #1E1E1E / #E5E2DD | 12.90 | 3     | pass                         |
+| L9  | Ink star glyph on paper (decorative, non-text)                      | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
+| L10 | Paper on ink: primary Book now label and its ink fill               | #F7F5F2 / #1E1E1E | 15.32 | 4.5   | pass                         |
+| L11 | Subtle ink on stone: disabled Book now label                        | #57534E / #E5E2DD | 5.91  | 4.5   | pass                         |
+| L12 | Muted edge on stone: disabled Book now dashed edge (non-text)       | #6F6A63 / #E5E2DD | 4.15  | 3     | pass                         |
+| L13 | Ink on stone: secondary-button hover fill (Log in to book)          | #1E1E1E / #E5E2DD | 12.90 | 4.5   | pass                         |
+| L14 | Paper empty-frame glyph on ink tile (not-found tile)                | #F7F5F2 / #1E1E1E | 15.32 | 3     | pass                         |
+| L15 | Danger on danger-bg: error heading text (bold)                      | #9B1C2E / #F8E1E0 | 6.48  | 4.5   | pass                         |
+| L16 | Danger edge against paper: error panel outer edge (non-text)        | #9B1C2E / #F7F5F2 | 7.42  | 3     | pass                         |
+| L17 | Danger edge against danger-bg: error panel inner side (non-text)    | #9B1C2E / #F8E1E0 | 6.48  | 3     | pass                         |
+| L18 | Paper "!" mark on danger tile                                       | #F7F5F2 / #9B1C2E | 7.42  | 3     | pass                         |
+| L19 | Ink focus outline on ember (nothing focusable on the band; kept)    | #1E1E1E / #E65F35 | 4.81  | 3     | pass                         |
+| L20 | Ink focus outline on paper and stone (Book now, login link, picker) | #1E1E1E / #F7F5F2 | 15.32 | 3     | pass                         |
+| N1  | Not used: paper text on ember (price band)                          | #F7F5F2 / #E65F35 | 3.19  | 4.5   | fails, so never placed there |
+| N2  | Not used: muted ink on ember                                        | #3F3B37 / #E65F35 | 3.20  | 4.5   | fails, so never placed there |
+| N3  | Not used: subtle ink on ember                                       | #57534E / #E65F35 | 2.20  | 4.5   | fails, so never placed there |
+| N4  | Not used: danger on ember                                           | #9B1C2E / #E65F35 | 2.33  | 4.5   | fails, so never placed there |
 
 Notes: N2 uses the value in `DESIGN.md` (3.20). The raw `bg-slate-100` placeholder it replaces was outside
 the palette and is removed. No new colour value is introduced.
 
+## Divergences from plan (as shipped)
+
+- Booking panel body padding is `p-4 sm:p-5` (16px, 20px from sm), not a flat 20px, so the panel body keeps room for the picker at 360 px.
+- The `DateRangePicker` is wrapped in a div that overrides `--rdp-day-width` and `--rdp-day_button-width` on `.rdp-root` below `sm` (40px and 38px; 44px and 42px from `sm`), so seven day columns fit the 360 px panel. The picker component itself is unchanged.
+- Log in to book carries `border-2 ![box-shadow:none]` on the secondary `Button`. `ring-0` still produced a composed box-shadow that tripped the no-shadow e2e assertion. A proper `Button` variant is a follow-up.
+- The gallery wrapper (frame, thumbnails and the dashed placeholder) uses `mb-6`.
+
 ## Risks
 
-| Risk                                                                   | Mitigation                                                                                          |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Price band text drifts to a muted or paper colour in a later edit       | Computed-colour e2e on every text node in the band; contrast table N1 to N3                         |
-| Sticky panel overlaps nav or hides the picker popover                   | `top-24`, no `overflow-hidden`, e2e scroll check, visual check of an open picker                    |
-| `DateRangePicker` looks dated next to the new panel                     | Out of scope; screenshot recorded; follow-up                                                        |
-| Class-name unit assertions rot with Tailwind refactors                  | Assert roles and structure first; classes only for shape cues; e2e asserts computed values          |
-| Wrapping thumbnails grows the page on photo-heavy listings at 360       | Thumbnails are small (64x96); acceptable; revisit with the gallery follow-up                        |
-| `Link` wrapping `Button` (nested interactive) stays                     | Pre-existing, behaviour-bearing; recorded as follow-up, not changed here                            |
+| Risk                                                              | Mitigation                                                                                 |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Price band text drifts to a muted or paper colour in a later edit | Computed-colour e2e on every text node in the band; contrast table N1 to N3                |
+| Sticky panel overlaps nav or hides the picker popover             | `top-24`, no `overflow-hidden`, e2e scroll check, visual check of an open picker           |
+| `DateRangePicker` looks dated next to the new panel               | Out of scope; screenshot recorded; follow-up                                               |
+| Class-name unit assertions rot with Tailwind refactors            | Assert roles and structure first; classes only for shape cues; e2e asserts computed values |
+| Wrapping thumbnails grows the page on photo-heavy listings at 360 | Thumbnails are small (64x96); acceptable; revisit with the gallery follow-up               |
+| `Link` wrapping `Button` (nested interactive) stays               | Pre-existing, behaviour-bearing; recorded as follow-up, not changed here                   |
 
 ## Open points
 
@@ -318,3 +325,14 @@ None blocking. Recorded follow-ups (not in scope):
   secondary button, as `VerifyEmailPage` does.
 - The `listings` spec mentions guest reviews on the page; only the count is
   rendered today.
+- `DateRangePicker` still shows the default react-day-picker blue for today, the
+  nav chevrons and the selected range. Its `--rdp-*` overrides in
+  `DateRangePicker.tsx` sit on a wrapper that `.rdp-root` re-declares; scope
+  them to `.rdp-root` with ember and ink tokens, and capture an explicit
+  selected-range state.
+- Centre the picker (`mx-auto`) inside the booking panel.
+- Add a `Button` variant so Log in to book needs no `border-2 ![box-shadow:none]`
+  override.
+- Gallery thumbnails share the listing title as alt text; distinct alt text needs copy.
+- `Link > Button` leaves a double tab stop (pre-existing).
+- Optional heavier stroke for the error "!" glyph in the state tile.
