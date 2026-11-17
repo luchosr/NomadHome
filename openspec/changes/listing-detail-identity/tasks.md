@@ -90,7 +90,7 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 9. Memory notes
 
-- [ ] 9.1 Save engram notes (`mem_save`) for the decisions: frame kept (no band), non-interactive wrapping thumbnails, dashed stone placeholder, ink-only ember price band, sticky `md:top-24`, local pieces instead of shared components, not-found paper vs error danger-tint panels with one `h1` each; then `mem_session_summary` before reporting done
+- [x] 9.1 Save engram notes (`mem_save`) for the decisions: frame kept (no band), non-interactive wrapping thumbnails, dashed stone placeholder, ink-only ember price band, sticky `md:top-24`, local pieces instead of shared components, not-found paper vs error danger-tint panels with one `h1` each; then `mem_session_summary` before reporting done
 
 ## 10. Final verification
 
