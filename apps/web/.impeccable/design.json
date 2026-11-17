@@ -209,7 +209,7 @@
       "kind": "custom",
       "refersTo": "card",
       "description": "Listing detail booking panel: paper panel with a 2px ink edge, ember price band in ink closed by a 2px rule.",
-      "html": "<div class=\"ds-book\"><div class=\"ds-bookband\"><b>$120.00</b> / night</div><div class=\"ds-bookbody\">Dates</div></div>",
+      "html": "<div class=\"ds-book\"><div class=\"ds-bookband\"><b>.00</b> per night</div><div class=\"ds-bookbody\">Dates</div></div>",
       "css": ".ds-book{max-width:384px;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;font-family:'Overpass Variable',sans-serif}.ds-bookband{background:#E65F35;border-bottom:2px solid #1E1E1E;padding:16px 20px;font-weight:700}.ds-bookband b{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}.ds-bookbody{padding:20px}"
     }
   ],
