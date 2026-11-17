@@ -21,11 +21,11 @@ NOT close it (photos remain, design.md D11).
 
 ## 1. Red tests
 
-- [ ] 1.1 Red: add `apps/web/src/pages/home/FeaturedStaysSection.test.tsx` (QueryClientProvider with `retry: false`, mocked `searchApi.search`) for the platform scenarios: renders N real rows with title, city, country, type, price from `nightlyRateCents` and `currency`, link `/listings/<id>`, no state tag; requests `page=1`, `pageSize=3`; empty result renders nothing; rejected request renders nothing and no error text; pending state shows busy skeletons and no listing text; long title, `primaryPhotoUrl: null` and non-positive rate render a usable row; missing amenities and unknown amenity codes
-- [ ] 1.2 Red: add a `searchApi` test (`apps/web/src/api/search.test.ts` or the existing one) that `pageSize` is sent only when provided and the current URL shape is otherwise unchanged
-- [ ] 1.3 Red: add a dictionary test in `packages/shared` asserting `en.home` has no `stats`, `testimonial`, `featured.cards`, `coliving.price_*`, `workspace.status_*` keys, and has `featured.price_per_night` and `featured.loading_label`
-- [ ] 1.4 Red: update `apps/web/src/pages/HomePage.test.tsx` to wrap in `QueryClientProvider` with a mocked search; drop the stats/testimonial, co-living price and workspace status assertions; add assertions that no `$1,100`, "NPS" or testimonial text renders and that the featured section is absent for an empty result; add a test that no two adjacent landing sections share a background class
-- [ ] 1.5 Red: add a `formatRate` unit test for the extracted `apps/web/src/lib/money.ts` (USD and EUR examples, no conversion)
+- [x] 1.1 Red: add `apps/web/src/pages/home/FeaturedStaysSection.test.tsx` (QueryClientProvider with `retry: false`, mocked `searchApi.search`) for the platform scenarios: renders N real rows with title, city, country, type, price from `nightlyRateCents` and `currency`, link `/listings/<id>`, no state tag; requests `page=1`, `pageSize=3`; empty result renders nothing; rejected request renders nothing and no error text; pending state shows busy skeletons and no listing text; long title, `primaryPhotoUrl: null` and non-positive rate render a usable row; missing amenities and unknown amenity codes
+- [x] 1.2 Red: add a `searchApi` test (`apps/web/src/api/search.test.ts` or the existing one) that `pageSize` is sent only when provided and the current URL shape is otherwise unchanged
+- [x] 1.3 Red: add a dictionary test in `packages/shared` asserting `en.home` has no `stats`, `testimonial`, `featured.cards`, `coliving.price_*`, `workspace.status_*` keys, and has `featured.price_per_night` and `featured.loading_label`
+- [x] 1.4 Red: update `apps/web/src/pages/HomePage.test.tsx` to wrap in `QueryClientProvider` with a mocked search; drop the stats/testimonial, co-living price and workspace status assertions; add assertions that no `$1,100`, "NPS" or testimonial text renders and that the featured section is absent for an empty result; add a test that no two adjacent landing sections share a background class
+- [x] 1.5 Red: add a `formatRate` unit test for the extracted `apps/web/src/lib/money.ts` (USD and EUR examples, no conversion)
 
 ## 2. Strings and constants removal
 
