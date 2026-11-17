@@ -40,14 +40,14 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 2. Red tests (e2e, Playwright, mocked API)
 
-- [ ] 2.1 Red: add `apps/web/e2e/booking-payment-identity.spec.ts` patterned on `listing-detail-identity.spec.ts` and `layout.spec.ts` (mock `http://localhost:3000/...` endpoints for listing, quote, bookings, booking by id and sync; helpers for no-overflow, inside-viewport and screenshot attach) at 1440x900 and 360x800: summary panel 2px ink border and `box-shadow: none`; photo border 2px and radius 0; no element with a box shadow or gradient in any state
-- [ ] 2.2 Red: total band background `rgb(230, 95, 53)` and the computed colour of every text node inside it equals ink `rgb(30, 30, 30)`; no input or button is a descendant of the band; Pay now is outside the band
-- [ ] 2.3 Red: success panel background ember with every text node ink; waiting panel `border-style: dashed` and stone background `rgb(229, 226, 221)`; cancel panel paper background and no ember descendant
-- [ ] 2.4 Red: my bookings: cards keep `.rounded-card` with a 2px border; status tag `border-style` is dashed for pending, solid otherwise; cancelled text has `text-decoration-line: line-through`; no tag has a 9999px radius
-- [ ] 2.5 Red: error panels (404, quote error, bookings failure) have a danger border `rgb(155, 28, 46)`, solid style and tint background `rgb(248, 225, 224)` and exactly one `role="alert"`; the cancel and review dialogs have a 2px border and no shadow; stars are `svg` with the names "N stars"
-- [ ] 2.6 Red: 360 px no-overflow for the form (long title, city and currency amount), no-dates, loading, 404, success, waiting, cancel, my bookings (long title, ten cards), empty, error, and with each dialog open; document `scrollWidth <= innerWidth` and the primary actions inside the viewport
-- [ ] 2.7 Red: keyboard: Tab reaches Pay now and then the back link (one stop each); the success and cancel link actions are one stop; the focused element shows the 3px ink outline
-- [ ] 2.8 Run the new e2e spec against an isolated server (see 7.1) and record that it fails before implementation
+- [x] 2.1 Red: add `apps/web/e2e/booking-payment-identity.spec.ts` patterned on `listing-detail-identity.spec.ts` and `layout.spec.ts` (mock `http://localhost:3000/...` endpoints for listing, quote, bookings, booking by id and sync; helpers for no-overflow, inside-viewport and screenshot attach) at 1440x900 and 360x800: summary panel 2px ink border and `box-shadow: none`; photo border 2px and radius 0; no element with a box shadow or gradient in any state
+- [x] 2.2 Red: total band background `rgb(230, 95, 53)` and the computed colour of every text node inside it equals ink `rgb(30, 30, 30)`; no input or button is a descendant of the band; Pay now is outside the band
+- [x] 2.3 Red: success panel background ember with every text node ink; waiting panel `border-style: dashed` and stone background `rgb(229, 226, 221)`; cancel panel paper background and no ember descendant
+- [x] 2.4 Red: my bookings: cards keep `.rounded-card` with a 2px border; status tag `border-style` is dashed for pending, solid otherwise; cancelled text has `text-decoration-line: line-through`; no tag has a 9999px radius
+- [x] 2.5 Red: error panels (404, quote error, bookings failure) have a danger border `rgb(155, 28, 46)`, solid style and tint background `rgb(248, 225, 224)` and exactly one `role="alert"`; the cancel and review dialogs have a 2px border and no shadow; stars are `svg` with the names "N stars"
+- [x] 2.6 Red: 360 px no-overflow for the form (long title, city and currency amount), no-dates, loading, 404, success, waiting, cancel, my bookings (long title, ten cards), empty, error, and with each dialog open; document `scrollWidth <= innerWidth` and the primary actions inside the viewport
+- [x] 2.7 Red: keyboard: Tab reaches Pay now and then the back link (one stop each); the success and cancel link actions are one stop; the focused element shows the 3px ink outline
+- [x] 2.8 Run the new e2e spec against an isolated server (see 7.1) and record that it fails before implementation
 
 ## 3. Implementation (green)
 
