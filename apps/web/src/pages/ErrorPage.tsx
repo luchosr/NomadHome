@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useRouteError, useNavigate } from "react-router-dom";
 import { t } from "@nomadhome/shared";
 
@@ -7,21 +8,45 @@ function isChunkLoadError(err: unknown): boolean {
   );
 }
 
+const CHUNK_RELOAD_KEY = "nh_chunk_reload";
+
+function hasReloadedOnce(): boolean {
+  try {
+    return sessionStorage.getItem(CHUNK_RELOAD_KEY) !== null;
+  } catch {
+    // Storage unavailable: we cannot guard against a loop, so never reload.
+    return true;
+  }
+}
+
 export function ErrorPage() {
   const err = useRouteError();
   const navigate = useNavigate();
+  const isChunkError = isChunkLoadError(err);
 
-  // Stale deployment: chunk hash no longer exists — reload once to get fresh bundle
-  if (isChunkLoadError(err)) {
-    const key = "nh_chunk_reload";
-    if (!sessionStorage.getItem(key)) {
-      sessionStorage.setItem(key, "1");
-      window.location.reload();
-      return null;
+  // Decided once per mount from a read-only check, so renders stay idempotent.
+  const [shouldReload] = useState(() => isChunkError && !hasReloadedOnce());
+  const handled = useRef(false);
+
+  // Stale deployment: chunk hash no longer exists. Reload once to get the fresh
+  // bundle; the flag survives the reload so a second failure shows the error UI.
+  useEffect(() => {
+    if (!isChunkError || handled.current) return;
+    handled.current = true;
+    try {
+      if (shouldReload) {
+        sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+        window.location.reload();
+      } else {
+        // Reload already tried and it still fails: reset so a later deploy can retry.
+        sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+      }
+    } catch {
+      // Storage unavailable: show the error UI.
     }
-    // Already reloaded once and still failing — fall through to error UI
-    sessionStorage.removeItem(key);
-  }
+  }, [isChunkError, shouldReload]);
+
+  if (shouldReload) return null;
 
   const message = err instanceof Error ? err.message : t("error.unexpected");
 
