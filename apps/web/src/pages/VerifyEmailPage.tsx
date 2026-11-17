@@ -116,7 +116,7 @@ export function VerifyEmailPage() {
     <div className="mx-auto w-full max-w-xl px-4 pb-16 pt-10 md:pt-16">
       <div
         role={status === "pending" ? "status" : undefined}
-        aria-live="polite"
+        aria-live={status === "error" ? undefined : "polite"}
         aria-busy={status === "pending"}
       >
         {status === "pending" && (

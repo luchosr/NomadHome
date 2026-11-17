@@ -66,10 +66,10 @@ export function LoginPage() {
       subtitle={t("auth.login.subtitle")}
       footer={
         <p className="m-0">
-          {t("auth.login.no_account")}{" "}
+          {t("auth.login.no_account")}
           <Link
             to="/register"
-            className="inline-flex min-h-11 items-center font-bold text-fg underline underline-offset-4"
+            className="ml-1 inline-flex min-h-11 items-center font-bold text-fg underline underline-offset-4"
           >
             {t("auth.login.sign_up_link")}
           </Link>
