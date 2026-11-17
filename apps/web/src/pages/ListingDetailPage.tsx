@@ -270,29 +270,32 @@ export function ListingDetailPage() {
               <span className="text-base font-bold"> {t("search.per_night")}</span>
             </div>
 
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {isGuest && (
                 <div className="space-y-3">
-                  <DateRangePicker
-                    checkIn={checkIn}
-                    checkOut={checkOut}
-                    blockedRanges={blockedRanges}
-                    onChange={(newIn, newOut) => {
-                      setCheckIn(newIn);
-                      setCheckOut(newOut);
-                      setSearchParams(
-                        (prev) => {
-                          const next = new URLSearchParams(prev);
-                          if (newIn) next.set("checkIn", newIn);
-                          else next.delete("checkIn");
-                          if (newOut) next.set("checkOut", newOut);
-                          else next.delete("checkOut");
-                          return next;
-                        },
-                        { replace: true },
-                      );
-                    }}
-                  />
+                  {/* Day cells shrink below sm so seven columns fit the 360 px panel */}
+                  <div className="[&_.rdp-root]:[--rdp-day-width:40px] [&_.rdp-root]:[--rdp-day_button-width:38px] sm:[&_.rdp-root]:[--rdp-day-width:44px] sm:[&_.rdp-root]:[--rdp-day_button-width:42px]">
+                    <DateRangePicker
+                      checkIn={checkIn}
+                      checkOut={checkOut}
+                      blockedRanges={blockedRanges}
+                      onChange={(newIn, newOut) => {
+                        setCheckIn(newIn);
+                        setCheckOut(newOut);
+                        setSearchParams(
+                          (prev) => {
+                            const next = new URLSearchParams(prev);
+                            if (newIn) next.set("checkIn", newIn);
+                            else next.delete("checkIn");
+                            if (newOut) next.set("checkOut", newOut);
+                            else next.delete("checkOut");
+                            return next;
+                          },
+                          { replace: true },
+                        );
+                      }}
+                    />
+                  </div>
 
                   {datesValid ? (
                     <Link
