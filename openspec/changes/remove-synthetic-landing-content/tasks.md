@@ -58,26 +58,26 @@ NOT close it (photos remain, design.md D11).
 
 ## 7. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 7.1 Run targeted tests for changed modules, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`
-- [ ] 7.2 Database state: the change is read-only. Use only the disposable `nomadhome_test` database (confirm with `select current_database()`). Before and after the test run capture `Listing`, `ListingPhoto`, `ListingAmenity` and `Amenity` row counts; confirm unchanged and restore any test data if not
-- [ ] 7.3 Write report `openspec/changes/remove-synthetic-landing-content/reports/YYYY-MM-DD-step-7-unit-test-and-db-verification.md` with commands, results and the DB pre/post comparison
+- [x] 7.1 Run targeted tests for changed modules, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`
+- [x] 7.2 Database state: the change is read-only. Use only the disposable `nomadhome_test` database (confirm with `select current_database()`). Before and after the test run capture `Listing`, `ListingPhoto`, `ListingAmenity` and `Amenity` row counts; confirm unchanged and restore any test data if not
+- [x] 7.3 Write report `openspec/changes/remove-synthetic-landing-content/reports/YYYY-MM-DD-step-7-unit-test-and-db-verification.md` with commands, results and the DB pre/post comparison
 
 ## 8. Manual endpoint testing with curl (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 8.1 Start the API with explicit env overrides against the **disposable test database only** (not the `.env`-loading dev script), on a free non-5173 port; the route is `GET /search` (no `/api` prefix)
-- [ ] 8.2 Seed temporary published listings in `nomadhome_test` (with and without a photo and amenities); run `curl -s -w "\nHTTP %{http_code}\n" "http://localhost:<port>/search?page=1&pageSize=3"` and verify HTTP 200, the `{ data, pagination }` envelope, at most 3 items, newest-first order, and the fields the board uses (`id, title, type, city, country, nightlyRateCents, currency, primaryPhotoUrl, amenities`)
-- [ ] 8.3 curl the empty case (no published listings) and verify `data: []`, `total: 0`; curl `pageSize=0` and `page=0` and verify HTTP 400 is unchanged; record the currency actually returned
-- [ ] 8.4 Remove all temporary rows and re-check counts match the 7.2 baseline
-- [ ] 8.5 Write report `openspec/changes/remove-synthetic-landing-content/reports/YYYY-MM-DD-step-8-curl-verification.md` with every command, response and cleanup action
+- [x] 8.1 Start the API with explicit env overrides against the **disposable test database only** (not the `.env`-loading dev script), on a free non-5173 port; the route is `GET /search` (no `/api` prefix)
+- [x] 8.2 Seed temporary published listings in `nomadhome_test` (with and without a photo and amenities); run `curl -s -w "\nHTTP %{http_code}\n" "http://localhost:<port>/search?page=1&pageSize=3"` and verify HTTP 200, the `{ data, pagination }` envelope, at most 3 items, newest-first order, and the fields the board uses (`id, title, type, city, country, nightlyRateCents, currency, primaryPhotoUrl, amenities`)
+- [x] 8.3 curl the empty case (no published listings) and verify `data: []`, `total: 0`; curl `pageSize=0` and `page=0` and verify HTTP 400 is unchanged; record the currency actually returned
+- [x] 8.4 Remove all temporary rows and re-check counts match the 7.2 baseline
+- [x] 8.5 Write report `openspec/changes/remove-synthetic-landing-content/reports/YYYY-MM-DD-step-8-curl-verification.md` with every command, response and cleanup action
 
 ## 9. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
 - [ ] 9.1 Update `apps/web/e2e/layout.spec.ts` and any spec touching the landing: `/search*` is mocked for every landing visit; keep existing hero assertions
 - [ ] 9.2 Add e2e (mocked) for: two real rows render with title, city, price, link to `/listings/<id>`; empty result hides the whole section; HTTP 500 hides the section; no `NPS`, testimonial or `$1,100` text; no horizontal overflow at 1440 px and 360 px with a long-title mock
-- [ ] 9.3 If the harness can run against the disposable test database with seeded listings and an isolated port, add one real-data pass and record it; otherwise record in the report why it was not feasible
-- [ ] 9.4 Execute `pnpm test:e2e` on an isolated port (never another worktree's server or port 5173 if it is in use); restore test data afterwards
-- [ ] 9.5 Visual check at 1440 px and 360 px with Playwright (featured present, featured hidden, loading): confirm no empty gaps in co-living and workspace, board rows wrap correctly, Locations on stone reads as intended and no two adjacent fields match; attach screenshots to the report
-- [ ] 9.6 Write report `openspec/changes/remove-synthetic-landing-content/reports/YYYY-MM-DD-step-9-e2e-and-visual-verification.md`
+- [x] 9.3 If the harness can run against the disposable test database with seeded listings and an isolated port, add one real-data pass and record it; otherwise record in the report why it was not feasible
+- [x] 9.4 Execute `pnpm test:e2e` on an isolated port (never another worktree's server or port 5173 if it is in use); restore test data afterwards
+- [x] 9.5 Visual check at 1440 px and 360 px with Playwright (featured present, featured hidden, loading): confirm no empty gaps in co-living and workspace, board rows wrap correctly, Locations on stone reads as intended and no two adjacent fields match; attach screenshots to the report
+- [x] 9.6 Write report `openspec/changes/remove-synthetic-landing-content/reports/YYYY-MM-DD-step-9-e2e-and-visual-verification.md`
 
 ## 10. Documentation (MANDATORY)
 
