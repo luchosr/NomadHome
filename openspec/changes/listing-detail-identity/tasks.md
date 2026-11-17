@@ -48,13 +48,13 @@ another worktree's port; pick a free port first; no database is started.
 
 ## 3. Page implementation (green)
 
-- [ ] 3.1 `ListingDetailPage.tsx`: add the local pieces per design.md D2 to D5 and D7 (a `TypeTag`, an `AmenityTag` list, a `StarGlyph` authored on a 24 grid with `aria-hidden`, a `StatePanel` with an authored tile glyph for not-found and error); no new shared component, no `packages/ui` change, no `t()` call outside the ones already used
-- [ ] 3.2 Gallery (D2): framed primary photo, flat wrapping non-interactive thumbnails, dashed stone placeholder; keep `alt`, `maxHeight` and the photo sort and slice logic exactly
-- [ ] 3.3 Header and content (D3, D4): type tag, solid Overpass 900 `h1`, departure-board row (`{city}, {country}` kept as one text node), `max-w-prose` description, ink 2px amenity tags in a list, star glyph rating, capacity line
-- [ ] 3.4 Booking panel (D5): paper panel with ember price band (price and unit in ink, tabular, 900), body with the unchanged picker and CTAs, `md:sticky md:top-24`, no shadow and no `overflow-hidden`; keep every condition, handler, URL and `setSearchParams` call untouched
-- [ ] 3.5 Skeleton (D6): flat blocks, 2px ink-edged booking placeholder, `aria-busy="true"`, same test id and heights
-- [ ] 3.6 Not-found and error (D7): paper sign panel with ink tile and one `h1`; `role="alert"` danger panel with filled tile and one `h1`; same strings and same trigger conditions
-- [ ] 3.7 Run tasks 1.1 to 1.9 green and re-run 2.x e2e green against the isolated server
+- [x] 3.1 `ListingDetailPage.tsx`: add the local pieces per design.md D2 to D5 and D7 (a `TypeTag`, an `AmenityTag` list, a `StarGlyph` authored on a 24 grid with `aria-hidden`, a `StatePanel` with an authored tile glyph for not-found and error); no new shared component, no `packages/ui` change, no `t()` call outside the ones already used
+- [x] 3.2 Gallery (D2): framed primary photo, flat wrapping non-interactive thumbnails, dashed stone placeholder; keep `alt`, `maxHeight` and the photo sort and slice logic exactly
+- [x] 3.3 Header and content (D3, D4): type tag, solid Overpass 900 `h1`, departure-board row (`{city}, {country}` kept as one text node), `max-w-prose` description, ink 2px amenity tags in a list, star glyph rating, capacity line
+- [x] 3.4 Booking panel (D5): paper panel with ember price band (price and unit in ink, tabular, 900), body with the unchanged picker and CTAs, `md:sticky md:top-24`, no shadow and no `overflow-hidden`; keep every condition, handler, URL and `setSearchParams` call untouched
+- [x] 3.5 Skeleton (D6): flat blocks, 2px ink-edged booking placeholder, `aria-busy="true"`, same test id and heights
+- [x] 3.6 Not-found and error (D7): paper sign panel with ink tile and one `h1`; `role="alert"` danger panel with filled tile and one `h1`; same strings and same trigger conditions
+- [x] 3.7 Run tasks 1.1 to 1.9 green and re-run 2.x e2e green against the isolated server
 
 ## 4. Review and update existing unit tests (MANDATORY)
 
