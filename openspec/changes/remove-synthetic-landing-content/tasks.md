@@ -84,7 +84,7 @@ NOT close it (photos remain, design.md D11).
 - [x] 10.1 `apps/web/DESIGN.md`: remove the testimonial from the Sage rules (co-living field and hero facts list only) and trim the "synthetic demo content" paragraph to the remaining items (placeholder photos; the editorial Locations index is not synthetic data); note the board now renders real listings
 - [x] 10.2 `apps/web/.impeccable/surfaces/src-pages-homepage-tsx.md`: update the "Proof" line (no stats or testimonial; featured stays are real listings); review `apps/web/.impeccable/design.json` for sample rows presented as real and decide (design.md D12)
 - [x] 10.3 `rg -n -i "stats section|testimonial|synthetic|\$1,100" README.md docs apps/web/*.md apps/web/.impeccable openspec/project.md` and update remaining non-archive mentions; do not edit `openspec/changes/archive/` or `openspec/specs/`
-- [ ] 10.4 Record a launch note in the PR: seed or onboard real listings before public launch, otherwise the featured section is hidden by design (design.md D9)
+- [x] 10.4 Record a launch note in the PR: seed or onboard real listings before public launch, otherwise the featured section is hidden by design (design.md D9)
 
 ## 11. Memory notes
 
@@ -95,4 +95,4 @@ NOT close it (photos remain, design.md D11).
 - [x] 12.1 `node scripts/check-mvp-scope.mjs` and `openspec validate remove-synthetic-landing-content --strict` pass
 - [x] 12.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green
 - [x] 12.3 `rg -n "SYNTHETIC \(NH-118" apps` returns only items intentionally kept (none expected); `rg` for the removed constants and keys returns no source hits
-- [ ] 12.4 PR title states the user story, the description links the change-id and says "Refs #121" (no closing keyword); remaining item recorded: replace the remote Unsplash photos (co-living, workspace) with real or licensed self-hosted photography
+- [x] 12.4 PR title states the user story, the description links the change-id and says "Refs #121" (no closing keyword); remaining item recorded: replace the remote Unsplash photos (co-living, workspace) with real or licensed self-hosted photography
