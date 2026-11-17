@@ -248,6 +248,15 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 - **Step tile:** ink tile with a numbered ember square carrying ink digits.
 - **Sign panel on sage:** the co-living field holds an ink panel carrying an ember pictogram only, beside the checklist; it states no rate.
 
+### Auth screens
+
+- **Title band:** AuthShell opens Login and Register with a full-bleed ember band closed by a 2px ink rule. The 32rem column holds the H1 (Black, solid leading, 4xl) and a one-line ink subtitle; no muted ink on ember.
+- **Form panel:** one paper panel, 2px ink edge, 4px radius, no shadow, in the same 32rem column under the band (padding 20px, 32px from sm). Fields stack at 20px; the submit is the full-width primary button.
+- **Footer row:** inside the panel, under a 2px ink rule, on stone: prompt text then a bold, always-underlined ink link with a 44px minimum target, separated by a 4px margin.
+- **Field error:** a 4px solid danger left bar, bold 14px danger text on paper, linked to its input by aria-describedby while shown; not an alert.
+- **Form-level error:** a danger-bg panel with a 2px danger edge, a filled danger square tile carrying a paper exclamation, bold danger text; role alert.
+- **Verify tile (VerifyEmail):** one panel and one fact per state, with a 64px tile carrying a 32-grid glyph. Pending is a dashed stone panel with a dashed tile; success is an ember panel with an ink-filled tile and paper check; error is a paper panel with a danger-outlined tile and cross. The action is a Link styled as the primary button. BecomeHostPage inherits the restyled field and form-level error wrappers.
+
 ### Navigation
 
 - Sticky, ink, 2px bottom rule, 1280px inner wrapper. Logo mark plus name in 900 at 1.25rem. Links 14px bold paper, underline on hover. Primary action is an ember button with ink text (hover to paper); secondary is a paper-outlined button inverting on hover. Logged-in mobile collapses to a bordered menu toggle and a dropdown under a paper rule. The focus outline on the nav is paper.
@@ -279,6 +288,7 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 - **Do** set places, prices and counts in Black weight, solid leading, tabular numerals.
 - **Do** use the authored Pictogram and Arrow components for kind-of-space and connection; add glyphs to the same 32 grid.
 - **Do** keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.
+- **Do** state a form error by shape: a left-barred field error, a filled-tile panel for form-level errors.
 - **Do** write user-facing strings through t().
 
 ### Don't:
@@ -288,6 +298,7 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 - **Don't** introduce a white surface, a sixth palette colour or colour-only status.
 - **Don't** use sage as text or a line, or as a bare block with nothing on it.
 - **Don't** put ember text on paper, stone or sage.
+- **Don't** put an error, danger text or muted ink on the ember title band; forms and errors stay on paper.
 - **Don't** add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.
 - **Don't** use icon fonts or third-party icon sets for wayfinding glyphs.
 
