@@ -29,32 +29,32 @@ NOT close it (photos remain, design.md D11).
 
 ## 2. Strings and constants removal
 
-- [ ] 2.1 Remove `home.stats.*`, `home.testimonial.*`, `home.featured.cards.*`, `home.coliving.price_label|price_value|price_period` and `home.workspace.status_open|status_desks` from `packages/shared/src/strings/en.ts`; change `home.featured.headline_*` to "Newly listed" / "stays" (no post); add `home.featured.price_per_night` ("/ night") and `home.featured.loading_label`
-- [ ] 2.2 Remove `STAT_ITEMS` and `FEATURED_CARDS` and the `SYNTHETIC (NH-118 ...)` comments on content that remains-or-goes from `apps/web/src/pages/home/constants.ts`; replace the `LOCATION_CARDS` note with the editorial-links note (design.md D10)
-- [ ] 2.3 Delete `StatsSection.tsx` and `TestimonialSection.tsx` (and any test or story files for them)
+- [x] 2.1 Remove `home.stats.*`, `home.testimonial.*`, `home.featured.cards.*`, `home.coliving.price_label|price_value|price_period` and `home.workspace.status_open|status_desks` from `packages/shared/src/strings/en.ts`; change `home.featured.headline_*` to "Newly listed" / "stays" (no post); add `home.featured.price_per_night` ("/ night") and `home.featured.loading_label`
+- [x] 2.2 Remove `STAT_ITEMS` and `FEATURED_CARDS` and the `SYNTHETIC (NH-118 ...)` comments on content that remains-or-goes from `apps/web/src/pages/home/constants.ts`; replace the `LOCATION_CARDS` note with the editorial-links note (design.md D10)
+- [x] 2.3 Delete `StatsSection.tsx` and `TestimonialSection.tsx` (and any test or story files for them)
 
 ## 3. Featured stays data wiring (green)
 
-- [ ] 3.1 Add optional `pageSize` to `SearchParams` and `searchApi.search` in `apps/web/src/api/search.ts` (no other change)
-- [ ] 3.2 Extract `formatRate` from `apps/web/src/components/ListingCard.tsx` to `apps/web/src/lib/money.ts` and import it in both places; `ListingCard` tests stay green unchanged
-- [ ] 3.3 Rewrite `FeaturedStaysSection.tsx` per design.md D1 to D3, D5, D6: `useQuery` (`["home","featured-stays"]`, `staleTime` 60 s, `retry: false`), skeleton rows with `aria-busy`, `null` for empty and error, rows linking to `/listings/<id>`, type pictogram in the code square, photo or pictogram fallback, city and country, meta line with type and up to 3 amenity labels, price via `formatRate` plus `home.featured.price_per_night`, no Badge, `alt=""` thumbnails; keep the ink row, ember hover and ink focus ring styling
+- [x] 3.1 Add optional `pageSize` to `SearchParams` and `searchApi.search` in `apps/web/src/api/search.ts` (no other change)
+- [x] 3.2 Extract `formatRate` from `apps/web/src/components/ListingCard.tsx` to `apps/web/src/lib/money.ts` and import it in both places; `ListingCard` tests stay green unchanged
+- [x] 3.3 Rewrite `FeaturedStaysSection.tsx` per design.md D1 to D3, D5, D6: `useQuery` (`["home","featured-stays"]`, `staleTime` 60 s, `retry: false`), skeleton rows with `aria-busy`, `null` for empty and error, rows linking to `/listings/<id>`, type pictogram in the code square, photo or pictogram fallback, city and country, meta line with type and up to 3 amenity labels, price via `formatRate` plus `home.featured.price_per_night`, no Badge, `alt=""` thumbnails; keep the ink row, ember hover and ink focus ring styling
 
 ## 4. Co-living and workspace cleanup
 
-- [ ] 4.1 `CoLivingSection.tsx`: remove the example rate block and the `SYNTHETIC` comment; keep the ink panel as a pictogram-only sign beside the checklist (design.md D7); keep body copy, features and image
-- [ ] 4.2 `WorkspaceSection.tsx`: remove the inverse status strip and the `SYNTHETIC` comment; keep photo frame, arrow and checklist stack
+- [x] 4.1 `CoLivingSection.tsx`: remove the example rate block and the `SYNTHETIC` comment; keep the ink panel as a pictogram-only sign beside the checklist (design.md D7); keep body copy, features and image
+- [x] 4.2 `WorkspaceSection.tsx`: remove the inverse status strip and the `SYNTHETIC` comment; keep photo frame, arrow and checklist stack
 - [ ] 4.3 Verify no empty block or floating one-line panel at 1440 px and 360 px (finalised in section 9)
 
 ## 5. HomePage composition and rhythm
 
-- [ ] 5.1 `HomePage.tsx`: remove the `StatsSection` and `TestimonialSection` lazy imports and `Suspense` blocks; set the featured `Suspense` fallback `minHeight` to match the loading skeleton frame
-- [ ] 5.2 `LocationsSection.tsx`: change the field to `bg-surface-inset` (stone) so it no longer touches the ember CTA band (design.md D8); confirm "Explore all" and row hover contrast on stone against the approved pairings
-- [ ] 5.3 Refactor: run the section-list rhythm test from 1.4 and confirm green with the featured section present and hidden
+- [x] 5.1 `HomePage.tsx`: remove the `StatsSection` and `TestimonialSection` lazy imports and `Suspense` blocks; set the featured `Suspense` fallback `minHeight` to match the loading skeleton frame
+- [x] 5.2 `LocationsSection.tsx`: change the field to `bg-surface-inset` (stone) so it no longer touches the ember CTA band (design.md D8); confirm "Explore all" and row hover contrast on stone against the approved pairings
+- [x] 5.3 Refactor: run the section-list rhythm test from 1.4 and confirm green with the featured section present and hidden
 
 ## 6. Review and update existing unit tests (MANDATORY)
 
-- [ ] 6.1 Review every test touching the landing, `ListingCard`, `searchApi`, `en.ts` keys and shared dictionary snapshots; update stale assertions without weakening them (`rg` for the removed names must return no source hits)
-- [ ] 6.2 Verify: `pnpm --filter @nomadhome/web test && pnpm --filter @nomadhome/shared test && pnpm lint && pnpm typecheck` green
+- [x] 6.1 Review every test touching the landing, `ListingCard`, `searchApi`, `en.ts` keys and shared dictionary snapshots; update stale assertions without weakening them (`rg` for the removed names must return no source hits)
+- [x] 6.2 Verify: `pnpm --filter @nomadhome/web test && pnpm --filter @nomadhome/shared test && pnpm lint && pnpm typecheck` green
 
 ## 7. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
