@@ -41,7 +41,8 @@ test.describe("US-7.1 — Host views upcoming bookings dashboard", () => {
       }),
     );
     await page.goto("/host/upcoming");
-    await expect(page.getByText("Sunny Loft in Lisbon")).toBeVisible();
-    await expect(page.getByText("guest@test.com")).toBeVisible();
+    // The table (from sm up) and the cards (below sm) are both in the DOM; one is display: none.
+    await expect(page.getByText("Sunny Loft in Lisbon").filter({ visible: true })).toBeVisible();
+    await expect(page.getByText("guest@test.com").filter({ visible: true })).toBeVisible();
   });
 });

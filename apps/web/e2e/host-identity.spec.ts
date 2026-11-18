@@ -490,31 +490,61 @@ for (const vp of VIEWPORTS) {
   test.describe(`Host bookings identity at ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test("table: 2px ink head rule, bold ink headings, tabular amounts, one black h1", async ({
+    const isDesktop = vp.width >= 640;
+    // Both layouts are in the DOM (one is display: none), so page-wide text queries keep the visible match.
+    const visible = (l: Locator) => l.filter({ visible: true });
+
+    test("one black h1; the table shows from sm up and the cards below, never both", async ({
       page,
     }, testInfo) => {
       await host(page);
       await page.goto("/host/upcoming");
-      await expect(page.getByText("Pending Loft")).toBeVisible();
+      await expect(visible(page.getByText("Pending Loft"))).toBeVisible();
 
       await expect(page.locator("h1")).toHaveCount(1);
       await expect(page.locator("h1")).toHaveText("All Bookings");
       await expect(page.locator("h1")).toHaveCSS("color", INK_RGB);
 
-      const headRow = page.locator("thead tr");
-      await expect(headRow).toHaveCSS("border-bottom-width", "2px");
-      await expect(headRow).toHaveCSS("border-bottom-style", "solid");
-      await expect(headRow).toHaveCSS("border-bottom-color", INK_RGB);
-      const headings = page.locator("thead th");
-      await expect(headings).toHaveCount(6);
-      for (let i = 0; i < 6; i += 1) {
-        await expect(headings.nth(i)).toHaveCSS("font-weight", "700");
-        await expect(headings.nth(i)).toHaveCSS("color", INK_RGB);
+      const table = page.locator("main table");
+      const cards = page.locator("main ul > li");
+      if (isDesktop) {
+        await expect(table).toBeVisible();
+        await expect(cards.first()).toBeHidden();
+        await expect(page.getByRole("table")).toHaveCount(1);
+        await expect(page.getByRole("listitem")).toHaveCount(0);
+        const headRow = page.locator("thead tr");
+        await expect(headRow).toHaveCSS("border-bottom-width", "2px");
+        await expect(headRow).toHaveCSS("border-bottom-style", "solid");
+        await expect(headRow).toHaveCSS("border-bottom-color", INK_RGB);
+        const headings = page.locator("thead th");
+        await expect(headings).toHaveCount(6);
+        for (let i = 0; i < 6; i += 1) {
+          await expect(headings.nth(i)).toHaveCSS("font-weight", "700");
+          await expect(headings.nth(i)).toHaveCSS("color", INK_RGB);
+        }
+        const amount = table.getByText("$300").first();
+        expect(await amount.evaluate((el) => getComputedStyle(el).fontVariantNumeric)).toContain(
+          "tabular-nums",
+        );
+      } else {
+        await expect(table).toBeHidden();
+        await expect(page.getByRole("table")).toHaveCount(0);
+        await expect(cards).toHaveCount(4);
+        for (let i = 0; i < 4; i += 1) {
+          const card = cards.nth(i);
+          await expect(card).toBeVisible();
+          await expect(card).toHaveCSS("border-top-width", "2px");
+          await expect(card).toHaveCSS("border-top-style", "solid");
+          await expect(card).toHaveCSS("border-top-color", INK_RGB);
+          await expect(card).toHaveCSS("box-shadow", "none");
+          await expect(card.getByText("$300")).toBeVisible();
+          await expect(card.getByText("guest@test.com")).toBeVisible();
+        }
+        const amount = cards.first().getByText("$300");
+        expect(await amount.evaluate((el) => getComputedStyle(el).fontVariantNumeric)).toContain(
+          "tabular-nums",
+        );
       }
-      const amount = page.getByText("$300").first();
-      expect(await amount.evaluate((el) => getComputedStyle(el).fontVariantNumeric)).toContain(
-        "tabular-nums",
-      );
       expect(await shadowsAndGradients(page)).toEqual([]);
       expect(await emberBackgrounds(page)).toBe(0);
       await expectNoHorizontalOverflow(page);
@@ -526,14 +556,15 @@ for (const vp of VIEWPORTS) {
     }) => {
       await host(page);
       await page.goto("/host/upcoming");
-      await expect(page.getByText("Pending Loft")).toBeVisible();
+      await expect(visible(page.getByText("Pending Loft"))).toBeVisible();
 
-      const pending = page.getByText("Pending Payment", { exact: true });
-      const confirmed = page.getByText("Confirmed", { exact: true });
-      const cancelled = page.getByText("Cancelled", { exact: true });
-      const completed = page.getByText("Completed", { exact: true });
+      const pending = visible(page.getByText("Pending Payment", { exact: true }));
+      const confirmed = visible(page.getByText("Confirmed", { exact: true }));
+      const cancelled = visible(page.getByText("Cancelled", { exact: true }));
+      const completed = visible(page.getByText("Completed", { exact: true }));
       for (const tag of [pending, confirmed, cancelled, completed]) {
         await expect(tag).toHaveCount(1);
+        await expect(tag).toBeVisible();
         expect(await maxRadius(tag)).toBeLessThanOrEqual(4);
         await expect(tag).toHaveCSS("border-top-width", "2px");
       }
@@ -800,7 +831,7 @@ test.describe("Host screens at mobile-360: long strings and every state", () => 
     expectInsideViewport(page, b);
   });
 
-  test("bookings with a long guest email scroll inside their wrapper, not the document", async ({
+  test("bookings below sm are cards showing status and amount, with a long email and no overflow", async ({
     page,
   }, testInfo) => {
     await host(page, {
@@ -810,16 +841,22 @@ test.describe("Host screens at mobile-360: long strings and every state", () => 
       ]),
     });
     await page.goto("/host/upcoming");
-    await expect(page.getByText("Pending Loft")).toBeVisible();
+    const cards = page.locator("main ul > li");
+    await expect(cards).toHaveCount(5);
+    await expect(page.locator("main table")).toBeHidden();
 
     await expectNoHorizontalOverflow(page);
-    const wrapper = page.locator("table").locator("xpath=..");
-    await expect(wrapper).toHaveCSS("overflow-x", "auto");
-    const m = await wrapper.evaluate((el) => ({
-      scrollWidth: el.scrollWidth,
-      clientWidth: el.clientWidth,
-    }));
-    expect(m.scrollWidth).toBeGreaterThan(m.clientWidth);
+    const long = cards.first();
+    await expect(long).toBeVisible();
+    await expect(long.getByText("Confirmed", { exact: true })).toBeVisible();
+    await expect(long.getByText("$300")).toBeVisible();
+    await expect(long.getByText(`${LONG_WORD}@example.com`)).toBeVisible();
+    for (const label of ["Pending Payment", "Cancelled", "Completed"]) {
+      const tag = cards.getByText(label, { exact: true });
+      await expect(tag).toBeVisible();
+      expectInsideViewport(page, await box(tag));
+    }
+    expectInsideViewport(page, await box(long.getByText("$300")));
     await attachScreenshot(page, testInfo, "bookings-long-email-mobile-360");
   });
 

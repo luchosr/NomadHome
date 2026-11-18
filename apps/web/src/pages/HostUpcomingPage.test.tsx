@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { formatDate } from "../lib/dates.js";
 import { HostUpcomingPage } from "./HostUpcomingPage.js";
 
 const mockHostAll = vi.fn();
@@ -50,8 +51,9 @@ describe("HostUpcomingPage", () => {
   it("renders listing title and guest email", async () => {
     mockHostAll.mockResolvedValue(mockBookings);
     renderPage();
-    expect(await screen.findByText("Beach House")).toBeInTheDocument();
-    expect(screen.getByText("guest@example.com")).toBeInTheDocument();
+    // Both layouts (table from sm up, cards below) are in the DOM; jsdom ignores media queries.
+    expect(await screen.findAllByText("Beach House")).toHaveLength(2);
+    expect(screen.getAllByText("guest@example.com")).toHaveLength(2);
   });
 
   it("shows empty state when no bookings", async () => {
@@ -94,8 +96,17 @@ const ALL_STATUSES = [
   booking("b-d", "COMPLETED", "Completed Loft"),
 ];
 
+// Each layout is in the DOM at once (jsdom does not evaluate media queries), so queries are scoped.
+const loaded = () => screen.findAllByText("Pending Loft");
+const tableScope = () => within(screen.getByRole("table"));
+const cardsScope = () => within(screen.getByRole("list"));
+
 function tag(label: string): HTMLElement {
-  return screen.getByText(label, { exact: true });
+  return tableScope().getByText(label, { exact: true });
+}
+
+function cardTag(label: string): HTMLElement {
+  return cardsScope().getByText(label, { exact: true });
 }
 
 describe("HostUpcomingPage identity: heading and table", () => {
@@ -106,7 +117,7 @@ describe("HostUpcomingPage identity: heading and table", () => {
 
   it("has exactly one black h1", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     const h1s = screen.getAllByRole("heading", { level: 1 });
     expect(h1s).toHaveLength(1);
     expect(h1s[0]).toHaveTextContent("All Bookings");
@@ -115,7 +126,7 @@ describe("HostUpcomingPage identity: heading and table", () => {
 
   it("the head row has a 2px ink bottom rule and bold ink headings", async () => {
     const { container } = renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     const row = required(container.querySelector("thead tr"), "head row");
     expect(row).toHaveClass("border-b-2", "border-border");
     const headings = screen.getAllByRole("columnheader");
@@ -123,18 +134,17 @@ describe("HostUpcomingPage identity: heading and table", () => {
     for (const th of headings) expect(th).toHaveClass("font-bold", "text-fg");
   });
 
-  it("GUARD: the table sits in an overflow-x-auto wrapper that is not focusable", async () => {
-    const { container } = renderPage();
-    await screen.findByText("Pending Loft");
-    const wrapper = required(container.querySelector("table")?.parentElement ?? null, "wrapper");
-    expect(wrapper).toHaveClass("overflow-x-auto");
-    expect(wrapper).not.toHaveAttribute("tabindex");
+  it("the table container is hidden below sm and shown from sm up", async () => {
+    renderPage();
+    await loaded();
+    const container = required(screen.getByRole("table").parentElement, "table container");
+    expect(container).toHaveClass("hidden", "sm:block");
   });
 
   it("amount cells use tabular figures", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
-    const amounts = screen.getAllByText("$300");
+    await loaded();
+    const amounts = tableScope().getAllByText("$300");
     expect(amounts.length).toBe(4);
     for (const cell of amounts) expect(cell).toHaveClass("tabular-nums");
   });
@@ -142,9 +152,69 @@ describe("HostUpcomingPage identity: heading and table", () => {
   it("GUARD: date and amount formatting is unchanged", async () => {
     mockHostAll.mockResolvedValue([booking("b1", "CONFIRMED", "Beach House")]);
     renderPage();
-    await screen.findByText("Beach House");
-    expect(screen.getByText("$300")).toBeInTheDocument();
+    await screen.findAllByText("Beach House");
+    expect(tableScope().getByText("$300")).toBeInTheDocument();
+    expect(tableScope().getByText(formatDate("2027-01-10"))).toBeInTheDocument();
     expect(screen.getAllByRole("cell")).toHaveLength(6);
+  });
+});
+
+describe("HostUpcomingPage identity: cards below sm", () => {
+  beforeEach(() => {
+    mockHostAll.mockReset();
+    mockHostAll.mockResolvedValue(ALL_STATUSES);
+  });
+
+  it("the card list is shown below sm only and is one list item per booking", async () => {
+    renderPage();
+    await loaded();
+    const list = screen.getByRole("list");
+    expect(list).toHaveClass("sm:hidden");
+    expect(list).not.toHaveClass("sm:block");
+    expect(within(list).getAllByRole("listitem")).toHaveLength(4);
+  });
+
+  it("each card is a flat 2px ink-edged rounded-card with no shadow or ring", async () => {
+    renderPage();
+    await loaded();
+    for (const card of within(screen.getByRole("list")).getAllByRole("listitem")) {
+      expect(card).toHaveClass("rounded-card", "border-2", "border-border", "min-w-0");
+      expect(Array.from(card.classList).filter((c) => /^(shadow|ring)/.test(c))).toEqual([]);
+    }
+  });
+
+  it("a card shows title, status tag, both dates, guest email and amount", async () => {
+    mockHostAll.mockResolvedValue([booking("b1", "CONFIRMED", "Beach House")]);
+    renderPage();
+    await screen.findAllByText("Beach House");
+    const card = within(within(screen.getByRole("list")).getByRole("listitem"));
+    expect(card.getByText("Beach House")).toHaveClass("break-words");
+    expect(card.getByText("Confirmed", { exact: true })).toBeInTheDocument();
+    expect(card.getByText(formatDate("2027-01-10"))).toBeInTheDocument();
+    expect(card.getByText(formatDate("2027-01-15"))).toBeInTheDocument();
+    expect(card.getByText("guest@example.com")).toHaveClass("break-all");
+    expect(card.getByText("$300")).toHaveClass("tabular-nums");
+  });
+
+  it("card tags carry the status by shape, like the table tags", async () => {
+    renderPage();
+    await loaded();
+    expect(cardTag("Pending Payment")).toHaveClass("border-2", "border-dashed");
+    expect(cardTag("Confirmed")).toHaveClass("border-2", "border-border");
+    expect(cardTag("Cancelled")).toHaveClass("border-border-muted", "line-through");
+    required(cardTag("Completed").querySelector('[aria-hidden="true"]'), "completed marker");
+    for (const label of ["Pending Payment", "Confirmed", "Cancelled", "Completed"]) {
+      expect(cardTag(label)).not.toHaveClass("rounded-pill");
+    }
+  });
+
+  it("only one layout is exposed: each status label appears once per layout", async () => {
+    renderPage();
+    await loaded();
+    for (const label of ["Pending Payment", "Confirmed", "Cancelled", "Completed"]) {
+      expect(tableScope().getAllByText(label, { exact: true })).toHaveLength(1);
+      expect(cardsScope().getAllByText(label, { exact: true })).toHaveLength(1);
+    }
   });
 });
 
@@ -156,21 +226,21 @@ describe("HostUpcomingPage identity: booking status tags", () => {
 
   it("GUARD: every status label matches exactly one element", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     for (const label of ["Pending Payment", "Confirmed", "Cancelled", "Completed"]) {
-      expect(screen.getAllByText(label, { exact: true })).toHaveLength(1);
+      expect(screen.getAllByText(label, { exact: true })).toHaveLength(2);
     }
   });
 
   it("pending is dashed", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     expect(tag("Pending Payment")).toHaveClass("border-2", "border-dashed", "border-border");
   });
 
   it("confirmed is solid ink", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     const el = tag("Confirmed");
     expect(el).toHaveClass("border-2", "border-border");
     expect(el).not.toHaveClass("border-dashed");
@@ -179,7 +249,7 @@ describe("HostUpcomingPage identity: booking status tags", () => {
 
   it("cancelled is struck through with the muted solid edge", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     const el = tag("Cancelled");
     expect(el).toHaveClass("border-2", "border-border-muted", "line-through");
     expect(el).not.toHaveClass("border-dashed");
@@ -187,7 +257,7 @@ describe("HostUpcomingPage identity: booking status tags", () => {
 
   it("completed is solid ink with an aria-hidden marker", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     const el = tag("Completed");
     expect(el).toHaveClass("border-2", "border-border");
     expect(el).not.toHaveClass("border-dashed");
@@ -196,7 +266,7 @@ describe("HostUpcomingPage identity: booking status tags", () => {
 
   it("no tag is a pill", async () => {
     renderPage();
-    await screen.findByText("Pending Loft");
+    await loaded();
     for (const label of ["Pending Payment", "Confirmed", "Cancelled", "Completed"]) {
       expect(tag(label)).not.toHaveClass("rounded-pill");
     }
