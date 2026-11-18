@@ -5,13 +5,18 @@ import type { CreateFormValues } from "../hooks/useCreateListing.js";
 import { AMENITIES, COUNTRIES, CURRENCIES } from "../lib/listingData.js";
 import { GroupedSelect } from "./GroupedSelect.js";
 import { AmenityCheckboxGrid } from "./AmenityCheckboxGrid.js";
+import { FormField, errorIdFor } from "./FormField.js";
+import { ServerErrorAlert } from "./ServerErrorAlert.js";
+import { CONTROL_CLASS, HINT_CLASS, LABEL_CLASS } from "./listingFormStyles.js";
 
-const SELECT_CLASS =
-  "w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg focus-visible:border-border focus-visible:outline-none";
-
+// The field error renders through FormField; the hint shows only while the field has no error.
 function FieldHint({ error, hint }: { error?: string; hint: string }) {
-  if (error) return <p className="mt-1 text-xs text-danger">{error}</p>;
-  return <p className="mt-1 text-xs text-fg-subtle">{hint}</p>;
+  if (error) return null;
+  return <p className={HINT_CLASS}>{hint}</p>;
+}
+
+function describedBy(id: string, error?: string) {
+  return error ? errorIdFor(id) : undefined;
 }
 
 interface Props {
@@ -36,88 +41,107 @@ export function CreateListingForm({
 
   return (
     <form onSubmit={(e) => void submit(e)} className="space-y-5" noValidate>
-      <div>
-        <label htmlFor="title" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_title")}
-        </label>
-        <Input id="title" {...register("title")} aria-invalid={!!errors.title} />
+      <FormField id="title" label={t("host.listings.field_title")} error={errors.title?.message}>
+        <Input
+          id="title"
+          {...register("title")}
+          aria-invalid={!!errors.title}
+          aria-describedby={describedBy("title", errors.title?.message)}
+        />
         <FieldHint error={errors.title?.message} hint={t("host.listings.hint_title")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="description" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_description")}
-        </label>
+      <FormField
+        id="description"
+        label={t("host.listings.field_description")}
+        error={errors.description?.message}
+      >
         <textarea
           id="description"
           {...register("description")}
           rows={4}
           aria-invalid={!!errors.description}
-          className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle transition-colors duration-fast ease-out focus-visible:border-border focus-visible:outline-none"
+          aria-describedby={describedBy("description", errors.description?.message)}
+          className={CONTROL_CLASS}
         />
         <FieldHint error={errors.description?.message} hint={t("host.listings.hint_description")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="type" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_type")}
-        </label>
-        <select id="type" {...register("type")} className={SELECT_CLASS}>
+      <FormField id="type" label={t("host.listings.field_type")} error={errors.type?.message}>
+        <select
+          id="type"
+          {...register("type")}
+          aria-describedby={describedBy("type", errors.type?.message)}
+          className={CONTROL_CLASS}
+        >
           <option value="PROPERTY">{t("host.listings.type_property")}</option>
           <option value="WORKSPACE">{t("host.listings.type_workspace")}</option>
         </select>
         <FieldHint error={errors.type?.message} hint={t("host.listings.hint_type")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="city" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_city")}
-        </label>
-        <Input id="city" {...register("city")} aria-invalid={!!errors.city} />
+      <FormField id="city" label={t("host.listings.field_city")} error={errors.city?.message}>
+        <Input
+          id="city"
+          {...register("city")}
+          aria-invalid={!!errors.city}
+          aria-describedby={describedBy("city", errors.city?.message)}
+        />
         <FieldHint error={errors.city?.message} hint={t("host.listings.hint_city")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="country" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_country")}
-        </label>
+      <FormField
+        id="country"
+        label={t("host.listings.field_country")}
+        error={errors.country?.message}
+      >
         <GroupedSelect
           id="country"
           {...register("country")}
           aria-invalid={!!errors.country}
-          className={SELECT_CLASS}
+          aria-describedby={describedBy("country", errors.country?.message)}
+          className={CONTROL_CLASS}
           groups={COUNTRIES}
           placeholder={t("host.listings.country_placeholder")}
         />
         <FieldHint error={errors.country?.message} hint={t("host.listings.hint_country")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="addressLine" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_address")}
-        </label>
-        <Input id="addressLine" {...register("addressLine")} aria-invalid={!!errors.addressLine} />
+      <FormField
+        id="addressLine"
+        label={t("host.listings.field_address")}
+        error={errors.addressLine?.message}
+      >
+        <Input
+          id="addressLine"
+          {...register("addressLine")}
+          aria-invalid={!!errors.addressLine}
+          aria-describedby={describedBy("addressLine", errors.addressLine?.message)}
+        />
         <FieldHint error={errors.addressLine?.message} hint={t("host.listings.hint_address")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="capacity" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_capacity")}
-        </label>
+      <FormField
+        id="capacity"
+        label={t("host.listings.field_capacity")}
+        error={errors.capacity?.message}
+      >
         <Input
           id="capacity"
           type="number"
           min={1}
           {...register("capacity")}
           aria-invalid={!!errors.capacity}
+          aria-describedby={describedBy("capacity", errors.capacity?.message)}
         />
         <FieldHint error={errors.capacity?.message} hint={t("host.listings.hint_capacity")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="nightlyRate" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_rate")}
-        </label>
+      <FormField
+        id="nightlyRate"
+        label={t("host.listings.field_rate")}
+        error={errors.nightlyRate?.message}
+      >
         <Input
           id="nightlyRate"
           type="number"
@@ -125,29 +149,30 @@ export function CreateListingForm({
           step={0.01}
           {...register("nightlyRate")}
           aria-invalid={!!errors.nightlyRate}
+          aria-describedby={describedBy("nightlyRate", errors.nightlyRate?.message)}
         />
         <FieldHint error={errors.nightlyRate?.message} hint={t("host.listings.hint_rate")} />
-      </div>
+      </FormField>
 
-      <div>
-        <label htmlFor="currency" className="mb-1 block text-sm font-medium text-fg-muted">
-          {t("host.listings.field_currency")}
-        </label>
+      <FormField
+        id="currency"
+        label={t("host.listings.field_currency")}
+        error={errors.currency?.message}
+      >
         <GroupedSelect
           id="currency"
           {...register("currency")}
           aria-invalid={!!errors.currency}
-          className={SELECT_CLASS}
+          aria-describedby={describedBy("currency", errors.currency?.message)}
+          className={CONTROL_CLASS}
           groups={CURRENCIES}
         />
         <FieldHint error={errors.currency?.message} hint={t("host.listings.hint_currency")} />
-      </div>
+      </FormField>
 
       <fieldset>
-        <legend className="mb-1 text-sm font-medium text-fg-muted">
-          {t("host.listings.field_amenities")}
-        </legend>
-        <p className="mb-2 text-xs text-fg-subtle">{t("host.listings.hint_amenities")}</p>
+        <legend className={LABEL_CLASS}>{t("host.listings.field_amenities")}</legend>
+        <p className={`${HINT_CLASS} mb-3`}>{t("host.listings.hint_amenities")}</p>
         <AmenityCheckboxGrid
           amenities={AMENITIES}
           selected={selectedAmenities}
@@ -155,13 +180,9 @@ export function CreateListingForm({
         />
       </fieldset>
 
-      {serverError && (
-        <p role="alert" className="text-sm text-danger">
-          {serverError}
-        </p>
-      )}
+      <ServerErrorAlert error={serverError} />
 
-      <Button type="submit" disabled={isSubmitting || !isValid}>
+      <Button type="submit" className="min-h-11" disabled={isSubmitting || !isValid}>
         {isSubmitting ? t("host.listings.creating") : t("host.listings.create_title")}
       </Button>
     </form>
