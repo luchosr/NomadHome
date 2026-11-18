@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
 import { BookingCancelPage } from "./BookingCancelPage.js";
+import { expectButtonLink } from "../test/buttonLink.js";
 
 // NH-124 identity tests (booking-payment-identity, task 1.7). jsdom does not compute Tailwind, so
 // shape is asserted through class tokens. Selector assumptions:
@@ -38,6 +39,20 @@ describe("BookingCancelPage", () => {
       "href",
       "/search",
     );
+  });
+});
+
+describe("BookingCancelPage button-link variants (NH-138)", () => {
+  it.each([
+    ["?listingId=xyz789", /back to listing/i],
+    ["", /back to search/i],
+  ])("the secondary CTA for %j is one anchor with the secondary classes", (search, name) => {
+    const { container } = renderCancel(search);
+    const link = screen.getByRole("link", { name });
+    expectButtonLink(link, "secondary", ["w-full", "sm:w-auto", "hover:bg-surface-inset"]);
+    expect(link).not.toHaveClass("hover:bg-surface-raised");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
   });
 });
 

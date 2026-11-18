@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { BookingSuccessPage } from "./BookingSuccessPage.js";
+import { expectButtonLink } from "../test/buttonLink.js";
 
 // NH-124 identity tests (booking-payment-identity, tasks 1.5 and 1.6). jsdom does not compute
 // Tailwind, so shape is asserted through class tokens. Selector assumptions:
@@ -62,6 +63,24 @@ function textClassesOutsideTiles(panel: HTMLElement): string[] {
     .flatMap((el) => Array.from(el.classList))
     .filter((c) => /^text-(fg-muted|fg-subtle|fg-inverse|danger)$/.test(c));
 }
+
+describe("BookingSuccessPage button-link variants (NH-138)", () => {
+  beforeEach(() => {
+    mockGetById.mockReset();
+    mockGetById.mockResolvedValue({ status: "CONFIRMED" });
+    mockSyncPayment.mockReset();
+    mockSyncPayment.mockResolvedValue({});
+  });
+
+  it("View my bookings is one primary anchor with no nested button", async () => {
+    const { container } = renderSuccess();
+    const link = await screen.findByRole("link", { name: /view my bookings/i });
+    expect(link).toHaveAttribute("href", "/bookings");
+    expectButtonLink(link, "primary");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
+  });
+});
 
 describe("BookingSuccessPage", () => {
   beforeEach(() => {

@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { t } from "@nomadhome/shared";
 import { VerifyEmailPage } from "./VerifyEmailPage.js";
+import { expectButtonLink } from "../test/buttonLink.js";
 
 vi.mock("../api/auth.js", () => ({ authApi: { verifyEmail: vi.fn() } }));
 import { authApi } from "../api/auth.js";
@@ -18,6 +19,34 @@ function renderAt(url: string) {
 
 beforeEach(() => {
   verifyEmail.mockReset();
+});
+
+describe("VerifyEmailPage button-link variants (NH-138)", () => {
+  it("the success CTA is one primary anchor with no nested button", async () => {
+    verifyEmail.mockResolvedValue(undefined as never);
+    const { container } = render(
+      <MemoryRouter initialEntries={["/verify-email?token=abc"]}>
+        <VerifyEmailPage />
+      </MemoryRouter>,
+    );
+    const link = await screen.findByRole("link", { name: t("identity.verify_email.success_cta") });
+    expectButtonLink(link, "primary");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
+  });
+
+  it("the error CTA is one primary anchor with no nested button", async () => {
+    verifyEmail.mockRejectedValue(new Error("bad"));
+    const { container } = render(
+      <MemoryRouter initialEntries={["/verify-email?token=abc"]}>
+        <VerifyEmailPage />
+      </MemoryRouter>,
+    );
+    const link = await screen.findByRole("link", { name: t("identity.verify_email.error_cta") });
+    expectButtonLink(link, "primary");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
+  });
 });
 
 describe("VerifyEmailPage", () => {

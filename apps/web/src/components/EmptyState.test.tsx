@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
 import { EmptyState } from "./EmptyState.js";
+import { expectButtonLink } from "../test/buttonLink.js";
 
 // NH-124 identity tests (booking-payment-identity, task 1.10). jsdom does not compute Tailwind, so
 // shape is asserted through class tokens. Selector assumption: root = the message's parent element.
@@ -34,6 +35,20 @@ describe("EmptyState", () => {
     );
     expect(screen.getByText("Nothing here")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Go search" })).toHaveAttribute("href", "/search");
+  });
+
+  it("renders exactly one link with the CTA name and href, and no button (NH-138)", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <EmptyState message="Nothing here" ctaLabel="Go search" ctaTo="/search" />
+      </MemoryRouter>,
+    );
+    const links = screen.getAllByRole("link", { name: "Go search" });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/search");
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(container.querySelector("a button")).toBeNull();
+    expectButtonLink(links[0]!, "secondary");
   });
 
   it("GUARD: renders no link when the cta props are missing", () => {
