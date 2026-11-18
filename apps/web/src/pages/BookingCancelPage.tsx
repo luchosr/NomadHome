@@ -1,10 +1,6 @@
 import { useSearchParams, Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-
-// A link styled as the secondary Button, so the action is one interactive element instead of a
-// Button nested in a Link. Issue #138 tracks a shared solution in the Button primitive.
-const SECONDARY_CTA =
-  "inline-flex min-h-11 w-full items-center justify-center rounded-sm border-2 border-border bg-transparent px-[22px] py-[14px] text-sm font-bold text-fg no-underline transition-colors duration-med ease-out hover:bg-surface-raised active:translate-y-px sm:w-auto";
+import { buttonVariants } from "@nomadhome/ui";
 
 export function BookingCancelPage() {
   const [searchParams] = useSearchParams();
@@ -40,11 +36,17 @@ export function BookingCancelPage() {
         </div>
         <div className="rounded-b-[2px] border-t-2 border-border bg-surface-inset p-4 md:px-8">
           {listingId ? (
-            <Link to={`/listings/${listingId}`} className={SECONDARY_CTA}>
+            <Link
+              to={`/listings/${listingId}`}
+              className={`${buttonVariants({ variant: "secondary" })} w-full sm:w-auto`}
+            >
               {t("booking.ui.back_to_listing")}
             </Link>
           ) : (
-            <Link to="/search" className={SECONDARY_CTA}>
+            <Link
+              to="/search"
+              className={`${buttonVariants({ variant: "secondary" })} w-full sm:w-auto`}
+            >
               {t("booking.ui.back_to_search")}
             </Link>
           )}

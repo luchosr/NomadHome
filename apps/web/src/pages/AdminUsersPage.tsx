@@ -4,8 +4,6 @@ import { Button, Skeleton } from "@nomadhome/ui";
 import { adminApi, type AdminUser } from "../api/admin.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 
-const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
-
 /** Account state as shape plus text: solid with a marker (active), struck through (disabled). */
 function AccountStatusTag({ disabledAt }: { disabledAt: string | null }) {
   const active = disabledAt === null;
@@ -75,17 +73,13 @@ export function AdminUsersPage() {
     user.disabledAt === null ? (
       <Button
         variant="destructive"
-        className={`min-h-11 ${className}`}
+        className={className}
         onClick={() => void handleDisable(user.id)}
       >
         {t("admin.users.disable")}
       </Button>
     ) : (
-      <Button
-        variant="secondary"
-        className={`min-h-11 ${FLAT_SECONDARY} ${className}`}
-        onClick={() => void handleEnable(user.id)}
-      >
+      <Button variant="secondary" className={className} onClick={() => void handleEnable(user.id)}>
         {t("admin.users.enable")}
       </Button>
     );

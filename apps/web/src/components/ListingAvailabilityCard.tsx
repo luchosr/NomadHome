@@ -2,7 +2,7 @@ import { t } from "@nomadhome/shared";
 import { formatDate } from "../lib/dates.js";
 import { Button, Card, Input } from "@nomadhome/ui";
 import { ServerErrorAlert } from "./ServerErrorAlert.js";
-import { FLAT_CARD_CLASS, LABEL_CLASS } from "./listingFormStyles.js";
+import { LABEL_CLASS } from "./listingFormStyles.js";
 
 interface Block {
   id: string;
@@ -34,7 +34,7 @@ export function ListingAvailabilityCard({
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <Card className={FLAT_CARD_CLASS}>
+    <Card>
       <h2 className="mb-4 text-lg font-bold text-fg">{t("host.availability.title")}</h2>
       {blocks.length === 0 ? (
         <p className="text-fg-muted">{t("host.availability.no_blocks")}</p>
@@ -84,7 +84,7 @@ export function ListingAvailabilityCard({
             onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
-        <Button className="min-h-11" onClick={addBlock} disabled={!startDate || !endDate}>
+        <Button onClick={addBlock} disabled={!startDate || !endDate}>
           {t("host.availability.block")}
         </Button>
       </div>

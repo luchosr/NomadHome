@@ -5,8 +5,6 @@ import { adminApi, type AdminListing } from "../api/admin.js";
 import { ListingStatusTag } from "../components/ListingStatusTag.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 
-const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
-
 function listingTypeLabel(type: AdminListing["type"]): string {
   return type === "PROPERTY" ? t("host.listings.type_property") : t("host.listings.type_workspace");
 }
@@ -63,7 +61,7 @@ export function AdminListingsPage() {
     listing.status !== "DISABLED" ? (
       <Button
         variant="destructive"
-        className={`min-h-11 ${className}`}
+        className={className}
         onClick={() => void handleDisable(listing.id)}
       >
         {t("admin.listings.disable")}
@@ -71,7 +69,7 @@ export function AdminListingsPage() {
     ) : (
       <Button
         variant="secondary"
-        className={`min-h-11 ${FLAT_SECONDARY} ${className}`}
+        className={className}
         onClick={() => void handleEnable(listing.id)}
       >
         {t("admin.listings.enable")}

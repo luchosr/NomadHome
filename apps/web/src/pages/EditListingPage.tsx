@@ -7,12 +7,8 @@ import { useListingAvailability } from "../hooks/useListingAvailability.js";
 import { ListingDetailsForm } from "../components/ListingDetailsForm.js";
 import { ListingPhotosCard } from "../components/ListingPhotosCard.js";
 import { ListingAvailabilityCard } from "../components/ListingAvailabilityCard.js";
-import { FLAT_CARD_CLASS } from "../components/listingFormStyles.js";
 import { ListingStatusTag } from "../components/ListingStatusTag.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
-
-// A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
-const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
 
 function StatePanel({ children }: { children: string }) {
   return (
@@ -108,18 +104,16 @@ export function EditListingPage() {
       <div className="flex flex-wrap items-center gap-4">
         <ListingStatusTag status={listing.status} />
         {listing.status !== "PUBLISHED" ? (
-          <Button className="min-h-11" onClick={publish}>
-            {t("host.listings.publish")}
-          </Button>
+          <Button onClick={publish}>{t("host.listings.publish")}</Button>
         ) : (
-          <Button variant="secondary" className={`min-h-11 ${FLAT_SECONDARY}`} onClick={unpublish}>
+          <Button variant="secondary" onClick={unpublish}>
             {t("host.listings.unpublish")}
           </Button>
         )}
         <ServerErrorAlert error={publishError} className="w-full" />
       </div>
 
-      <Card className={FLAT_CARD_CLASS}>
+      <Card>
         <ListingDetailsForm
           form={form}
           selectedAmenities={selectedAmenities}

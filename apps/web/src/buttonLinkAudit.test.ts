@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 // constants are replaced by the shared Button / buttonVariants primitive, so none may survive.
 
 const sources = import.meta.glob<string>(
-  ["./**/*.ts", "./**/*.tsx", "!./**/*.test.ts", "!./**/*.test.tsx"],
+  ["./**/*.ts", "./**/*.tsx", "!./**/*.test.ts", "!./**/*.test.tsx", "!./test/**"],
   {
     query: "?raw",
     import: "default",
