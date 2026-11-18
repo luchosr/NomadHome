@@ -436,3 +436,63 @@ description):
   tone mostly by colour; other screens still use it. A shape-per-tone `Badge`
   would let `MyBookingsPage` drop its local status tag.
 - A shared `StatePanel` once three or more screens carry the same tile and panel.
+
+## Divergences from plan
+
+Recorded after the build, from the shipped code. Where this section and D1 to D13
+differ, the shipped code and this section win.
+
+- **Photo inside the padded body (D2).** The photo is the first child of the
+  `space-y-4 p-4 sm:p-5` body, with its own `border-2 border-border` and
+  `rounded-none`, not at the top of the panel closed by a rule. The total band
+  is the only rule-separated block.
+- **Skeleton bars on stone use `bg-ink/10` (D3).** The waiting panel's three bars
+  are `rounded-none bg-ink/10` so they read on the stone fill. The form skeleton
+  keeps the default `Skeleton` fill with `rounded-none`. The MyBookings skeleton
+  blocks keep the `Skeleton` default radius (2px) and fill; they were not made
+  square.
+- **Cancel foot (D4).** The stone foot (`bg-surface-inset`, 2px top rule) holds a
+  `SECONDARY_CTA` whose hover fill is `hover:bg-surface-raised` (paper), not
+  `hover:bg-surface-inset` as in D1: stone on stone would show no hover. The
+  link is also `w-full` below `sm`. Success uses the same `w-full sm:w-auto`
+  primary link on its paper foot.
+- **`px-4` page wrappers.** Every state and page wrapper is `mx-auto max-w-* px-4`
+  (`max-w-xl py-8` on the form and its states, `max-w-lg py-12` on success and
+  cancel). The plan only stated the form frame; the 16px gutter is what keeps
+  these panels off the viewport edge at 360 px.
+- **`FLAT_SECONDARY` override (accepted deviation).**
+  `const FLAT_SECONDARY = "border-2 ![box-shadow:none]"` is declared locally in
+  `EmptyState`, `CancelBookingModal`, `ReviewModal` and `MyBookingsPage` and passed
+  to the secondary `Button` to replace its 1px border plus inset-ring box shadow
+  with a solid 2px edge. The plan did not foresee it. It is a per-file override
+  of a `packages/ui` primitive, accepted for this change and tracked in issue
+  \#138 together with the `Link > Button` nesting.
+- **Calendar glyph.** The no-dates tile on the form and the `EmptyState` glyph both
+  use the 24-grid calendar path `M4 6H20V20H4ZM4 12H20M8 3V6M16 3V6`
+  (3-unit strokes, square caps, miter joins). The `EmptyState` glyph is 32px
+  and the tile glyph is `h-8 w-8` in a 48px tile.
+- **Cancelled tag contrast.** The cancelled `StatusTag` edge is
+  `border-border-muted` (#6F6A63): 4.93:1 on paper (the tag fill is
+  `bg-surface-raised`) and 4.15:1 on stone, both above the 3:1 non-text floor
+  (B13, B23). Its text is `text-fg-muted` with `line-through`.
+
+## Follow-ups (not in this PR)
+
+Copy these into the PR description (task 8.4).
+
+- **Modal accessibility.** No focus trap, no initial focus or focus restore, no
+  ESC close, no backdrop-click close and no body scroll lock. Needs an `onClose`
+  prop on `Modal`, which changes its API and the `CancelBookingModal` and
+  `ReviewModal` call sites, plus keyboard tests.
+- **`Link > Button` nesting (issue #138).** `EmptyState` and `HostListingsPage`
+  still nest a `Button` in a `Link`, and the booking pages carry local link-style
+  constants and `FLAT_SECONDARY` until a shared link-capable `Button` exists.
+- **Copy defects (need `t()` work):** the timed-out path on the success page shows
+  the confirmed copy; the "Complete payment" handler in `MyBookingsPage` has no
+  `catch`, so a failure is silent; the star `aria-label`s (`"N stars"`) are
+  hard-coded English; the form shows raw ISO dates while My bookings uses
+  `formatDate`.
+- **`Badge` pill in `packages/ui`.** Still a pill with tone mostly by colour;
+  a shape-per-tone `Badge` would remove the local `StatusTag`.
+- **Shared `StatePanel` extraction.** The form's local `StatePanel` duplicates the
+  one in `ListingDetailPage`; extract once three or more screens share it.

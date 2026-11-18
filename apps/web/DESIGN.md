@@ -137,7 +137,7 @@ components:
 
 The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from a warm palette, ember orange, ink, paper and sage with stone as the inset, each held by a 2px ink edge. Nothing floats and nothing blurs; depth is a hard bar or an edge, never a glow. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count, so the page scans like a board rather than a brochure.
 
-Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on an ember hero that works as a departure form, then continues as an ink departure board of the newest real listings (hidden when there are none), an ink three-step strip, a sage co-living field carrying an ink pictogram sign beside its checklist, a workspace field, a stone destination index, and an ember closing band. Search keeps the same signs at a calmer density: an ember query band, a paper filter panel, and bordered result panels. The Auth screens put an ember title band over one paper form panel, and the listing detail stays on paper with a photo frame, an ink-edged header row and a booking panel whose only ember is its price band.
+Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on an ember hero that works as a departure form, then continues as an ink departure board of the newest real listings (hidden when there are none), an ink three-step strip, a sage co-living field carrying an ink pictogram sign beside its checklist, a workspace field, a stone destination index, and an ember closing band. Search keeps the same signs at a calmer density: an ember query band, a paper filter panel, and bordered result panels. The Auth screens put an ember title band over one paper form panel, and the listing detail stays on paper with a photo frame, an ink-edged header row and a booking panel whose only ember is its price band. Booking and payment follow on paper too: a summary panel closed by an ember total band, an ember success panel, and a my-bookings list whose status is a tag outline (dashed, solid, struck) before it is a colour.
 
 This file records what shipped. The earlier yellow, black and green palette is gone; none of its values remain in source except as negative guards in tests.
 
@@ -269,6 +269,24 @@ Local pieces of ListingDetailPage; no ember title band (that is the Auth grammar
 - **Booking panel:** paper, 2px ink edge, 4px radius, sticky at md:top-24 beside the content, stacked below md. Ember is used only as its price band: the nightly rate in Black tabular ink with "per night", closed by a 2px ink rule. Body padding is 16px, 20px from sm. The date picker sits in a wrapper that narrows the day cells (40px, 38px button) below sm so seven columns fit a 360px panel. Book now is the full-width primary button (disabled until dates are valid); a visitor gets a full-width secondary Log in to book with a 2px edge and no box shadow.
 - **State panels:** not-found and error share a 36rem panel with a 48px square tile and one H1. Not-found is paper with an ink-filled tile and a square outline glyph; error is danger-bg with a danger edge, a danger-filled tile and an exclamation, role alert.
 
+### Booking and payment
+
+Local pieces of BookingFormPage, BookingSuccessPage, BookingCancelPage and MyBookingsPage, plus Modal, the two booking dialogs and EmptyState. No ember title band; panels stay on paper, ember is used once per screen and always carries ink. Page wrappers are px-4 (max-w-xl form, max-w-lg success and cancel).
+
+- **Link actions:** one Link styled as the button (local constants, 44px minimum height, 2px radius and edge), never a Button inside a Link. Primary is ink fill, secondary is transparent with a stone hover, tertiary is a bold underlined text link. EmptyState still nests Link and Button (issue #138).
+- **Summary panel (form):** paper, 2px ink edge, 4px radius, no shadow, body padding 16px (20px from sm). The photo sits inside the padded body with its own 2px edge and no radius. Title in bold ink, city and country in muted ink. Dates, nightly rate times nights and the service fee are plain label and value rows (dates are the raw ISO strings).
+- **Total band:** the last child of the panel on ember, opened by a 2px ink rule. The label (bold 16px) and the amount (Black 24px, tabular) are ink only and wrap onto two lines when a currency amount is long. Pay now sits outside the band as the full-width primary button, followed by a centred tertiary back link.
+- **State panels (form):** a 36rem panel, 2px edge, 4px radius, 48px square tile with a 24-grid glyph (3-unit strokes, square caps) and one H1. No dates is paper with an ink tile and a calendar glyph, path M4 6H20V20H4ZM4 12H20M8 3V6M16 3V6, and a secondary back link. Listing not found and quote or generic error are danger-bg with a solid danger edge, a filled danger tile with an exclamation and bold danger text, role alert. Loading is a square skeleton with aria-busy and no heading.
+- **Success panel:** ember, 2px edge, 4px radius. A 64px ink tile with a paper check, a Black H1, the message in medium ink and the booking id as one bold ink text node. A paper foot under a 2px rule holds the single primary link to /bookings; no control sits on ember. The timed-out and no-booking-id paths render this same panel.
+- **Waiting panel:** dashed 2px edge on stone, role status and aria-busy, the processing text in bold ink over three square skeleton bars drawn in ink at 10% (bg-ink/10) so they read on stone. No tile: nothing is decided yet.
+- **Cancel panel:** paper, 2px edge, 4px radius, a 64px tile with an ink outline and a dash glyph, a Black H1, muted-ink message, and a stone foot under a 2px rule with one secondary link (back to the listing, or to search without a listing id) whose hover fill is paper. No ember and no danger: cancelling the payment is not an error.
+- **My bookings card:** a div with 2px ink edge, 4px radius (the rounded-card class is kept), paper fill, no shadow, padding 16px (20px from sm). The listing title is a bold ink link; dates in muted ink and the night count in subtle ink. Actions keep their Button variants. Loading is the same cards as skeleton blocks with aria-busy; an error is the danger panel with a filled tile and one H1, role alert; empty is EmptyState.
+- **Status tag:** a 2px-edged paper tag, 2px radius, bold 12px, label text exactly as the dictionary gives it. Pending is a dashed ink edge; confirmed is solid ink; cancelled is a solid muted edge (border-muted, 4.93 on paper) with muted struck-through text; completed is solid ink with an 8px ink square marker (aria-hidden). Status is the shape plus the text, never colour alone, and the tag has no pill radius.
+- **Modal frame:** the dialog panel has a 2px ink edge, 4px radius, paper fill, no shadow, over a flat ink/40 scrim with no blur. It is a visual restyle only: there is still no focus trap, ESC, backdrop close or scroll lock.
+- **Dialog fields:** a bold 14px ink label over a 2px-edged paper textarea with the global two-layer focus ring; a failed submit renders ServerErrorAlert (role alert). The secondary Close button overrides the primitive's inset ring with a solid 2px border and no box shadow.
+- **Star glyph (review):** a drawn 24-grid star in a 44px button, aria-hidden. Filled is solid ink; empty is a 2px ink outline, so the rating is shape, not colour. The buttons keep their "N stars" labels and aria-pressed. Success is a flat paper panel with a 2px edge, a small ink tile with a paper check and bold ink text.
+- **Empty state:** a flat 2px dashed ink panel on paper, square, with a 32px calendar glyph in ink, muted-ink message and an optional secondary link button.
+
 ### Navigation
 
 - Sticky, ink, 2px bottom rule, 1280px inner wrapper. Logo mark plus name in 900 at 1.25rem. Links 14px bold paper, underline on hover. Primary action is an ember button with ink text (hover to paper); secondary is a paper-outlined button inverting on hover. Logged-in mobile collapses to a bordered menu toggle and a dropdown under a paper rule. The focus outline on the nav is paper.
@@ -302,6 +320,7 @@ Local pieces of ListingDetailPage; no ember title band (that is the Auth grammar
 - **Do** keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.
 - **Do** state a form error by shape: a left-barred field error, a filled-tile panel for form-level errors.
 - **Do** set the price on an ember band in ink; ember carries the price band alone on the listing detail.
+- **Do** state a booking status as a shape plus its text (dashed, solid, struck, solid with a marker), and set the total on an ember band in ink.
 - **Do** mark absent media with a dashed stone panel, not a slate or white block.
 - **Do** write user-facing strings through t().
 
@@ -315,6 +334,7 @@ Local pieces of ListingDetailPage; no ember title band (that is the Auth grammar
 - **Don't** put an error, danger text or muted ink on the ember title band; forms and errors stay on paper.
 - **Don't** add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.
 - **Don't** add an ember title band to the listing detail, or put muted ink, subtle ink or danger on its price band.
+- **Don't** put muted ink, subtle ink, paper or danger text on the booking total band or the success panel, or place a control on the success panel's ember.
 - **Don't** use icon fonts or third-party icon sets for wayfinding glyphs.
 
 ## Known build notes (not rules)
