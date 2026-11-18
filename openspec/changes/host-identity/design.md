@@ -191,8 +191,9 @@ bg-surface-raised px-6 py-12`, the existing `host.listings.no_listings` text in
 ## D11. HostUpcomingPage
 
 - **Frame.** `PageWrapper`; `h1` (D6).
-- **Table.** Wrapper `overflow-x-auto` (own scroll at 360px; the page itself
-  never scrolls horizontally). `thead tr`: `border-b-2 border-border`; `th`:
+- **Layouts (revised by D18).** Table from `sm` up, cards below it; see D18.
+- **Table.** Container `hidden sm:block overflow-x-auto` (the overflow is only a
+  safety net from 640px up; the page never scrolls horizontally). `thead tr`: `border-b-2 border-border`; `th`:
   `font-bold text-fg`, same `text-left` and padding. Body rows keep a 1px
   `border-border-muted` rule. Listing title ink; guest, dates and amount
   `fg-muted`, amount `tabular-nums`. `formatDate` and `formatAmount` unchanged.
@@ -264,8 +265,8 @@ justify-between gap-3 rounded-none border-2 border-border p-3`, dates in ink
 - Targets: link CTAs, submit and destructive buttons, amenity and terms
   checkboxes 44px.
 - 360 px: single column, `min-w-0` and `break-words` on titles, cities, emails;
-  header CTA full width; no document-level horizontal scroll; only the bookings
-  table scrolls inside its wrapper.
+  header CTA full width; no document-level horizontal scroll; the bookings page
+  shows cards below `sm` (D18) so no content hides behind a scroll.
 - Reduced motion: only colour transitions; the skeleton pulse is already off
   under `prefers-reduced-motion`.
 
@@ -282,9 +283,9 @@ justify-between gap-3 rounded-none border-2 border-border p-3`, dates in ink
     `rounded-pill`.
   - Status tag: per status the label is a single text node and the shape class
     is present (dashed, solid plus marker, `line-through`); no pill.
-  - Host bookings: head row `border-b-2`; status tags shape-coded; table inside
-    an `overflow-x-auto` wrapper; empty still renders `EmptyState`; error as
-    above.
+  - Host bookings: head row `border-b-2`; status tags shape-coded in both
+    layouts; table container `hidden sm:block`, card list `sm:hidden` (D18);
+    empty still renders `EmptyState`; error as above.
   - Forms: labels bold ink; invalid field shows the danger bar text and keeps
     `aria-invalid`; hints render when valid; submit disabled while invalid and
     while submitting; payload unchanged; server, save, publish, upload and block
@@ -376,18 +377,18 @@ recorded only as guards. Danger text sits on paper or the danger tint only;
 
 ## Risks
 
-| Risk                                                                        | Mitigation                                                                                           |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `getByText("Published")` / `"Draft"` matches two nodes (us-2.2 strict)      | Label is the tag's only text; marker is an empty `aria-hidden` span; unit and e2e assert one match   |
-| A form restyle drops `register` options, `noValidate` or the `isValid` gate | Only classes and wrappers change; tests assert `disabled` conditions and submitted payloads          |
-| Status tag shape cues rot with Tailwind refactors                           | Assert text and roles first; classes only for shape cues; e2e asserts computed border and decoration |
-| The bookings table overflows the page at 360px                              | Wrapper-only scroll; e2e asserts `scrollWidth <= clientWidth` on the document                        |
-| Struck "Disabled" tag reads poorly                                          | `fg-muted` 10.20:1 and muted edge 4.93:1 (H2, H7); e2e computed colour                               |
-| Native checkbox stops being a real input                                    | `appearance-none` on the input itself; glyph `aria-hidden`; tests by `role="checkbox"` and Space     |
-| Hidden file input or its `ref` broken by the photos restyle                 | Input markup untouched; us-2.x upload tests re-run                                                   |
-| Error panel plus another alert yields two `role="alert"`                    | Page error states render only the panel; tests assert exactly one                                    |
-| Upload error gains `role="alert"` (new announcement)                        | Intended by the `ServerErrorAlert` grammar; same text; recorded here as the only role change         |
-| `Badge` pill and secondary `Button` ring remain in `packages/ui`            | Untouched by design; `AdminListingsPage` stays inconsistent until #123; `FLAT_SECONDARY` per #138    |
+| Risk                                                                        | Mitigation                                                                                            |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `getByText("Published")` / `"Draft"` matches two nodes (us-2.2 strict)      | Label is the tag's only text; marker is an empty `aria-hidden` span; unit and e2e assert one match    |
+| A form restyle drops `register` options, `noValidate` or the `isValid` gate | Only classes and wrappers change; tests assert `disabled` conditions and submitted payloads           |
+| Status tag shape cues rot with Tailwind refactors                           | Assert text and roles first; classes only for shape cues; e2e asserts computed border and decoration  |
+| The bookings table hides Status and Amount at 360px                         | Cards below `sm` (D18); e2e asserts the tag and amount are visible and the document does not overflow |
+| Struck "Disabled" tag reads poorly                                          | `fg-muted` 10.20:1 and muted edge 4.93:1 (H2, H7); e2e computed colour                                |
+| Native checkbox stops being a real input                                    | `appearance-none` on the input itself; glyph `aria-hidden`; tests by `role="checkbox"` and Space      |
+| Hidden file input or its `ref` broken by the photos restyle                 | Input markup untouched; us-2.x upload tests re-run                                                    |
+| Error panel plus another alert yields two `role="alert"`                    | Page error states render only the panel; tests assert exactly one                                     |
+| Upload error gains `role="alert"` (new announcement)                        | Intended by the `ServerErrorAlert` grammar; same text; recorded here as the only role change          |
+| `Badge` pill and secondary `Button` ring remain in `packages/ui`            | Untouched by design; `AdminListingsPage` stays inconsistent until #123; `FLAT_SECONDARY` per #138     |
 
 ## Open points
 
@@ -411,6 +412,30 @@ description):
   a `FormField` error get `aria-describedby={errorIdFor(id)}`, the convention
   `LoginPage` and `RegisterPage` use. Hints and the Edit form (no per-field
   errors) get none; linking hints is a follow-up.
-- **Scrollable table region (resolved at spec time).** The bookings table
-  wrapper stays non-focusable: no existing translated string can name it and no
-  new copy is allowed. A focusable labelled region is a follow-up.
+- **Scrollable table region (superseded by D18).** The bookings table no longer
+  scrolls below `sm`, so the labelled scroll region follow-up is dropped; the
+  `overflow-x-auto` container from `sm` up is a non-focusable safety net only.
+
+## D18. Host bookings: cards below `sm` (review finding, supersedes the scroll wrapper)
+
+The independent review found that at 360px the table, hidden behind its
+horizontal scroll wrapper, pushed Status and Amount (and with long emails Guest)
+out of sight, so the shape-coded status tag was invisible on a phone. Decision:
+render each booking as a 2px-edged card below `sm` and keep the flat table from
+`sm` up, the same pattern as the `MyBookingsPage` cards (NH-124) and the
+`HostListingsPage` rows. This supersedes the D11 "scroll wrapper" choice and the
+"non-focusable wrapper" point (no scroll region exists below `sm` to label).
+
+- Card list: `ul.sm:hidden`; each `li` `min-w-0 rounded-card border-2 border-border
+bg-surface-raised p-4`, no shadow, no ring. Title `break-words` in a `min-w-0`
+  column beside the local `StatusTag` (reused unchanged); a `dl` holds Guest
+  (`break-all`), Check-in, Check-out and Amount (`tabular-nums`), labelled with
+  the existing `host.bookings.*_col` keys (no new copy).
+- Table container: `hidden sm:block overflow-x-auto`. Both are `display: none`
+  when inactive, so only one layout is in the accessibility tree and no text is
+  announced twice. Data and formatting are shared (`formatDate`, `formatAmount`).
+- Test impact: jsdom ignores media queries, so unit tests scope queries with
+  `within(table)` or `getAllBy` and assert the `hidden sm:block` and `sm:hidden`
+  classes. Playwright `getByText` counts `display: none` nodes, so specs that
+  matched the page-wide text (`us-7.1`, `host-identity`) filter to the visible
+  match; no assertion is weakened.

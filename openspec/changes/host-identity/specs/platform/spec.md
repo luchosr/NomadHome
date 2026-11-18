@@ -75,33 +75,53 @@ strict text query for "Draft" or "Published" matches exactly one element.
 - **WHEN** the host presses Publish and the request succeeds
 - **THEN** the tag shows "Published" with a solid ink edge and a marker, and the request is made exactly as before
 
-### Requirement: Host bookings page is a flat table with shape-coded booking status
+### Requirement: Host bookings page is a flat table from sm up and flat cards below it, with shape-coded booking status
 
 The host bookings page (`/host/upcoming`) SHALL render exactly one `h1` in black
-ink and a flat table whose head row has a 2px ink bottom rule and bold ink
-headings, whose body rows keep a 1px muted rule, and whose amount cells use
-tabular figures. Date and amount formatting MUST NOT change. The booking status
-MUST render in a local status tag that carries the status by shape and text with
-the unchanged `booking.dashboard.status_*` strings: pending dashed ink edge,
-confirmed solid ink edge, cancelled solid muted edge with struck-through text,
-completed solid ink edge with a filled marker. The tag MUST NOT be a pill. The
-table MUST sit in its own horizontal scroll wrapper so the document never
-scrolls horizontally. That wrapper MUST stay non-focusable because no existing
-translated string can name it; no new copy is added and the keyboard-scroll gap
-is recorded as a follow-up. With no bookings the page MUST render the unchanged
-`EmptyState` with the same props.
+ink and the same bookings in one of two layouts chosen by viewport width. From
+640px (`sm`) up it MUST render a flat table whose head row has a 2px ink bottom
+rule and bold ink headings, whose body rows keep a 1px muted rule, and whose
+amount cells use tabular figures. Below 640px it MUST render each booking as a
+flat card instead: a `rounded-card` block with a 2px ink edge, no shadow and no
+ring, holding the listing title (`break-words`, in a `min-w-0` column), the
+shape-coded status tag, the check-in and check-out dates, the guest email
+(`break-all`) and the amount, each labelled with the existing
+`host.bookings.*_col` strings so no new copy is added. The status MUST therefore
+be visible at 360px without any horizontal scrolling, and the document MUST NOT
+scroll horizontally in either layout. Only one layout MUST be exposed at a time:
+the table container uses `hidden sm:block` and the card list `sm:hidden`, so the
+inactive layout is `display: none` and out of the accessibility tree and its text
+is never announced twice. Date and amount formatting MUST NOT change. The booking
+status MUST render in the one local status tag, used by both layouts, that
+carries the status by shape and text with the unchanged
+`booking.dashboard.status_*` strings: pending dashed ink edge, confirmed solid
+ink edge, cancelled solid muted edge with struck-through text, completed solid
+ink edge with a filled marker. The tag MUST NOT be a pill. With no bookings the
+page MUST render the unchanged `EmptyState` with the same props.
 
-#### Scenario: Table is flat and scrolls inside its wrapper
+#### Scenario: Cards below sm show every field
 
-- **GIVEN** a host with bookings at a 360 px viewport
-- **WHEN** the table is inspected
-- **THEN** the head row has a 2px ink bottom border and the headings are bold ink
-- **AND** the table is inside a wrapper with horizontal overflow auto, and the document scroll width does not exceed the viewport width
+- **GIVEN** a host with bookings, one with a very long guest email, at a 360 px viewport
+- **WHEN** the page is inspected
+- **THEN** each booking is a visible card with a 2px ink border showing the listing title, the status tag, both dates, the guest email and the amount
+- **AND** the table is not displayed and the document scroll width does not exceed the viewport width
+
+#### Scenario: Table from sm up
+
+- **GIVEN** a host with bookings at a 1440 px viewport
+- **WHEN** the page is inspected
+- **THEN** the table is visible with a 2px ink bottom border on the head row and bold ink headings, and the cards are not displayed
+
+#### Scenario: Only one layout is exposed
+
+- **GIVEN** the host bookings page with bookings
+- **WHEN** its markup is inspected
+- **THEN** the table container has the classes `hidden` and `sm:block` and the card list has the class `sm:hidden`, so at any width exactly one of them is displayed and the other is out of the accessibility tree
 
 #### Scenario: Booking status is carried by shape
 
 - **GIVEN** one booking in each status
-- **WHEN** the status tags are inspected
+- **WHEN** the status tags of the visible layout are inspected
 - **THEN** pending has a dashed border, confirmed a solid ink border, cancelled a solid muted border with `line-through` text and completed a solid ink border with a filled marker
 - **AND** each tag's text equals the existing label and none has a pill radius
 
@@ -316,7 +336,7 @@ MUST NOT be carried by colour alone. No new colour value MAY be introduced.
 The host listings, host bookings, create, edit and become-host pages SHALL render
 without document-level horizontal scrolling and without clipped content at a 360
 px viewport in every state, including long titles, city names and guest emails;
-only the host bookings table MAY scroll, inside its own wrapper. The header New
+the host bookings page shows cards below 640 px instead of a scrolling table. The header New
 listing action MUST be full width at 360 px. Keyboard focus order MUST follow the
 visual order, every call to action MUST be one tab stop, and every interactive
 element, including selects, textareas and checkboxes, MUST show the two-layer focus
@@ -351,8 +371,7 @@ logic, the set of `t()` keys, the text of any existing string, the API client,
 `packages/ui` or any shared primitive, including `EmptyState` and `Modal`. No
 data, schema or backend file MUST change. The follow-ups (shared state panel,
 shared booking status tag, `Badge` pill, `Link > Button` in `EmptyState` and the
-secondary button override, listing photo treatment, the hard-coded photo alt, and
-focusable labelled scroll region for the bookings table) MUST be recorded.
+secondary button override, listing photo treatment and the hard-coded photo alt) MUST be recorded.
 
 #### Scenario: Host flows are unchanged
 
@@ -376,4 +395,4 @@ focusable labelled scroll region for the bookings table) MUST be recorded.
 
 - **GIVEN** the change design and the pull request description
 - **WHEN** they are read
-- **THEN** they list the shared state panel, the shared booking status tag, the `Badge` pill, the nested link and button issue (#138), listing photos (#121), the hard-coded photo alt and the bookings table scroll region
+- **THEN** they list the shared state panel, the shared booking status tag, the `Badge` pill, the nested link and button issue (#138), listing photos (#121) and the hard-coded photo alt
