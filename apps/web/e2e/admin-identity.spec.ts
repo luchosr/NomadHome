@@ -22,6 +22,7 @@ const MUTED_EDGE_RGB = "rgb(111, 106, 99)";
 const DANGER_RGB = "rgb(155, 28, 46)";
 const DANGER_BG_RGB = "rgb(248, 225, 224)";
 const EMBER_RGB = "rgb(230, 95, 53)";
+const PAPER_RGB = "rgb(247, 245, 242)";
 
 const VIEWPORTS = [
   { name: "desktop-1440", width: 1440, height: 900 },
@@ -663,7 +664,7 @@ test.describe("Admin screens keyboard focus", () => {
       ["button|Disable", "button|Disable", "button|Re-enable"],
     ],
   ] as const) {
-    test(`${name}: Tab reaches each action once, in order, with the 3px ink ring`, async ({
+    test(`${name}: Tab reaches each action once, in order, with the two-layer ring`, async ({
       page,
     }) => {
       await admin(page);
@@ -671,9 +672,10 @@ test.describe("Admin screens keyboard focus", () => {
       await expect(visible(page.getByText(ready))).toBeVisible();
 
       // Every focusable element inside <main>, in Tab order: each action is one button, so one stop.
-      // Only the 3px ink outline is asserted: the Button variants (and FLAT_SECONDARY) own the
-      // box-shadow, so the paper gap ring is not part of this check.
-      const stops: { id: string; width: string; style: string; color: string }[] = [];
+      // Two-layer ring on every button (NH-138): the 3px ink outline plus the 2px paper
+      // --focus-gap box shadow. No Button variant sets its own shadow any more.
+      const stops: { id: string; width: string; style: string; color: string; shadow: string }[] =
+        [];
       for (let i = 0; i < 60 && stops.length < expected.length; i += 1) {
         await page.keyboard.press("Tab");
         const stop = await page.evaluate(() => {
@@ -685,6 +687,7 @@ test.describe("Admin screens keyboard focus", () => {
             width: cs.outlineWidth,
             style: cs.outlineStyle,
             color: cs.outlineColor,
+            shadow: cs.boxShadow,
           };
         });
         if (stop) stops.push(stop);
@@ -694,6 +697,8 @@ test.describe("Admin screens keyboard focus", () => {
         expect(stop.style).toBe("solid");
         expect(stop.width).toBe("3px");
         expect(stop.color).toBe(INK_RGB);
+        expect(stop.shadow).toContain(PAPER_RGB);
+        expect(stop.shadow).toMatch(/0px 0px 0px 2px/);
       }
     });
   }
