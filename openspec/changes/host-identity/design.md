@@ -452,3 +452,28 @@ bg-surface-raised p-4`, no shadow, no ring. Title `break-words` in a `min-w-0`
   classes. Playwright `getByText` counts `display: none` nodes, so specs that
   matched the page-wide text (`us-7.1`, `host-identity`) filter to the visible
   match; no assertion is weakened.
+
+## Divergences from plan
+
+Recorded after the build, from the shipped code. Where this section, D18 or D19 and D1 to D17 differ, the shipped code and these sections win. D19 already records `FLAT_CARD_CLASS` and the plain `border-2` edit skeleton; D18 records the bookings cards.
+
+- **`FLAT_CARD_CLASS` and `FLAT_SECONDARY` (#138 family).** The `packages/ui` `Card` composes a `ring-1` box-shadow and the secondary `Button` a 1px border plus inset ring, so `EditListingPage` and `ListingAvailabilityCard` pass `FLAT_CARD_CLASS` and the secondary buttons pass `FLAT_SECONDARY` (`border-2 ![box-shadow:none]`). Both are per-file overrides of a primitive, accepted here.
+- **Edit skeleton.** The loading state uses three plain `border-2 border-border bg-surface-raised p-5` divs instead of `Card`, so it carries no ring or shadow.
+- **`Pictogram` from `packages/ui`.** The no-photo tile imports the existing `Pictogram` (`bed`, `desk`) and `Skeleton`; no new glyph component was added and `packages/ui` is unchanged.
+- **Check glyph duplicated.** The 20-grid check path `M4.5 10.5l3.5 3.5 7.5-8` is inlined in both `AmenityCheckboxGrid` and `BecomeHostPage` (checkbox plus `aria-hidden` svg) rather than shared.
+- **Bookings cards below `sm`.** `HostUpcomingPage` renders cards below `sm` and the table from `sm` up; this supersedes the D11 scroll wrapper (D18).
+- **`Photo N` alt stays English.** `ListingPhotosCard` keeps its hard-coded `Photo N` alt (D8), not routed through `t()`.
+- **No photo placeholders.** A listing without a photo shows the pictogram tile on the host list; the photo grid on the edit page shows no placeholder for missing photos (#121).
+- **`Badge` pill stays in `packages/ui`.** `AdminListingsPage` still renders the pill for the same listing statuses until #123.
+
+## Follow-ups (not in this PR)
+
+Copy these into the PR description (task 8.4). Items already listed under Open points are not repeated in full.
+
+- **Shared `StatePanel` and `StatusTag` extraction.** The danger panel is local in three host pages besides `ListingDetailPage` and `BookingFormPage`, and `HostUpcomingPage` copies the `MyBookingsPage` tag; extract both, with a shape-per-tone `Badge` (see Open points).
+- **`FLAT_CARD_CLASS` and `FLAT_SECONDARY` (#138).** Remove both once the `Card` and `Button` primitives can render a flat 2px edge; `EmptyState` keeps its `Link > Button` until then.
+- **`Badge` pill and listing photos (#123, #121).** The admin listing pill and photo placeholders and treatment are separate tickets.
+- **Copy.** `Photo N` alt needs a `t()` key.
+- **Create vs Edit country and currency (pre-existing).** `CreateListingForm` uses a `GroupedSelect` for country and currency, `ListingDetailsForm` uses text `Input`s; unify in a form-consistency ticket.
+- **BecomeHost terms error (pre-existing).** The terms error (`ERROR_BAR_CLASS`, no role) is not linked to the checkbox with `aria-describedby`; hints on all forms are not linked either.
+- **Disabled and cancelled tag legibility.** The 12px muted struck label (10.20:1 text, 4.93:1 edge) passes AA but is borderline to read; consider 14px or a heavier cue in the shared `StatusTag`.

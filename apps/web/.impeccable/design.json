@@ -219,6 +219,14 @@
       "description": "Booking form summary panel closed by an ember total band in ink, with the my-bookings status tags: dashed (pending), solid (confirmed), struck muted (cancelled), solid with a square marker (completed).",
       "html": "<div class=\"ds-sum\"><div class=\"ds-sumbody\">Stay and price rows</div><div class=\"ds-sumband\"><span>Total</span><b>$480.00</b></div></div> <span class=\"ds-tag ds-tag-p\">Pending</span> <span class=\"ds-tag\">Confirmed</span> <span class=\"ds-tag ds-tag-x\">Cancelled</span> <span class=\"ds-tag\"><i></i>Completed</span>",
       "css": ".ds-sum{max-width:384px;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;font-family:'Overpass Variable',sans-serif}.ds-sumbody{padding:16px 20px}.ds-sumband{display:flex;align-items:baseline;justify-content:space-between;border-top:2px solid #1E1E1E;background:#E65F35;padding:16px 20px;font-weight:700}.ds-sumband b{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}.ds-tag{display:inline-flex;align-items:center;gap:8px;border:2px solid #1E1E1E;border-radius:2px;background:#F7F5F2;padding:4px 8px;font:700 12px 'Overpass Variable',sans-serif;color:#1E1E1E}.ds-tag-p{border-style:dashed}.ds-tag-x{border-color:#6F6A63;color:#3F3B37;text-decoration:line-through}.ds-tag i{width:8px;height:8px;background:#1E1E1E}"
+    },
+    {
+      "name": "Host Listing Row and Status Tags",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Host dashboard listing row: flat 2px ink edge on paper, a 64px framed thumbnail on stone, title and meta, and the listing status tags: dashed (draft), solid with a square marker (published), struck muted (disabled). No ember.",
+      "html": "<div class=\"ds-row\"><div class=\"ds-thumb\"></div><div class=\"ds-rowtext\"><b>Loft near the canal</b><span>Property · Lisbon, Portugal</span></div><span class=\"ds-ltag ds-ltag-d\">Draft</span> <span class=\"ds-ltag\"><i></i>Published</span> <span class=\"ds-ltag ds-ltag-x\">Disabled</span></div>",
+      "css": ".ds-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;max-width:640px;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;padding:16px;font-family:'Overpass Variable',sans-serif}.ds-thumb{width:64px;height:64px;border:2px solid #1E1E1E;background:#E5E2DD}.ds-rowtext{display:flex;flex-direction:column;flex:1;min-width:0}.ds-rowtext span{font-size:14px;color:#3F3B37}.ds-ltag{display:inline-flex;align-items:center;gap:8px;border:2px solid #1E1E1E;border-radius:2px;background:#F7F5F2;padding:4px 8px;font:700 12px 'Overpass Variable',sans-serif;color:#1E1E1E}.ds-ltag-d{border-style:dashed}.ds-ltag-x{border-color:#6F6A63;color:#3F3B37;text-decoration:line-through}.ds-ltag i{width:8px;height:8px;background:#1E1E1E}"
     }
   ],
   "narrative": {
@@ -289,6 +297,7 @@
       "Do keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.",
       "Do state a form error by shape: a left-barred field error, a filled-tile panel for form-level errors.",
       "Do state a booking status as a shape plus its text (dashed, solid, struck, solid with a marker), and set the total on an ember band in ink.",
+      "Do state a listing status as a shape plus its text (dashed draft, solid published with a marker, struck disabled), and give every listing form the same field grammar.",
       "Do write user-facing strings through t()."
     ],
     "donts": [
@@ -299,6 +308,7 @@
       "Don't put ember text on paper, stone or sage.",
       "Don't add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.",
       "Don't put muted ink, subtle ink, paper or danger text on the booking total band or the success panel, or place a control on the success panel's ember.",
+      "Don't put ember on a host screen, or use raw red text (text-red-600), a pill or a tone-only chip for a host state.",
       "Don't use icon fonts or third-party icon sets for wayfinding glyphs.",
       "Don't put an error, danger text or muted ink on the ember title band; forms and errors stay on paper."
     ]
