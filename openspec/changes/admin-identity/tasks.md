@@ -55,9 +55,9 @@ declared tasks (1.1, 1.2, 4.1), and no assertion is weakened.
 
 ## 3. Implementation (green)
 
-- [ ] 3.1 `AdminUsersPage.tsx`: local constants `FLAT_SECONDARY` and `StatePanel` (D1), black heavy `h1` (D6), local `AccountStatusTag` (D2), roles plain text (D3), `hidden sm:block` table plus `sm:hidden` cards (D5), 44px Disable and Re-enable with the same handlers and `FLAT_SECONDARY` on Re-enable, flat `aria-busy` skeleton, dashed empty panel, danger `StatePanel` inside `PageWrapper`; remove the `Badge` import and `userStatusTone`; no query, mutation, handler, `disabled` condition or `t()` change
-- [ ] 3.2 `AdminListingsPage.tsx`: same as 3.1 with `ListingStatusTag` (D4) in place of the account tag; delete `statusLabel()` and `listingStatusTone`, keep `listingTypeLabel()`; remove the `Badge` import; listing card layout from D5
-- [ ] 3.3 Run tasks 1.1 to 1.7 green and re-run the 2.x e2e green against the isolated server
+- [x] 3.1 `AdminUsersPage.tsx`: local constants `FLAT_SECONDARY` and `StatePanel` (D1), black heavy `h1` (D6), local `AccountStatusTag` (D2), roles plain text (D3), `hidden sm:block` table plus `sm:hidden` cards (D5), 44px Disable and Re-enable with the same handlers and `FLAT_SECONDARY` on Re-enable, flat `aria-busy` skeleton, dashed empty panel, danger `StatePanel` inside `PageWrapper`; remove the `Badge` import and `userStatusTone`; no query, mutation, handler, `disabled` condition or `t()` change
+- [x] 3.2 `AdminListingsPage.tsx`: same as 3.1 with `ListingStatusTag` (D4) in place of the account tag; delete `statusLabel()` and `listingStatusTone`, keep `listingTypeLabel()`; remove the `Badge` import; listing card layout from D5
+- [x] 3.3 Run tasks 1.1 to 1.7 green and re-run the 2.x e2e green against the isolated server
 
 ## 4. Review and update existing unit tests (MANDATORY)
 

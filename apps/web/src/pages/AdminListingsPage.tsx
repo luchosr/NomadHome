@@ -1,33 +1,44 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Badge, Button, Skeleton } from "@nomadhome/ui";
+import { Button, Skeleton } from "@nomadhome/ui";
 import { adminApi, type AdminListing } from "../api/admin.js";
+import { ListingStatusTag } from "../components/ListingStatusTag.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 
-function listingStatusTone(status: AdminListing["status"]): "success" | "neutral" | "danger" {
-  switch (status) {
-    case "PUBLISHED":
-      return "success";
-    case "DRAFT":
-      return "neutral";
-    case "DISABLED":
-      return "danger";
-  }
-}
-
-function listingStatusLabel(status: AdminListing["status"]): string {
-  switch (status) {
-    case "PUBLISHED":
-      return t("host.listings.status_published");
-    case "DRAFT":
-      return t("host.listings.status_draft");
-    case "DISABLED":
-      return t("host.listings.status_disabled");
-  }
-}
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
 
 function listingTypeLabel(type: AdminListing["type"]): string {
   return type === "PROPERTY" ? t("host.listings.type_property") : t("host.listings.type_workspace");
+}
+
+function StatePanel({ children }: { children: string }) {
+  return (
+    <div
+      role="alert"
+      className="mx-auto flex min-w-0 max-w-[36rem] items-start gap-4 rounded-card border-2 border-solid border-danger bg-danger-bg p-6"
+    >
+      <span
+        aria-hidden="true"
+        className="flex h-12 w-12 shrink-0 items-center justify-center border-2 border-danger bg-danger text-fg-inverse"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          className="h-8 w-8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={3}
+          strokeLinecap="square"
+          strokeLinejoin="miter"
+          focusable={false}
+        >
+          <path d="M12 5v9M12 18v1" />
+        </svg>
+      </span>
+      <h1 className="m-0 min-w-0 break-words text-2xl font-bold leading-tight text-danger">
+        {children}
+      </h1>
+    </div>
+  );
 }
 
 export function AdminListingsPage() {
@@ -48,21 +59,42 @@ export function AdminListingsPage() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
   };
 
+  const renderAction = (listing: AdminListing, className: string) =>
+    listing.status !== "DISABLED" ? (
+      <Button
+        variant="destructive"
+        className={`min-h-11 ${className}`}
+        onClick={() => void handleDisable(listing.id)}
+      >
+        {t("admin.listings.disable")}
+      </Button>
+    ) : (
+      <Button
+        variant="secondary"
+        className={`min-h-11 ${FLAT_SECONDARY} ${className}`}
+        onClick={() => void handleEnable(listing.id)}
+      >
+        {t("admin.listings.enable")}
+      </Button>
+    );
+
   if (isLoading) {
     return (
       <PageWrapper>
-        <Skeleton className="mb-6 h-8 w-48" />
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-border-muted pb-3">
-              <Skeleton className="h-4 w-1/4" />
-              <Skeleton className="h-4 w-1/6" />
-              <Skeleton className="h-4 w-1/6" />
-              <Skeleton className="h-4 w-1/5" />
-              <Skeleton className="h-6 w-16 rounded-pill" />
-              <Skeleton className="h-9 w-20 rounded-md" />
-            </div>
-          ))}
+        <div aria-busy="true">
+          <Skeleton className="mb-6 h-8 w-48" />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 border-b border-border-muted pb-3">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-4 w-1/6" />
+                <Skeleton className="h-4 w-1/6" />
+                <Skeleton className="h-4 w-1/5" />
+                <Skeleton className="h-6 w-16" />
+                <Skeleton className="h-11 w-20" />
+              </div>
+            ))}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -70,59 +102,75 @@ export function AdminListingsPage() {
 
   if (error || !data) {
     return (
-      <p role="alert" className="text-danger">
-        {t("error.generic.unexpected")}
-      </p>
+      <PageWrapper>
+        <StatePanel>{t("error.generic.unexpected")}</StatePanel>
+      </PageWrapper>
     );
   }
 
   return (
     <PageWrapper>
-      <h1 className="mb-6 text-2xl font-bold text-fg">{t("admin.listings.title")}</h1>
+      <h1 className="m-0 mb-6 text-3xl font-black leading-solid text-fg md:text-4xl">
+        {t("admin.listings.title")}
+      </h1>
 
       {data.data.length === 0 ? (
-        <p className="text-fg-muted">{t("admin.listings.no_listings")}</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border-muted text-left text-fg-subtle">
-                <th className="pb-2 pr-4 font-medium">{t("admin.listings.title_col")}</th>
-                <th className="pb-2 pr-4 font-medium">{t("admin.listings.type_col")}</th>
-                <th className="pb-2 pr-4 font-medium">{t("admin.listings.city_col")}</th>
-                <th className="pb-2 pr-4 font-medium">{t("admin.listings.host_col")}</th>
-                <th className="pb-2 pr-4 font-medium">{t("admin.listings.status_col")}</th>
-                <th className="pb-2 font-medium">{t("admin.listings.actions_col")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.data.map((listing: AdminListing) => (
-                <tr key={listing.id} className="border-b border-border-muted last:border-0">
-                  <td className="py-3 pr-4 text-fg">{listing.title}</td>
-                  <td className="py-3 pr-4 text-fg-muted">{listingTypeLabel(listing.type)}</td>
-                  <td className="py-3 pr-4 text-fg-muted">{listing.city}</td>
-                  <td className="py-3 pr-4 text-fg-muted">{listing.host.email}</td>
-                  <td className="py-3 pr-4">
-                    <Badge tone={listingStatusTone(listing.status)}>
-                      {listingStatusLabel(listing.status)}
-                    </Badge>
-                  </td>
-                  <td className="py-3">
-                    {listing.status !== "DISABLED" ? (
-                      <Button variant="destructive" onClick={() => void handleDisable(listing.id)}>
-                        {t("admin.listings.disable")}
-                      </Button>
-                    ) : (
-                      <Button variant="secondary" onClick={() => void handleEnable(listing.id)}>
-                        {t("admin.listings.enable")}
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="rounded-card border-2 border-dashed border-border bg-surface-raised px-6 py-12">
+          <p className="m-0 text-fg-muted">{t("admin.listings.no_listings")}</p>
         </div>
+      ) : (
+        <>
+          <ul className="m-0 flex list-none flex-col gap-4 p-0 sm:hidden">
+            {data.data.map((listing: AdminListing) => (
+              <li
+                key={listing.id}
+                className="min-w-0 rounded-card border-2 border-border bg-surface-raised p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="m-0 break-words font-bold text-fg">{listing.title}</p>
+                    <p className="m-0 mt-1 break-words text-sm text-fg-muted">
+                      {listingTypeLabel(listing.type)}
+                      {" · "}
+                      {listing.city}
+                    </p>
+                  </div>
+                  <ListingStatusTag status={listing.status} />
+                </div>
+                <p className="m-0 mt-3 break-all text-sm text-fg-muted">{listing.host.email}</p>
+                <div className="mt-4">{renderAction(listing, "w-full sm:w-auto")}</div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto sm:block">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b-2 border-border text-left">
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.title_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.type_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.city_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.host_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.status_col")}</th>
+                  <th className="pb-2 font-bold text-fg">{t("admin.listings.actions_col")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.data.map((listing: AdminListing) => (
+                  <tr key={listing.id} className="border-b border-border-muted last:border-0">
+                    <td className="py-3 pr-4 text-fg">{listing.title}</td>
+                    <td className="py-3 pr-4 text-fg-muted">{listingTypeLabel(listing.type)}</td>
+                    <td className="py-3 pr-4 text-fg-muted">{listing.city}</td>
+                    <td className="py-3 pr-4 text-fg-muted">{listing.host.email}</td>
+                    <td className="py-3 pr-4">
+                      <ListingStatusTag status={listing.status} />
+                    </td>
+                    <td className="py-3">{renderAction(listing, "")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </PageWrapper>
   );
