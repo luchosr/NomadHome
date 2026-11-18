@@ -157,18 +157,20 @@ export function AdminUsersPage() {
                   <th className="pb-2 pr-4 font-bold text-fg">{t("admin.users.email_col")}</th>
                   <th className="pb-2 pr-4 font-bold text-fg">{t("admin.users.roles_col")}</th>
                   <th className="pb-2 pr-4 font-bold text-fg">{t("admin.users.status_col")}</th>
-                  <th className="pb-2 font-bold text-fg">{t("admin.users.actions_col")}</th>
+                  <th className="pb-2 pr-1 font-bold text-fg">{t("admin.users.actions_col")}</th>
                 </tr>
               </thead>
               <tbody>
                 {data.data.map((user: AdminUser) => (
                   <tr key={user.id} className="border-b border-border-muted last:border-0">
-                    <td className="py-3 pr-4 text-fg">{user.email}</td>
+                    <td className="py-3 pr-4 text-fg">
+                      <div className="max-w-[22rem] [overflow-wrap:anywhere]">{user.email}</div>
+                    </td>
                     <td className="py-3 pr-4 text-fg-muted">{user.roles.join(", ")}</td>
                     <td className="py-3 pr-4">
                       <AccountStatusTag disabledAt={user.disabledAt} />
                     </td>
-                    <td className="py-3">{renderAction(user, "")}</td>
+                    <td className="whitespace-nowrap py-3 pr-1">{renderAction(user, "")}</td>
                   </tr>
                 ))}
               </tbody>

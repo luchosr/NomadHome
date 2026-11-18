@@ -151,20 +151,28 @@ export function AdminListingsPage() {
                   <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.city_col")}</th>
                   <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.host_col")}</th>
                   <th className="pb-2 pr-4 font-bold text-fg">{t("admin.listings.status_col")}</th>
-                  <th className="pb-2 font-bold text-fg">{t("admin.listings.actions_col")}</th>
+                  <th className="pb-2 pr-1 font-bold text-fg">{t("admin.listings.actions_col")}</th>
                 </tr>
               </thead>
               <tbody>
                 {data.data.map((listing: AdminListing) => (
                   <tr key={listing.id} className="border-b border-border-muted last:border-0">
-                    <td className="py-3 pr-4 text-fg">{listing.title}</td>
+                    <td className="py-3 pr-4 text-fg">
+                      <div className="max-w-[18rem] [overflow-wrap:anywhere]">{listing.title}</div>
+                    </td>
                     <td className="py-3 pr-4 text-fg-muted">{listingTypeLabel(listing.type)}</td>
-                    <td className="py-3 pr-4 text-fg-muted">{listing.city}</td>
-                    <td className="py-3 pr-4 text-fg-muted">{listing.host.email}</td>
+                    <td className="py-3 pr-4 text-fg-muted">
+                      <div className="max-w-[10rem] [overflow-wrap:anywhere]">{listing.city}</div>
+                    </td>
+                    <td className="py-3 pr-4 text-fg-muted">
+                      <div className="max-w-[14rem] [overflow-wrap:anywhere]">
+                        {listing.host.email}
+                      </div>
+                    </td>
                     <td className="py-3 pr-4">
                       <ListingStatusTag status={listing.status} />
                     </td>
-                    <td className="py-3">{renderAction(listing, "")}</td>
+                    <td className="whitespace-nowrap py-3 pr-1">{renderAction(listing, "")}</td>
                   </tr>
                 ))}
               </tbody>
