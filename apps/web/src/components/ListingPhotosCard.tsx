@@ -2,6 +2,7 @@ import type { ChangeEvent, RefObject } from "react";
 import { t } from "@nomadhome/shared";
 import { Button, Card } from "@nomadhome/ui";
 import { ServerErrorAlert } from "./ServerErrorAlert.js";
+import { FLAT_CARD_CLASS } from "./listingFormStyles.js";
 
 // A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
 const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
@@ -34,7 +35,7 @@ export function ListingPhotosCard({
   };
 
   return (
-    <Card>
+    <Card className={FLAT_CARD_CLASS}>
       <h2 className="mb-4 text-lg font-bold text-fg">{t("host.photos.title")}</h2>
       {photos.length === 0 ? (
         <p className="text-fg-muted">{t("host.photos.no_photos")}</p>

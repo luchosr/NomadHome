@@ -7,6 +7,7 @@ import { useListingAvailability } from "../hooks/useListingAvailability.js";
 import { ListingDetailsForm } from "../components/ListingDetailsForm.js";
 import { ListingPhotosCard } from "../components/ListingPhotosCard.js";
 import { ListingAvailabilityCard } from "../components/ListingAvailabilityCard.js";
+import { FLAT_CARD_CLASS } from "../components/listingFormStyles.js";
 import { ListingStatusTag } from "../components/ListingStatusTag.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
 
@@ -68,26 +69,26 @@ export function EditListingPage() {
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-11 w-28" />
         </div>
-        <Card>
+        <div className="border-2 border-border bg-surface-raised p-5">
           <div className="space-y-4">
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="h-24 w-full" />
           </div>
-        </Card>
-        <Card>
+        </div>
+        <div className="border-2 border-border bg-surface-raised p-5">
           <div className="space-y-3">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-24 w-full" />
           </div>
-        </Card>
-        <Card>
+        </div>
+        <div className="border-2 border-border bg-surface-raised p-5">
           <div className="space-y-3">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-16 w-full" />
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
@@ -118,7 +119,7 @@ export function EditListingPage() {
         <ServerErrorAlert error={publishError} className="w-full" />
       </div>
 
-      <Card>
+      <Card className={FLAT_CARD_CLASS}>
         <ListingDetailsForm
           form={form}
           selectedAmenities={selectedAmenities}

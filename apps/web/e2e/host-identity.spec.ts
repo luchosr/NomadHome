@@ -876,9 +876,9 @@ test.describe("Host screens keyboard focus", () => {
     await page.goto("/host/listings");
     await expect(page.getByText("Published Cabin")).toBeVisible();
 
-    // Every focusable element inside <main>, in Tab order: a Link > Button CTA shows up twice.
+    // Every focusable element inside <main>, in Tab order: each CTA is one link, so one stop.
     const stops: { id: string; width: string; color: string; shadow: string }[] = [];
-    for (let i = 0; i < 60 && stops.length < 8; i += 1) {
+    for (let i = 0; i < 60 && stops.length < 4; i += 1) {
       await page.keyboard.press("Tab");
       const stop = await page.evaluate(() => {
         const el = document.activeElement;
