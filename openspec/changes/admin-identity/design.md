@@ -123,6 +123,15 @@ border-border bg-surface-raised p-4`, no shadow, no ring.
   accessibility tree and no text is announced twice. Data and formatting are
   shared (no new helpers).
 
+- **Long strings in the table (review finding).** With the auto table layout a
+  long unbroken email or title widened its column and pushed Status and Actions
+  out of view, and the Re-enable label wrapped. Fix: wrap the long cells (email,
+  title, city, host email) in a `max-w-*` div with `[overflow-wrap:anywhere]`,
+  give the actions `td` `whitespace-nowrap`, and add `pr-1` to the last `td` and
+  `th` so the 3px focus ring is not clipped by `overflow-x-auto`. `table-fixed`
+  is not used. A `md:` breakpoint for the listings table (six columns) was
+  considered and left as a follow-up.
+
 ## D6. Headings, no ember band
 
 Each admin screen has exactly one `h1`, with the recipe `m-0 mb-6 text-3xl

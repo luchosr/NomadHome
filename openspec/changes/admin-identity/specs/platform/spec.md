@@ -132,6 +132,14 @@ accessibility tree and its text is never announced twice.
 - **WHEN** their markup is inspected
 - **THEN** each table container has the classes `hidden` and `sm:block` and each card list has the class `sm:hidden`, so at any width exactly one of them is displayed and the other is out of the accessibility tree
 
+#### Scenario: Long unbroken strings keep every column inside the table
+
+- **GIVEN** an admin viewing users with a very long unbroken email (about 120 characters) and listings with a very long unbroken title (about 100 characters), at a 1440 px viewport
+- **WHEN** each table is inspected
+- **THEN** every column, including Status and Actions, stays inside the table container with no horizontal scroll inside it
+- **AND** the action button stays on one line
+- **AND** the 3px focus ring of the last-column action is not clipped at the container's right edge
+
 ### Requirement: Moderation actions are 44px real buttons with a flat secondary edge
 
 The admin moderation actions SHALL stay real `button` elements, in both layouts, with the same handlers,

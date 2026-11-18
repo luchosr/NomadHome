@@ -59,6 +59,8 @@ declared tasks (1.1, 1.2, 4.1), and no assertion is weakened.
 - [x] 3.2 `AdminListingsPage.tsx`: same as 3.1 with `ListingStatusTag` (D4) in place of the account tag; delete `statusLabel()` and `listingStatusTone`, keep `listingTypeLabel()`; remove the `Badge` import; listing card layout from D5
 - [x] 3.3 Run tasks 1.1 to 1.7 green and re-run the 2.x e2e green against the isolated server
 
+- [x] 3.4 Review finding: long unbroken strings at 1440 px. Red e2e and unit class assertions first, then wrap the long cells with `max-w-*` and `[overflow-wrap:anywhere]`, add `whitespace-nowrap` to the actions `td` and `pr-1` to the last `td` and `th` of both tables (design.md D5)
+
 ## 4. Review and update existing unit tests (MANDATORY)
 
 - [ ] 4.1 Review and update every test and e2e spec that renders or navigates to the changed pages: `AdminUsersPage.test.tsx`, `AdminListingsPage.test.tsx`, `apps/web/e2e/us-8.1-admin-users.spec.ts` and `us-8.2-admin-listings.spec.ts` (strict `getByText("Disabled")` and `getByRole("button", { name: /re-enable/i })` now match both layouts: scope to the visible match with `.filter({ visible: true })`; this edit is intended and no assertion is weakened), `focus-hover.spec.ts`, `layout.spec.ts` and `rg -n "admin" apps/web/e2e apps/web/src --glob "*.test.*"`; do not edit a spec that hard-codes `localhost:5173` and record it as known and unchanged
