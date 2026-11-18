@@ -41,7 +41,8 @@ test.describe("US-8.1 — Admin manages users", () => {
       }),
     );
     await page.goto("/admin/users");
-    await expect(page.getByText("user@test.com")).toBeVisible();
+    // Table and cards are both in the DOM (one is display: none): keep the visible match.
+    await expect(page.getByText("user@test.com").filter({ visible: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /disable/i })).toBeVisible();
   });
 
@@ -71,6 +72,6 @@ test.describe("US-8.1 — Admin manages users", () => {
     });
     await page.goto("/admin/users");
     await page.getByRole("button", { name: /disable/i }).click();
-    await expect(page.getByText("Disabled")).toBeVisible();
+    await expect(page.getByText("Disabled").filter({ visible: true })).toBeVisible();
   });
 });

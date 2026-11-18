@@ -46,12 +46,12 @@ declared tasks (1.1, 1.2, 4.1), and no assertion is weakened.
 
 ## 2. Red tests (e2e, Playwright, mocked API)
 
-- [ ] 2.1 Red: add `apps/web/e2e/admin-identity.spec.ts` patterned on `host-identity.spec.ts` and the `us-8.x` specs: relative URLs or the configured `baseURL` only (no hard-coded `5173`, no `localhost:5173` mock URL), the API mocked the way `host-identity.spec.ts` and `us-8.1` do, an admin session, routes taken from `apps/web/src/router.tsx` (`/admin/users`, `/admin/listings`); helpers for no-overflow and screenshot attach; at 1440x900: table head rule 2px ink `rgb(30, 30, 30)`, tag border styles per state and `line-through` on disabled and on the disabled listing tag, Re-enable computed border 2px, action min height 44px, no element with a box shadow or gradient in any state; at 360x800: cards visible with the 2px ink edge, radius at most 4px, status tag and action visible, table hidden
-- [ ] 2.2 Red: listing tag `border-style` is dashed for draft and solid for published and disabled; no tag has a 9999px radius; users tag solid for active (with marker) and solid muted for disabled
-- [ ] 2.3 Red: error panels (users failure, listings failure) have a danger border `rgb(155, 28, 46)`, solid style, tint background `rgb(248, 225, 224)` and exactly one `role="alert"`; the empty panels are `border-style: dashed`
-- [ ] 2.4 Red: 360 px no-overflow (`scrollWidth <= innerWidth`) for users (very long email, many rows), listings (long title and city), and for loading, empty and error on each page
-- [ ] 2.5 Red: keyboard: Tab reaches each Disable and Re-enable once and the focused element shows the 3px ink outline
-- [ ] 2.6 Run the new e2e spec against an isolated server (see 7.1) and record that it fails before implementation
+- [x] 2.1 Red: add `apps/web/e2e/admin-identity.spec.ts` patterned on `host-identity.spec.ts` and the `us-8.x` specs: relative URLs or the configured `baseURL` only (no hard-coded `5173`, no `localhost:5173` mock URL), the API mocked the way `host-identity.spec.ts` and `us-8.1` do, an admin session, routes taken from `apps/web/src/router.tsx` (`/admin/users`, `/admin/listings`); helpers for no-overflow and screenshot attach; at 1440x900: table head rule 2px ink `rgb(30, 30, 30)`, tag border styles per state and `line-through` on disabled and on the disabled listing tag, Re-enable computed border 2px, action min height 44px, no element with a box shadow or gradient in any state; at 360x800: cards visible with the 2px ink edge, radius at most 4px, status tag and action visible, table hidden
+- [x] 2.2 Red: listing tag `border-style` is dashed for draft and solid for published and disabled; no tag has a 9999px radius; users tag solid for active (with marker) and solid muted for disabled
+- [x] 2.3 Red: error panels (users failure, listings failure) have a danger border `rgb(155, 28, 46)`, solid style, tint background `rgb(248, 225, 224)` and exactly one `role="alert"`; the empty panels are `border-style: dashed`
+- [x] 2.4 Red: 360 px no-overflow (`scrollWidth <= innerWidth`) for users (very long email, many rows), listings (long title and city), and for loading, empty and error on each page
+- [x] 2.5 Red: keyboard: Tab reaches each Disable and Re-enable once and the focused element shows the 3px ink outline
+- [x] 2.6 Run the new e2e spec against an isolated server (see 7.1) and record that it fails before implementation
 
 ## 3. Implementation (green)
 
