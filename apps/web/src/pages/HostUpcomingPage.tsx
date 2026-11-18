@@ -124,36 +124,73 @@ export function HostUpcomingPage() {
           ctaTo="/host/listings"
         />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b-2 border-border text-left">
-                <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.listing_col")}</th>
-                <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.guest_col")}</th>
-                <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.checkin_col")}</th>
-                <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.checkout_col")}</th>
-                <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.status_col")}</th>
-                <th className="pb-2 font-bold text-fg">{t("host.bookings.amount_col")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((booking) => (
-                <tr key={booking.id} className="border-b border-border-muted last:border-0">
-                  <td className="py-3 pr-4 text-fg">{booking.listing.title}</td>
-                  <td className="py-3 pr-4 text-fg-muted">{booking.guest.email}</td>
-                  <td className="py-3 pr-4 text-fg-muted">{formatDate(booking.checkIn)}</td>
-                  <td className="py-3 pr-4 text-fg-muted">{formatDate(booking.checkOut)}</td>
-                  <td className="py-3 pr-4">
-                    <StatusTag status={booking.status} />
-                  </td>
-                  <td className="py-3 tabular-nums text-fg-muted">
-                    {formatAmount(booking.totalCents, booking.currency)}
-                  </td>
+        <>
+          <ul className="m-0 flex list-none flex-col gap-4 p-0 sm:hidden">
+            {data.map((booking) => (
+              <li
+                key={booking.id}
+                className="min-w-0 rounded-card border-2 border-border bg-surface-raised p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="m-0 min-w-0 break-words font-bold text-fg">
+                    {booking.listing.title}
+                  </p>
+                  <StatusTag status={booking.status} />
+                </div>
+                <dl className="m-0 mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <div className="col-span-2 min-w-0">
+                    <dt className="font-bold text-fg">{t("host.bookings.guest_col")}</dt>
+                    <dd className="m-0 break-all text-fg-muted">{booking.guest.email}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="font-bold text-fg">{t("host.bookings.checkin_col")}</dt>
+                    <dd className="m-0 text-fg-muted">{formatDate(booking.checkIn)}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="font-bold text-fg">{t("host.bookings.checkout_col")}</dt>
+                    <dd className="m-0 text-fg-muted">{formatDate(booking.checkOut)}</dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt className="font-bold text-fg">{t("host.bookings.amount_col")}</dt>
+                    <dd className="m-0 tabular-nums text-fg-muted">
+                      {formatAmount(booking.totalCents, booking.currency)}
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto sm:block">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b-2 border-border text-left">
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.listing_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.guest_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.checkin_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.checkout_col")}</th>
+                  <th className="pb-2 pr-4 font-bold text-fg">{t("host.bookings.status_col")}</th>
+                  <th className="pb-2 font-bold text-fg">{t("host.bookings.amount_col")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data.map((booking) => (
+                  <tr key={booking.id} className="border-b border-border-muted last:border-0">
+                    <td className="py-3 pr-4 text-fg">{booking.listing.title}</td>
+                    <td className="py-3 pr-4 text-fg-muted">{booking.guest.email}</td>
+                    <td className="py-3 pr-4 text-fg-muted">{formatDate(booking.checkIn)}</td>
+                    <td className="py-3 pr-4 text-fg-muted">{formatDate(booking.checkOut)}</td>
+                    <td className="py-3 pr-4">
+                      <StatusTag status={booking.status} />
+                    </td>
+                    <td className="py-3 tabular-nums text-fg-muted">
+                      {formatAmount(booking.totalCents, booking.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </PageWrapper>
   );
