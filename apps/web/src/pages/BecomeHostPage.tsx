@@ -8,6 +8,7 @@ import { getDisplayMessage } from "../api/client.js";
 import { useState } from "react";
 import { FormField } from "../components/FormField.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
+import { CHECKBOX_CLASS, ERROR_BAR_CLASS } from "../components/listingFormStyles.js";
 
 export function BecomeHostPage() {
   const { becomeHost } = useAuth();
@@ -32,9 +33,11 @@ export function BecomeHostPage() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-8">
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-fg">{t("identity.become_host.title")}</h1>
-        <p className="mt-1 text-sm text-fg-subtle">{t("identity.become_host.subtitle")}</p>
+      <div className="mb-8">
+        <h1 className="m-0 text-3xl font-black leading-solid text-fg md:text-4xl">
+          {t("identity.become_host.title")}
+        </h1>
+        <p className="m-0 mt-2 text-sm text-fg-muted">{t("identity.become_host.subtitle")}</p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-4">
@@ -63,20 +66,35 @@ export function BecomeHostPage() {
           />
         </FormField>
 
-        <div className="flex items-start gap-2">
-          <input
-            id="acceptedTerms"
-            type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-border-muted"
-            {...register("acceptedTerms")}
-          />
-          <label htmlFor="acceptedTerms" className="text-sm text-fg-muted">
-            {t("identity.become_host.terms_label")}
-          </label>
+        <div>
+          <div className="relative flex min-h-11 items-start gap-3 py-3">
+            <input
+              id="acceptedTerms"
+              type="checkbox"
+              className={CHECKBOX_CLASS}
+              {...register("acceptedTerms")}
+            />
+            <svg
+              aria-hidden="true"
+              focusable={false}
+              viewBox="0 0 20 20"
+              className="pointer-events-none absolute left-0 top-3 hidden h-5 w-5 text-fg-inverse peer-checked:block"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={3}
+              strokeLinecap="square"
+              strokeLinejoin="miter"
+            >
+              <path d="M4.5 10.5l3.5 3.5 7.5-8" />
+            </svg>
+            <label htmlFor="acceptedTerms" className="min-w-0 text-sm leading-5 text-fg">
+              {t("identity.become_host.terms_label")}
+            </label>
+          </div>
+          {errors.acceptedTerms && (
+            <p className={ERROR_BAR_CLASS}>{errors.acceptedTerms.message}</p>
+          )}
         </div>
-        {errors.acceptedTerms && (
-          <p className="text-xs text-danger">{errors.acceptedTerms.message}</p>
-        )}
 
         <ServerErrorAlert error={serverError} />
 
