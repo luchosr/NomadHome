@@ -118,9 +118,9 @@ function hasClassMatching(el: Element, re: RegExp): boolean {
 function listing(
   id: string,
   title: string,
-  overrides: Partial<(typeof mockListings)[number]> = {},
-): (typeof mockListings)[number] {
-  return { ...(mockListings[0] as (typeof mockListings)[number]), id, title, ...overrides };
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return { ...mockListings[0], id, title, ...overrides };
 }
 
 const MIXED = [
