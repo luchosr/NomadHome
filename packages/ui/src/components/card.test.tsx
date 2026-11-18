@@ -33,3 +33,16 @@ describe("Card", () => {
     expect(screen.getByText("Tappable").className).not.toMatch(LEGACY_SCALE_CLASS);
   });
 });
+
+describe("Card flat shape (NH-138)", () => {
+  it.each([false, true])(
+    "has border-2 and border-border and no ring (interactive=%s)",
+    (interactive) => {
+      render(<Card interactive={interactive}>Panel</Card>);
+      const el = screen.getByText("Panel");
+      expect(el).toHaveClass("border-2", "border-border");
+      expect(el).not.toHaveClass("border");
+      expect(el.className.split(/\s+/).filter((c) => /(?:^|:)ring(?:-|$)/.test(c))).toEqual([]);
+    },
+  );
+});
