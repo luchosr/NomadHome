@@ -42,7 +42,8 @@ test.describe("US-8.2 — Admin disables listings", () => {
       }),
     );
     await page.goto("/admin/listings");
-    await expect(page.getByText("Sunny Loft in Lisbon")).toBeVisible();
+    // Table and cards are both in the DOM (one is display: none): keep the visible match.
+    await expect(page.getByText("Sunny Loft in Lisbon").filter({ visible: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /disable/i })).toBeVisible();
   });
 
@@ -76,6 +77,8 @@ test.describe("US-8.2 — Admin disables listings", () => {
     });
     await page.goto("/admin/listings");
     await page.getByRole("button", { name: /disable/i }).click();
-    await expect(page.getByRole("button", { name: /re-enable/i })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /re-enable/i }).filter({ visible: true }),
+    ).toBeVisible();
   });
 });
