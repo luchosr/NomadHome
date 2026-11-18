@@ -117,8 +117,10 @@ renders through `FormField` with the danger left bar. `Input`, `select` and
 `GroupedSelect` keep `aria-invalid`, so the danger edge appears on invalid
 fields. `ListingDetailsForm` has no per-field errors today and gets none: only
 labels (`LABEL_CLASS`) and the `select`/`textarea` classes (`CONTROL_CLASS`)
-change; `required`, `min` and `valueAsNumber` stay. No `aria-describedby` is
-added (see Open points).
+change; `required`, `min` and `valueAsNumber` stay. On Create only, a control
+that shows a `FormField` error gets `aria-describedby` pointing at that error
+(`errorIdFor`, as Login and Register do); hints and the Edit form get none (see
+Open points).
 
 ## D5. Thumbnail and pictogram tile
 
@@ -405,9 +407,10 @@ description):
 - **Listing photos** (#121): photo treatment beyond the square frame.
 - **Copy (needs `t()` work):** the hard-coded `Photo N` alt in
   `ListingPhotosCard`.
-- **Field descriptions.** Hints and errors are not linked with
-  `aria-describedby` on the listing forms (nor today); wiring it is an a11y
-  improvement to decide at spec time or as a follow-up.
-- **Scrollable table region.** Whether the bookings table wrapper should be a
-  focusable labelled region for keyboard scrolling (needs no copy if labelled
-  by the `h1`).
+- **Field descriptions (resolved at spec time).** Create form controls that show
+  a `FormField` error get `aria-describedby={errorIdFor(id)}`, the convention
+  `LoginPage` and `RegisterPage` use. Hints and the Edit form (no per-field
+  errors) get none; linking hints is a follow-up.
+- **Scrollable table region (resolved at spec time).** The bookings table
+  wrapper stays non-focusable: no existing translated string can name it and no
+  new copy is allowed. A focusable labelled region is a follow-up.
