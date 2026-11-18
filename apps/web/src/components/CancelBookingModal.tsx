@@ -4,6 +4,10 @@ import { Button } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
 import { getDisplayMessage } from "../api/client.js";
 import { Modal } from "./Modal.js";
+import { ServerErrorAlert } from "./ServerErrorAlert.js";
+
+// A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
 
 interface Props {
   bookingId: string;
@@ -31,12 +35,12 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
 
   return (
     <Modal labelledBy="cancel-modal-title">
-      <h2 id="cancel-modal-title" className="mb-2 text-xl font-semibold text-fg">
+      <h2 id="cancel-modal-title" className="m-0 mb-2 text-xl font-black text-fg">
         {t("booking.dashboard.cancel_modal_title")}
       </h2>
-      <p className="mb-4 text-fg-muted">{t("booking.dashboard.cancel_modal_body")}</p>
+      <p className="m-0 mb-4 text-fg-muted">{t("booking.dashboard.cancel_modal_body")}</p>
 
-      <label htmlFor="cancel-reason" className="mb-1 block text-sm font-medium text-fg-muted">
+      <label htmlFor="cancel-reason" className="mb-2 block text-sm font-bold text-fg">
         {t("booking.dashboard.cancel_reason_label")}
       </label>
       <textarea
@@ -46,17 +50,18 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
         maxLength={500}
         rows={3}
         placeholder={t("booking.dashboard.cancel_reason_placeholder")}
-        className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle focus-visible:border-border focus-visible:outline-none"
+        className="w-full rounded-sm border-2 border-border bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle"
       />
 
-      {error && (
-        <p role="alert" className="mt-2 text-sm text-danger">
-          {error}
-        </p>
-      )}
+      <ServerErrorAlert error={error} className="mt-3" />
 
       <div className="mt-4 flex justify-end gap-3">
-        <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+        <Button
+          variant="secondary"
+          className={FLAT_SECONDARY}
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
           {t("common.action.close")}
         </Button>
         <Button variant="destructive" onClick={() => void handleConfirm()} disabled={isSubmitting}>

@@ -211,6 +211,14 @@
       "description": "Listing detail booking panel: paper panel with a 2px ink edge, ember price band in ink closed by a 2px rule.",
       "html": "<div class=\"ds-book\"><div class=\"ds-bookband\"><b>$120.00</b> per night</div><div class=\"ds-bookbody\">Dates</div></div>",
       "css": ".ds-book{max-width:384px;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;font-family:'Overpass Variable',sans-serif}.ds-bookband{background:#E65F35;border-bottom:2px solid #1E1E1E;padding:16px 20px;font-weight:700}.ds-bookband b{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}.ds-bookbody{padding:20px}"
+    },
+    {
+      "name": "Booking Total Band and Status Tags",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Booking form summary panel closed by an ember total band in ink, with the my-bookings status tags: dashed (pending), solid (confirmed), struck muted (cancelled), solid with a square marker (completed).",
+      "html": "<div class=\"ds-sum\"><div class=\"ds-sumbody\">Stay and price rows</div><div class=\"ds-sumband\"><span>Total</span><b>$480.00</b></div></div> <span class=\"ds-tag ds-tag-p\">Pending</span> <span class=\"ds-tag\">Confirmed</span> <span class=\"ds-tag ds-tag-x\">Cancelled</span> <span class=\"ds-tag\"><i></i>Completed</span>",
+      "css": ".ds-sum{max-width:384px;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;font-family:'Overpass Variable',sans-serif}.ds-sumbody{padding:16px 20px}.ds-sumband{display:flex;align-items:baseline;justify-content:space-between;border-top:2px solid #1E1E1E;background:#E65F35;padding:16px 20px;font-weight:700}.ds-sumband b{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}.ds-tag{display:inline-flex;align-items:center;gap:8px;border:2px solid #1E1E1E;border-radius:2px;background:#F7F5F2;padding:4px 8px;font:700 12px 'Overpass Variable',sans-serif;color:#1E1E1E}.ds-tag-p{border-style:dashed}.ds-tag-x{border-color:#6F6A63;color:#3F3B37;text-decoration:line-through}.ds-tag i{width:8px;height:8px;background:#1E1E1E}"
     }
   ],
   "narrative": {
@@ -280,6 +288,7 @@
       "Do use the authored Pictogram and Arrow components for kind-of-space and connection; add glyphs to the same 32 grid.",
       "Do keep every focus ring two-layer: ink outline with paper gap, flipped to paper outline with ink gap on ink fields.",
       "Do state a form error by shape: a left-barred field error, a filled-tile panel for form-level errors.",
+      "Do state a booking status as a shape plus its text (dashed, solid, struck, solid with a marker), and set the total on an ember band in ink.",
       "Do write user-facing strings through t()."
     ],
     "donts": [
@@ -289,6 +298,7 @@
       "Don't use sage as text or a line, or as a bare block with nothing on it.",
       "Don't put ember text on paper, stone or sage.",
       "Don't add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.",
+      "Don't put muted ink, subtle ink, paper or danger text on the booking total band or the success panel, or place a control on the success panel's ember.",
       "Don't use icon fonts or third-party icon sets for wayfinding glyphs.",
       "Don't put an error, danger text or muted ink on the ember title band; forms and errors stay on paper."
     ]

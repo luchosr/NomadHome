@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@nomadhome/ui";
 
+// The secondary Button draws its 2px edge as a 1px border plus a 1px inset ring (a box shadow). A
+// solid 2px border gives the same edge with no shadow, so the surface stays flat.
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
+
 interface Props {
   message: string;
   ctaLabel?: string;
@@ -10,23 +14,26 @@ interface Props {
 /** Bare-message placeholder for an empty list, with an optional next-step CTA. */
 export function EmptyState({ message, ctaLabel, ctaTo }: Props) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border border-border-muted bg-surface-raised px-6 py-12 text-center">
+    <div className="flex flex-col items-center gap-4 border-2 border-dashed border-border bg-surface-raised px-6 py-12 text-center">
       <svg
-        className="h-10 w-10 text-fg-subtle"
+        aria-hidden="true"
+        focusable={false}
+        className="h-8 w-8 text-fg"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeWidth={3}
+        strokeLinecap="square"
+        strokeLinejoin="miter"
       >
-        <rect x="3" y="7" width="18" height="14" rx="2" />
-        <path d="M8 3v6M16 3v6M3 11h18" />
+        <path d="M4 6H20V20H4ZM4 12H20M8 3V6M16 3V6" />
       </svg>
-      <p className="text-fg-muted">{message}</p>
+      <p className="m-0 min-w-0 break-words text-fg-muted">{message}</p>
       {ctaLabel && ctaTo && (
         <Link to={ctaTo}>
-          <Button variant="secondary">{ctaLabel}</Button>
+          <Button variant="secondary" className={FLAT_SECONDARY}>
+            {ctaLabel}
+          </Button>
         </Link>
       )}
     </div>

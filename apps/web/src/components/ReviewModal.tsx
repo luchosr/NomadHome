@@ -4,6 +4,10 @@ import { Button } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
 import { getDisplayMessage } from "../api/client.js";
 import { Modal } from "./Modal.js";
+import { ServerErrorAlert } from "./ServerErrorAlert.js";
+
+// A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
 
 interface Props {
   bookingId: string;
@@ -12,6 +16,26 @@ interface Props {
 }
 
 const STAR_COUNT = 5;
+
+/** Decorative star on a 24 grid: filled ink or a 2px outline, so state is shape and not colour. */
+function StarGlyph({ filled }: { filled: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable={false}
+      className="h-8 w-8 shrink-0"
+      fill={filled ? "currentColor" : "none"}
+    >
+      <path
+        d="M12 2 15 9 22 9.5 16.5 14.5 18 22 12 18 6 22 7.5 14.5 2 9.5 9 9Z"
+        stroke="currentColor"
+        strokeWidth={filled ? 1 : 2}
+        strokeLinejoin="miter"
+      />
+    </svg>
+  );
+}
 
 export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
   const [rating, setRating] = useState(0);
@@ -40,16 +64,37 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
 
   return (
     <Modal labelledBy="review-modal-title">
-      <h2 id="review-modal-title" className="mb-4 text-xl font-semibold text-fg">
+      <h2 id="review-modal-title" className="m-0 mb-4 text-xl font-black text-fg">
         {t("booking.dashboard.review_modal_title")}
       </h2>
 
       {success ? (
-        <p className="py-4 text-center text-success">{t("booking.dashboard.review_success")}</p>
+        <div className="flex items-center gap-3 border-2 border-border bg-surface-raised p-4">
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 shrink-0 items-center justify-center bg-ink text-fg-inverse"
+          >
+            <svg
+              viewBox="0 0 32 32"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={3}
+              strokeLinecap="square"
+              strokeLinejoin="miter"
+              focusable={false}
+            >
+              <path d="M6 17 13 24 26 8" />
+            </svg>
+          </span>
+          <p className="m-0 min-w-0 break-words font-bold text-fg">
+            {t("booking.dashboard.review_success")}
+          </p>
+        </div>
       ) : (
         <>
           <div className="mb-4">
-            <p className="mb-2 text-sm font-medium text-fg-muted">
+            <p className="m-0 mb-2 text-sm font-bold text-fg">
               {t("booking.dashboard.review_rating_label")}
             </p>
             <div
@@ -69,9 +114,9 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
                     onClick={() => setRating(starValue)}
                     onMouseEnter={() => setHovered(starValue)}
                     onMouseLeave={() => setHovered(0)}
-                    className="text-2xl text-warning transition-colors duration-fast ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2"
+                    className="flex h-11 w-11 items-center justify-center text-fg"
                   >
-                    {filled ? "★" : "☆"}
+                    <StarGlyph filled={filled} />
                   </button>
                 );
               })}
@@ -79,7 +124,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="review-text" className="mb-1 block text-sm font-medium text-fg-muted">
+            <label htmlFor="review-text" className="mb-2 block text-sm font-bold text-fg">
               {t("booking.dashboard.review_text_label")}
             </label>
             <textarea
@@ -89,18 +134,19 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
               maxLength={2000}
               rows={4}
               placeholder={t("booking.dashboard.review_text_placeholder")}
-              className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle focus-visible:border-border focus-visible:outline-none"
+              className="w-full rounded-sm border-2 border-border bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle"
             />
           </div>
 
-          {error && (
-            <p role="alert" className="mb-3 text-sm text-danger">
-              {error}
-            </p>
-          )}
+          <ServerErrorAlert error={error} className="mb-3" />
 
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+            <Button
+              variant="secondary"
+              className={FLAT_SECONDARY}
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               {t("common.action.close")}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={rating === 0 || isSubmitting}>
