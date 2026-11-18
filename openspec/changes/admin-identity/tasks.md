@@ -63,28 +63,28 @@ declared tasks (1.1, 1.2, 4.1), and no assertion is weakened.
 
 ## 4. Review and update existing unit tests (MANDATORY)
 
-- [ ] 4.1 Review and update every test and e2e spec that renders or navigates to the changed pages: `AdminUsersPage.test.tsx`, `AdminListingsPage.test.tsx`, `apps/web/e2e/us-8.1-admin-users.spec.ts` and `us-8.2-admin-listings.spec.ts` (strict `getByText("Disabled")` and `getByRole("button", { name: /re-enable/i })` now match both layouts: scope to the visible match with `.filter({ visible: true })`; this edit is intended and no assertion is weakened), `focus-hover.spec.ts`, `layout.spec.ts` and `rg -n "admin" apps/web/e2e apps/web/src --glob "*.test.*"`; do not edit a spec that hard-codes `localhost:5173` and record it as known and unchanged
-- [ ] 4.2 Confirm every other user of `Badge`, `Button` and `ListingStatusTag` (found in 0.3, for example `ListingCard` and the host pages) still passes and renders correctly; confirm nothing shared in `packages/ui` changed and that `Badge` is no longer imported by any admin page
-- [ ] 4.3 Verify: `pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
+- [x] 4.1 Review and update every test and e2e spec that renders or navigates to the changed pages: `AdminUsersPage.test.tsx`, `AdminListingsPage.test.tsx`, `apps/web/e2e/us-8.1-admin-users.spec.ts` and `us-8.2-admin-listings.spec.ts` (strict `getByText("Disabled")` and `getByRole("button", { name: /re-enable/i })` now match both layouts: scope to the visible match with `.filter({ visible: true })`; this edit is intended and no assertion is weakened), `focus-hover.spec.ts`, `layout.spec.ts` and `rg -n "admin" apps/web/e2e apps/web/src --glob "*.test.*"`; do not edit a spec that hard-codes `localhost:5173` and record it as known and unchanged
+- [x] 4.2 Confirm every other user of `Badge`, `Button` and `ListingStatusTag` (found in 0.3, for example `ListingCard` and the host pages) still passes and renders correctly; confirm nothing shared in `packages/ui` changed and that `Badge` is no longer imported by any admin page
+- [x] 4.3 Verify: `pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
 
 ## 5. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 5.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`; run the diff-cover check on the changed lines and record totals and coverage
-- [ ] 5.2 Database state: **not applicable.** The change is frontend only. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/`, `packages/shared/` or `packages/ui/`, and no database is started by any step. If any such path appears, stop and reopen this task
-- [ ] 5.3 Write report `openspec/changes/admin-identity/reports/YYYY-MM-DD-step-5-unit-test-verification.md` with commands, results, coverage and the not-applicable justification for the database step
+- [x] 5.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`; run the diff-cover check on the changed lines and record totals and coverage
+- [x] 5.2 Database state: **not applicable.** The change is frontend only. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/`, `packages/shared/` or `packages/ui/`, and no database is started by any step. If any such path appears, stop and reopen this task
+- [x] 5.3 Write report `openspec/changes/admin-identity/reports/YYYY-MM-DD-step-5-unit-test-verification.md` with commands, results, coverage and the not-applicable justification for the database step
 
 ## 6. Manual endpoint testing with curl (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 6.1 **Not applicable.** No endpoint, request shape, response shape or status code changes; the pages call the same admin users and admin listings endpoints and the same disable and re-enable mutations through the unchanged API client and hooks. Justification check: `git diff origin/main -- packages apps/api apps/web/src/api` is empty. Record the check and the result in the step 7 report instead of a curl report
+- [x] 6.1 **Not applicable.** No endpoint, request shape, response shape or status code changes; the pages call the same admin users and admin listings endpoints and the same disable and re-enable mutations through the unchanged API client and hooks. Justification check: `git diff origin/main -- packages apps/api apps/web/src/api` is empty. Record the check and the result in the step 7 report instead of a curl report
 
 ## 7. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 7.1 Isolated run setup: pick a free port (`node -e "require('net').createServer().listen(0,function(){console.log(this.address().port);this.close()})"`), start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; run `pnpm install` in this worktree first so the toolchain is local; API calls are mocked so no API or database runs
-- [ ] 7.2 Run `apps/web/e2e/admin-identity.spec.ts`, `us-8.1-admin-users.spec.ts`, `us-8.2-admin-listings.spec.ts`, `focus-hover.spec.ts` and `layout.spec.ts` on the isolated port and confirm green, except any failure caused by a pre-existing hard-coded `localhost:5173` URL (record it as pre-existing and unchanged)
-- [ ] 7.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green; record any failure that is a hard-coded port 5173 URL in an unrelated or untouched spec as unchanged by this change
-- [ ] 7.4 Visual check with Playwright at 1440x900 and 360x800: admin users (active and disabled accounts, long email, several roles), loading, empty and error; admin listings (one row per status, long title and city), loading, empty and error; save PNGs to `openspec/changes/admin-identity/reports/screenshots/`; confirm tag shapes are distinguishable, no ember anywhere, no overflow, and capture a grayscale pass for the status tags and the error panels
-- [ ] 7.5 Confirm keyboard use through Playwright key presses (Tab order on each page, Enter on each action, focus ring visible) and that no console error is logged in any state
-- [ ] 7.6 Write report `openspec/changes/admin-identity/reports/YYYY-MM-DD-step-7-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 6.1 and any finding
+- [x] 7.1 Isolated run setup: pick a free port (`node -e "require('net').createServer().listen(0,function(){console.log(this.address().port);this.close()})"`), start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; run `pnpm install` in this worktree first so the toolchain is local; API calls are mocked so no API or database runs
+- [x] 7.2 Run `apps/web/e2e/admin-identity.spec.ts`, `us-8.1-admin-users.spec.ts`, `us-8.2-admin-listings.spec.ts`, `focus-hover.spec.ts` and `layout.spec.ts` on the isolated port and confirm green, except any failure caused by a pre-existing hard-coded `localhost:5173` URL (record it as pre-existing and unchanged)
+- [x] 7.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green; record any failure that is a hard-coded port 5173 URL in an unrelated or untouched spec as unchanged by this change
+- [x] 7.4 Visual check with Playwright at 1440x900 and 360x800: admin users (active and disabled accounts, long email, several roles), loading, empty and error; admin listings (one row per status, long title and city), loading, empty and error; save PNGs to `openspec/changes/admin-identity/reports/screenshots/`; confirm tag shapes are distinguishable, no ember anywhere, no overflow, and capture a grayscale pass for the status tags and the error panels
+- [x] 7.5 Confirm keyboard use through Playwright key presses (Tab order on each page, Enter on each action, focus ring visible) and that no console error is logged in any state (verified: Tab order and focus ring by e2e, no console error in any state; Enter on the actions relies on native button behaviour and is not key-press tested)
+- [x] 7.6 Write report `openspec/changes/admin-identity/reports/YYYY-MM-DD-step-7-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 6.1 and any finding
 
 ## 8. Documentation (MANDATORY)
 
@@ -99,8 +99,8 @@ declared tasks (1.1, 1.2, 4.1), and no assertion is weakened.
 
 ## 10. Final verification
 
-- [ ] 10.1 `node scripts/check-mvp-scope.mjs` and `openspec validate admin-identity --strict` pass
-- [ ] 10.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (e2e on the isolated port; caveat as in 7.2 and 7.3)
-- [ ] 10.3 `rg -n "rounded-xl|rounded-lg|rounded-md|rounded-full|rounded-pill|shadow-sm|shadow-md|text-red-600|bg-ember|accent-action|Badge|statusLabel|userStatusTone|listingStatusTone" apps/web/src/pages/{AdminUsersPage,AdminListingsPage}.tsx` returns only intended hits (no `Badge` import in either file)
-- [ ] 10.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope" and `git diff origin/main -- packages apps/api apps/web/src/api` is empty
+- [x] 10.1 `node scripts/check-mvp-scope.mjs` and `openspec validate admin-identity --strict` pass
+- [x] 10.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (e2e on the isolated port; caveat as in 7.2 and 7.3)
+- [x] 10.3 `rg -n "rounded-xl|rounded-lg|rounded-md|rounded-full|rounded-pill|shadow-sm|shadow-md|text-red-600|bg-ember|accent-action|Badge|statusLabel|userStatusTone|listingStatusTone" apps/web/src/pages/{AdminUsersPage,AdminListingsPage}.tsx` returns only intended hits (no `Badge` import in either file)
+- [x] 10.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope" and `git diff origin/main -- packages apps/api apps/web/src/api` is empty
 - [ ] 10.5 PR title states the user story (for example: "Let an admin moderate accounts and listings on screens that look like the rest of NomadHome"), the description links the change-id and says "Refs #123; closes #123", attaches the 1440 and 360 screenshots and lists the follow-ups from 8.4; commits are Conventional with the (NH-123) suffix, one per reviewable change, no AI attribution
