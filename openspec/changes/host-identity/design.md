@@ -319,6 +319,19 @@ thumb and pictogram tile, listing status tag, host bookings table, field
 grammar, amenity checkbox, edit cards, state panels); the Overview sentence that
 lists the screens mentions the host screens. No palette or token change.
 
+## D19. Deviations recorded after implementation
+
+- **`FLAT_CARD_CLASS = "border-2 ![box-shadow:none]"`** in
+  `apps/web/src/components/listingFormStyles.ts`. The `packages/ui` `Card`
+  composes a `ring-1` box-shadow, so the edit page cards pass this class to get a
+  solid 2px edge with no shadow. Same #138 family as `FLAT_SECONDARY` (D1), used
+  by `EditListingPage` and `ListingAvailabilityCard`.
+- This is a **sixth** exported constant in `listingFormStyles.ts`, beyond the five
+  listed in D2 (`LABEL_CLASS`, `CONTROL_CLASS`, `HINT_CLASS`, `ERROR_BAR_CLASS`,
+  `CHECKBOX_CLASS`).
+- **Edit skeleton** uses plain `border-2` divs (not `Card`), so the loading state
+  carries no ring or shadow.
+
 ## Computed contrast table
 
 Script (same WCAG 2.1 formula as `packages/ui/src/contrast.test.ts`; embedded so
