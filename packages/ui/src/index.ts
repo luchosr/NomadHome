@@ -1,5 +1,5 @@
-export { Button } from "./components/button.js";
-export type { ButtonProps } from "./components/button.js";
+export { Button, buttonVariants } from "./components/button.js";
+export type { ButtonProps, ButtonVariantProps } from "./components/button.js";
 export { Badge } from "./components/badge.js";
 export type { BadgeProps } from "./components/badge.js";
 export { Input } from "./components/input.js";

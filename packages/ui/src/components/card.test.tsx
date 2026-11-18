@@ -7,7 +7,7 @@ const LEGACY_SCALE_CLASS = /(?:^|[\s:])[a-z-]*-(?:sand|ink|forest|terracotta)-\d
 describe("Card", () => {
   it("renders its children inside a bordered surface", () => {
     render(<Card>A quiet desk</Card>);
-    expect(screen.getByText("A quiet desk")).toHaveClass("border");
+    expect(screen.getByText("A quiet desk")).toHaveClass("border-2");
   });
 
   it("uses no old Gantry palette classes, including when interactive", () => {

@@ -11,7 +11,7 @@ export function Card({ className, interactive = false, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-card border border-border bg-surface-raised p-5 ring-1 ring-inset ring-border",
+        "rounded-card border-2 border-border bg-surface-raised p-5",
         interactive &&
           "cursor-pointer transition-colors duration-med ease-out hover:bg-surface-inset",
         className,
