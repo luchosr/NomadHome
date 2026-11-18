@@ -324,3 +324,23 @@ description):
   separate ticket.
 - **Disabled tag legibility.** The 12px muted struck label (10.20:1 text, 4.93:1
   edge) passes AA but is borderline to read; revisit with the shared `StatusTag`.
+
+## Divergences from plan
+
+Recorded after the build, from the shipped code. Where this section and D1 to D13 differ, the shipped code and this section win.
+
+- **`FLAT_SECONDARY` on Re-enable (#138 family).** Re-enable passes `FLAT_SECONDARY` (`border-2 ![box-shadow:none]`) to replace the secondary `Button` 1px border plus inset ring; a per-file override of a primitive, accepted as in NH-122 and NH-124 (D1).
+- **Focus ring on the action Buttons.** The Disable and Re-enable `Button`s show the 3px ink outline without the paper gap ring, because the `Button` variants set their own `box-shadow` (and `FLAT_SECONDARY` forces none). The spec said a two-layer ring; reconcile it in the primitive pass (#138).
+- **No disabled-while-pending state.** D10 said "same `disabled` while the mutation is pending", but neither page ever had one: the handlers just `await` the call and invalidate the query. Behaviour is unchanged (pre-existing); the unit tests guard the existing behaviour.
+- **Long strings in the tables (review finding).** Added after review (D5, task 3.4): `max-w-[…] [overflow-wrap:anywhere]` wrappers on email, title, city and host email, `whitespace-nowrap` on the actions cell and `pr-1` on the last `td` and `th` so the focus ring is not clipped.
+- **Roles stay raw text.** `roles.join(", ")` in muted ink on both layouts; no role badges (D3).
+- **`Badge` used only by `ListingCard`.** No admin page imports `Badge` any more; the `packages/ui` primitive is untouched and its only consumer is the `ListingCard` accent tab (local override).
+- **Fifth local copy.** `AdminUsersPage` and `AdminListingsPage` each declare their own `StatePanel` and `FLAT_SECONDARY` (D1); `AccountStatusTag` is local to `AdminUsersPage`.
+
+## Follow-ups (not in this PR)
+
+Copy these into the PR description (task 8.4) together with the Open points above (shared `StatePanel` and `StatusTag`, `Badge` and `FLAT_SECONDARY` #138, mutation error handling, per-row names, tag legibility), which are not repeated in full.
+
+- **Disable and Re-enable pending state.** Neither action is disabled while its request is in flight (pre-existing; the test guards the current behaviour); add it together with the error handling.
+- **`md:` breakpoint for the listings table.** The six-column table fits poorly between 640px and about 900px; consider cards until `md:` in a follow-up.
+- **Long strings in `HostUpcomingPage` (NH-122).** The host bookings table has the same latent issue the admin tables just fixed (long guest email pushes Status and Amount out of view); apply the same wrappers there.

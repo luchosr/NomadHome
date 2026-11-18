@@ -227,6 +227,14 @@
       "description": "Host dashboard listing row: flat 2px ink edge on paper, a 64px framed thumbnail on stone, title and meta, and the listing status tags: dashed (draft), solid with a square marker (published), struck muted (disabled). No ember.",
       "html": "<div class=\"ds-row\"><div class=\"ds-thumb\"></div><div class=\"ds-rowtext\"><b>Loft near the canal</b><span>Property · Lisbon, Portugal</span></div><span class=\"ds-ltag ds-ltag-d\">Draft</span> <span class=\"ds-ltag\"><i></i>Published</span> <span class=\"ds-ltag ds-ltag-x\">Disabled</span></div>",
       "css": ".ds-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;max-width:640px;border:2px solid #1E1E1E;border-radius:4px;background:#F7F5F2;color:#1E1E1E;padding:16px;font-family:'Overpass Variable',sans-serif}.ds-thumb{width:64px;height:64px;border:2px solid #1E1E1E;background:#E5E2DD}.ds-rowtext{display:flex;flex-direction:column;flex:1;min-width:0}.ds-rowtext span{font-size:14px;color:#3F3B37}.ds-ltag{display:inline-flex;align-items:center;gap:8px;border:2px solid #1E1E1E;border-radius:2px;background:#F7F5F2;padding:4px 8px;font:700 12px 'Overpass Variable',sans-serif;color:#1E1E1E}.ds-ltag-d{border-style:dashed}.ds-ltag-x{border-color:#6F6A63;color:#3F3B37;text-decoration:line-through}.ds-ltag i{width:8px;height:8px;background:#1E1E1E}"
+    },
+    {
+      "name": "Admin Table Row and Account State Tags",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Admin screens row: flat table from sm (2px ink head rule, 1px muted row rules) with the account state tag, solid with a square marker (Active) or solid muted and struck (Disabled), and a 44px moderation action. Listing status reuses the host listing tag. No ember.",
+      "html": "<div class=\"ds-adm\"><div class=\"ds-admh\"><b>Email</b><b>Status</b><b>Actions</b></div><div class=\"ds-admr\"><span>ana@example.com</span><span class=\"ds-atag\"><i></i>Active</span><button class=\"ds-adbtn ds-adbtn-d\">Disable</button></div><div class=\"ds-admr\"><span>luis@example.com</span><span class=\"ds-atag ds-atag-x\">Disabled</span><button class=\"ds-adbtn\">Re-enable</button></div></div>",
+      "css": ".ds-adm{max-width:640px;background:#F7F5F2;color:#1E1E1E;font:14px 'Overpass Variable',sans-serif}.ds-admh,.ds-admr{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:16px;padding:12px 0}.ds-admh{border-bottom:2px solid #1E1E1E}.ds-admr{border-bottom:1px solid #6F6A63}.ds-atag{display:inline-flex;align-items:center;gap:8px;border:2px solid #1E1E1E;border-radius:2px;background:#F7F5F2;padding:4px 8px;font:700 12px 'Overpass Variable',sans-serif;color:#1E1E1E}.ds-atag-x{border-color:#6F6A63;color:#3F3B37;text-decoration:line-through}.ds-atag i{width:8px;height:8px;background:#1E1E1E}.ds-adbtn{min-height:44px;padding:0 16px;border:2px solid #1E1E1E;border-radius:2px;background:#F7F5F2;color:#1E1E1E;font:700 14px 'Overpass Variable',sans-serif}.ds-adbtn-d{border-color:#9B1C2E;background:#9B1C2E;color:#F7F5F2}"
     }
   ],
   "narrative": {
@@ -298,6 +306,7 @@
       "Do state a form error by shape: a left-barred field error, a filled-tile panel for form-level errors.",
       "Do state a booking status as a shape plus its text (dashed, solid, struck, solid with a marker), and set the total on an ember band in ink.",
       "Do state a listing status as a shape plus its text (dashed draft, solid published with a marker, struck disabled), and give every listing form the same field grammar.",
+      "Do state an account or listing state on the admin screens as a shape plus its text, keep moderation actions 44px, and let long strings wrap inside a max-width cell so the actions stay visible.",
       "Do write user-facing strings through t()."
     ],
     "donts": [
@@ -309,6 +318,7 @@
       "Don't add blur shadows, gradients, rounded pills or glass; radii stay 0 to 4px.",
       "Don't put muted ink, subtle ink, paper or danger text on the booking total band or the success panel, or place a control on the success panel's ember.",
       "Don't put ember on a host screen, or use raw red text (text-red-600), a pill or a tone-only chip for a host state.",
+      "Don't put ember on an admin screen, or use the Badge pill or a tone-only chip for an account or listing state.",
       "Don't use icon fonts or third-party icon sets for wayfinding glyphs.",
       "Don't put an error, danger text or muted ink on the ember title band; forms and errors stay on paper."
     ]

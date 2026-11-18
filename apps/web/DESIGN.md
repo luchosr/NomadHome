@@ -137,7 +137,7 @@ components:
 
 The interface reads like airport and rail wayfinding. Surfaces are flat panels cut from a warm palette, ember orange, ink, paper and sage with stone as the inset, each held by a 2px ink edge. Nothing floats and nothing blurs; depth is a hard bar or an edge, never a glow. Type is one family, Overpass, set at Black weight and tight leading for anything that names a place, a price or a count, so the page scans like a board rather than a brochure.
 
-Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on an ember hero that works as a departure form, then continues as an ink departure board of the newest real listings (hidden when there are none), an ink three-step strip, a sage co-living field carrying an ink pictogram sign beside its checklist, a workspace field, a stone destination index, and an ember closing band. Search keeps the same signs at a calmer density: an ember query band, a paper filter panel, and bordered result panels. The Auth screens put an ember title band over one paper form panel, and the listing detail stays on paper with a photo frame, an ink-edged header row and a booking panel whose only ember is its price band. Booking and payment follow on paper too: a summary panel closed by an ember total band, an ember success panel, and a my-bookings list whose status is a tag outline (dashed, solid, struck) before it is a colour. The host screens are work screens with no ember: flat 2px-edged listing rows with a framed thumbnail or pictogram tile and a shape-coded status tag, a bookings table (cards on a phone), and listing forms that share one field grammar.
+Meaning travels by shape before colour. A destination is a large word, a state is a solid, dashed or struck outline, a connector is an arrow, and a kind of space is a drawn pictogram (bed, desk). The Landing opens on an ember hero that works as a departure form, then continues as an ink departure board of the newest real listings (hidden when there are none), an ink three-step strip, a sage co-living field carrying an ink pictogram sign beside its checklist, a workspace field, a stone destination index, and an ember closing band. Search keeps the same signs at a calmer density: an ember query band, a paper filter panel, and bordered result panels. The Auth screens put an ember title band over one paper form panel, and the listing detail stays on paper with a photo frame, an ink-edged header row and a booking panel whose only ember is its price band. Booking and payment follow on paper too: a summary panel closed by an ember total band, an ember success panel, and a my-bookings list whose status is a tag outline (dashed, solid, struck) before it is a colour. The host screens are work screens with no ember: flat 2px-edged listing rows with a framed thumbnail or pictogram tile and a shape-coded status tag, a bookings table (cards on a phone), and listing forms that share one field grammar. The admin screens (accounts and listings) follow the same work-screen grammar: a flat table with shape-coded state tags, cards on a phone, and 44px moderation actions.
 
 This file records what shipped. The earlier yellow, black and green palette is gone; none of its values remain in source except as negative guards in tests.
 
@@ -237,7 +237,7 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 
 ### Badges
 
-- Tone is carried by outline: neutral, success and info solid; warning dashed; danger solid and struck; accent is ember fill, ink text and ink edge. Over images the accent badge is square and pinned to the top-left corner with right and bottom edges only.
+- Tone is carried by outline: neutral, success and info solid; warning dashed; danger solid and struck; accent is ember fill, ink text and ink edge. Over images the accent badge is square and pinned to the top-left corner with right and bottom edges only. The packages/ui Badge pill is now used only by the ListingCard accent tab (a local override); host and admin screens use state tags instead.
 
 ### Cards and panels
 
@@ -300,6 +300,17 @@ Local pieces of HostListingsPage, HostUpcomingPage, CreateListingPage, EditListi
 - **Amenity checkbox:** one real native checkbox per amenity (role, checked state, label click and Space unchanged), appearance-none, 20px square, 2px ink edge, radius 0, ink fill when checked with a drawn paper check glyph (aria-hidden) over it. The label is a 44px-high row; the grid is two columns, three from sm. The Become host terms checkbox uses the same box and glyph with its error on the danger left bar and no added role.
 - **Edit cards:** the details form, photos and availability are Card panels with FLAT_CARD_CLASS (border-2, forced no box shadow) because the primitive composes a ring-1 shadow. Headings are bold 18px ink H2. Photos are square, 2px-edged, radius 0 tiles in a two column grid (three from sm) with a destructive Delete; availability rows are 2px-edged, radius 0 rows with tabular ink dates and a destructive Delete; the Block, Save and submit buttons are 44px high.
 
+### Admin screens
+
+Local pieces of AdminUsersPage and AdminListingsPage, reusing ListingStatusTag. Work screens: one H1 per screen in Black (3xl, 4xl from md), no ember anywhere.
+
+- **Account state tag:** a local 2px-edged paper tag, 2px radius, bold 12px, label as its only text node. Active is a solid ink edge with an 8px ink square marker (aria-hidden); Disabled is a solid muted edge (border-muted, 4.93 on paper) with muted struck-through text. Shape plus text, never colour alone, no pill. Roles are raw muted text (`roles.join(", ")`), with no role badge.
+- **Listing status:** AdminListingsPage renders the shared ListingStatusTag (dashed draft, solid published with a marker, struck disabled); it no longer imports the Badge pill.
+- **Layouts:** from sm a flat table (2px ink head rule, bold ink headings, 1px muted row rules, muted secondary cells) in an overflow-x-auto safety container; below sm each row is a 2px-edged card (rounded-card, paper fill, no ring, no shadow) with the email or title beside the state tag, the secondary lines and a full-width action. Both layouts are rendered and only one is displayed, so one layout is exposed to assistive tech.
+- **Long strings:** long cells (email, title, city, host email) sit in a `max-w-[…] [overflow-wrap:anywhere]` wrapper; the action cell is `whitespace-nowrap` with `pr-1` on the last td and th so the 3px focus ring is not clipped by the scroll container. `table-fixed` is not used.
+- **Moderation actions:** Disable is the destructive Button and Re-enable the secondary Button with FLAT_SECONDARY (border-2, forced no box shadow; the #138 override); both are 44px high (min-h-11), the same label and handler in both layouts. The Buttons show a 3px ink focus outline without the paper gap ring because the Button variants set their own box shadow. There is no disabled-while-pending state, and the mutations have no error handling (pre-existing).
+- **State panels:** loading is flat skeleton rows under aria-busy with no heading; empty is a dashed 2px panel on paper with muted text; error is a 36rem danger-bg panel with a solid danger edge, a filled 48px danger tile with an exclamation and one H1 in bold danger, role alert. StatePanel is a local function in each page.
+
 ### Navigation
 
 - Sticky, ink, 2px bottom rule, 1280px inner wrapper. Logo mark plus name in 900 at 1.25rem. Links 14px bold paper, underline on hover. Primary action is an ember button with ink text (hover to paper); secondary is a paper-outlined button inverting on hover. Logged-in mobile collapses to a bordered menu toggle and a dropdown under a paper rule. The focus outline on the nav is paper.
@@ -335,6 +346,7 @@ Local pieces of HostListingsPage, HostUpcomingPage, CreateListingPage, EditListi
 - **Do** set the price on an ember band in ink; ember carries the price band alone on the listing detail.
 - **Do** state a booking status as a shape plus its text (dashed, solid, struck, solid with a marker), and set the total on an ember band in ink.
 - **Do** state a listing status as a shape plus its text (dashed draft, solid published with a marker, struck disabled), and give every listing form the same field grammar.
+- **Do** state an account or listing state on the admin screens as a shape plus its text, keep moderation actions 44px, and let long strings wrap inside a max-width cell so the actions stay visible.
 - **Do** mark absent media with a dashed stone panel, not a slate or white block.
 - **Do** write user-facing strings through t().
 
@@ -350,6 +362,7 @@ Local pieces of HostListingsPage, HostUpcomingPage, CreateListingPage, EditListi
 - **Don't** add an ember title band to the listing detail, or put muted ink, subtle ink or danger on its price band.
 - **Don't** put muted ink, subtle ink, paper or danger text on the booking total band or the success panel, or place a control on the success panel's ember.
 - **Don't** put ember on a host screen, or use raw red text (text-red-600), a pill or a tone-only chip for a host state.
+- **Don't** put ember on an admin screen, or use the Badge pill or a tone-only chip for an account or listing state.
 - **Don't** use icon fonts or third-party icon sets for wayfinding glyphs.
 
 ## Known build notes (not rules)
