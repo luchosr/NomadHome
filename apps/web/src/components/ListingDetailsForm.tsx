@@ -3,6 +3,9 @@ import { t, type LocaleKey } from "@nomadhome/shared";
 import { Button, Input } from "@nomadhome/ui";
 import type { ListingFormValues } from "../hooks/useEditListing.js";
 import { AMENITIES } from "../lib/listingData.js";
+import { AmenityCheckboxGrid } from "./AmenityCheckboxGrid.js";
+import { ServerErrorAlert } from "./ServerErrorAlert.js";
+import { CONTROL_CLASS, LABEL_CLASS } from "./listingFormStyles.js";
 
 const FIELD_LABELS: Record<"title" | "city" | "country" | "addressLine" | "currency", LocaleKey> = {
   title: "host.listings.field_title",
@@ -36,7 +39,7 @@ export function ListingDetailsForm({
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {(["title", "city", "country", "addressLine", "currency"] as const).map((field) => (
         <div key={field}>
-          <label htmlFor={`edit-${field}`} className="mb-1 block text-sm font-medium text-fg-muted">
+          <label htmlFor={`edit-${field}`} className={LABEL_CLASS}>
             {t(FIELD_LABELS[field])}
           </label>
           <Input id={`edit-${field}`} {...register(field)} required />
@@ -44,7 +47,7 @@ export function ListingDetailsForm({
       ))}
 
       <div>
-        <label htmlFor="edit-description" className="mb-1 block text-sm font-medium text-fg-muted">
+        <label htmlFor="edit-description" className={LABEL_CLASS}>
           {t("host.listings.field_description")}
         </label>
         <textarea
@@ -52,27 +55,22 @@ export function ListingDetailsForm({
           {...register("description")}
           required
           rows={4}
-          className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg placeholder:text-fg-subtle transition-colors duration-fast ease-out focus-visible:border-border focus-visible:outline-none"
+          className={CONTROL_CLASS}
         />
       </div>
 
       <div>
-        <label htmlFor="edit-type" className="mb-1 block text-sm font-medium text-fg-muted">
+        <label htmlFor="edit-type" className={LABEL_CLASS}>
           {t("host.listings.field_type")}
         </label>
-        <select
-          id="edit-type"
-          {...register("type")}
-          required
-          className="w-full rounded-md border border-border-muted bg-surface-raised px-4 py-3 text-base text-fg focus-visible:border-border focus-visible:outline-none"
-        >
+        <select id="edit-type" {...register("type")} required className={CONTROL_CLASS}>
           <option value="PROPERTY">{t("host.listings.type_property")}</option>
           <option value="WORKSPACE">{t("host.listings.type_workspace")}</option>
         </select>
       </div>
 
       <div>
-        <label htmlFor="edit-capacity" className="mb-1 block text-sm font-medium text-fg-muted">
+        <label htmlFor="edit-capacity" className={LABEL_CLASS}>
           {t("host.listings.field_capacity")}
         </label>
         <Input
@@ -85,10 +83,7 @@ export function ListingDetailsForm({
       </div>
 
       <div>
-        <label
-          htmlFor="edit-nightlyRateCents"
-          className="mb-1 block text-sm font-medium text-fg-muted"
-        >
+        <label htmlFor="edit-nightlyRateCents" className={LABEL_CLASS}>
           {t("host.listings.field_rate")}
         </label>
         <Input
@@ -101,30 +96,16 @@ export function ListingDetailsForm({
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-fg-muted">
-          {t("host.listings.field_amenities")}
-        </legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {AMENITIES.map(({ code, labelKey }) => (
-            <label key={code} className="flex items-center gap-2 text-sm text-fg-muted">
-              <input
-                type="checkbox"
-                checked={selectedAmenities.has(code)}
-                onChange={() => toggleAmenity(code)}
-                className="h-4 w-4 rounded border-border-muted accent-action"
-              />
-              {t(labelKey)}
-            </label>
-          ))}
-        </div>
+        <legend className={LABEL_CLASS}>{t("host.listings.field_amenities")}</legend>
+        <AmenityCheckboxGrid
+          amenities={AMENITIES}
+          selected={selectedAmenities}
+          onToggle={toggleAmenity}
+        />
       </fieldset>
 
-      {saveError && (
-        <p role="alert" className="text-sm text-danger">
-          {saveError}
-        </p>
-      )}
-      <Button type="submit" disabled={isSubmitting}>
+      <ServerErrorAlert error={saveError} />
+      <Button type="submit" className="min-h-11" disabled={isSubmitting}>
         {t("host.listings.save")}
       </Button>
     </form>

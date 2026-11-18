@@ -1,24 +1,47 @@
 import { useParams } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { Badge, Button, Card, Skeleton } from "@nomadhome/ui";
-import type { HostListing } from "../api/host.js";
+import { Button, Card, Skeleton } from "@nomadhome/ui";
 import { useEditListing } from "../hooks/useEditListing.js";
 import { useListingPhotos } from "../hooks/useListingPhotos.js";
 import { useListingAvailability } from "../hooks/useListingAvailability.js";
 import { ListingDetailsForm } from "../components/ListingDetailsForm.js";
 import { ListingPhotosCard } from "../components/ListingPhotosCard.js";
 import { ListingAvailabilityCard } from "../components/ListingAvailabilityCard.js";
+import { FLAT_CARD_CLASS } from "../components/listingFormStyles.js";
+import { ListingStatusTag } from "../components/ListingStatusTag.js";
+import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
 
-function statusTone(status: HostListing["status"]): "neutral" | "success" | "danger" {
-  if (status === "PUBLISHED") return "success";
-  if (status === "DISABLED") return "danger";
-  return "neutral";
-}
+// A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
 
-function statusLabel(status: HostListing["status"]): string {
-  if (status === "PUBLISHED") return t("host.listings.status_published");
-  if (status === "DISABLED") return t("host.listings.status_disabled");
-  return t("host.listings.status_draft");
+function StatePanel({ children }: { children: string }) {
+  return (
+    <div
+      role="alert"
+      className="mx-auto flex min-w-0 max-w-[36rem] items-start gap-4 rounded-card border-2 border-solid border-danger bg-danger-bg p-6"
+    >
+      <span
+        aria-hidden="true"
+        className="flex h-12 w-12 shrink-0 items-center justify-center border-2 border-danger bg-danger text-fg-inverse"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          className="h-8 w-8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={3}
+          strokeLinecap="square"
+          strokeLinejoin="miter"
+          focusable={false}
+        >
+          <path d="M12 5v9M12 18v1" />
+        </svg>
+      </span>
+      <h1 className="m-0 min-w-0 break-words text-2xl font-bold leading-tight text-danger">
+        {children}
+      </h1>
+    </div>
+  );
 }
 
 export function EditListingPage() {
@@ -40,63 +63,63 @@ export function EditListingPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-10 px-4 py-8">
+      <div aria-busy="true" className="mx-auto max-w-2xl space-y-10 px-4 py-8">
         <Skeleton className="h-8 w-56" />
         <div className="flex items-center gap-4">
-          <Skeleton className="h-6 w-24 rounded-pill" />
-          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-11 w-28" />
         </div>
-        <Card>
+        <div className="border-2 border-border bg-surface-raised p-5">
           <div className="space-y-4">
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="h-24 w-full" />
           </div>
-        </Card>
-        <Card>
+        </div>
+        <div className="border-2 border-border bg-surface-raised p-5">
           <div className="space-y-3">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-24 w-full" />
           </div>
-        </Card>
-        <Card>
+        </div>
+        <div className="border-2 border-border bg-surface-raised p-5">
           <div className="space-y-3">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-16 w-full" />
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
   if (!listing)
     return (
-      <p role="alert" className="text-danger">
-        {t("error.generic.unexpected")}
-      </p>
+      <div className="mx-auto max-w-2xl px-4 py-8">
+        <StatePanel>{t("error.generic.unexpected")}</StatePanel>
+      </div>
     );
 
   return (
     <div className="mx-auto max-w-2xl space-y-10 px-4 py-8">
-      <h1 className="text-2xl font-bold text-fg">{t("host.listings.edit_title")}</h1>
+      <h1 className="m-0 text-3xl font-black leading-solid text-fg md:text-4xl">
+        {t("host.listings.edit_title")}
+      </h1>
 
       <div className="flex flex-wrap items-center gap-4">
-        <Badge tone={statusTone(listing.status)}>{statusLabel(listing.status)}</Badge>
+        <ListingStatusTag status={listing.status} />
         {listing.status !== "PUBLISHED" ? (
-          <Button onClick={publish}>{t("host.listings.publish")}</Button>
+          <Button className="min-h-11" onClick={publish}>
+            {t("host.listings.publish")}
+          </Button>
         ) : (
-          <Button variant="secondary" onClick={unpublish}>
+          <Button variant="secondary" className={`min-h-11 ${FLAT_SECONDARY}`} onClick={unpublish}>
             {t("host.listings.unpublish")}
           </Button>
         )}
-        {publishError && (
-          <p role="alert" className="text-sm text-danger">
-            {publishError}
-          </p>
-        )}
+        <ServerErrorAlert error={publishError} className="w-full" />
       </div>
 
-      <Card>
+      <Card className={FLAT_CARD_CLASS}>
         <ListingDetailsForm
           form={form}
           selectedAmenities={selectedAmenities}

@@ -1,6 +1,11 @@
 import type { ChangeEvent, RefObject } from "react";
 import { t } from "@nomadhome/shared";
 import { Button, Card } from "@nomadhome/ui";
+import { ServerErrorAlert } from "./ServerErrorAlert.js";
+import { FLAT_CARD_CLASS } from "./listingFormStyles.js";
+
+// A solid 2px border replaces the secondary Button's 1px border plus inset ring (a box shadow).
+const FLAT_SECONDARY = "border-2 ![box-shadow:none]";
 
 interface Photo {
   id: string;
@@ -30,22 +35,22 @@ export function ListingPhotosCard({
   };
 
   return (
-    <Card>
-      <h2 className="mb-4 text-lg font-semibold text-fg">{t("host.photos.title")}</h2>
+    <Card className={FLAT_CARD_CLASS}>
+      <h2 className="mb-4 text-lg font-bold text-fg">{t("host.photos.title")}</h2>
       {photos.length === 0 ? (
-        <p className="text-fg-subtle">{t("host.photos.no_photos")}</p>
+        <p className="text-fg-muted">{t("host.photos.no_photos")}</p>
       ) : (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {photos.map((photo, index) => (
             <div key={photo.id} className="relative">
               <img
                 src={photo.url}
                 alt={`Photo ${index + 1}`}
-                className="h-28 w-full rounded-md object-cover"
+                className="aspect-square w-full rounded-none border-2 border-border object-cover"
               />
               <Button
                 variant="destructive"
-                className="mt-1 w-full"
+                className="mt-2 min-h-11 w-full"
                 onClick={() => deletePhoto(photo.id)}
               >
                 {t("host.photos.delete")}
@@ -54,7 +59,7 @@ export function ListingPhotosCard({
           ))}
         </div>
       )}
-      {uploadError && <p className="mt-3 text-sm text-red-600">{uploadError}</p>}
+      <ServerErrorAlert error={uploadError} className="mt-3" />
       <div className="mt-4">
         <input
           ref={fileInputRef}
@@ -65,6 +70,7 @@ export function ListingPhotosCard({
         />
         <Button
           variant="secondary"
+          className={FLAT_SECONDARY}
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
         >
