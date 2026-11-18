@@ -449,3 +449,30 @@ describe("AdminListingsPage identity: states", () => {
     expect(classes.filter((c) => /^(rounded-(pill|md|lg|xl|full)|shadow.*)$/.test(c))).toEqual([]);
   });
 });
+
+describe("AdminListingsPage table: long strings", () => {
+  beforeEach(() => {
+    mockListListings.mockReset();
+    mockListListings.mockResolvedValue(MIXED);
+  });
+
+  it("wraps title, city and host email in capped overflow-wrap:anywhere boxes and keeps the actions on one line", async () => {
+    const { container } = renderPage();
+    await loaded(container);
+    const row = required(container.querySelector("tbody tr"), "body row");
+    const cells = Array.from(row.querySelectorAll("td"));
+    const expected: [number, string][] = [
+      [0, "max-w-[18rem]"],
+      [2, "max-w-[10rem]"],
+      [3, "max-w-[14rem]"],
+    ];
+    for (const [i, cap] of expected) {
+      const box = required(cells[i]?.querySelector("div"), `wrapper in cell ${i}`);
+      expect(box).toHaveClass(cap, "[overflow-wrap:anywhere]");
+    }
+    const actions = required(cells[cells.length - 1], "actions cell");
+    expect(actions).toHaveClass("whitespace-nowrap", "pr-1");
+    const lastTh = required(Array.from(container.querySelectorAll("thead th")).pop(), "last th");
+    expect(lastTh).toHaveClass("pr-1");
+  });
+});

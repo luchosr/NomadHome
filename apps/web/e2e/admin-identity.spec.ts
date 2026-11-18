@@ -593,6 +593,64 @@ test.describe("Admin screens at mobile-360: long strings and every state", () =>
   }
 });
 
+test.describe("Admin tables at 1440: long unbroken strings", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  const LONG_EMAIL = `${"verylongunbrokenlocalpart".repeat(4)}@${"longdomain".repeat(2)}.example.com`;
+  const LONG_TITLE = "Verylongunbrokentitle".repeat(5);
+
+  /** Every action button sits fully inside the scroller with room for the 3px ring, on one line. */
+  async function expectActionsVisible(page: Page, buttonCount: number) {
+    const scroller = page.locator("main table").locator("xpath=..");
+    const s = await box(scroller);
+    const m = await scroller.evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }));
+    expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth);
+    const headActions = await box(page.locator("thead th").last());
+    expect(headActions.x + headActions.width).toBeLessThanOrEqual(s.x + s.width);
+    const buttons = page.locator("main tbody").getByRole("button");
+    await expect(buttons).toHaveCount(buttonCount);
+    for (let i = 0; i < buttonCount; i += 1) {
+      const b = await box(buttons.nth(i));
+      expect(b.height).toBeLessThan(60);
+      expect(b.x + b.width + 3).toBeLessThanOrEqual(s.x + s.width);
+    }
+  }
+
+  test("users: a very long email keeps Status and Actions inside the table", async ({ page }) => {
+    await admin(page, {
+      users: page1([
+        makeUser("u-long", LONG_EMAIL, ["guest", "host"]),
+        makeUser("u-long-off", `off${LONG_EMAIL}`, ["guest"], true),
+      ]),
+    });
+    await page.goto("/admin/users");
+    await expect(page.locator("main tbody tr")).toHaveCount(2);
+    await expectActionsVisible(page, 2);
+    await expect(page.getByRole("button", { name: "Re-enable" })).toBeVisible();
+  });
+
+  test("listings: a very long title keeps Status and Actions inside the table", async ({
+    page,
+  }) => {
+    await admin(page, {
+      listings: page1([
+        makeListing("l-long", LONG_TITLE, "PUBLISHED", {
+          city: "Verylongcityname".repeat(5),
+          host: { email: LONG_EMAIL },
+        }),
+        makeListing("l-long-dis", `Dis${LONG_TITLE}`, "DISABLED"),
+      ]),
+    });
+    await page.goto("/admin/listings");
+    await expect(page.locator("main tbody tr")).toHaveCount(2);
+    await expectActionsVisible(page, 2);
+    await expect(page.getByRole("button", { name: "Re-enable" })).toBeVisible();
+  });
+});
+
 test.describe("Admin screens keyboard focus", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 

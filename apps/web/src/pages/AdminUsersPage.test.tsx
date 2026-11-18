@@ -425,3 +425,24 @@ describe("AdminUsersPage identity: states", () => {
     expect(classes.filter((c) => /^(rounded-(pill|md|lg|xl|full)|shadow.*)$/.test(c))).toEqual([]);
   });
 });
+
+describe("AdminUsersPage table: long strings", () => {
+  beforeEach(() => {
+    mockListUsers.mockReset();
+    mockListUsers.mockResolvedValue(MIXED);
+  });
+
+  it("wraps the email in a capped overflow-wrap:anywhere box and keeps the actions on one line", async () => {
+    const { container } = renderPage();
+    await loaded(container);
+    const row = required(container.querySelector("tbody tr"), "body row");
+    const cells = Array.from(row.querySelectorAll("td"));
+    const emailBox = required(cells[0]?.querySelector("div"), "email wrapper");
+    expect(emailBox).toHaveClass("max-w-[22rem]", "[overflow-wrap:anywhere]");
+    expect(emailBox).toHaveTextContent("alice@example.com");
+    const actions = required(cells[cells.length - 1], "actions cell");
+    expect(actions).toHaveClass("whitespace-nowrap", "pr-1");
+    const lastTh = required(Array.from(container.querySelectorAll("thead th")).pop(), "last th");
+    expect(lastTh).toHaveClass("pr-1");
+  });
+});
