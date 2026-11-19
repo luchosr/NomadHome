@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button, Skeleton, buttonVariants } from "@nomadhome/ui";
+import { Button, Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { bookingsApi } from "../api/bookings.js";
 import { ApiError, getDisplayMessage } from "../api/client.js";
@@ -263,7 +263,10 @@ export function BookingFormPage() {
       <div className="mt-4 flex justify-center">
         <Link
           to={`/listings/${listing.id}`}
-          className={`${buttonVariants({ variant: "tertiary" })} px-2 underline hover:no-underline`}
+          className={cn(
+            buttonVariants({ variant: "tertiary" }),
+            "px-2 underline hover:no-underline",
+          )}
         >
           {t("booking.ui.back_to_listing")}
         </Link>

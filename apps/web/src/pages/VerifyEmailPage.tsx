@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { buttonVariants } from "@nomadhome/ui";
+import { buttonVariants, cn } from "@nomadhome/ui";
 import { authApi } from "../api/auth.js";
 
 type Status = "pending" | "success" | "error";
@@ -128,7 +128,7 @@ export function VerifyEmailPage() {
             action={
               <Link
                 to="/login"
-                className={`${buttonVariants({ variant: "primary" })} mt-6 w-full sm:w-auto`}
+                className={cn(buttonVariants({ variant: "primary" }), "mt-6 w-full sm:w-auto")}
               >
                 {t("identity.verify_email.success_cta")}
               </Link>
@@ -143,7 +143,7 @@ export function VerifyEmailPage() {
             action={
               <Link
                 to="/register"
-                className={`${buttonVariants({ variant: "primary" })} mt-6 w-full sm:w-auto`}
+                className={cn(buttonVariants({ variant: "primary" }), "mt-6 w-full sm:w-auto")}
               >
                 {t("identity.verify_email.error_cta")}
               </Link>

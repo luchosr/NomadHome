@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Pictogram, Skeleton, buttonVariants } from "@nomadhome/ui";
+import { Pictogram, Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { hostApi } from "../api/host.js";
 import { ListingStatusTag } from "../components/ListingStatusTag.js";
 import { PageWrapper } from "../components/PageWrapper.js";
@@ -87,7 +87,7 @@ export function HostListingsPage() {
         </h1>
         <Link
           to="/host/listings/new"
-          className={`${buttonVariants({ variant: "primary" })} w-full sm:w-auto`}
+          className={cn(buttonVariants({ variant: "primary" }), "w-full sm:w-auto")}
         >
           {t("host.listings.new_listing")}
         </Link>

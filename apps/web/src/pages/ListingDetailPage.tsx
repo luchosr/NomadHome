@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button, Skeleton, buttonVariants } from "@nomadhome/ui";
+import { Button, Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { DateRangePicker } from "../components/DateRangePicker.js";
 import { useAuth } from "../contexts/auth.js";
@@ -301,7 +301,7 @@ export function ListingDetailPage() {
                   {datesValid ? (
                     <Link
                       to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}
-                      className={`${buttonVariants({ variant: "primary" })} w-full`}
+                      className={cn(buttonVariants({ variant: "primary" }), "w-full")}
                     >
                       {t("listings.detail.book_now")}
                     </Link>
@@ -314,7 +314,10 @@ export function ListingDetailPage() {
               )}
 
               {!authLoading && !user && (
-                <Link to="/login" className={`${buttonVariants({ variant: "secondary" })} w-full`}>
+                <Link
+                  to="/login"
+                  className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
+                >
                   {t("listings.detail.login_to_book")}
                 </Link>
               )}

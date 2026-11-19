@@ -1,6 +1,6 @@
 import { useSearchParams, Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { buttonVariants } from "@nomadhome/ui";
+import { buttonVariants, cn } from "@nomadhome/ui";
 
 export function BookingCancelPage() {
   const [searchParams] = useSearchParams();
@@ -38,14 +38,14 @@ export function BookingCancelPage() {
           {listingId ? (
             <Link
               to={`/listings/${listingId}`}
-              className={`${buttonVariants({ variant: "secondary" })} w-full sm:w-auto`}
+              className={cn(buttonVariants({ variant: "secondary" }), "w-full sm:w-auto")}
             >
               {t("booking.ui.back_to_listing")}
             </Link>
           ) : (
             <Link
               to="/search"
-              className={`${buttonVariants({ variant: "secondary" })} w-full sm:w-auto`}
+              className={cn(buttonVariants({ variant: "secondary" }), "w-full sm:w-auto")}
             >
               {t("booking.ui.back_to_search")}
             </Link>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { Skeleton, buttonVariants } from "@nomadhome/ui";
+import { Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
 import { useAuth } from "../contexts/auth.js";
 
@@ -111,7 +111,7 @@ export function BookingSuccessPage() {
         <div className="rounded-b-[2px] border-t-2 border-border bg-surface-raised p-4 md:px-8">
           <Link
             to="/bookings"
-            className={`${buttonVariants({ variant: "primary" })} w-full sm:w-auto`}
+            className={cn(buttonVariants({ variant: "primary" }), "w-full sm:w-auto")}
           >
             {t("booking.ui.view_bookings")}
           </Link>
