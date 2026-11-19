@@ -54,43 +54,43 @@ Isolation rules for every run:
 
 ## 3. Implementation (green)
 
-- [ ] 3.1 `packages/ui/src/components/button.tsx`: export `buttonVariants` (cva) and `ButtonVariantProps`; add `min-h-11` and `no-underline` to the base; every variant uses `border-2`; secondary becomes `border-border bg-transparent text-fg hover:bg-surface-inset` (drop `border`, `ring-1 ring-inset ring-border`, `disabled:ring-0`); disabled keeps `disabled:border-dashed disabled:border-border-muted`; tertiary keeps `hover:underline underline-offset-4`; `Button` renders `cn(buttonVariants({ variant }), className)`; props and behaviour unchanged
-- [ ] 3.2 `packages/ui/src/components/card.tsx`: `rounded-card border-2 border-border bg-surface-raised p-5` with no ring; `packages/ui/src/index.ts`: export `buttonVariants` and `ButtonVariantProps`; no new dependency, no `globals.css` change
-- [ ] 3.3 Build ui: `pnpm --filter @nomadhome/ui build` (and `@nomadhome/shared`), then confirm `apps/web` resolves the new export
-- [ ] 3.4 `EmptyState.tsx`: a single `<Link className={buttonVariants(...)}>`, no nested `Button`, no `FLAT_SECONDARY`
-- [ ] 3.5 `ListingDetailPage.tsx`, `HostListingsPage.tsx`, `BookingFormPage.tsx`, `BookingCancelPage.tsx`, `BookingSuccessPage.tsx`, `VerifyEmailPage.tsx`: replace every local CTA constant with `buttonVariants`, widths as `className` extensions; `BookingFormPage` back link is `buttonVariants({ variant: "tertiary" })` plus `px-2 underline hover:no-underline`; `BookingCancelPage` hover unified; no route, href, name or `t()` change
-- [ ] 3.6 Delete `FLAT_SECONDARY` and its usages from `CancelBookingModal`, `ReviewModal`, `MyBookingsPage`, `AdminUsersPage`, `AdminListingsPage`, `EditListingPage`, `ListingPhotosCard`; delete `FLAT_CARD_CLASS` from `listingFormStyles.ts` and its usages in `EditListingPage`, `ListingPhotosCard`, `ListingAvailabilityCard` (keep `LABEL_CLASS`); drop `min-h-11` extensions that the primitive now makes redundant
-- [ ] 3.7 Run tasks 1.1 to 1.9 green and re-run the 2.x e2e green on the isolated port
+- [x] 3.1 `packages/ui/src/components/button.tsx`: export `buttonVariants` (cva) and `ButtonVariantProps`; add `min-h-11` and `no-underline` to the base; every variant uses `border-2`; secondary becomes `border-border bg-transparent text-fg hover:bg-surface-inset` (drop `border`, `ring-1 ring-inset ring-border`, `disabled:ring-0`); disabled keeps `disabled:border-dashed disabled:border-border-muted`; tertiary keeps `hover:underline underline-offset-4`; `Button` renders `cn(buttonVariants({ variant }), className)`; props and behaviour unchanged
+- [x] 3.2 `packages/ui/src/components/card.tsx`: `rounded-card border-2 border-border bg-surface-raised p-5` with no ring; `packages/ui/src/index.ts`: export `buttonVariants` and `ButtonVariantProps`; no new dependency, no `globals.css` change
+- [x] 3.3 Build ui: `pnpm --filter @nomadhome/ui build` (and `@nomadhome/shared`), then confirm `apps/web` resolves the new export
+- [x] 3.4 `EmptyState.tsx`: a single `<Link className={buttonVariants(...)}>`, no nested `Button`, no `FLAT_SECONDARY`
+- [x] 3.5 `ListingDetailPage.tsx`, `HostListingsPage.tsx`, `BookingFormPage.tsx`, `BookingCancelPage.tsx`, `BookingSuccessPage.tsx`, `VerifyEmailPage.tsx`: replace every local CTA constant with `buttonVariants`, widths as `className` extensions; `BookingFormPage` back link is `buttonVariants({ variant: "tertiary" })` plus `px-2 underline hover:no-underline`; `BookingCancelPage` hover unified; no route, href, name or `t()` change
+- [x] 3.6 Delete `FLAT_SECONDARY` and its usages from `CancelBookingModal`, `ReviewModal`, `MyBookingsPage`, `AdminUsersPage`, `AdminListingsPage`, `EditListingPage`, `ListingPhotosCard`; delete `FLAT_CARD_CLASS` from `listingFormStyles.ts` and its usages in `EditListingPage`, `ListingPhotosCard`, `ListingAvailabilityCard` (keep `LABEL_CLASS`); drop `min-h-11` extensions that the primitive now makes redundant
+- [x] 3.7 Run tasks 1.1 to 1.9 green and re-run the 2.x e2e green on the isolated port
 
 ## 4. Review and update existing unit tests (MANDATORY)
 
 - [ ] 4.1 Review every test and e2e spec that renders or navigates to the changed pieces (`rg -n "FLAT_|box-shadow|ring|Button|Link" apps/web/src apps/web/e2e --glob "*.test.*" --glob "*.spec.ts"`) and update stale class or text assumptions without weakening any assertion; do not edit a spec that hard-codes `localhost:5173` and record it as known and unchanged
 - [ ] 4.2 Confirm every other consumer of `Button`, `Card` and `Badge` found in 0.3 still renders and passes; confirm `Badge`, `globals.css` and the token tests in `packages/ui` are untouched and green
-- [ ] 4.3 Verify, ui built first: `pnpm --filter @nomadhome/ui build && pnpm --filter @nomadhome/ui test && pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
+- [x] 4.3 Verify, ui built first: `pnpm --filter @nomadhome/ui build && pnpm --filter @nomadhome/ui test && pnpm --filter @nomadhome/web test && pnpm lint && pnpm typecheck` green
 
 ## 5. Run unit tests and verify database state (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 5.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build` (ui and shared built before web); run the diff-cover check on the changed lines and record totals and coverage
-- [ ] 5.2 Database state: **not applicable.** Scope is `packages/ui` and `apps/web`. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/`, `packages/shared/` or `apps/web/src/api/`, and no database is started by any step; if one ever is, it MUST be `nomadhome_test` only. If any such path appears, stop and reopen this task
-- [ ] 5.3 Write report `openspec/changes/button-link-variants/reports/YYYY-MM-DD-step-5-unit-test-verification.md` with commands, results, coverage and the not-applicable justification
+- [x] 5.1 Run targeted tests for the changed files, then `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build` (ui and shared built before web); run the diff-cover check on the changed lines and record totals and coverage
+- [x] 5.2 Database state: **not applicable.** Scope is `packages/ui` and `apps/web`. Justification check: `git diff origin/main --stat` shows no path under `apps/api/`, `packages/db/`, `packages/shared/` or `apps/web/src/api/`, and no database is started by any step; if one ever is, it MUST be `nomadhome_test` only. If any such path appears, stop and reopen this task
+- [x] 5.3 Write report `openspec/changes/button-link-variants/reports/YYYY-MM-DD-step-5-unit-test-verification.md` with commands, results, coverage and the not-applicable justification
 
 ## 6. Manual endpoint testing with curl (MANDATORY - AGENT MUST EXECUTE)
 
-- [ ] 6.1 **Not applicable.** No endpoint, request shape, response shape or status code changes. Justification check: `git diff origin/main --stat -- apps/web/src/api apps/api packages/shared packages/db` is empty. Record the check and the result in the step 7 report instead of a curl report
+- [x] 6.1 **Not applicable.** No endpoint, request shape, response shape or status code changes. Justification check: `git diff origin/main --stat -- apps/web/src/api apps/api packages/shared packages/db` is empty. Record the check and the result in the step 7 report instead of a curl report
 
 ## 7. E2E and visual checks (MANDATORY - AGENT MUST EXECUTE)
 
 - [ ] 7.1 Isolated run setup: build `packages/shared` and `packages/ui` first; pick a free port at or above 5330, start the web dev server only with `pnpm --filter @nomadhome/web exec vite --port <port> --strictPort`, and run Playwright with a throw-away config kept outside the repo (scratchpad) that spreads the repo config, sets `baseURL` to that port, uses an absolute `testDir` and `reuseExistingServer: false`; never use 5173; API calls are mocked so no API runs and any database is `nomadhome_test` only
 - [ ] 7.2 Run the shared helper specs, `admin-identity.spec.ts`, `focus-hover.spec.ts` and every per-screen spec for the migrated screens on the isolated port and confirm green, except any failure caused by a pre-existing hard-coded `localhost:5173` URL (record it as pre-existing and unchanged)
-- [ ] 7.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green; record any failure that is a hard-coded port 5173 URL in an unrelated spec as unchanged by this change
+- [x] 7.3 Run the whole `pnpm test:e2e` suite on the isolated port (throw-away config) and confirm green; record any failure that is a hard-coded port 5173 URL in an unrelated spec as unchanged by this change
 - [ ] 7.4 Visual check at 1440x900 and 360x800: empty state link, listing detail actions, host listings (New listing, Edit), booking form (primary, secondary, back link), booking cancel, booking success, verify email, my bookings, admin users and listings (Re-enable), edit listing (Upload, photos and availability cards); each focused to show the outline plus paper gap; save PNGs to `openspec/changes/button-link-variants/reports/screenshots/`; confirm no overflow, no shadow at rest and the two intentional visual changes only (focus gap on secondary buttons and cards, Cancel page hover)
 - [ ] 7.5 Confirm keyboard use through Playwright key presses (one tab stop per link CTA, Enter follows the link, focus ring visible on every button, link and card) and that no console error is logged in any state
-- [ ] 7.6 Write report `openspec/changes/button-link-variants/reports/YYYY-MM-DD-step-7-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 6.1 and any finding
+- [x] 7.6 Write report `openspec/changes/button-link-variants/reports/YYYY-MM-DD-step-7-e2e-and-visual-verification.md` with the port used, commands, results, screenshot list, the no-backend-change check from 6.1 and any finding
 
 ## 8. Documentation (MANDATORY)
 
-- [ ] 8.1 Update `apps/web/DESIGN.md`: remove the `FLAT_SECONDARY` and `FLAT_CARD_CLASS` sentences (Link actions ~l.294, Edit cards ~l.301, Moderation actions ~l.311) and the "no gap ring" wording (~l.324); describe link-style actions as `buttonVariants` and the edge as `border-2` for `Button` and `Card`; no token or palette change
-- [ ] 8.2 Update the surface briefs under `apps/web/.impeccable/surfaces/` and the sidecar `design.json` only where they mention the override or the missing gap ring; run `rg -n "FLAT_|box-shadow:none|ring-1|no gap ring|replaces the gap" apps/web README.md docs openspec/project.md` and fix non-archive hits; do not edit `openspec/changes/archive/` or `openspec/specs/` (the specs update through the archive sync)
+- [x] 8.1 Update `apps/web/DESIGN.md`: remove the `FLAT_SECONDARY` and `FLAT_CARD_CLASS` sentences (Link actions ~l.294, Edit cards ~l.301, Moderation actions ~l.311) and the "no gap ring" wording (~l.324); describe link-style actions as `buttonVariants` and the edge as `border-2` for `Button` and `Card`; no token or palette change
+- [x] 8.2 Update the surface briefs under `apps/web/.impeccable/surfaces/` and the sidecar `design.json` only where they mention the override or the missing gap ring; run `rg -n "FLAT_|box-shadow:none|ring-1|no gap ring|replaces the gap" apps/web README.md docs openspec/project.md` and fix non-archive hits; do not edit `openspec/changes/archive/` or `openspec/specs/` (the specs update through the archive sync)
 - [ ] 8.3 Record in the PR description the follow-ups from design.md Open points: disabled link-style actions, shared `StatePanel` and `StatusTag` extraction, the `Badge` pill, and a `link` variant only if a second caller appears; name the two intentional visual changes
 
 ## 9. Memory notes
@@ -99,10 +99,10 @@ Isolation rules for every run:
 
 ## 10. Final verification
 
-- [ ] 10.1 `node scripts/check-mvp-scope.mjs` and `openspec validate button-link-variants --strict` pass
-- [ ] 10.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (ui and shared built first; e2e on the isolated port; caveat as in 7.2 and 7.3)
-- [ ] 10.3 `rg -n "FLAT_|box-shadow:none|ring-1" openspec/specs apps packages` returns no code hit (archived changes excepted)
-- [ ] 10.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope" and no path under `apps/api/`, `packages/db/`, `packages/shared/` or `apps/web/src/api/`
+- [x] 10.1 `node scripts/check-mvp-scope.mjs` and `openspec validate button-link-variants --strict` pass
+- [x] 10.2 Final `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build` green (ui and shared built first; e2e on the isolated port; caveat as in 7.2 and 7.3)
+- [x] 10.3 `rg -n "FLAT_|box-shadow:none|ring-1" openspec/specs apps packages` returns no code hit (archived changes excepted)
+- [x] 10.4 Confirm no unrelated file changed: `git diff origin/main --stat` lists only the files in design.md "Files in scope" and no path under `apps/api/`, `packages/db/`, `packages/shared/` or `apps/web/src/api/`
 - [ ] 10.5 PR title states the user story (for example: "Render link-style buttons as a single link and show the full focus ring on every button and card"), the description links the change-id and says "Refs #138; closes #138", attaches the 1440 and 360 screenshots and lists the follow-ups from 8.3; commits are Conventional with the (NH-138) suffix, one per reviewable change, no AI attribution
 
 ## 11. Checkpoint D (Gate 3)
