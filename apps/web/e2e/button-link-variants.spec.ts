@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import type { Page, Route } from "@playwright/test";
 import { mockSession } from "./helpers/auth";
 import { expectButtonLinkContract } from "./helpers/button-link";
@@ -195,6 +195,20 @@ for (const vp of VIEWPORTS) {
         .first();
       await back.waitFor();
       await expectButtonLinkContract(page, { links: [back] });
+    });
+
+    test("booking form: back link is underlined at rest and plain on hover", async ({ page }) => {
+      await as(page, ["guest"]);
+      await page.goto("/listings/l1/book?checkIn=2099-07-10&checkOut=2099-07-12");
+      const back = page
+        .getByRole("link", { name: /back to listing/i })
+        .filter(visible)
+        .first();
+      await back.waitFor();
+      await page.mouse.move(0, 0);
+      await expect(back).toHaveCSS("text-decoration-line", "underline");
+      await back.hover();
+      await expect(back).toHaveCSS("text-decoration-line", "none");
     });
 
     test("booking cancel: secondary CTA is one anchor", async ({ page }) => {
