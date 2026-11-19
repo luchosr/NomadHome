@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { HostListingsPage } from "./HostListingsPage.js";
+import { expectButtonLink } from "../test/buttonLink.js";
 
 const mockListMine = vi.fn();
 vi.mock("../api/host.js", () => ({
@@ -47,6 +48,33 @@ const mockListings = [
     _count: { bookings: 2 },
   },
 ];
+
+describe("HostListingsPage button-link variants (NH-138)", () => {
+  beforeEach(() => {
+    mockListMine.mockReset();
+  });
+
+  it("New listing is a primary anchor and Edit a secondary anchor, with no nested button", async () => {
+    mockListMine.mockResolvedValue(mockListings);
+    const { container } = renderPage();
+    await screen.findByText("Forest Cabin");
+    expectButtonLink(screen.getByRole("link", { name: "New listing" }), "primary", [
+      "w-full",
+      "sm:w-auto",
+    ]);
+    expectButtonLink(screen.getByRole("link", { name: "Edit" }), "secondary");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
+  });
+
+  it("the empty state CTA is one anchor with no button inside", async () => {
+    mockListMine.mockResolvedValue([]);
+    const { container } = renderPage();
+    await screen.findByText(/you have no listings yet/i);
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
+  });
+});
 
 describe("HostListingsPage", () => {
   beforeEach(() => {

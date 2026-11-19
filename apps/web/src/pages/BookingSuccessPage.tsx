@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { t } from "@nomadhome/shared";
-import { Skeleton } from "@nomadhome/ui";
+import { Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
 import { useAuth } from "../contexts/auth.js";
 
 const POLL_MS = 2000;
 const TIMEOUT_MS = 30_000;
-
-// A link styled as the primary Button, so the action is one interactive element instead of a Button
-// nested in a Link. Issue #138 tracks a shared solution in the Button primitive.
-const PRIMARY_CTA =
-  "inline-flex min-h-11 w-full items-center justify-center rounded-sm border-2 border-border bg-action px-[22px] py-[14px] text-sm font-bold text-action-fg no-underline transition-colors duration-med ease-out hover:bg-action-hover active:translate-y-px sm:w-auto";
 
 export function BookingSuccessPage() {
   const [searchParams] = useSearchParams();
@@ -114,7 +109,10 @@ export function BookingSuccessPage() {
           )}
         </div>
         <div className="rounded-b-[2px] border-t-2 border-border bg-surface-raised p-4 md:px-8">
-          <Link to="/bookings" className={PRIMARY_CTA}>
+          <Link
+            to="/bookings"
+            className={cn(buttonVariants({ variant: "primary" }), "w-full sm:w-auto")}
+          >
             {t("booking.ui.view_bookings")}
           </Link>
         </div>

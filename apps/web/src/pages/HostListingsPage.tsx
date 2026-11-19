@@ -1,17 +1,10 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Pictogram, Skeleton } from "@nomadhome/ui";
+import { Pictogram, Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { hostApi } from "../api/host.js";
 import { ListingStatusTag } from "../components/ListingStatusTag.js";
 import { PageWrapper } from "../components/PageWrapper.js";
-
-// Links styled as the primary and secondary Button variants, so a CTA is one interactive element
-// instead of a Button nested in a Link. Issue #138 tracks a shared solution in the Button primitive.
-const CTA_BASE =
-  "inline-flex min-h-11 items-center justify-center rounded-sm border-2 px-[22px] py-[14px] text-sm font-bold no-underline transition-colors duration-med ease-out active:translate-y-px";
-const PRIMARY_CTA = `${CTA_BASE} border-border bg-action text-action-fg hover:bg-action-hover`;
-const SECONDARY_CTA = `${CTA_BASE} border-border bg-transparent text-fg hover:bg-surface-inset`;
 
 function StatePanel({ children }: { children: string }) {
   return (
@@ -92,7 +85,10 @@ export function HostListingsPage() {
         <h1 className="m-0 text-3xl font-black leading-solid text-fg md:text-4xl">
           {t("host.listings.title")}
         </h1>
-        <Link to="/host/listings/new" className={`${PRIMARY_CTA} w-full sm:w-auto`}>
+        <Link
+          to="/host/listings/new"
+          className={cn(buttonVariants({ variant: "primary" }), "w-full sm:w-auto")}
+        >
           {t("host.listings.new_listing")}
         </Link>
       </div>
@@ -145,7 +141,10 @@ export function HostListingsPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <ListingStatusTag status={listing.status} />
-                  <Link to={`/host/listings/${listing.id}/edit`} className={SECONDARY_CTA}>
+                  <Link
+                    to={`/host/listings/${listing.id}/edit`}
+                    className={buttonVariants({ variant: "secondary" })}
+                  >
                     {t("host.listings.edit")}
                   </Link>
                 </div>

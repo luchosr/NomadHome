@@ -2,19 +2,11 @@ import { useState, type ReactNode } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button, Skeleton } from "@nomadhome/ui";
+import { Button, Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { bookingsApi } from "../api/bookings.js";
 import { ApiError, getDisplayMessage } from "../api/client.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
-
-// Links styled as the Button variants, so an action is one interactive element instead of a Button
-// nested in a Link. Issue #138 tracks a shared solution in the Button primitive.
-const CTA_BASE =
-  "inline-flex min-h-11 items-center justify-center rounded-sm border-2 px-[22px] py-[14px] text-sm font-bold no-underline transition-colors duration-med ease-out active:translate-y-px";
-const SECONDARY_CTA = `${CTA_BASE} border-border bg-transparent text-fg hover:bg-surface-inset`;
-const TERTIARY_CTA =
-  "inline-flex min-h-11 items-center justify-center px-2 text-sm font-bold text-fg underline underline-offset-4 hover:no-underline";
 
 const TILE_CLASS = "flex h-12 w-12 shrink-0 items-center justify-center border-2";
 const TILE_GLYPH = {
@@ -133,7 +125,10 @@ export function BookingFormPage() {
         variant="info"
         message={t("booking.ui.select_dates")}
         action={
-          <Link to={id ? `/listings/${id}` : "/search"} className={SECONDARY_CTA}>
+          <Link
+            to={id ? `/listings/${id}` : "/search"}
+            className={buttonVariants({ variant: "secondary" })}
+          >
             {t("booking.ui.back_to_listing")}
           </Link>
         }
@@ -266,7 +261,13 @@ export function BookingFormPage() {
       </div>
 
       <div className="mt-4 flex justify-center">
-        <Link to={`/listings/${listing.id}`} className={TERTIARY_CTA}>
+        <Link
+          to={`/listings/${listing.id}`}
+          className={cn(
+            buttonVariants({ variant: "tertiary" }),
+            "px-2 underline hover:no-underline",
+          )}
+        >
           {t("booking.ui.back_to_listing")}
         </Link>
       </div>

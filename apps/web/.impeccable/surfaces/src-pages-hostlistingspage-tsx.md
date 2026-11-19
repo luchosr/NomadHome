@@ -40,7 +40,7 @@ STORY: The host opens a list of 2px-edged rows, reads each status by its tag, ed
 
 FIRST VIEWPORT: Host listings: the Black-weight title beside the ink New listing link, then flat rows each with a 64px framed thumbnail or pictogram tile, title, type and city, a status tag and Edit. Edit: title, the status tag with Publish or Unpublish, then 2px-edged cards for details, photos and availability. Bookings: title over a flat table from sm, 2px-edged cards below it.
 
-FORM: Local constants per file (CTA_BASE, PRIMARY_CTA, SECONDARY_CTA, FLAT_SECONDARY, a local StatePanel, a local booking StatusTag), plus two shared host files: ListingStatusTag and listingFormStyles (LABEL_CLASS, CONTROL_CLASS, HINT_CLASS, ERROR_BAR_CLASS, CHECKBOX_CLASS, FLAT_CARD_CLASS). Link CTAs are single links, never a Button inside a Link. Create wraps each field in FormField; Edit shares the same classes. AmenityCheckboxGrid is one real checkbox per amenity with a drawn check glyph. Every form error renders through ServerErrorAlert. The edit cards keep Card with FLAT_CARD_CLASS.
+FORM: Local pieces per file (a local StatePanel, a local booking StatusTag), plus two shared host files: ListingStatusTag and listingFormStyles (LABEL_CLASS, CONTROL_CLASS, HINT_CLASS, ERROR_BAR_CLASS, CHECKBOX_CLASS). Link CTAs are single links styled with buttonVariants, never a Button inside a Link. Create wraps each field in FormField; Edit shares the same classes. AmenityCheckboxGrid is one real checkbox per amenity with a drawn check glyph. Every form error renders through ServerErrorAlert. The edit cards use the plain Card (border-2, no ring).
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict and DESIGN.md.
 
@@ -52,7 +52,7 @@ No palette or token change and no ember on any host screen. Ink on paper carries
 
 - StatePanel is local to HostListingsPage, HostUpcomingPage and EditListingPage, besides ListingDetailPage and BookingFormPage; a shared extraction is the next refactor, with a shared booking StatusTag (HostUpcomingPage copies the MyBookingsPage tag).
 - The Badge pill in packages/ui remains for AdminListingsPage until issue #123.
-- Link inside Button nesting remains in EmptyState; issue #138 tracks a shared solution. FLAT_SECONDARY (secondary Button) and FLAT_CARD_CLASS (Card ring-1 box-shadow) are local overrides of packages/ui primitives, accepted and tracked in the same issue family.
+- NH-138 closed the former Link-in-Button nesting and the local primitive overrides: link CTAs use buttonVariants, and secondary Button and Card are plain border-2 with the full two-layer focus ring.
 - Photo treatment beyond the square frame, and no photo placeholders, belong to issue #121; the hard-coded English `Photo N` alt in ListingPhotosCard needs t() work.
 - The check glyph is duplicated in AmenityCheckboxGrid and BecomeHostPage.
 - Pre-existing: Create uses a GroupedSelect for country and currency while Edit uses text inputs; the BecomeHost terms error is not linked by aria-describedby; hints on every form are not linked either.

@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { BookingFormPage } from "./BookingFormPage.js";
+import { expectButtonLink } from "../test/buttonLink.js";
 import { ApiError } from "../api/client.js";
 import type { ListingDetail } from "../api/listings.js";
 
@@ -433,6 +434,24 @@ describe("BookingFormPage identity: interactive elements", () => {
     expect(back).toHaveAttribute("href", "/listings/abc");
     expect(back.querySelector("button")).toBeNull();
     expect(within(back).queryByRole("button")).toBeNull();
+  });
+});
+
+describe("BookingFormPage button-link variants (NH-138)", () => {
+  it("back link carries the tertiary classes plus px-2 underline hover:no-underline", async () => {
+    const { container } = await renderLoaded();
+    const back = screen.getByRole("link", { name: /back to listing/i });
+    expectButtonLink(
+      back,
+      "tertiary",
+      ["px-2", "underline", "hover:no-underline"],
+      ["no-underline", "hover:underline", "px-0"],
+    );
+    // one text-decoration utility per state, or the link is never underlined at rest
+    expect(back).not.toHaveClass("no-underline");
+    expect(back).not.toHaveClass("hover:underline");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
   });
 });
 

@@ -325,7 +325,10 @@ describe("AdminUsersPage identity: actions", () => {
     await loaded(container);
     for (const scope of [tableOf(container), listOf(container)]) {
       const enable = within(scope).getByRole("button", { name: "Re-enable" });
-      expect(enable).toHaveClass("border-2", "![box-shadow:none]");
+      expect(enable).toHaveClass("border-2", "border-border", "bg-transparent");
+      expect(enable).not.toHaveClass("![box-shadow:none]");
+      expect(enable).not.toHaveClass("border");
+      expect(enable.className).not.toMatch(/(?:^|[\s:])(?:ring|shadow)(?:-|\s|$)/);
       const disable = within(scope).getByRole("button", { name: "Disable" });
       expect(disable).not.toHaveClass("![box-shadow:none]");
     }

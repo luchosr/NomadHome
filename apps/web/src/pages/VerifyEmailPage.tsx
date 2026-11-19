@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { t } from "@nomadhome/shared";
+import { buttonVariants, cn } from "@nomadhome/ui";
 import { authApi } from "../api/auth.js";
 
 type Status = "pending" | "success" | "error";
-
-const PRIMARY_LINK =
-  "mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-sm border-2 border-border bg-action px-[22px] py-[14px] text-sm font-bold text-action-fg no-underline transition-colors duration-med ease-out hover:bg-action-hover sm:w-auto";
 
 const TILE_BASE = "flex h-16 w-16 shrink-0 items-center justify-center border-2";
 
@@ -128,7 +126,10 @@ export function VerifyEmailPage() {
             title={t("identity.verify_email.success_title")}
             body={t("identity.verify_email.success_body")}
             action={
-              <Link to="/login" className={PRIMARY_LINK}>
+              <Link
+                to="/login"
+                className={cn(buttonVariants({ variant: "primary" }), "mt-6 w-full sm:w-auto")}
+              >
                 {t("identity.verify_email.success_cta")}
               </Link>
             }
@@ -140,7 +141,10 @@ export function VerifyEmailPage() {
             title={t("identity.verify_email.error_title")}
             body={t("identity.verify_email.error_body")}
             action={
-              <Link to="/register" className={PRIMARY_LINK}>
+              <Link
+                to="/register"
+                className={cn(buttonVariants({ variant: "primary" }), "mt-6 w-full sm:w-auto")}
+              >
                 {t("identity.verify_email.error_cta")}
               </Link>
             }

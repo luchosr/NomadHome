@@ -105,7 +105,7 @@ export function ListingDetailsForm({
       </fieldset>
 
       <ServerErrorAlert error={saveError} />
-      <Button type="submit" className="min-h-11" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting}>
         {t("host.listings.save")}
       </Button>
     </form>

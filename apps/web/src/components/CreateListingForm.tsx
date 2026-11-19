@@ -182,7 +182,7 @@ export function CreateListingForm({
 
       <ServerErrorAlert error={serverError} />
 
-      <Button type="submit" className="min-h-11" disabled={isSubmitting || !isValid}>
+      <Button type="submit" disabled={isSubmitting || !isValid}>
         {isSubmitting ? t("host.listings.creating") : t("host.listings.create_title")}
       </Button>
     </form>

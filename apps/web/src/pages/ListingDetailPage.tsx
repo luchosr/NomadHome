@@ -3,20 +3,12 @@ import type { ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
-import { Button, Skeleton } from "@nomadhome/ui";
+import { Button, Skeleton, buttonVariants, cn } from "@nomadhome/ui";
 import { listingsApi } from "../api/listings.js";
 import { DateRangePicker } from "../components/DateRangePicker.js";
 import { useAuth } from "../contexts/auth.js";
 import { ApiError } from "../api/client.js";
 import { AMENITIES } from "../lib/listingData.js";
-
-// Links styled as the primary and secondary Button variants, so a CTA is one
-// interactive element instead of a Button nested in a Link. Issue #138 tracks a
-// shared solution in the Button primitive and the other five screens.
-const CTA_BASE =
-  "inline-flex min-h-11 w-full items-center justify-center rounded-sm border-2 px-[22px] py-[14px] text-sm font-bold no-underline transition-colors duration-med ease-out active:translate-y-px";
-const PRIMARY_CTA = `${CTA_BASE} border-border bg-action text-action-fg hover:bg-action-hover`;
-const SECONDARY_CTA = `${CTA_BASE} border-border bg-transparent text-fg hover:bg-surface-inset`;
 
 function formatRate(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
@@ -309,7 +301,7 @@ export function ListingDetailPage() {
                   {datesValid ? (
                     <Link
                       to={`/listings/${listing.id}/book?checkIn=${checkIn}&checkOut=${checkOut}`}
-                      className={PRIMARY_CTA}
+                      className={cn(buttonVariants({ variant: "primary" }), "w-full")}
                     >
                       {t("listings.detail.book_now")}
                     </Link>
@@ -322,7 +314,10 @@ export function ListingDetailPage() {
               )}
 
               {!authLoading && !user && (
-                <Link to="/login" className={SECONDARY_CTA}>
+                <Link
+                  to="/login"
+                  className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
+                >
                   {t("listings.detail.login_to_book")}
                 </Link>
               )}

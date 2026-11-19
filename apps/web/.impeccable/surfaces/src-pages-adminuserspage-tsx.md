@@ -27,7 +27,7 @@ STORY: The admin opens a flat table, reads each state by its tag, and acts on a 
 
 FIRST VIEWPORT: Black-weight title over a flat table from sm (2px ink head rule, 1px muted row rules, state tag, 44px action) or, below sm, 2px-edged cards with email or title, state tag, roles or type and city, and a full-width action.
 
-FORM: Local constants per file (FLAT_SECONDARY, a local StatePanel, a local AccountStatusTag in AdminUsersPage), plus the shared ListingStatusTag. Table from sm and cards below sm are both rendered and only one is displayed. Long strings (email, title, city, host email) sit in max-width wrappers with overflow-wrap anywhere; the action cell is whitespace-nowrap with a small right padding so the focus ring is not clipped.
+FORM: Local pieces per file (a local StatePanel, a local AccountStatusTag in AdminUsersPage), plus the shared ListingStatusTag. Table from sm and cards below sm are both rendered and only one is displayed. Long strings (email, title, city, host email) sit in max-width wrappers with overflow-wrap anywhere; the action cell is whitespace-nowrap with a small right padding so the focus ring is not clipped.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the verification and DESIGN.md.
 
@@ -37,9 +37,9 @@ No palette or token change and no ember on any admin screen. Ink on paper carrie
 
 ## Unresolved decisions
 
-- StatePanel and FLAT_SECONDARY are now a fifth local copy (host, booking, listing detail and both admin pages); a shared StatePanel and StatusTag extraction (with the account and booking tags) is the next refactor.
-- The Badge pill in packages/ui is no longer used by any admin page; only the ListingCard accent tab uses it. Fixing the primitive belongs to issue #138.
-- FLAT_SECONDARY on Re-enable is a per-file override of the secondary Button (issue #138 family). The action Buttons show a 3px ink focus outline without the paper gap ring because the Button variants set their own box-shadow; reconcile in the primitive pass (#138).
+- StatePanel is now a fifth local copy (host, booking, listing detail and both admin pages); a shared StatePanel and StatusTag extraction (with the account and booking tags) is the next refactor.
+- The Badge pill in packages/ui is no longer used by any admin page; only the ListingCard accent tab uses it. A shape-per-tone Badge is a separate ticket (accepted deviation).
+- Re-enable is the plain secondary Button (border-2 border-border). The action Buttons show the full two-layer focus ring since NH-138 removed the per-file overrides.
 - Disable and Re-enable have no disabled-while-pending state and the mutations have no error handling (both pre-existing, behaviour kept and guarded by tests); per-row accessible names need new copy.
 - Roles are raw plain text; there are no role badges.
 - The listings table has six columns; a md: breakpoint for the table (cards until md) was considered and left as a follow-up. HostUpcomingPage has the same latent long-string issue (NH-122).

@@ -7,7 +7,7 @@ const LEGACY_SCALE_CLASS = /(?:^|[\s:])[a-z-]*-(?:sand|ink|forest|terracotta)-\d
 describe("Card", () => {
   it("renders its children inside a bordered surface", () => {
     render(<Card>A quiet desk</Card>);
-    expect(screen.getByText("A quiet desk")).toHaveClass("border");
+    expect(screen.getByText("A quiet desk")).toHaveClass("border-2");
   });
 
   it("uses no old Gantry palette classes, including when interactive", () => {
@@ -32,4 +32,17 @@ describe("Card", () => {
     expect(screen.getByText("Plain").className).not.toMatch(LEGACY_SCALE_CLASS);
     expect(screen.getByText("Tappable").className).not.toMatch(LEGACY_SCALE_CLASS);
   });
+});
+
+describe("Card flat shape (NH-138)", () => {
+  it.each([false, true])(
+    "has border-2 and border-border and no ring (interactive=%s)",
+    (interactive) => {
+      render(<Card interactive={interactive}>Panel</Card>);
+      const el = screen.getByText("Panel");
+      expect(el).toHaveClass("border-2", "border-border");
+      expect(el).not.toHaveClass("border");
+      expect(el.className.split(/\s+/).filter((c) => /(?:^|:)ring(?:-|$)/.test(c))).toEqual([]);
+    },
+  );
 });

@@ -6,6 +6,7 @@ import { t } from "@nomadhome/shared";
 import type { LocaleKey } from "@nomadhome/shared";
 import pageSource from "./ListingDetailPage.tsx?raw";
 import { ListingDetailPage } from "./ListingDetailPage.js";
+import { expectButtonLink } from "../test/buttonLink.js";
 import type { ListingDetail } from "../api/listings.js";
 import { ApiError } from "../api/client.js";
 
@@ -63,6 +64,36 @@ const mockListing: ListingDetail = {
   _count: { reviews: 3 },
   avgRating: 4.5,
 };
+
+describe("ListingDetailPage button-link variants (NH-138)", () => {
+  beforeEach(() => {
+    mockGetDetail.mockReset();
+    mockGetBlockedDates.mockReset();
+    mockGetBlockedDates.mockResolvedValue([]);
+  });
+
+  it("Book now is one primary anchor with no nested or wrapping button", async () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: "u1", email: "guest@test.com", roles: ["guest"] },
+      isLoading: false,
+    });
+    mockGetDetail.mockResolvedValue(mockListing);
+    const { container } = renderDetail("listing-1", "?checkIn=2026-07-10&checkOut=2026-07-12");
+    expectButtonLink(await screen.findByRole("link", { name: /book now/i }), "primary");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
+  });
+
+  it("Log in to book is one secondary anchor", async () => {
+    mockUseAuth.mockReturnValue({ user: null, isLoading: false });
+    mockGetDetail.mockResolvedValue(mockListing);
+    const { container } = renderDetail();
+    const link = await screen.findByRole("link", { name: /log in to book/i });
+    expectButtonLink(link, "secondary");
+    expect(container.querySelector("a button")).toBeNull();
+    expect(container.querySelector("button a")).toBeNull();
+  });
+});
 
 describe("ListingDetailPage", () => {
   beforeEach(() => {

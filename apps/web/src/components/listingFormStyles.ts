@@ -11,8 +11,5 @@ export const HINT_CLASS =
 export const ERROR_BAR_CLASS =
   "m-0 mt-2 break-words border-l-4 border-solid border-danger pl-3 text-sm font-bold text-danger";
 
-// Card keeps a 1px border plus an inset ring (a box shadow); this gives it the flat solid 2px edge.
-export const FLAT_CARD_CLASS = "border-2 ![box-shadow:none]";
-
 export const CHECKBOX_CLASS =
   "peer h-5 w-5 shrink-0 appearance-none rounded-none border-2 border-border bg-surface-raised checked:bg-ink";
