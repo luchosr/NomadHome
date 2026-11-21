@@ -118,13 +118,21 @@ const DIALOGS = [
 async function focusState(page: Page) {
   return page.evaluate(() => {
     const active = document.activeElement;
-    const dialog = document.querySelector('[role="dialog"]');
+    const dialog = document.querySelector("dialog");
     const label =
       active instanceof HTMLElement
-        ? (active.getAttribute("aria-label") ?? active.id ?? active.textContent?.trim() ?? "")
+        ? active.getAttribute("aria-label") || active.id || active.textContent?.trim() || ""
         : "";
     return {
       inside: !!dialog && !!active && dialog.contains(active),
+      // A native modal dialog hands focus to the browser UI after its last control; the document
+      // then reports BODY. That is not a page control outside the dialog being reached.
+      contained:
+        !!dialog &&
+        !!active &&
+        (dialog.contains(active) ||
+          active === document.body ||
+          active === document.documentElement),
       tag: active?.tagName ?? null,
       label,
     };
@@ -160,15 +168,15 @@ for (const vp of VIEWPORTS) {
           for (let i = 0; i < d.controls + 3; i++) {
             await page.keyboard.press("Tab");
             const s = await focusState(page);
-            expect(s.inside, `Tab #${i + 1} landed on ${s.tag} "${s.label}" outside`).toBe(true);
-            seen.add(`${s.tag}:${s.label}`);
+            expect(s.contained, `Tab #${i + 1} landed on ${s.tag} "${s.label}" outside`).toBe(true);
+            if (s.inside) seen.add(`${s.tag}:${s.label}`);
           }
           expect(seen.size).toBe(d.controls);
 
           for (let i = 0; i < d.controls + 3; i++) {
             await page.keyboard.press("Shift+Tab");
             const s = await focusState(page);
-            expect(s.inside, `Shift+Tab #${i + 1} landed on ${s.tag} "${s.label}" outside`).toBe(
+            expect(s.contained, `Shift+Tab #${i + 1} landed on ${s.tag} "${s.label}" outside`).toBe(
               true,
             );
           }
@@ -197,6 +205,26 @@ for (const vp of VIEWPORTS) {
           await backdropClick(page);
           await expect(page.getByRole("dialog")).toHaveCount(0);
           await expect(d.opener(page)).toBeFocused();
+        });
+
+        test("a drag that starts inside the surface and ends on the backdrop does not close", async ({
+          page,
+        }) => {
+          await setup(page);
+          await d.open(page);
+          const dialog = page.getByRole("dialog");
+          const box = await dialog.locator("h2").boundingBox();
+          if (!box) throw new Error("missing structure: dialog title box");
+
+          await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+          await page.mouse.down();
+          await page.mouse.move(5, 5, { steps: 5 });
+          await page.mouse.up();
+          await expect(dialog).toBeVisible();
+
+          // A genuine backdrop click afterwards still closes (no stale gesture state).
+          await backdropClick(page);
+          await expect(page.getByRole("dialog")).toHaveCount(0);
         });
 
         test("Escape and backdrop are ignored while the request is in flight, then it closes", async ({
@@ -288,72 +316,62 @@ for (const vp of VIEWPORTS) {
   });
 }
 
-// Scrollbar jump (design open point, tasks 2.4 and 3.5). Headless Chromium hides scrollbars by
-// default and macOS uses overlay scrollbars, so a classic scrollbar is forced. The test records
-// the measurement as an annotation and in the log; it asserts only that the scrollbar existed (so the
-// measurement means something). `simulated` applies the same overflow:hidden without a dialog.
-test.describe("Scrollbar jump when the dialog opens at desktop-1440", () => {
-  test("measure horizontal content shift", async ({ baseURL }, testInfo) => {
-    // Own browser: Playwright's headless default passes --hide-scrollbars, and launchOptions cannot
-    // be overridden per describe group.
-    const browser = await chromium.launch({ ignoreDefaultArgs: ["--hide-scrollbars"] });
-    const page = await browser.newPage({ baseURL, viewport: { width: 1440, height: 900 } });
-    // Headless Chromium on macOS renders overlay scrollbars that take no layout space, so a classic
-    // 15px scrollbar (what Windows, Linux and macOS with "always show" give) is forced with a
-    // styled ::-webkit-scrollbar, which always reserves its width.
-    await setup(page);
-    await page.goto("/bookings");
-    await page.addStyleTag({ content: "html::-webkit-scrollbar { width: 15px; }" });
-    await expect(cancelOpener(page)).toBeVisible();
+// Scrollbar shift (design open point, tasks 2.4 and 3.5). Headless Chromium hides scrollbars by
+// default and macOS uses overlay scrollbars, so a classic 15px scrollbar is forced. The scroll lock
+// (body overflow:hidden) removes the scrollbar; `scrollbar-gutter: stable` must keep its space so the
+// page content does not move horizontally when the dialog opens.
+test.describe("No horizontal shift when the dialog opens at desktop-1440", () => {
+  for (const d of DIALOGS) {
+    test(`${d.name} dialog: content stays put with a classic scrollbar`, async ({
+      baseURL,
+    }, testInfo) => {
+      // Own browser: Playwright's headless default passes --hide-scrollbars, and launchOptions cannot
+      // be overridden per describe group.
+      const browser = await chromium.launch({ ignoreDefaultArgs: ["--hide-scrollbars"] });
+      try {
+        const page = await browser.newPage({ baseURL, viewport: { width: 1440, height: 900 } });
+        await setup(page);
+        await page.goto("/bookings");
+        // Headless Chromium on macOS renders overlay scrollbars that take no layout space, so a
+        // classic scrollbar is forced with a styled ::-webkit-scrollbar, which always reserves it.
+        await page.addStyleTag({ content: "html::-webkit-scrollbar { width: 15px; }" });
+        await expect(d.opener(page)).toBeVisible();
 
-    const measure = () =>
-      page.evaluate(() => {
-        const h1 = document.querySelector("h1")?.getBoundingClientRect();
-        const card = document.querySelector("main .rounded-card")?.getBoundingClientRect();
-        return {
-          h1Left: h1?.left ?? null,
-          cardLeft: card?.left ?? null,
-          cardWidth: card?.width ?? null,
-          clientWidth: document.documentElement.clientWidth,
-          innerWidth: window.innerWidth,
-          scrollable: document.documentElement.scrollHeight > document.documentElement.clientHeight,
-        };
-      });
+        const measure = () =>
+          page.evaluate(() => {
+            const h1 = document.querySelector("h1")?.getBoundingClientRect();
+            const card = document.querySelector("main .rounded-card")?.getBoundingClientRect();
+            return {
+              h1Left: h1?.left ?? null,
+              cardLeft: card?.left ?? null,
+              cardWidth: card?.width ?? null,
+              clientWidth: document.documentElement.clientWidth,
+              innerWidth: window.innerWidth,
+              scrollable:
+                document.documentElement.scrollHeight > document.documentElement.clientHeight,
+            };
+          });
 
-    const closed = await measure();
-    expect(closed.scrollable).toBe(true);
-    const scrollbarWidth = closed.innerWidth - closed.clientWidth;
-    expect(
-      scrollbarWidth,
-      "a classic scrollbar must be present for the measurement",
-    ).toBeGreaterThan(0);
+        const closed = await measure();
+        expect(closed.scrollable).toBe(true);
+        expect(
+          closed.innerWidth - closed.clientWidth,
+          "a classic scrollbar must be present for the measurement",
+        ).toBeGreaterThan(0);
 
-    await cancelOpener(page).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    const open = await measure();
+        await d.opener(page).click();
+        await expect(page.getByRole("dialog")).toBeVisible();
+        const open = await measure();
 
-    // Fresh page (independent of whether the dialog can be closed yet), same overflow lock, no dialog.
-    await page.goto("/bookings");
-    await page.addStyleTag({ content: "html::-webkit-scrollbar { width: 15px; }" });
-    await expect(cancelOpener(page)).toBeVisible();
-    await page.evaluate(() => {
-      document.body.style.overflow = "hidden";
+        console.log(`SCROLLBAR_MEASUREMENT ${d.name} ${JSON.stringify({ closed, open })}`);
+        await page.screenshot({ path: testInfo.outputPath(`scrollbar-${d.name}.png`) });
+
+        expect(open.h1Left).toBe(closed.h1Left);
+        expect(open.cardLeft).toBe(closed.cardLeft);
+        expect(open.cardWidth).toBe(closed.cardWidth);
+      } finally {
+        await browser.close();
+      }
     });
-    const simulated = await measure();
-
-    const shiftOpen = (open.cardLeft ?? 0) - (closed.cardLeft ?? 0);
-    const shiftSimulated = (simulated.cardLeft ?? 0) - (closed.cardLeft ?? 0);
-    const report = JSON.stringify({
-      scrollbarWidth,
-      closed,
-      open,
-      simulatedOverflowHidden: simulated,
-      contentShiftWithDialogPx: shiftOpen,
-      contentShiftSimulatedLockPx: shiftSimulated,
-    });
-    testInfo.annotations.push({ type: "scrollbar-measurement", description: report });
-    console.log(`SCROLLBAR_MEASUREMENT ${report}`);
-    await page.screenshot({ path: testInfo.outputPath("scrollbar-closed-open.png") });
-    await browser.close();
-  });
+  }
 });

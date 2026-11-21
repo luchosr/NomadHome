@@ -291,7 +291,12 @@ describe("ReviewModal keyboard, focus and timer (NH-146)", () => {
     await submitUnderFakeTimers();
     pressEscape();
     expect(onClose).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole("dialog"));
+    // A real backdrop click is press + release + click on the dialog; a bare click event (no press)
+    // is not one (NH-146 drag rule), and userEvent is avoided here because of the fake timers.
+    const dialog = screen.getByRole("dialog");
+    fireEvent.mouseDown(dialog);
+    fireEvent.mouseUp(dialog);
+    fireEvent.click(dialog);
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 

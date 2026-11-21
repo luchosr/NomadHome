@@ -136,6 +136,40 @@ describe("Modal", () => {
       await userEvent.click(screen.getByRole("heading", { name: "Dialog title" }));
       expect(onClose).not.toHaveBeenCalled();
     });
+
+    it("a drag that starts inside the surface and ends on the backdrop does not call onClose", () => {
+      const { onClose } = renderModal();
+      const dialog = screen.getByRole("dialog");
+      const inside = screen.getByRole("button", { name: "inside" });
+      // The browser dispatches the click on the common ancestor (the dialog) after such a drag.
+      fireEvent.mouseDown(inside);
+      fireEvent.mouseUp(dialog);
+      fireEvent.click(dialog);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("a drag that starts on the backdrop and ends inside the surface does not call onClose", () => {
+      const { onClose } = renderModal();
+      const dialog = screen.getByRole("dialog");
+      fireEvent.mouseDown(dialog);
+      fireEvent.mouseUp(frame());
+      fireEvent.click(dialog);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("a stale drag does not leak into the next genuine backdrop click", () => {
+      const { onClose } = renderModal();
+      const dialog = screen.getByRole("dialog");
+      fireEvent.mouseDown(screen.getByRole("button", { name: "inside" }));
+      fireEvent.mouseUp(dialog);
+      fireEvent.click(dialog);
+      expect(onClose).not.toHaveBeenCalled();
+
+      fireEvent.mouseDown(dialog);
+      fireEvent.mouseUp(dialog);
+      fireEvent.click(dialog);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("scroll lock", () => {
