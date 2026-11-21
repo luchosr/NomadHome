@@ -1,20 +1,22 @@
-import { render, screen } from "@testing-library/react";
+import { createEvent, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { Modal } from "./Modal.js";
 
-// NH-124 identity tests (booking-payment-identity, tasks 1.10 and 1.11). jsdom does not compute
-// Tailwind, so shape is asserted through class tokens. Selector assumptions:
-//  - backdrop = the role="dialog" element; frame = its first element child.
-// Tests marked GUARD pass before the restyle and must keep passing.
+// NH-124 identity tests plus NH-146 (modal-a11y) behaviour tests. jsdom does not compute Tailwind or
+// implement the top layer, so shape is asserted through class tokens and `showModal`/`close` are the
+// stubs from src/test/setup.ts. Tab loop, inert and ::backdrop are covered by the Playwright e2e.
+// Selector assumptions: dialog = the role="dialog" element (a native <dialog> after NH-146);
+// surface = its first element child.
 
-function renderModal() {
-  render(
-    <Modal labelledBy="m-title">
+function renderModal(onClose = vi.fn()) {
+  const utils = render(
+    <Modal labelledBy="m-title" onClose={onClose}>
       <h2 id="m-title">Dialog title</h2>
       <button>inside</button>
     </Modal>,
   );
+  return { onClose, ...utils };
 }
 
 function frame(): HTMLElement {
@@ -23,12 +25,46 @@ function frame(): HTMLElement {
   return el;
 }
 
+const openers: HTMLElement[] = [];
+
+function makeOpener(): HTMLButtonElement {
+  const opener = document.createElement("button");
+  opener.textContent = "open";
+  document.body.append(opener);
+  openers.push(opener);
+  return opener;
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  document.body.style.overflow = "";
+  for (const o of openers.splice(0)) o.remove();
+});
+
 describe("Modal", () => {
   it("GUARD: exposes role dialog, aria-modal and its title as the label", () => {
     renderModal();
     const dialog = screen.getByRole("dialog", { name: "Dialog title" });
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAttribute("aria-labelledby", "m-title");
+  });
+
+  it("is a native <dialog> element", () => {
+    renderModal();
+    expect(screen.getByRole("dialog").tagName).toBe("DIALOG");
+  });
+
+  it("calls showModal on mount and the dialog is open", () => {
+    const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+    renderModal();
+    expect(showModal).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("dialog")).toHaveAttribute("open");
+  });
+
+  it("the surface is the only element child and holds the content", () => {
+    renderModal();
+    expect(screen.getByRole("dialog").children).toHaveLength(1);
+    expect(frame()).toContainElement(screen.getByRole("button", { name: "inside" }));
   });
 
   it("frame has the 2px ink border, rounded-card and no shadow", () => {
@@ -43,11 +79,109 @@ describe("Modal", () => {
     expect(classes.filter((c) => /blur|gradient|shadow/.test(c))).toEqual([]);
   });
 
-  it("GUARD: adds no key handler and no backdrop-click close (follow-up recorded, not fixed)", async () => {
+  it("dialog keeps the reset and flat scrim classes, surface keeps its frame classes", () => {
     renderModal();
-    await userEvent.keyboard("{Escape}");
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("dialog"));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveClass(
+      "p-0",
+      "border-0",
+      "bg-transparent",
+      "max-w-[calc(100%-2rem)]",
+      "backdrop:bg-ink/40",
+    );
+    expect(frame()).toHaveClass(
+      "w-full",
+      "max-w-md",
+      "rounded-card",
+      "border-2",
+      "border-border",
+      "bg-surface-raised",
+      "p-6",
+    );
+    expect(frame()).not.toHaveClass("mx-4");
+  });
+
+  describe("Escape (cancel event)", () => {
+    it("default-prevents the cancel event and calls onClose once", () => {
+      const { onClose } = renderModal();
+      const dialog = screen.getByRole("dialog");
+      const event = createEvent("cancel", dialog, { cancelable: true });
+      fireEvent(dialog, event);
+      expect(event.defaultPrevented).toBe(true);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("leaves the dialog mounted: only the parent unmounts it", () => {
+      renderModal();
+      fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+  });
+
+  describe("backdrop click", () => {
+    it("a click on the dialog element itself calls onClose once", async () => {
+      const { onClose } = renderModal();
+      await userEvent.click(screen.getByRole("dialog"));
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("a click on the surface does not call onClose", async () => {
+      const { onClose } = renderModal();
+      await userEvent.click(frame());
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("a click on an element inside the surface does not call onClose", async () => {
+      const { onClose } = renderModal();
+      await userEvent.click(screen.getByRole("button", { name: "inside" }));
+      await userEvent.click(screen.getByRole("heading", { name: "Dialog title" }));
+      expect(onClose).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("scroll lock", () => {
+    it("sets body overflow hidden while mounted and restores a previous non-empty value", () => {
+      document.body.style.overflow = "scroll";
+      const { unmount } = renderModal();
+      expect(document.body.style.overflow).toBe("hidden");
+      unmount();
+      expect(document.body.style.overflow).toBe("scroll");
+    });
+
+    it("restores an empty previous value on unmount", () => {
+      document.body.style.overflow = "";
+      const { unmount } = renderModal();
+      expect(document.body.style.overflow).toBe("hidden");
+      unmount();
+      expect(document.body.style.overflow).toBe("");
+    });
+  });
+
+  describe("focus return", () => {
+    it("returns focus to the opener on unmount when it is still connected", () => {
+      const opener = makeOpener();
+      opener.focus();
+      expect(opener).toHaveFocus();
+
+      const { unmount } = renderModal();
+      // The browser moves focus into the dialog in showModal(); the jsdom stub does not, so do it here.
+      screen.getByRole("button", { name: "inside" }).focus();
+      expect(opener).not.toHaveFocus();
+
+      unmount();
+      expect(opener).toHaveFocus();
+    });
+
+    it("GUARD: a detached opener does not throw and is not focused", () => {
+      const opener = makeOpener();
+      opener.focus();
+      const focus = vi.spyOn(opener, "focus");
+
+      const { unmount } = renderModal();
+      opener.remove();
+      expect(opener.isConnected).toBe(false);
+
+      expect(() => unmount()).not.toThrow();
+      expect(focus).not.toHaveBeenCalled();
+    });
   });
 });

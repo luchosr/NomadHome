@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CancelBookingModal } from "./CancelBookingModal.js";
@@ -114,12 +114,64 @@ describe("CancelBookingModal identity", () => {
     await userEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+});
 
-  it("GUARD: no ESC handling and no backdrop-click close (follow-up recorded, not fixed)", async () => {
+// NH-146 (modal-a11y): Escape arrives as the dialog's `cancel` event (the browser fires it on Escape),
+// the backdrop is a click on the dialog element itself, and both are suppressed while the cancel
+// mutation is pending. `showModal`/`close` are the jsdom stubs from src/test/setup.ts.
+describe("CancelBookingModal keyboard and focus (NH-146)", () => {
+  const onSuccess = vi.fn();
+  const onClose = vi.fn();
+
+  beforeEach(() => {
+    mockCancel.mockReset();
+    onSuccess.mockReset();
+    onClose.mockReset();
+  });
+
+  function pressEscape() {
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+  }
+
+  it("the reason textarea has focus after render (autoFocus)", () => {
     render(<CancelBookingModal bookingId="b1" onSuccess={onSuccess} onClose={onClose} />);
-    await userEvent.keyboard("{Escape}");
+    expect(screen.getByLabelText(/reason/i)).toHaveFocus();
+  });
+
+  it("Escape calls onClose", () => {
+    render(<CancelBookingModal bookingId="b1" onSuccess={onSuccess} onClose={onClose} />);
+    pressEscape();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("a backdrop click calls onClose", async () => {
+    render(<CancelBookingModal bookingId="b1" onSuccess={onSuccess} onClose={onClose} />);
     await userEvent.click(screen.getByRole("dialog"));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("Escape and backdrop click are ignored while the cancel request is pending", async () => {
+    mockCancel.mockReturnValue(new Promise(() => {}));
+    render(<CancelBookingModal bookingId="b1" onSuccess={onSuccess} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: /yes, cancel/i }));
+    expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+
+    pressEscape();
+    await userEvent.click(screen.getByRole("dialog"));
+
     expect(onClose).not.toHaveBeenCalled();
-    expect(onSuccess).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("Escape and backdrop click work again after a failed submit", async () => {
+    mockCancel.mockRejectedValue(new ApiError(500, {}));
+    render(<CancelBookingModal bookingId="b1" onSuccess={onSuccess} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: /yes, cancel/i }));
+    await screen.findByRole("alert");
+
+    pressEscape();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("dialog"));
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });
