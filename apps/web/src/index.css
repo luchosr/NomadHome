@@ -1,2 +1,7 @@
 /* Consume the shared NomadHome foundation: fonts, token CSS vars, base styles + @tailwind layers. */
 @import "@nomadhome/ui/styles/globals.css";
+
+/* Reserve the scrollbar gutter so the modal scroll lock (body overflow hidden) causes no horizontal shift. */
+html {
+  scrollbar-gutter: stable;
+}

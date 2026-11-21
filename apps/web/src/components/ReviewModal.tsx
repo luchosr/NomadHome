@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { t } from "@nomadhome/shared";
 import { Button } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
@@ -13,6 +13,7 @@ interface Props {
 }
 
 const STAR_COUNT = 5;
+const noop = () => {};
 
 /** Decorative star on a 24 grid: filled ink or a 2px outline, so state is shape and not colour. */
 function StarGlyph({ filled }: { filled: boolean }) {
@@ -41,6 +42,10 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const successTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // An early close must never fire onSuccess later.
+  useEffect(() => () => clearTimeout(successTimer.current), []);
 
   const handleSubmit = async () => {
     if (rating === 0) return;
@@ -49,7 +54,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
     try {
       await bookingsApi.review(bookingId, { rating, text: text.trim() || undefined });
       setSuccess(true);
-      setTimeout(onSuccess, 1200);
+      successTimer.current = setTimeout(onSuccess, 1200);
     } catch (err) {
       setError(getDisplayMessage(err));
     } finally {
@@ -60,7 +65,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
   const displayRating = hovered || rating;
 
   return (
-    <Modal labelledBy="review-modal-title">
+    <Modal labelledBy="review-modal-title" onClose={isSubmitting ? noop : onClose}>
       <h2 id="review-modal-title" className="m-0 mb-4 text-xl font-black text-fg">
         {t("booking.dashboard.review_modal_title")}
       </h2>
@@ -106,6 +111,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
                   <button
                     key={starValue}
                     type="button"
+                    autoFocus={starValue === 1}
                     aria-label={`${starValue} star${starValue === 1 ? "" : "s"}`}
                     aria-pressed={starValue === rating}
                     onClick={() => setRating(starValue)}

@@ -12,6 +12,8 @@ interface Props {
   onClose: () => void;
 }
 
+const noop = () => {};
+
 export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +33,7 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
   };
 
   return (
-    <Modal labelledBy="cancel-modal-title">
+    <Modal labelledBy="cancel-modal-title" onClose={isSubmitting ? noop : onClose}>
       <h2 id="cancel-modal-title" className="m-0 mb-2 text-xl font-black text-fg">
         {t("booking.dashboard.cancel_modal_title")}
       </h2>
@@ -42,6 +44,7 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
       </label>
       <textarea
         id="cancel-reason"
+        autoFocus
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         maxLength={500}
