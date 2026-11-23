@@ -23,8 +23,13 @@ const BASELINE: Record<string, string> = {
   "booking.ui.form_title": "Confirm your booking",
   "booking.ui.night": "night",
   "booking.ui.nights": "nights",
+  "booking.ui.not_found_message": "Open My bookings to see your reservations.",
+  "booking.ui.not_found_title": "We could not find your booking",
   "booking.ui.pay_now": "Pay now",
   "booking.ui.processing": "Processing your payment…",
+  "booking.ui.processing_message":
+    "We have not confirmed your payment yet. This can take a few minutes, so check My bookings shortly.",
+  "booking.ui.processing_title": "Still processing",
   "booking.ui.select_dates": "Select check-in and check-out dates to book.",
   "booking.ui.service_fee": "Service fee",
   "booking.ui.success_message":
