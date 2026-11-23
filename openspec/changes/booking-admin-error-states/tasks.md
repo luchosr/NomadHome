@@ -26,10 +26,10 @@ New keys (added in task 2.1, asserted by red tests in 1.1): `booking.ui.processi
 
 ## 3. E2E
 
-- [ ] 3.1 Update `apps/web/e2e/booking-payment-identity.spec.ts` and `apps/web/e2e/us-4.1-booking.spec.ts` where they assume the success panel on timeout or missing id or raw ISO dates: success only after confirmed status; add a missing-`bookingId` case asserting the not-found panel and `/bookings` link. Check `apps/web/e2e/button-link-variants.spec.ts` for success-page assumptions and adjust only if broken.
-- [ ] 3.2 Update `apps/web/e2e/us-8.1-admin-users.spec.ts` and `apps/web/e2e/us-8.2-admin-listings.spec.ts` (and `apps/web/e2e/admin-identity.spec.ts` only if broken) with a failed-action alert case via route interception, if the suite already stubs the admin API; otherwise note the gap. Run the affected Playwright specs headless.
+- [x] 3.1 Update `apps/web/e2e/booking-payment-identity.spec.ts` and `apps/web/e2e/us-4.1-booking.spec.ts` where they assume the success panel on timeout or missing id or raw ISO dates: success only after confirmed status; add a missing-`bookingId` case asserting the not-found panel and `/bookings` link. Check `apps/web/e2e/button-link-variants.spec.ts` for success-page assumptions and adjust only if broken.
+- [x] 3.2 Update `apps/web/e2e/us-8.1-admin-users.spec.ts` and `apps/web/e2e/us-8.2-admin-listings.spec.ts` (and `apps/web/e2e/admin-identity.spec.ts` only if broken) with a failed-action alert case via route interception, if the suite already stubs the admin API; otherwise note the gap. Run the affected Playwright specs headless.
 
 ## 4. Docs
 
-- [ ] 4.1 Update `apps/web/DESIGN.md` booking and payment paragraphs (around lines 140 and 274) to mention the neutral Still processing and not-found panels beside the ember success panel; no token or colour change.
-- [ ] 4.2 Run `openspec validate booking-admin-error-states --strict` and tick all tasks in this file.
+- [x] 4.1 Update `apps/web/DESIGN.md` booking and payment paragraphs (around lines 140 and 274) to mention the neutral Still processing and not-found panels beside the ember success panel; no token or colour change.
+- [x] 4.2 Run `openspec validate booking-admin-error-states --strict` and tick all tasks in this file.
