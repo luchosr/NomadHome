@@ -16,7 +16,7 @@ New keys (added in task 2.1, asserted by red tests in 1.1): `booking.ui.processi
 
 ## 2. Frontend green
 
-- [ ] 2.1 Add the four new `booking.ui` keys to `packages/shared/src/strings/en.ts` following `packages/shared/src/strings/README.md`; keep existing keys unchanged. Run shared string tests and `BookingCopy.test.ts`.
+- [x] 2.1 Add the four new `booking.ui` keys to `packages/shared/src/strings/en.ts` following `packages/shared/src/strings/README.md`; keep existing keys unchanged. Run shared string tests and `BookingCopy.test.ts`.
 - [ ] 2.2 `apps/web/src/pages/BookingSuccessPage.tsx`: derive state `polling | confirmed | pending | missing`; confirmed only for `CONFIRMED`/`COMPLETED`; timeout or exhausted poll errors render the neutral Still processing panel (stone, 2px ink edge, `role="status"`, one `h1`, single `/bookings` link, no check tile, no ember); missing `bookingId` renders the neutral not-found panel and starts no polling and no sync; poll interval, timeout, `syncPayment` call and `authLoading` gating unchanged. Make 1.2 pass.
 - [ ] 2.3 `apps/web/src/pages/BookingFormPage.tsx`: render check-in and check-out via `formatDate` from `../lib/dates.js`; leave payloads ISO. Make 1.3 pass.
 - [ ] 2.4 `apps/web/src/pages/MyBookingsPage.tsx`: add `catch` to `handleCompletePayment`; store `getDisplayMessage(err)` in state, clear it at the start of each attempt, render with `ServerErrorAlert`; keep `finally` resetting `checkingOut`. Make 1.4 pass.

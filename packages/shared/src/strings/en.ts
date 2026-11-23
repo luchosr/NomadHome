@@ -235,6 +235,11 @@ export const en = {
       cancel_message: "Your payment was not completed. No charges were made.",
       back_to_search: "Back to search",
       processing: "Processing your payment…",
+      processing_title: "Still processing",
+      processing_message:
+        "We have not confirmed your payment yet. This can take a few minutes, so check My bookings shortly.",
+      not_found_title: "We could not find your booking",
+      not_found_message: "Open My bookings to see your reservations.",
     },
     dashboard: {
       title: "My Bookings",
