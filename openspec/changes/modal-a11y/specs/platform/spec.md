@@ -63,6 +63,20 @@
 - **WHEN** the user presses Escape or clicks the backdrop
 - **THEN** the parent `onClose` is called
 
+#### Scenario: Review success keeps focus inside and is announced
+
+- **GIVEN** the review dialog whose submit just succeeded and replaced the form with the success message
+- **WHEN** the success state renders
+- **THEN** the success panel is a `role="status"` live region that is programmatically focusable (`tabindex="-1"`) and holds focus, so focus does not fall back to `<body>`
+- **AND** pressing Escape closes the dialog and focus returns to the opener
+
+#### Scenario: A native close while mounted does not leave an invisible dialog
+
+- **GIVEN** an open dialog that the browser closes natively (for example a second Escape that Chromium delivers as a non-cancelable `cancel`) while the component is still mounted
+- **WHEN** the native `close` event fires
+- **THEN** the dialog is opened again with `showModal()`, the page stays inert and the body scroll lock stays in place
+- **AND** a close caused by the component unmounting is not reopened
+
 #### Scenario: Layout at 360 px and copy are unchanged
 
 - **GIVEN** the cancel and review dialogs open at 360 px width

@@ -43,9 +43,16 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const successTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const successPanel = useRef<HTMLDivElement>(null);
 
   // An early close must never fire onSuccess later.
   useEffect(() => () => clearTimeout(successTimer.current), []);
+
+  // The form (and the control that held focus) is replaced by the success panel: keep focus inside
+  // the dialog so Escape still reaches it instead of the focus falling back to <body>.
+  useEffect(() => {
+    if (success) successPanel.current?.focus();
+  }, [success]);
 
   const handleSubmit = async () => {
     if (rating === 0) return;
@@ -71,7 +78,12 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
       </h2>
 
       {success ? (
-        <div className="flex items-center gap-3 border-2 border-border bg-surface-raised p-4">
+        <div
+          ref={successPanel}
+          role="status"
+          tabIndex={-1}
+          className="flex items-center gap-3 border-2 border-border bg-surface-raised p-4"
+        >
           <span
             aria-hidden="true"
             className="flex h-8 w-8 shrink-0 items-center justify-center bg-ink text-fg-inverse"
