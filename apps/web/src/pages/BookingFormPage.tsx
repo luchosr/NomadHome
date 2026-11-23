@@ -7,6 +7,7 @@ import { listingsApi } from "../api/listings.js";
 import { bookingsApi } from "../api/bookings.js";
 import { ApiError, getDisplayMessage } from "../api/client.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
+import { formatDate } from "../lib/dates.js";
 
 const TILE_CLASS = "flex h-12 w-12 shrink-0 items-center justify-center border-2";
 const TILE_GLYPH = {
@@ -220,12 +221,12 @@ export function BookingFormPage() {
 
           <div className="flex justify-between gap-4 text-sm text-fg-muted">
             <span>{t("booking.ui.checkin_label")}</span>
-            <span className="font-medium text-fg">{checkIn}</span>
+            <span className="font-medium text-fg">{formatDate(checkIn)}</span>
           </div>
 
           <div className="flex justify-between gap-4 text-sm text-fg-muted">
             <span>{t("booking.ui.checkout_label")}</span>
-            <span className="font-medium text-fg">{checkOut}</span>
+            <span className="font-medium text-fg">{formatDate(checkOut)}</span>
           </div>
 
           <div className="flex justify-between gap-4 text-sm text-fg-muted">
