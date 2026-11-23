@@ -175,6 +175,21 @@ for (const vp of VIEWPORTS) {
           }
           expect(seen.size).toBe(d.controls);
 
+          // The page behind is inert: programmatic focus on the opener or a background link is refused.
+          const reachable = await page.evaluate(() => {
+            const dialog = document.querySelector("dialog");
+            const outside = [...document.querySelectorAll<HTMLElement>("a[href], button")].filter(
+              (el) => !dialog?.contains(el),
+            );
+            const focused = outside.filter((el) => {
+              el.focus();
+              return document.activeElement === el;
+            });
+            return { total: outside.length, focused: focused.length };
+          });
+          expect(reachable.total).toBeGreaterThan(0);
+          expect(reachable.focused).toBe(0);
+
           for (let i = 0; i < d.controls + 3; i++) {
             await page.keyboard.press("Shift+Tab");
             const s = await focusState(page);
@@ -384,58 +399,74 @@ for (const vp of VIEWPORTS) {
 // default and macOS uses overlay scrollbars, so a classic 15px scrollbar is forced. The scroll lock
 // (body overflow:hidden) removes the scrollbar; `scrollbar-gutter: stable` must keep its space so the
 // page content does not move horizontally when the dialog opens.
+// Two modes: "native" uses the platform scrollbar as is (skipped where it is an overlay scrollbar
+// that takes no layout space, e.g. macOS, so the native gutter path cannot be measured there) and
+// "forced" styles ::-webkit-scrollbar, which reserves a classic scrollbar on every platform and is
+// the fallback measurement.
 test.describe("No horizontal shift when the dialog opens at desktop-1440", () => {
-  for (const d of DIALOGS) {
-    test(`${d.name} dialog: content stays put with a classic scrollbar`, async ({
-      baseURL,
-    }, testInfo) => {
-      // Own browser: Playwright's headless default passes --hide-scrollbars, and launchOptions cannot
-      // be overridden per describe group.
-      const browser = await chromium.launch({ ignoreDefaultArgs: ["--hide-scrollbars"] });
-      try {
-        const page = await browser.newPage({ baseURL, viewport: { width: 1440, height: 900 } });
-        await setup(page);
-        await page.goto("/bookings");
-        // Headless Chromium on macOS renders overlay scrollbars that take no layout space, so a
-        // classic scrollbar is forced with a styled ::-webkit-scrollbar, which always reserves it.
-        await page.addStyleTag({ content: "html::-webkit-scrollbar { width: 15px; }" });
-        await expect(d.opener(page)).toBeVisible();
+  for (const mode of ["native", "forced"] as const) {
+    for (const d of DIALOGS) {
+      test(`${d.name} dialog: content stays put with a classic scrollbar (${mode})`, async ({
+        baseURL,
+      }, testInfo) => {
+        // Own browser: Playwright's headless default passes --hide-scrollbars, and launchOptions cannot
+        // be overridden per describe group.
+        const browser = await chromium.launch({ ignoreDefaultArgs: ["--hide-scrollbars"] });
+        try {
+          const page = await browser.newPage({ baseURL, viewport: { width: 1440, height: 900 } });
+          await setup(page);
+          await page.goto("/bookings");
+          // Headless Chromium on macOS renders overlay scrollbars that take no layout space, so a
+          // classic scrollbar is forced with a styled ::-webkit-scrollbar, which always reserves it.
+          if (mode === "forced") {
+            await page.addStyleTag({ content: "html::-webkit-scrollbar { width: 15px; }" });
+          }
+          await expect(d.opener(page)).toBeVisible();
 
-        const measure = () =>
-          page.evaluate(() => {
-            const h1 = document.querySelector("h1")?.getBoundingClientRect();
-            const card = document.querySelector("main .rounded-card")?.getBoundingClientRect();
-            return {
-              h1Left: h1?.left ?? null,
-              cardLeft: card?.left ?? null,
-              cardWidth: card?.width ?? null,
-              clientWidth: document.documentElement.clientWidth,
-              innerWidth: window.innerWidth,
-              scrollable:
-                document.documentElement.scrollHeight > document.documentElement.clientHeight,
-            };
-          });
+          const measure = () =>
+            page.evaluate(() => {
+              const h1 = document.querySelector("h1")?.getBoundingClientRect();
+              const card = document.querySelector("main .rounded-card")?.getBoundingClientRect();
+              return {
+                h1Left: h1?.left ?? null,
+                cardLeft: card?.left ?? null,
+                cardWidth: card?.width ?? null,
+                clientWidth: document.documentElement.clientWidth,
+                innerWidth: window.innerWidth,
+                scrollable:
+                  document.documentElement.scrollHeight > document.documentElement.clientHeight,
+              };
+            });
 
-        const closed = await measure();
-        expect(closed.scrollable).toBe(true);
-        expect(
-          closed.innerWidth - closed.clientWidth,
-          "a classic scrollbar must be present for the measurement",
-        ).toBeGreaterThan(0);
+          const closed = await measure();
+          expect(closed.scrollable).toBe(true);
+          if (mode === "native") {
+            testInfo.skip(
+              closed.innerWidth - closed.clientWidth === 0,
+              "overlay scrollbars on this platform: the native gutter path cannot be measured",
+            );
+          }
+          expect(
+            closed.innerWidth - closed.clientWidth,
+            "a classic scrollbar must be present for the measurement",
+          ).toBeGreaterThan(0);
 
-        await d.opener(page).click();
-        await expect(page.getByRole("dialog")).toBeVisible();
-        const open = await measure();
+          await d.opener(page).click();
+          await expect(page.getByRole("dialog")).toBeVisible();
+          const open = await measure();
 
-        console.log(`SCROLLBAR_MEASUREMENT ${d.name} ${JSON.stringify({ closed, open })}`);
-        await page.screenshot({ path: testInfo.outputPath(`scrollbar-${d.name}.png`) });
+          console.log(
+            `SCROLLBAR_MEASUREMENT ${mode} ${d.name} ${JSON.stringify({ closed, open })}`,
+          );
+          await page.screenshot({ path: testInfo.outputPath(`scrollbar-${mode}-${d.name}.png`) });
 
-        expect(open.h1Left).toBe(closed.h1Left);
-        expect(open.cardLeft).toBe(closed.cardLeft);
-        expect(open.cardWidth).toBe(closed.cardWidth);
-      } finally {
-        await browser.close();
-      }
-    });
+          expect(open.h1Left).toBe(closed.h1Left);
+          expect(open.cardLeft).toBe(closed.cardLeft);
+          expect(open.cardWidth).toBe(closed.cardWidth);
+        } finally {
+          await browser.close();
+        }
+      });
+    }
   }
 });

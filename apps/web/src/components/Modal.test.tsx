@@ -1,5 +1,6 @@
 import { createEvent, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { Modal } from "./Modal.js";
 
@@ -254,6 +255,71 @@ describe("Modal", () => {
       expect(document.body.style.overflow).toBe("hidden");
       unmount();
       expect(document.body.style.overflow).toBe("");
+    });
+  });
+
+  describe("scrollbar compensation", () => {
+    // jsdom has no layout: model a classic 15px scrollbar that vanishes with `overflow: hidden`.
+    function mockScrollbar(width: number, vanishes: boolean) {
+      vi.spyOn(window, "innerWidth", "get").mockReturnValue(1000);
+      Object.defineProperty(document.documentElement, "clientWidth", {
+        configurable: true,
+        get: () => (vanishes && document.body.style.overflow === "hidden" ? 1000 : 1000 - width),
+      });
+    }
+
+    afterEach(() => {
+      Reflect.deleteProperty(document.documentElement, "clientWidth");
+      document.body.style.paddingRight = "";
+    });
+
+    it("pads the body by the vanished scrollbar width and restores the padding on unmount", () => {
+      document.body.style.paddingRight = "8px";
+      mockScrollbar(15, true);
+      const { unmount } = renderModal();
+      expect(document.body.style.paddingRight).toBe("23px");
+      unmount();
+      expect(document.body.style.paddingRight).toBe("8px");
+    });
+
+    it("adds no padding when the gutter is kept (the scrollbar width does not change)", () => {
+      mockScrollbar(15, false);
+      const { unmount } = renderModal();
+      expect(document.body.style.paddingRight).toBe("");
+      unmount();
+      expect(document.body.style.paddingRight).toBe("");
+    });
+
+    it("adds no padding with overlay scrollbars (no width to lose)", () => {
+      mockScrollbar(0, true);
+      renderModal();
+      expect(document.body.style.paddingRight).toBe("");
+    });
+  });
+
+  describe("StrictMode", () => {
+    it("opens the dialog, keeps the scroll lock and closes cleanly on unmount", () => {
+      document.body.style.overflow = "scroll";
+      const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+      const { unmount } = render(
+        <StrictMode>
+          <Modal labelledBy="m-title" onClose={vi.fn()}>
+            <h2 id="m-title">Dialog title</h2>
+            <input aria-label="target" data-autofocus />
+          </Modal>
+        </StrictMode>,
+      );
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toHaveAttribute("open");
+      expect(showModal).toHaveBeenCalled();
+      expect(document.body.style.overflow).toBe("hidden");
+      expect(screen.getByLabelText("target")).toHaveFocus();
+      // The simulated effect re-run must not leave the dialog un-reopenable: a native close re-opens.
+      (dialog as HTMLDialogElement).close();
+      expect(dialog).toHaveAttribute("open");
+      unmount();
+      expect(document.body.style.overflow).toBe("scroll");
+      expect(dialog).not.toHaveAttribute("open");
     });
   });
 
