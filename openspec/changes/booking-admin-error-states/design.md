@@ -30,3 +30,16 @@ Single `pendingId: string | null` per page (one in-flight action at a time per p
 ## Decision 4: Strings
 
 Add keys under the existing `booking.ui` and `admin` groups in `packages/shared/src/strings/en.ts`, following `strings/README.md`.
+
+## Decision 5: Amended platform requirements (Gate 2)
+
+Search of `openspec/specs/platform/spec.md` found four requirements that contradict the change and are MODIFIED in the delta, not just the success sign panel:
+
+- "Booking success page is a sign panel": timeout/no-id no longer show success copy; the "state logic MUST NOT change" clause is narrowed to polling interval, sync call and timeout duration.
+- "Booking form page uses the Gantry Signage identity": dates stay plain text but go through `formatDate`.
+- "Booking and payment restyle changes no behavior": new `booking.ui` keys are allowed; the "no `packages/shared` change" scenario becomes "no backend or client change".
+- "Admin restyle changes no behavior": "failed requests (none)" and "`disabled` conditions unchanged" are replaced by a pointer to the new admin requirement; the mutation-error-handling follow-up is closed.
+
+## Decision 6: Neutral panels and strings
+
+Still processing and not-found reuse the stone panel grammar of the waiting state (2px ink edge, no ember, no check tile) so only a confirmed booking ever looks green or ember. Still processing uses `role="status"`. Four new `booking.ui` strings; no new admin or dashboard strings because errors come from `getDisplayMessage`.
