@@ -431,6 +431,10 @@ test.describe("No horizontal shift when the dialog opens at desktop-1440", () =>
                 h1Left: h1?.left ?? null,
                 cardLeft: card?.left ?? null,
                 cardWidth: card?.width ?? null,
+                // clientWidth excludes a scrollbar but also a kept gutter; layoutWidth is the width
+                // the page is laid out in, so together they tell a kept gutter from a lost one.
+                layoutWidth: document.documentElement.getBoundingClientRect().width,
+                bodyPaddingRight: getComputedStyle(document.body).paddingRight,
                 clientWidth: document.documentElement.clientWidth,
                 innerWidth: window.innerWidth,
                 scrollable:
@@ -459,10 +463,11 @@ test.describe("No horizontal shift when the dialog opens at desktop-1440", () =>
             `SCROLLBAR_MEASUREMENT ${mode} ${d.name} ${JSON.stringify({ closed, open })}`,
           );
           await page.screenshot({ path: testInfo.outputPath(`scrollbar-${mode}-${d.name}.png`) });
+          const diagnostics = `closed vs open: ${JSON.stringify({ closed, open })}`;
 
-          expect(open.h1Left).toBe(closed.h1Left);
-          expect(open.cardLeft).toBe(closed.cardLeft);
-          expect(open.cardWidth).toBe(closed.cardWidth);
+          expect(open.h1Left, diagnostics).toBe(closed.h1Left);
+          expect(open.cardLeft, diagnostics).toBe(closed.cardLeft);
+          expect(open.cardWidth, diagnostics).toBe(closed.cardWidth);
         } finally {
           await browser.close();
         }

@@ -259,13 +259,20 @@ describe("Modal", () => {
   });
 
   describe("scrollbar compensation", () => {
-    // jsdom has no layout: model a classic 15px scrollbar that vanishes with `overflow: hidden`.
-    function mockScrollbar(width: number, vanishes: boolean) {
+    // jsdom has no layout: model a classic 15px scrollbar under `overflow: hidden`.
+    //  - "vanishes": the space is really lost (layout width grows, clientWidth grows);
+    //  - "gutter": `scrollbar-gutter: stable` keeps the space, so layout width stays, but Chromium
+    //    reports `clientWidth` as the full width (no scrollbar), which must not count as lost space.
+    function mockScrollbar(width: number, mode: "vanishes" | "gutter") {
+      const locked = () => document.body.style.overflow === "hidden";
       vi.spyOn(window, "innerWidth", "get").mockReturnValue(1000);
       Object.defineProperty(document.documentElement, "clientWidth", {
         configurable: true,
-        get: () => (vanishes && document.body.style.overflow === "hidden" ? 1000 : 1000 - width),
+        get: () => (locked() ? 1000 : 1000 - width),
       });
+      vi.spyOn(document.documentElement, "getBoundingClientRect").mockImplementation(
+        () => ({ width: mode === "vanishes" && locked() ? 1000 : 1000 - width }) as DOMRect,
+      );
     }
 
     afterEach(() => {
@@ -275,23 +282,25 @@ describe("Modal", () => {
 
     it("pads the body by the vanished scrollbar width and restores the padding on unmount", () => {
       document.body.style.paddingRight = "8px";
-      mockScrollbar(15, true);
+      mockScrollbar(15, "vanishes");
       const { unmount } = renderModal();
       expect(document.body.style.paddingRight).toBe("23px");
       unmount();
       expect(document.body.style.paddingRight).toBe("8px");
     });
 
-    it("adds no padding when the gutter is kept (the scrollbar width does not change)", () => {
-      mockScrollbar(15, false);
+    it("adds no padding when the gutter keeps the space, even though clientWidth grows", () => {
+      // A non-empty padding so a wrongly applied compensation is observable in jsdom.
+      document.body.style.paddingRight = "8px";
+      mockScrollbar(15, "gutter");
       const { unmount } = renderModal();
-      expect(document.body.style.paddingRight).toBe("");
+      expect(document.body.style.paddingRight).toBe("8px");
       unmount();
-      expect(document.body.style.paddingRight).toBe("");
+      expect(document.body.style.paddingRight).toBe("8px");
     });
 
     it("adds no padding with overlay scrollbars (no width to lose)", () => {
-      mockScrollbar(0, true);
+      mockScrollbar(0, "vanishes");
       renderModal();
       expect(document.body.style.paddingRight).toBe("");
     });
