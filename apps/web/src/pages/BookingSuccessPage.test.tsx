@@ -147,30 +147,6 @@ describe("BookingSuccessPage identity: confirmed", () => {
     expect(link.querySelector("button")).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
   });
-
-  it("no bookingId renders the same ember panel and copy", async () => {
-    renderSuccess("");
-    expect(
-      await screen.findByRole("heading", { level: 1, name: /booking confirmed/i }),
-    ).toBeVisible();
-    expectEmberSuccessPanel();
-    expect(screen.getByText(/your booking is confirmed/i)).toBeVisible();
-    expect(screen.queryByText(/^#/)).toBeNull();
-    expect(mockGetById).not.toHaveBeenCalled();
-  });
-
-  it("timed-out path renders the same ember panel and copy", async () => {
-    vi.useFakeTimers();
-    mockGetById.mockResolvedValue({ status: "PENDING_PAYMENT" });
-    renderSuccess();
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(31_000);
-    });
-    expect(screen.getByRole("heading", { level: 1, name: /booking confirmed/i })).toBeVisible();
-    expectEmberSuccessPanel();
-    expect(screen.getByText(/your booking is confirmed/i)).toBeVisible();
-    expect(screen.getByText("#abc123")).toBeVisible();
-  });
 });
 
 describe("BookingSuccessPage identity: waiting", () => {
@@ -233,5 +209,102 @@ describe("BookingSuccessPage identity: waiting", () => {
     });
     expect(screen.getByRole("heading", { level: 1, name: /booking confirmed/i })).toBeVisible();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+// NH-146 (booking-admin-error-states): success is only claimed for a confirmed booking.
+
+describe("BookingSuccessPage: still processing (timeout)", () => {
+  beforeEach(() => {
+    mockGetById.mockReset();
+    mockSyncPayment.mockReset();
+    mockSyncPayment.mockResolvedValue({});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function runToTimeout() {
+    vi.useFakeTimers();
+    const view = renderSuccess();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+    return view;
+  }
+
+  function expectStillProcessing(container: HTMLElement) {
+    const panel = screen.getByRole("status");
+    expect(panel).toHaveTextContent("Still processing");
+    expect(panel).toHaveTextContent(/check my bookings shortly/i);
+    expect(panel).toHaveClass("border-2", "border-border", "bg-surface-inset");
+    expect(panel).not.toHaveAttribute("aria-busy", "true");
+    expect(container.querySelector(".bg-ember")).toBeNull();
+    expect(panel.querySelector("svg")).toBeNull();
+    const h1s = screen.getAllByRole("heading", { level: 1 });
+    expect(h1s).toHaveLength(1);
+    expect(h1s[0]).toHaveTextContent("Still processing");
+    expect(screen.queryByText(/booking confirmed/i)).toBeNull();
+    expect(screen.queryByText(/your booking is confirmed/i)).toBeNull();
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/bookings");
+  }
+
+  it("a booking that stays PENDING_PAYMENT shows the Still processing panel at timeout", async () => {
+    mockGetById.mockResolvedValue({ status: "PENDING_PAYMENT" });
+    const { container } = await runToTimeout();
+    expectStillProcessing(container);
+  });
+
+  it("every poll rejected until timeout shows the same Still processing panel", async () => {
+    mockGetById.mockRejectedValue(new Error("network"));
+    const { container } = await runToTimeout();
+    expectStillProcessing(container);
+  });
+
+  it("a COMPLETED booking is still confirmed", async () => {
+    mockGetById.mockResolvedValue({ status: "COMPLETED" });
+    renderSuccess();
+    expect(
+      await screen.findByRole("heading", { level: 1, name: /booking confirmed/i }),
+    ).toBeVisible();
+  });
+});
+
+describe("BookingSuccessPage: missing booking id", () => {
+  beforeEach(() => {
+    mockGetById.mockReset();
+    mockSyncPayment.mockReset();
+  });
+
+  it("shows the not-found panel with one /bookings link and no confirmation", async () => {
+    const { container } = renderSuccess("");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: /we could not find your booking/i }),
+    ).toBeVisible();
+    expect(screen.getByText("Open My bookings to see your reservations.")).toBeVisible();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.queryByText(/booking confirmed/i)).toBeNull();
+    expect(screen.queryByText(/your booking is confirmed/i)).toBeNull();
+    expect(container.querySelector(".bg-ember")).toBeNull();
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/bookings");
+  });
+
+  it("neither polls nor syncs payment", async () => {
+    vi.useFakeTimers();
+    try {
+      renderSuccess("");
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      expect(mockGetById).not.toHaveBeenCalled();
+      expect(mockSyncPayment).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
