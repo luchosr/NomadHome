@@ -6,13 +6,13 @@ New keys (added in task 2.1, asserted by red tests in 1.1): `booking.ui.processi
 
 ## 1. QA red (tests first; they fail until section 2)
 
-- [ ] 1.1 Update `apps/web/src/pages/BookingCopy.test.ts`: assert the four new `booking.ui` keys and values above; keep every existing literal unchanged; drop any assumption that the success page source has no branching copy. Commit `test(web): red copy guard for booking success states (NH-146)`.
-- [ ] 1.2 Update `apps/web/src/pages/BookingSuccessPage.test.tsx`: replace the "no booking id" and "timed-out path renders the same ember panel and copy" tests with the delta scenarios (timeout shows Still processing panel in a stone panel, no `.bg-ember`, no check tile, one `h1`, single `/bookings` link, no confirmation title; every poll rejected until timeout shows the same panel; missing id shows not-found panel and `mockGetById` and `mockSyncPayment` are never called); keep confirmed and waiting scenarios and the 2s/30s timings unchanged.
-- [ ] 1.3 Update `apps/web/src/pages/BookingFormPage.test.tsx` (lines asserting `2026-08-01` / `2026-08-04` as text): assert `formatDate` output for both dates, assert raw ISO strings are not shown, and assert the `POST /bookings` payload still carries the ISO values.
-- [ ] 1.4 Update `apps/web/src/pages/MyBookingsPage.test.tsx`: add scenarios for failed checkout (alert with `getDisplayMessage` text, no redirect), retry (error cleared on next click, button enabled after failure) and success (redirect, no error).
-- [ ] 1.5 Update `apps/web/src/pages/AdminUsersPage.test.tsx`: add scenarios for row button disabled while the request is in flight (second click sends no second request), failed disable/enable shows an alert and re-enables the button, error clears on next action, success refetches.
-- [ ] 1.6 Update `apps/web/src/pages/AdminListingsPage.test.tsx`: same four scenarios as 1.5 for listings.
-- [ ] 1.7 Run `pnpm --filter @nomadhome/web test` and confirm only the new/updated tests fail for the expected reasons; report failing names. No production code touched.
+- [x] 1.1 Update `apps/web/src/pages/BookingCopy.test.ts`: assert the four new `booking.ui` keys and values above; keep every existing literal unchanged; drop any assumption that the success page source has no branching copy. Commit `test(web): red copy guard for booking success states (NH-146)`.
+- [x] 1.2 Update `apps/web/src/pages/BookingSuccessPage.test.tsx`: replace the "no booking id" and "timed-out path renders the same ember panel and copy" tests with the delta scenarios (timeout shows Still processing panel in a stone panel, no `.bg-ember`, no check tile, one `h1`, single `/bookings` link, no confirmation title; every poll rejected until timeout shows the same panel; missing id shows not-found panel and `mockGetById` and `mockSyncPayment` are never called); keep confirmed and waiting scenarios and the 2s/30s timings unchanged.
+- [x] 1.3 Update `apps/web/src/pages/BookingFormPage.test.tsx` (lines asserting `2026-08-01` / `2026-08-04` as text): assert `formatDate` output for both dates, assert raw ISO strings are not shown, and assert the `POST /bookings` payload still carries the ISO values.
+- [x] 1.4 Update `apps/web/src/pages/MyBookingsPage.test.tsx`: add scenarios for failed checkout (alert with `getDisplayMessage` text, no redirect), retry (error cleared on next click, button enabled after failure) and success (redirect, no error).
+- [x] 1.5 Update `apps/web/src/pages/AdminUsersPage.test.tsx`: add scenarios for row button disabled while the request is in flight (second click sends no second request), failed disable/enable shows an alert and re-enables the button, error clears on next action, success refetches.
+- [x] 1.6 Update `apps/web/src/pages/AdminListingsPage.test.tsx`: same four scenarios as 1.5 for listings.
+- [x] 1.7 Run `pnpm --filter @nomadhome/web test` and confirm only the new/updated tests fail for the expected reasons; report failing names. No production code touched.
 
 ## 2. Frontend green
 
