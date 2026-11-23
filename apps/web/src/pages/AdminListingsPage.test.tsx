@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AdminListingsPage } from "./AdminListingsPage.js";
+import { ApiError } from "../api/client.js";
 import adminListingsSource from "./AdminListingsPage.tsx?raw";
 
 const mockListListings = vi.fn();
@@ -393,7 +394,7 @@ describe("AdminListingsPage identity: actions", () => {
     expect(mockDisableListing).not.toHaveBeenCalled();
   });
 
-  it("GUARD: the data flow is unchanged (one list call, no disabled while pending, same names)", async () => {
+  it("GUARD: the data flow is unchanged (one list call, same names; pending is covered by NH-146)", async () => {
     mockDisableListing.mockReturnValue(new Promise(() => {}));
     const { container } = renderPage();
     await loaded(container);
@@ -404,7 +405,6 @@ describe("AdminListingsPage identity: actions", () => {
     const disable = within(table).getAllByRole("button", { name: "Disable" })[0] as HTMLElement;
     await userEvent.click(disable);
     expect(mockDisableListing).toHaveBeenCalledWith("pub");
-    expect(disable).not.toBeDisabled();
 
     const buttons = screen.getAllByRole("button");
     expect(buttons.every((b) => b.textContent === "Disable" || b.textContent === "Re-enable")).toBe(
@@ -477,5 +477,99 @@ describe("AdminListingsPage table: long strings", () => {
     expect(actions).toHaveClass("whitespace-nowrap", "pr-1");
     const lastTh = required(Array.from(container.querySelectorAll("thead th")).pop(), "last th");
     expect(lastTh).toHaveClass("pr-1");
+  });
+});
+
+// NH-146 (booking-admin-error-states): pending and error feedback on moderation actions.
+
+describe("AdminListingsPage: pending and error feedback (NH-146)", () => {
+  beforeEach(() => {
+    mockListListings.mockReset();
+    mockDisableListing.mockReset();
+    mockEnableListing.mockReset();
+    mockListListings.mockResolvedValue(MIXED);
+  });
+
+  it("disables the row button while the request is in flight and ignores a second click", async () => {
+    mockDisableListing.mockReturnValue(new Promise(() => {}));
+    const { container } = renderPage();
+    await loaded(container);
+    const table = tableOf(container);
+    const disable = within(table).getAllByRole("button", { name: "Disable" })[0] as HTMLElement;
+    await userEvent.click(disable);
+    await waitFor(() => expect(disable).toBeDisabled());
+    await userEvent.click(disable);
+    expect(mockDisableListing).toHaveBeenCalledTimes(1);
+    expect(within(table).getAllByRole("button", { name: "Disable" })[1]).toBeEnabled();
+    expect(within(table).getByRole("button", { name: "Re-enable" })).toBeEnabled();
+  });
+
+  it("disables the row button while Re-enable is in flight", async () => {
+    mockEnableListing.mockReturnValue(new Promise(() => {}));
+    const { container } = renderPage();
+    await loaded(container);
+    const reenable = within(tableOf(container)).getByRole("button", { name: "Re-enable" });
+    await userEvent.click(reenable);
+    await waitFor(() => expect(reenable).toBeDisabled());
+    await userEvent.click(reenable);
+    expect(mockEnableListing).toHaveBeenCalledTimes(1);
+  });
+
+  it("a failed disable shows the display message in an alert and re-enables the button", async () => {
+    mockDisableListing.mockRejectedValue(
+      new ApiError(500, { message: "Could not disable listing." }),
+    );
+    const { container } = renderPage();
+    await loaded(container);
+    const disable = within(tableOf(container)).getAllByRole("button", {
+      name: "Disable",
+    })[0] as HTMLElement;
+    await userEvent.click(disable);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not disable listing.");
+    expect(disable).toBeEnabled();
+  });
+
+  it("a failed enable shows the generic message when the server sent none", async () => {
+    mockEnableListing.mockRejectedValue(new Error("boom"));
+    const { container } = renderPage();
+    await loaded(container);
+    const reenable = within(tableOf(container)).getByRole("button", { name: "Re-enable" });
+    await userEvent.click(reenable);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong. Please try again.",
+    );
+    expect(reenable).toBeEnabled();
+  });
+
+  it("the error is cleared when the next action starts", async () => {
+    mockDisableListing.mockRejectedValueOnce(
+      new ApiError(500, { message: "Could not disable listing." }),
+    );
+    mockDisableListing.mockReturnValueOnce(new Promise(() => {}));
+    const { container } = renderPage();
+    await loaded(container);
+    const disable = within(tableOf(container)).getAllByRole("button", {
+      name: "Disable",
+    })[0] as HTMLElement;
+    await userEvent.click(disable);
+    await screen.findByRole("alert");
+    await userEvent.click(disable);
+    await waitFor(() => expect(mockDisableListing).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("a successful action refetches the list and the button is enabled again", async () => {
+    mockDisableListing.mockResolvedValue({});
+    const { container } = renderPage();
+    await loaded(container);
+    const disable = within(tableOf(container)).getAllByRole("button", {
+      name: "Disable",
+    })[0] as HTMLElement;
+    await userEvent.click(disable);
+    await waitFor(() => expect(mockListListings).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(
+      within(tableOf(container)).getAllByRole("button", { name: "Disable" })[0] as HTMLElement,
+    ).toBeEnabled();
   });
 });

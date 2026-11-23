@@ -11,8 +11,8 @@ import modalSource from "../components/Modal.tsx?raw";
 import emptyStateSource from "../components/EmptyState.tsx?raw";
 
 // NH-124 task 1.12 (booking-payment-identity D11): the restyle changes no copy. The literals below
-// are the baseline values captured before the change. This whole file is a GUARD: it passes today
-// and must keep passing, so any key rename or string edit during the restyle fails here.
+// are the baseline values captured before the change, extended in NH-146 with the four new
+// booking.ui keys. Any key rename or string edit fails here.
 
 const BOOKING_UI = {
   form_title: "Confirm your booking",
@@ -33,6 +33,12 @@ const BOOKING_UI = {
   cancel_message: "Your payment was not completed. No charges were made.",
   back_to_search: "Back to search",
   processing: "Processing your payment…",
+  // NH-146 (booking-admin-error-states): neutral states for the success page.
+  processing_title: "Still processing",
+  processing_message:
+    "We have not confirmed your payment yet. This can take a few minutes, so check My bookings shortly.",
+  not_found_title: "We could not find your booking",
+  not_found_message: "Open My bookings to see your reservations.",
 };
 
 const BOOKING_DASHBOARD = {

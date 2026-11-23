@@ -56,9 +56,41 @@ export function BookingSuccessPage() {
     };
   }, [bookingId, authLoading]);
 
-  const waiting = bookingId && !confirmed && !timedOut;
+  const status: "polling" | "confirmed" | "pending" | "missing" = !bookingId
+    ? "missing"
+    : confirmed
+      ? "confirmed"
+      : timedOut
+        ? "pending"
+        : "polling";
 
-  if (waiting) {
+  if (status === "missing" || status === "pending") {
+    const missing = status === "missing";
+    return (
+      <div className="mx-auto max-w-lg px-4 py-12">
+        <div role="status" className="border-2 border-border bg-surface-inset text-fg">
+          <div className="p-6 md:p-8">
+            <h1 className="m-0 mb-3 break-words text-3xl font-black leading-[0.95] tracking-[-0.03em] text-fg">
+              {missing ? t("booking.ui.not_found_title") : t("booking.ui.processing_title")}
+            </h1>
+            <p className="m-0 break-words text-base font-medium text-fg">
+              {missing ? t("booking.ui.not_found_message") : t("booking.ui.processing_message")}
+            </p>
+          </div>
+          <div className="border-t-2 border-border bg-surface-raised p-4 md:px-8">
+            <Link
+              to="/bookings"
+              className={cn(buttonVariants({ variant: "primary" }), "w-full sm:w-auto")}
+            >
+              {t("booking.ui.view_bookings")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "polling") {
     return (
       <div className="mx-auto max-w-lg px-4 py-12">
         <div
@@ -104,9 +136,7 @@ export function BookingSuccessPage() {
           <p className="m-0 break-words text-base font-medium text-fg">
             {t("booking.ui.success_message")}
           </p>
-          {bookingId && (
-            <p className="m-0 mt-3 break-words text-sm font-bold text-fg">#{bookingId}</p>
-          )}
+          <p className="m-0 mt-3 break-words text-sm font-bold text-fg">#{bookingId}</p>
         </div>
         <div className="rounded-b-[2px] border-t-2 border-border bg-surface-raised p-4 md:px-8">
           <Link

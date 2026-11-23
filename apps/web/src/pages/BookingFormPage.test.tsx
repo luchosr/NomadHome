@@ -7,6 +7,7 @@ import { BookingFormPage } from "./BookingFormPage.js";
 import { expectButtonLink } from "../test/buttonLink.js";
 import { ApiError } from "../api/client.js";
 import type { ListingDetail } from "../api/listings.js";
+import { formatDate } from "../lib/dates.js";
 
 // NH-124 identity tests (booking-payment-identity, tasks 1.1 to 1.4). jsdom does not compute Tailwind,
 // so shape is asserted through class tokens. Selector assumptions:
@@ -335,11 +336,35 @@ describe("BookingFormPage identity: summary panel", () => {
     expect(hasClassMatching(photo, /^rounded-(?!none$)/)).toBe(false);
   });
 
-  it("GUARD: dates render as raw ISO strings and the service fee label is present", async () => {
+  it("GUARD: the service fee label is present", async () => {
     await renderLoaded(mockListing, DATES);
-    expect(screen.getByText("2026-08-01")).toBeInTheDocument();
-    expect(screen.getByText("2026-08-04")).toBeInTheDocument();
     expect(await screen.findByText(/service fee/i)).toBeInTheDocument();
+  });
+
+  it("renders check-in and check-out through formatDate, never as raw ISO text (NH-146)", async () => {
+    await renderLoaded(mockListing, DATES);
+    expect(screen.getByText(formatDate("2026-08-01"))).toBeInTheDocument();
+    expect(screen.getByText(formatDate("2026-08-04"))).toBeInTheDocument();
+    expect(screen.queryByText("2026-08-01")).toBeNull();
+    expect(screen.queryByText("2026-08-04")).toBeNull();
+  });
+
+  it("still sends the ISO dates in the POST /bookings payload (NH-146)", async () => {
+    mockCreate.mockReset();
+    mockCheckout.mockReset();
+    mockCreate.mockResolvedValue({ id: "booking-iso" });
+    mockCheckout.mockResolvedValue({ url: "https://checkout.stripe.com/iso", sessionId: "s" });
+    Object.defineProperty(window, "location", { value: { href: "" }, writable: true });
+    await renderLoaded(mockListing, DATES);
+    await screen.findAllByText(/230\.00/);
+    await userEvent.click(screen.getByRole("button", { name: /pay now/i }));
+    await waitFor(() =>
+      expect(mockCreate).toHaveBeenCalledWith({
+        listingId: "abc",
+        checkIn: "2026-08-01",
+        checkOut: "2026-08-04",
+      }),
+    );
   });
 
   it("GUARD: the total row (closest div of the Total label) contains the total amount", async () => {

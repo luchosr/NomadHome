@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { Button, Skeleton } from "@nomadhome/ui";
 import { adminApi, type AdminListing } from "../api/admin.js";
 import { ListingStatusTag } from "../components/ListingStatusTag.js";
 import { PageWrapper } from "../components/PageWrapper.js";
+import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
+import { getDisplayMessage } from "../api/client.js";
 
 function listingTypeLabel(type: AdminListing["type"]): string {
   return type === "PROPERTY" ? t("host.listings.type_property") : t("host.listings.type_workspace");
@@ -47,21 +50,32 @@ export function AdminListingsPage() {
     queryFn: () => adminApi.listListings(),
   });
 
-  const handleDisable = async (id: string) => {
-    await adminApi.disableListing(id);
-    void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const runAction = async (id: string, action: (id: string) => Promise<unknown>) => {
+    if (pendingId !== null) return;
+    setPendingId(id);
+    setActionError(null);
+    try {
+      await action(id);
+      void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
+    } catch (err) {
+      setActionError(getDisplayMessage(err));
+    } finally {
+      setPendingId(null);
+    }
   };
 
-  const handleEnable = async (id: string) => {
-    await adminApi.enableListing(id);
-    void queryClient.invalidateQueries({ queryKey: ["admin", "listings"] });
-  };
+  const handleDisable = (id: string) => runAction(id, (i) => adminApi.disableListing(i));
+  const handleEnable = (id: string) => runAction(id, (i) => adminApi.enableListing(i));
 
   const renderAction = (listing: AdminListing, className: string) =>
     listing.status !== "DISABLED" ? (
       <Button
         variant="destructive"
         className={className}
+        disabled={pendingId === listing.id}
         onClick={() => void handleDisable(listing.id)}
       >
         {t("admin.listings.disable")}
@@ -70,6 +84,7 @@ export function AdminListingsPage() {
       <Button
         variant="secondary"
         className={className}
+        disabled={pendingId === listing.id}
         onClick={() => void handleEnable(listing.id)}
       >
         {t("admin.listings.enable")}
@@ -111,6 +126,8 @@ export function AdminListingsPage() {
       <h1 className="m-0 mb-6 text-3xl font-black leading-solid text-fg md:text-4xl">
         {t("admin.listings.title")}
       </h1>
+
+      <ServerErrorAlert error={actionError} className="mb-4" />
 
       {data.data.length === 0 ? (
         <div className="rounded-card border-2 border-dashed border-border bg-surface-raised px-6 py-12">
