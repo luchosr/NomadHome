@@ -74,4 +74,28 @@ test.describe("US-8.1 — Admin manages users", () => {
     await page.getByRole("button", { name: /disable/i }).click();
     await expect(page.getByText("Disabled").filter({ visible: true })).toBeVisible();
   });
+
+  test("shows an alert and re-enables the button when disabling a user fails", async ({ page }) => {
+    await mockAdminSession(page);
+    await page.route(`${API}/admin/users*`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: [ACTIVE_USER], total: 1, page: 1, limit: 50 }),
+      }),
+    );
+    await page.route(`${API}/admin/users/${USER_ID}/disable`, (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Could not disable right now" }),
+      }),
+    );
+    await page.goto("/admin/users");
+    const disable = page.getByRole("button", { name: /disable/i });
+    await disable.click();
+    await expect(page.getByRole("alert")).toContainText("Could not disable right now");
+    await expect(disable).toBeEnabled();
+    await expect(page.getByText("Disabled").filter({ visible: true })).toHaveCount(0);
+  });
 });

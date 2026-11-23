@@ -81,4 +81,30 @@ test.describe("US-8.2 — Admin disables listings", () => {
       page.getByRole("button", { name: /re-enable/i }).filter({ visible: true }),
     ).toBeVisible();
   });
+
+  test("shows an alert and re-enables the button when disabling a listing fails", async ({
+    page,
+  }) => {
+    await mockAdminSession(page);
+    await page.route(`${API}/admin/listings*`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: [ACTIVE_LISTING], total: 1, page: 1, limit: 50 }),
+      }),
+    );
+    await page.route(`${API}/admin/listings/${LISTING_ID}/disable`, (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Could not disable right now" }),
+      }),
+    );
+    await page.goto("/admin/listings");
+    const disable = page.getByRole("button", { name: /disable/i });
+    await disable.click();
+    await expect(page.getByRole("alert")).toContainText("Could not disable right now");
+    await expect(disable).toBeEnabled();
+    await expect(page.getByText("Disabled").filter({ visible: true })).toHaveCount(0);
+  });
 });
