@@ -308,6 +308,24 @@ describe("ReviewModal keyboard, focus and timer (NH-146)", () => {
     expect(panel).toHaveFocus();
   });
 
+  it("a request that resolves after the dialog unmounted never arms the success timer", async () => {
+    vi.useFakeTimers();
+    let resolve: (v: unknown) => void = () => {};
+    mockReview.mockReturnValue(new Promise((r) => (resolve = r)));
+    const { unmount } = render(
+      <ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    fireEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    unmount();
+    resolve({});
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("unmounting in the success state clears the 1200 ms timer: onSuccess is never called", async () => {
     const { unmount } = await submitUnderFakeTimers();
     await act(async () => {
