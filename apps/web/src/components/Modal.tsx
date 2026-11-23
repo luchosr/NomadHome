@@ -1,21 +1,89 @@
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 interface Props {
   labelledBy: string;
+  /** Called on Escape and on a backdrop click. The parent decides whether the dialog unmounts. */
+  onClose: () => void;
   children: ReactNode;
 }
 
-export function Modal({ labelledBy, children }: Props) {
+/**
+ * Native <dialog> opened with showModal(): the browser provides the focus move, Tab containment,
+ * inert background and top layer. Escape and backdrop clicks only call `onClose`; the parent
+ * unmounts the dialog (so a pending submit can swallow them with a noop).
+ */
+export function Modal({ labelledBy, onClose, children }: Props) {
+  const ref = useRef<HTMLDialogElement>(null);
+  // Captured during the first render, before showModal() (or the data-autofocus focus) moves focus.
+  const [opener] = useState(() => document.activeElement);
+  // A backdrop click counts only when the press and the release both happened on the dialog itself.
+  const gesture = useRef({ down: false, up: false });
+  // True from the effect cleanup until the next mount, so our own dialog.close() is not undone.
+  const unmounting = useRef(false);
+
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    unmounting.current = false;
+    const { body, documentElement: root } = document;
+    const previousOverflow = body.style.overflow;
+    const previousPaddingRight = body.style.paddingRight;
+    // Layout width, not clientWidth: once the scrollbar is gone, clientWidth reports the full width
+    // even when `scrollbar-gutter: stable` still reserves the space, which would pad twice.
+    const layoutBefore = root.getBoundingClientRect().width;
+    body.style.overflow = "hidden";
+    // `scrollbar-gutter: stable` (index.css) already keeps the space for native scrollbars. Where
+    // the gutter does not apply, pad by the width the layout actually gained.
+    const lost = root.getBoundingClientRect().width - layoutBefore;
+    if (lost > 0) {
+      body.style.paddingRight = `${parseFloat(getComputedStyle(body).paddingRight) + lost}px`;
+    }
+    if (!dialog.open) dialog.showModal();
+    // React's `autoFocus` runs while the dialog is still display:none, so it is a no-op in browsers
+    // and showModal() would pick the first focusable by DOM order. Focus the marked element here.
+    dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPaddingRight;
+      unmounting.current = true;
+      if (dialog.open) dialog.close();
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [opener]);
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40"
-      role="dialog"
+    <dialog
+      ref={ref}
       aria-modal="true"
       aria-labelledby={labelledBy}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onClose={(e) => {
+        // Chromium (CloseWatcher) can close the dialog natively on a second Escape that arrives
+        // without user interaction in between (a non-cancelable `cancel`). While React still
+        // renders the Modal, open it again so the page stays inert and the pending guard holds.
+        const dialog = e.currentTarget;
+        if (!unmounting.current && !dialog.open) dialog.showModal();
+      }}
+      onMouseDown={(e) => {
+        gesture.current = { down: e.target === e.currentTarget, up: false };
+      }}
+      onMouseUp={(e) => {
+        gesture.current.up = e.target === e.currentTarget;
+      }}
+      onClick={(e) => {
+        const { down, up } = gesture.current;
+        gesture.current = { down: false, up: false };
+        if (e.target === e.currentTarget && down && up) onClose();
+      }}
+      className="fixed inset-0 m-auto w-[28rem] max-w-[calc(100%-2rem)] border-0 bg-transparent p-0 text-fg backdrop-filter-none backdrop:bg-ink/40"
     >
-      <div className="mx-4 w-full max-w-md rounded-card border-2 border-border bg-surface-raised p-6">
+      <div className="w-full max-w-md rounded-card border-2 border-border bg-surface-raised p-6">
         {children}
       </div>
-    </div>
+    </dialog>
   );
 }

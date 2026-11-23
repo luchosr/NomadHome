@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { t } from "@nomadhome/shared";
 import { Button } from "@nomadhome/ui";
 import { bookingsApi } from "../api/bookings.js";
@@ -13,6 +13,7 @@ interface Props {
 }
 
 const STAR_COUNT = 5;
+const noop = () => {};
 
 /** Decorative star on a 24 grid: filled ink or a 2px outline, so state is shape and not colour. */
 function StarGlyph({ filled }: { filled: boolean }) {
@@ -41,6 +42,25 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const successTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const successPanel = useRef<HTMLDivElement>(null);
+
+  const mounted = useRef(false);
+
+  // An early close must never fire onSuccess later, including when the request resolves after it.
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      clearTimeout(successTimer.current);
+    };
+  }, []);
+
+  // The form (and the control that held focus) is replaced by the success panel: keep focus inside
+  // the dialog so Escape still reaches it instead of the focus falling back to <body>.
+  useEffect(() => {
+    if (success) successPanel.current?.focus();
+  }, [success]);
 
   const handleSubmit = async () => {
     if (rating === 0) return;
@@ -48,8 +68,9 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
     setIsSubmitting(true);
     try {
       await bookingsApi.review(bookingId, { rating, text: text.trim() || undefined });
+      if (!mounted.current) return;
       setSuccess(true);
-      setTimeout(onSuccess, 1200);
+      successTimer.current = setTimeout(onSuccess, 1200);
     } catch (err) {
       setError(getDisplayMessage(err));
     } finally {
@@ -60,13 +81,18 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
   const displayRating = hovered || rating;
 
   return (
-    <Modal labelledBy="review-modal-title">
+    <Modal labelledBy="review-modal-title" onClose={isSubmitting ? noop : onClose}>
       <h2 id="review-modal-title" className="m-0 mb-4 text-xl font-black text-fg">
         {t("booking.dashboard.review_modal_title")}
       </h2>
 
       {success ? (
-        <div className="flex items-center gap-3 border-2 border-border bg-surface-raised p-4">
+        <div
+          ref={successPanel}
+          role="status"
+          tabIndex={-1}
+          className="flex items-center gap-3 border-2 border-border bg-surface-raised p-4"
+        >
           <span
             aria-hidden="true"
             className="flex h-8 w-8 shrink-0 items-center justify-center bg-ink text-fg-inverse"
@@ -106,6 +132,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
                   <button
                     key={starValue}
                     type="button"
+                    data-autofocus={starValue === 1 ? "" : undefined}
                     aria-label={`${starValue} star${starValue === 1 ? "" : "s"}`}
                     aria-pressed={starValue === rating}
                     onClick={() => setRating(starValue)}

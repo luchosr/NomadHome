@@ -211,3 +211,143 @@ describe("ReviewModal identity", () => {
     );
   });
 });
+
+// NH-146 (modal-a11y): Escape arrives as the dialog's `cancel` event, the backdrop is a click on the
+// dialog element itself; both are suppressed while the review request is pending and allowed in the
+// success state. `showModal`/`close` are the jsdom stubs from src/test/setup.ts.
+describe("ReviewModal keyboard, focus and timer (NH-146)", () => {
+  const onSuccess = vi.fn();
+  const onClose = vi.fn();
+
+  beforeEach(() => {
+    mockReview.mockReset();
+    onSuccess.mockReset();
+    onClose.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function pressEscape() {
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+  }
+
+  /** Fake-timer friendly: rate, submit and flush the resolved review request. */
+  async function submitUnderFakeTimers() {
+    vi.useFakeTimers();
+    mockReview.mockResolvedValue({});
+    const view = render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    fireEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    fireEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByText("Review submitted!")).toBeInTheDocument();
+    return view;
+  }
+
+  it("the first star has focus after render (data-autofocus)", () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    expect(screen.getByRole("button", { name: "1 star" })).toHaveFocus();
+  });
+
+  it("Escape and a backdrop click call onClose", async () => {
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    pressEscape();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("dialog"));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("Escape and backdrop click are ignored while the review request is pending", async () => {
+    mockReview.mockReturnValue(new Promise(() => {}));
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    await userEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+
+    pressEscape();
+    await userEvent.click(screen.getByRole("dialog"));
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("Escape and backdrop click work again after a failed submit", async () => {
+    mockReview.mockRejectedValue(new ApiError(500, {}));
+    render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    await userEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    await screen.findByRole("alert");
+
+    pressEscape();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("dialog"));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("in the success state Escape and backdrop click call onClose", async () => {
+    await submitUnderFakeTimers();
+    pressEscape();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    // A real backdrop click is press + release + click on the dialog; a bare click event (no press)
+    // is not one (NH-146 drag rule), and userEvent is avoided here because of the fake timers.
+    const dialog = screen.getByRole("dialog");
+    fireEvent.mouseDown(dialog);
+    fireEvent.mouseUp(dialog);
+    fireEvent.click(dialog);
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("the success panel is a live region and takes focus when the form is replaced", async () => {
+    await submitUnderFakeTimers();
+    const panel = screen.getByRole("status");
+    expect(panel).toHaveTextContent("Review submitted!");
+    expect(panel).toHaveAttribute("tabindex", "-1");
+    expect(panel).toHaveFocus();
+  });
+
+  it("a request that resolves after the dialog unmounted never arms the success timer", async () => {
+    vi.useFakeTimers();
+    let resolve: (v: unknown) => void = () => {};
+    mockReview.mockReturnValue(new Promise((r) => (resolve = r)));
+    const { unmount } = render(
+      <ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "4 stars" }));
+    fireEvent.click(screen.getByRole("button", { name: /submit review/i }));
+    unmount();
+    resolve({});
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("unmounting in the success state clears the 1200 ms timer: onSuccess is never called", async () => {
+    const { unmount } = await submitUnderFakeTimers();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600);
+    });
+    unmount();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("GUARD: leaving the success state open calls onSuccess exactly once after 1200 ms", async () => {
+    await submitUnderFakeTimers();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1199);
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+});
