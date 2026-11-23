@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MyBookingsPage } from "./MyBookingsPage.js";
+import { ApiError } from "../api/client.js";
 import type { BookingsPage, BookingWithListing } from "../api/bookings.js";
 
 // NH-124 identity tests (booking-payment-identity, tasks 1.8 and 1.9). jsdom does not compute
@@ -334,5 +335,73 @@ describe("MyBookingsPage identity: states", () => {
       "href",
       "/search",
     );
+  });
+});
+
+// NH-146 (booking-admin-error-states): Complete payment failures are visible and retryable.
+
+describe("MyBookingsPage: Complete payment errors (NH-146)", () => {
+  beforeEach(() => {
+    mockListMine.mockReset();
+    mockListMine.mockResolvedValue(ALL_STATUSES);
+    mockCheckout.mockReset();
+    Object.defineProperty(window, "location", { value: { href: "" }, writable: true });
+  });
+
+  async function clickComplete() {
+    await userEvent.click(screen.getByRole("button", { name: "Complete payment" }));
+  }
+
+  it("failed checkout shows the getDisplayMessage text in an alert and does not redirect", async () => {
+    mockCheckout.mockRejectedValue(new ApiError(409, { message: "Booking is no longer payable." }));
+    renderPage();
+    await screen.findByText("Pending Listing");
+    await clickComplete();
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Booking is no longer payable.");
+    expect(window.location.href).toBe("");
+  });
+
+  it("failed checkout without a server message shows the generic text", async () => {
+    mockCheckout.mockRejectedValue(new Error("boom"));
+    renderPage();
+    await screen.findByText("Pending Listing");
+    await clickComplete();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong. Please try again.",
+    );
+  });
+
+  it("the button is enabled again after the failure", async () => {
+    mockCheckout.mockRejectedValue(new ApiError(500, { message: "Checkout is down." }));
+    renderPage();
+    await screen.findByText("Pending Listing");
+    await clickComplete();
+    await screen.findByRole("alert");
+    expect(screen.getByRole("button", { name: "Complete payment" })).toBeEnabled();
+  });
+
+  it("the previous error is cleared when the next attempt starts, before it resolves", async () => {
+    mockCheckout.mockRejectedValueOnce(new ApiError(500, { message: "Checkout is down." }));
+    mockCheckout.mockReturnValueOnce(new Promise(() => {}));
+    renderPage();
+    await screen.findByText("Pending Listing");
+    await clickComplete();
+    await screen.findByRole("alert");
+    await clickComplete();
+    await waitFor(() => expect(mockCheckout).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("a successful retry redirects and shows no error", async () => {
+    mockCheckout.mockRejectedValueOnce(new ApiError(500, { message: "Checkout is down." }));
+    mockCheckout.mockResolvedValueOnce({ url: "https://checkout.stripe.com/ok", sessionId: "s" });
+    renderPage();
+    await screen.findByText("Pending Listing");
+    await clickComplete();
+    await screen.findByRole("alert");
+    await clickComplete();
+    await waitFor(() => expect(window.location.href).toBe("https://checkout.stripe.com/ok"));
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });
