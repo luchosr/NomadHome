@@ -20,8 +20,8 @@ New keys (added in task 2.1, asserted by red tests in 1.1): `booking.ui.processi
 - [x] 2.2 `apps/web/src/pages/BookingSuccessPage.tsx`: derive state `polling | confirmed | pending | missing`; confirmed only for `CONFIRMED`/`COMPLETED`; timeout or exhausted poll errors render the neutral Still processing panel (stone, 2px ink edge, `role="status"`, one `h1`, single `/bookings` link, no check tile, no ember); missing `bookingId` renders the neutral not-found panel and starts no polling and no sync; poll interval, timeout, `syncPayment` call and `authLoading` gating unchanged. Make 1.2 pass.
 - [x] 2.3 `apps/web/src/pages/BookingFormPage.tsx`: render check-in and check-out via `formatDate` from `../lib/dates.js`; leave payloads ISO. Make 1.3 pass.
 - [x] 2.4 `apps/web/src/pages/MyBookingsPage.tsx`: add `catch` to `handleCompletePayment`; store `getDisplayMessage(err)` in state, clear it at the start of each attempt, render with `ServerErrorAlert`; keep `finally` resetting `checkingOut`. Make 1.4 pass.
-- [ ] 2.5 `apps/web/src/pages/AdminUsersPage.tsx`: add `pendingId` and an error state; disable only the matching row button while pending; `catch` sets the `getDisplayMessage` error shown with `ServerErrorAlert`; clear error at action start and `pendingId` in `finally`; keep refetch on success. Make 1.5 pass.
-- [ ] 2.6 `apps/web/src/pages/AdminListingsPage.tsx`: same as 2.5 for listings. Make 1.6 pass.
+- [x] 2.5 `apps/web/src/pages/AdminUsersPage.tsx`: add `pendingId` and an error state; disable only the matching row button while pending; `catch` sets the `getDisplayMessage` error shown with `ServerErrorAlert`; clear error at action start and `pendingId` in `finally`; keep refetch on success. Make 1.5 pass.
+- [x] 2.6 `apps/web/src/pages/AdminListingsPage.tsx`: same as 2.5 for listings. Make 1.6 pass.
 - [ ] 2.7 Verify and refactor: run `pnpm lint`, `pnpm typecheck`, `pnpm --filter @nomadhome/web test`, `pnpm --filter @nomadhome/shared test`, `pnpm build`; confirm `rg` finds no `packages/shared` change other than `strings/en.ts`, and no `console.log`.
 
 ## 3. E2E

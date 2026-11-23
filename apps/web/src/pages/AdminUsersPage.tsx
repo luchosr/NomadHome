@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { Button, Skeleton } from "@nomadhome/ui";
 import { adminApi, type AdminUser } from "../api/admin.js";
 import { PageWrapper } from "../components/PageWrapper.js";
+import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
+import { getDisplayMessage } from "../api/client.js";
 
 /** Account state as shape plus text: solid with a marker (active), struck through (disabled). */
 function AccountStatusTag({ disabledAt }: { disabledAt: string | null }) {
@@ -59,27 +62,43 @@ export function AdminUsersPage() {
     queryFn: () => adminApi.listUsers(),
   });
 
-  const handleDisable = async (id: string) => {
-    await adminApi.disableUser(id);
-    void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const runAction = async (id: string, action: (id: string) => Promise<unknown>) => {
+    if (pendingId !== null) return;
+    setPendingId(id);
+    setActionError(null);
+    try {
+      await action(id);
+      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    } catch (err) {
+      setActionError(getDisplayMessage(err));
+    } finally {
+      setPendingId(null);
+    }
   };
 
-  const handleEnable = async (id: string) => {
-    await adminApi.enableUser(id);
-    void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-  };
+  const handleDisable = (id: string) => runAction(id, (i) => adminApi.disableUser(i));
+  const handleEnable = (id: string) => runAction(id, (i) => adminApi.enableUser(i));
 
   const renderAction = (user: AdminUser, className: string) =>
     user.disabledAt === null ? (
       <Button
         variant="destructive"
         className={className}
+        disabled={pendingId === user.id}
         onClick={() => void handleDisable(user.id)}
       >
         {t("admin.users.disable")}
       </Button>
     ) : (
-      <Button variant="secondary" className={className} onClick={() => void handleEnable(user.id)}>
+      <Button
+        variant="secondary"
+        className={className}
+        disabled={pendingId === user.id}
+        onClick={() => void handleEnable(user.id)}
+      >
         {t("admin.users.enable")}
       </Button>
     );
@@ -117,6 +136,8 @@ export function AdminUsersPage() {
       <h1 className="m-0 mb-6 text-3xl font-black leading-solid text-fg md:text-4xl">
         {t("admin.users.title")}
       </h1>
+
+      <ServerErrorAlert error={actionError} className="mb-4" />
 
       {data.data.length === 0 ? (
         <div className="rounded-card border-2 border-dashed border-border bg-surface-raised px-6 py-12">
