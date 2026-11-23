@@ -19,10 +19,13 @@ export function Modal({ labelledBy, onClose, children }: Props) {
   const [opener] = useState(() => document.activeElement);
   // A backdrop click counts only when the press and the release both happened on the dialog itself.
   const gesture = useRef({ down: false, up: false });
+  // True from the effect cleanup until the next mount, so our own dialog.close() is not undone.
+  const unmounting = useRef(false);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
+    unmounting.current = false;
     const { body, documentElement: root } = document;
     const previousOverflow = body.style.overflow;
     const previousPaddingRight = body.style.paddingRight;
@@ -38,6 +41,7 @@ export function Modal({ labelledBy, onClose, children }: Props) {
     return () => {
       body.style.overflow = previousOverflow;
       body.style.paddingRight = previousPaddingRight;
+      unmounting.current = true;
       if (dialog.open) dialog.close();
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
     };
@@ -51,6 +55,13 @@ export function Modal({ labelledBy, onClose, children }: Props) {
       onCancel={(e) => {
         e.preventDefault();
         onClose();
+      }}
+      onClose={(e) => {
+        // Chromium (CloseWatcher) can close the dialog natively on a second Escape that arrives
+        // without user interaction in between (a non-cancelable `cancel`). While React still
+        // renders the Modal, open it again so the page stays inert and the pending guard holds.
+        const dialog = e.currentTarget;
+        if (!unmounting.current && !dialog.open) dialog.showModal();
       }}
       onMouseDown={(e) => {
         gesture.current = { down: e.target === e.currentTarget, up: false };
