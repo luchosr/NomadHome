@@ -45,8 +45,16 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
   const successTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const successPanel = useRef<HTMLDivElement>(null);
 
-  // An early close must never fire onSuccess later.
-  useEffect(() => () => clearTimeout(successTimer.current), []);
+  const mounted = useRef(false);
+
+  // An early close must never fire onSuccess later, including when the request resolves after it.
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      clearTimeout(successTimer.current);
+    };
+  }, []);
 
   // The form (and the control that held focus) is replaced by the success panel: keep focus inside
   // the dialog so Escape still reaches it instead of the focus falling back to <body>.
@@ -60,6 +68,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
     setIsSubmitting(true);
     try {
       await bookingsApi.review(bookingId, { rating, text: text.trim() || undefined });
+      if (!mounted.current) return;
       setSuccess(true);
       successTimer.current = setTimeout(onSuccess, 1200);
     } catch (err) {
