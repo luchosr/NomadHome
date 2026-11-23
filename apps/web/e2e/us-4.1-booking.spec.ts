@@ -74,8 +74,9 @@ test.describe("US-4.1 — Guest books a listing", () => {
     await mockQuote(page);
     await page.goto(`/listings/${LISTING_ID}/book?checkIn=2026-08-01&checkOut=2026-08-04`);
     await expect(page.getByText("Sunny Loft in Lisbon")).toBeVisible();
-    await expect(page.getByText("2026-08-01")).toBeVisible();
-    await expect(page.getByText("2026-08-04")).toBeVisible();
+    await expect(page.getByText("Aug 1, 2026")).toBeVisible();
+    await expect(page.getByText("Aug 4, 2026")).toBeVisible();
+    await expect(page.getByText("2026-08-01")).toHaveCount(0);
     await expect(page.getByText(/service fee/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /pay now/i })).toBeEnabled();
   });
@@ -118,5 +119,18 @@ test.describe("US-4.1 — Guest books a listing", () => {
     await page.getByRole("button", { name: /pay now/i }).click();
     await expect(page).toHaveURL(/booking\/success/, { timeout: 10000 });
     await expect(page.getByRole("heading", { name: /booking confirmed/i })).toBeVisible();
+  });
+
+  test("shows the not-found panel when the success page has no booking id", async ({ page }) => {
+    await mockGuestSession(page);
+    await page.goto("/booking/success");
+    await expect(
+      page.getByRole("heading", { name: /we could not find your booking/i }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /booking confirmed/i })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /view my bookings/i })).toHaveAttribute(
+      "href",
+      "/bookings",
+    );
   });
 });

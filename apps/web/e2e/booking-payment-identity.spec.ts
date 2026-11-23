@@ -447,8 +447,9 @@ for (const vp of VIEWPORTS) {
       await expectEdge(photo, "solid");
       await expectNoRadius(photo);
 
-      await expect(page.getByText("2026-08-01", { exact: true })).toBeVisible();
-      await expect(page.getByText("2026-08-04", { exact: true })).toBeVisible();
+      await expect(page.getByText("Aug 1, 2026", { exact: true })).toBeVisible();
+      await expect(page.getByText("Aug 4, 2026", { exact: true })).toBeVisible();
+      await expect(page.getByText("2026-08-01", { exact: true })).toHaveCount(0);
       await expect(page.getByText(/service fee/i)).toBeVisible();
 
       expect(await shadowsAndGradients(page)).toEqual([]);
@@ -643,18 +644,54 @@ for (const vp of VIEWPORTS) {
       await attachScreenshot(page, testInfo, `success-${vp.name}`);
     });
 
-    test("success without a booking id: the same ember panel, ink text and link", async ({
+    test("success without a booking id: a neutral not-found panel, no ember, no confirmation", async ({
       page,
     }, testInfo) => {
       await guest(page);
       await page.goto("/booking/success");
 
-      await expect(page.locator("h1")).toHaveText("Booking confirmed!");
-      expectInkEdgedPanel(await boxInfo(page.locator("h1"), "ember"), EMBER_RGB);
-      await expectInkOnEmber(page, 2);
-      await expect(page.getByRole("link", { name: "View my bookings" })).toBeVisible();
+      const h1 = page.locator("h1");
+      await expect(h1).toHaveCount(1);
+      await expect(h1).toHaveText("We could not find your booking");
+      await expect(page.getByText("Booking confirmed!")).toHaveCount(0);
+      await expect(page.getByRole("status")).toContainText(
+        "Open My bookings to see your reservations.",
+      );
+      expectInkEdgedPanel(await boxInfo(h1, "panel"), STONE_RGB);
+      expect(await emberTexts(page)).toEqual([]);
+      const link = page.getByRole("link", { name: "View my bookings" });
+      await expect(link).toHaveCount(1);
+      await expect(link).toHaveAttribute("href", "/bookings");
+      expect(await shadowsAndGradients(page)).toEqual([]);
       await expectNoHorizontalOverflow(page);
       await attachScreenshot(page, testInfo, `success-no-booking-id-${vp.name}`);
+    });
+
+    test("success that never confirms: a neutral Still processing panel after the timeout", async ({
+      page,
+    }, testInfo) => {
+      await page.clock.install();
+      await guest(page, { booking: ok({ id: BOOKING_ID, status: "PENDING_PAYMENT" }) });
+      await page.goto(`/booking/success?bookingId=${BOOKING_ID}`);
+      await expect(page.getByRole("status")).toContainText("Processing your payment");
+
+      for (let i = 0; i < 20 && (await page.locator("h1").count()) === 0; i++) {
+        await page.clock.runFor(2000);
+        await page.waitForTimeout(50);
+      }
+
+      const h1 = page.locator("h1");
+      await expect(h1).toHaveCount(1);
+      await expect(h1).toHaveText("Still processing");
+      await expect(page.getByText("Booking confirmed!")).toHaveCount(0);
+      expectInkEdgedPanel(await boxInfo(h1, "panel"), STONE_RGB);
+      expect(await emberTexts(page)).toEqual([]);
+      const link = page.getByRole("link", { name: "View my bookings" });
+      await expect(link).toHaveCount(1);
+      await expect(link).toHaveAttribute("href", "/bookings");
+      expect(await shadowsAndGradients(page)).toEqual([]);
+      await expectNoHorizontalOverflow(page);
+      await attachScreenshot(page, testInfo, `success-still-processing-${vp.name}`);
     });
 
     test("waiting: a dashed 2px ink stone status panel, busy, with a flat skeleton", async ({
