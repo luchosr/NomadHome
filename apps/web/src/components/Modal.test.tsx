@@ -117,6 +117,32 @@ describe("Modal", () => {
     });
   });
 
+  describe("native close while still mounted", () => {
+    // Chromium can deliver a second, non-cancelable `cancel` (CloseWatcher) that closes the dialog
+    // behind React's back. The dialog must be re-opened while React still renders the Modal.
+    it("re-opens the dialog with showModal when it is closed natively", () => {
+      renderModal();
+      const dialog = screen.getByRole("dialog") as HTMLDialogElement;
+      const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+      dialog.close();
+      expect(showModal).toHaveBeenCalledTimes(1);
+      expect(dialog).toHaveAttribute("open");
+    });
+
+    it("does not re-open the dialog while unmounting", () => {
+      const { unmount } = renderModal();
+      const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+      unmount();
+      expect(showModal).not.toHaveBeenCalled();
+    });
+
+    it("keeps the body scroll lock after a native close", () => {
+      renderModal();
+      (screen.getByRole("dialog") as HTMLDialogElement).close();
+      expect(document.body.style.overflow).toBe("hidden");
+    });
+  });
+
   describe("backdrop click", () => {
     it("a click on the dialog element itself calls onClose once", async () => {
       const { onClose } = renderModal();

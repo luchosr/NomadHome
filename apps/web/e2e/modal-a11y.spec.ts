@@ -255,6 +255,42 @@ for (const vp of VIEWPORTS) {
           await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 5000 });
         });
 
+        test("Escape pressed twice while pending keeps the dialog open and the page locked", async ({
+          page,
+        }) => {
+          // Chromium (CloseWatcher) delivers the second Escape with no user interaction in between as
+          // a non-cancelable `cancel` and closes the native dialog behind React's back.
+          let release: () => void = () => {};
+          const gate = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          await setup(page, { gate });
+          await d.open(page);
+          const dialog = page.getByRole("dialog");
+
+          if (d.name === "review") {
+            await dialog.getByRole("button", { name: "4 stars", exact: true }).click();
+            await dialog.getByRole("button", { name: /submit review/i }).click();
+          } else {
+            await dialog.getByRole("button", { name: /yes, cancel/i }).click();
+          }
+          await expect(dialog.getByRole("button", { name: "Close" })).toBeDisabled();
+
+          await page.keyboard.press("Escape");
+          await page.keyboard.press("Escape");
+          await page.keyboard.press("Escape");
+
+          await expect(dialog).toBeVisible();
+          expect(await bodyOverflow(page)).toBe("hidden");
+          expect(
+            await page.evaluate(() => document.querySelector("dialog")?.matches(":modal")),
+          ).toBe(true);
+
+          release();
+          await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 5000 });
+          expect(await bodyOverflow(page)).not.toBe("hidden");
+        });
+
         test("Escape works again after a failed submit", async ({ page }) => {
           await setup(page, { failWith: { status: 500, body: { error: "SERVER_ERROR" } } });
           await d.open(page);
