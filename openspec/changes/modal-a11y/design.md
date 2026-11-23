@@ -12,8 +12,8 @@ management, Escape, backdrop close and scroll lock.
 | File                                                             | Change                                                                           |
 | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `apps/web/src/components/Modal.tsx`                              | Native `<dialog>`, `showModal()`, `onClose`, cancel, backdrop, scroll, focus     |
-| `apps/web/src/components/CancelBookingModal.tsx`                 | Pass guarded `onClose`; `autoFocus` on the textarea                              |
-| `apps/web/src/components/ReviewModal.tsx`                        | Pass guarded `onClose`; `autoFocus` on the first star; success allows close      |
+| `apps/web/src/components/CancelBookingModal.tsx`                 | Pass guarded `onClose`; `data-autofocus` on the textarea                         |
+| `apps/web/src/components/ReviewModal.tsx`                        | Pass guarded `onClose`; `data-autofocus` on the first star; success allows close |
 | `apps/web/src/test/setup.ts`                                     | jsdom stub for `HTMLDialogElement.showModal` and `close`                         |
 | `apps/web/src/components/Modal.test.tsx` (new), consumers' tests | Escape, backdrop, pending guard, scroll lock, focus return, initial focus        |
 | `apps/web/e2e/booking-payment-identity.spec.ts` (and a11y spec)  | Tab loop, `inert` background, `::backdrop`, Escape, focus return                 |
@@ -100,15 +100,20 @@ allowed: the review is already saved and closing early is harmless; the pending
 timer still calls `onSuccess` (D9 notes the cleanup question). `MyBookingsPage`
 is unchanged.
 
-## D8. Initial focus with `autoFocus`
+## D8. Initial focus with `data-autofocus`
 
-`showModal()` focuses the first focusable descendant unless an element has
-`autofocus`. Declare it explicitly so the choice does not depend on DOM order:
+`showModal()` focuses the first focusable descendant unless an element has the
+HTML `autofocus` attribute. React's `autoFocus` prop does not help: it calls
+`.focus()` at commit, while the `<dialog>` is still `display: none`, so it is a
+no-op in a real browser (jsdom hides this because it does not model rendering).
+Instead `Modal` focuses the element marked `data-autofocus` right after
+`showModal()` in its mount effect, so the choice does not depend on DOM order:
 the `textarea#cancel-reason` in `CancelBookingModal` (the destructive button
-must not be the default target), the first star button in `ReviewModal`. React
-calls `.focus()` for `autoFocus` on mount, before or after `showModal()`
-depending on effect order, so the unit test asserts `document.activeElement`
-after render and the e2e asserts it in a real browser. No new copy or `t()` key.
+must not be the default target), the first star button in `ReviewModal`. A
+simple data attribute was chosen over an `initialFocusRef` prop: no prop
+plumbing through two consumers. The unit test proves focus lands on the marked
+element even when it is not first in DOM order and that it happens after
+`showModal()`; the e2e asserts it in a real browser. No new copy or `t()` key.
 
 ## D9. Tests
 
@@ -120,7 +125,7 @@ after render and the e2e asserts it in a real browser. No new copy or `t()` key.
   click inside the surface does not; body overflow is `hidden` while mounted and
   the previous value is restored on unmount; focus returns to the opener on
   unmount. Consumers: Escape and backdrop are no-ops while pending, work after a
-  failed submit, and work in the Review success state; `autoFocus` target is
+  failed submit, and work in the Review success state; `data-autofocus` target is
   focused.
 - **E2E (Playwright, mocked API).** Tab and Shift+Tab loop inside the dialog;
   background is `inert` (not reachable); Escape and backdrop click close; focus
@@ -139,6 +144,25 @@ in the two "restyle changes no behavior" requirements. `apps/web/DESIGN.md`
 "Modal frame" (~l.285) is rewritten to describe the native dialog. Verify the
 current line numbers then.
 
+## D12. Review follow-up hardening
+
+An independent review found three defects, fixed test first:
+
+- **Native close while mounted.** Chromium (CloseWatcher) delivers a second
+  Escape, with no user interaction in between, as a non-cancelable `cancel` and
+  closes the native dialog while React still renders `Modal`. `Modal` handles the
+  native `close` event and calls `showModal()` again unless an `unmounting` ref,
+  set in the effect cleanup before `dialog.close()`, says the close is ours. The
+  effect resets the ref on mount so StrictMode double effects work.
+- **Review success focus.** The form (which held focus) is replaced by the
+  success panel, so focus fell to `<body>`. The panel is `role="status"` with
+  `tabIndex={-1}` and is focused when `success` becomes true.
+- **Initial focus** is `data-autofocus` (D8).
+
+The global `html { scrollbar-gutter: stable }` keeps a gutter on every route that
+shows a classic scrollbar. That is accepted: it is the price of a layout that
+does not jump when the dialog locks the page scroll.
+
 ## D11. No other behaviour change
 
 Routes, API calls, queries, handlers, accessible names, visible strings, tab
@@ -152,15 +176,15 @@ untouched. No contrast table is needed; the existing token tests stay green.
 
 ## Risks
 
-| Risk                                                                 | Mitigation                                                                                                 |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| jsdom cannot verify Tab loop, `inert` or `::backdrop`                | The stub only enables unit behaviour; e2e in a real browser owns those assertions (D9)                     |
-| UA `<dialog>` styles shift layout at 360px                           | Resets and `max-w-[calc(100%-2rem)]` (D5); screenshots at 1440 and 360 px in the report                    |
-| Focus return when the opener unmounts                                | Restore only if connected (D6); documented fallback to browser default; e2e covers the cancel-success path |
-| Escape or backdrop mid-request                                       | Noop `onClose` while pending (D7); unit tests                                                              |
-| `autoFocus` and `showModal()` order differ across React and browsers | Assert `activeElement` in unit and e2e (D8)                                                                |
-| Backdrop click misfires after a drag that starts inside the surface  | Plain `click` with the `target === currentTarget` guard (D3); e2e covers drag-out                          |
-| Tests or screenshots pin the old `div` structure                     | Helper selectors keep working (D4); update any `.fixed` or overlay selectors in the same PR                |
+| Risk                                                                                    | Mitigation                                                                                                 |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| jsdom cannot verify Tab loop, `inert` or `::backdrop`                                   | The stub only enables unit behaviour; e2e in a real browser owns those assertions (D9)                     |
+| UA `<dialog>` styles shift layout at 360px                                              | Resets and `max-w-[calc(100%-2rem)]` (D5); screenshots at 1440 and 360 px in the report                    |
+| Focus return when the opener unmounts                                                   | Restore only if connected (D6); documented fallback to browser default; e2e covers the cancel-success path |
+| Escape or backdrop mid-request                                                          | Noop `onClose` while pending (D7); unit tests                                                              |
+| React `autoFocus` is a no-op in a display:none dialog; `showModal()` picks by DOM order | Assert `activeElement` in unit and e2e (D8)                                                                |
+| Backdrop click misfires after a drag that starts inside the surface                     | Plain `click` with the `target === currentTarget` guard (D3); e2e covers drag-out                          |
+| Tests or screenshots pin the old `div` structure                                        | Helper selectors keep working (D4); update any `.fixed` or overlay selectors in the same PR                |
 
 ## Open points
 

@@ -46,7 +46,7 @@ loop and Escape handling. No dependency is added.
   and restore the previous value on cleanup.
 - **Focus return.** Record `document.activeElement` before `showModal()` and
   restore focus to it on unmount (if still connected).
-- **Initial focus.** `autoFocus` on the first control: the textarea in
+- **Initial focus.** `data-autofocus` on the first control: the textarea in
   `CancelBookingModal`, the first star in `ReviewModal`.
 - **Consumers.**
   - `CancelBookingModal` and `ReviewModal` pass a noop `onClose` to `Modal` while

@@ -44,7 +44,7 @@ export function CancelBookingModal({ bookingId, onSuccess, onClose }: Props) {
       </label>
       <textarea
         id="cancel-reason"
-        autoFocus
+        data-autofocus
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         maxLength={500}

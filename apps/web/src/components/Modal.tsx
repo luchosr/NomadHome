@@ -15,7 +15,7 @@ interface Props {
  */
 export function Modal({ labelledBy, onClose, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
-  // Captured during the first render, before showModal() (or an autoFocus) moves focus.
+  // Captured during the first render, before showModal() (or the data-autofocus focus) moves focus.
   const [opener] = useState(() => document.activeElement);
   // A backdrop click counts only when the press and the release both happened on the dialog itself.
   const gesture = useRef({ down: false, up: false });
@@ -38,6 +38,9 @@ export function Modal({ labelledBy, onClose, children }: Props) {
       body.style.paddingRight = `${parseFloat(getComputedStyle(body).paddingRight) + lost}px`;
     }
     if (!dialog.open) dialog.showModal();
+    // React's `autoFocus` runs while the dialog is still display:none, so it is a no-op in browsers
+    // and showModal() would pick the first focusable by DOM order. Focus the marked element here.
+    dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => {
       body.style.overflow = previousOverflow;
       body.style.paddingRight = previousPaddingRight;

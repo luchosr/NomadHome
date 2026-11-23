@@ -247,7 +247,7 @@ describe("ReviewModal keyboard, focus and timer (NH-146)", () => {
     return view;
   }
 
-  it("the first star has focus after render (autoFocus)", () => {
+  it("the first star has focus after render (data-autofocus)", () => {
     render(<ReviewModal bookingId="b2" onSuccess={onSuccess} onClose={onClose} />);
     expect(screen.getByRole("button", { name: "1 star" })).toHaveFocus();
   });

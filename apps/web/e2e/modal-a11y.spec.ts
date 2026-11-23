@@ -153,7 +153,9 @@ for (const vp of VIEWPORTS) {
 
     for (const d of DIALOGS) {
       test.describe(`${d.name} dialog`, () => {
-        test("initial focus is inside the dialog on the autoFocus control", async ({ page }) => {
+        test("initial focus is inside the dialog on the data-autofocus control", async ({
+          page,
+        }) => {
           await setup(page);
           await d.open(page);
           expect((await focusState(page)).inside).toBe(true);

@@ -133,7 +133,7 @@ describe("CancelBookingModal keyboard and focus (NH-146)", () => {
     fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
   }
 
-  it("the reason textarea has focus after render (autoFocus)", () => {
+  it("the reason textarea has focus after render (data-autofocus)", () => {
     render(<CancelBookingModal bookingId="b1" onSuccess={onSuccess} onClose={onClose} />);
     expect(screen.getByLabelText(/reason/i)).toHaveFocus();
   });

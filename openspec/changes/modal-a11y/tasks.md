@@ -40,8 +40,8 @@ Isolation rules for every run:
 
 - [ ] 3.1 `apps/web/src/components/Modal.tsx`: native `<dialog ref aria-modal="true" aria-labelledby>` with `showModal()` on mount; required `onClose`; `cancel` handler with `preventDefault()` then `onClose()`; `onClick` closes only when `e.target === e.currentTarget`; classes `p-0 border-0 bg-transparent max-w-[calc(100%-2rem)] backdrop:bg-ink/40` with `backdrop-filter: none`; the surface stays the first child (`w-full max-w-md rounded-card border-2 border-border bg-surface-raised p-6`, `mx-4` removed); no dependency
 - [ ] 3.2 `Modal.tsx` effects: store `previous = document.body.style.overflow`, set `hidden`, restore `previous` on cleanup; store `document.activeElement` before `showModal()` and on cleanup call `focus()` only when it is an `HTMLElement` that `isConnected`
-- [ ] 3.3 `CancelBookingModal.tsx`: pass `onClose={isSubmitting ? noop : onClose}` to `Modal`; `autoFocus` on `textarea#cancel-reason`; no copy change
-- [ ] 3.4 `ReviewModal.tsx`: pass `onClose={isSubmitting ? noop : onClose}`; `autoFocus` on the first star; keep Escape and backdrop working in the success state; store the success timer id in a ref and clear it in an unmount cleanup so an early close never fires `onSuccess`; no copy change
+- [ ] 3.3 `CancelBookingModal.tsx`: pass `onClose={isSubmitting ? noop : onClose}` to `Modal`; `data-autofocus` on `textarea#cancel-reason`; no copy change
+- [ ] 3.4 `ReviewModal.tsx`: pass `onClose={isSubmitting ? noop : onClose}`; `data-autofocus` on the first star; keep Escape and backdrop working in the success state; store the success timer id in a ref and clear it in an unmount cleanup so an early close never fires `onSuccess`; no copy change
 - [ ] 3.5 Scrollbar decision: if 2.4 shows a content jump at 1440 px, add `scrollbar-gutter: stable` (or equivalent padding compensation) in the same change and re-run the screenshots; otherwise record the shift as accepted in the step 7 report
 - [ ] 3.6 `apps/web/src/test/setup.ts`: keep the stub from 1.8 and confirm no other test depends on the old `div` structure
 - [ ] 3.7 Run tasks 1.1 to 1.9 green and re-run the 2.x e2e green on the isolated port

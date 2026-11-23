@@ -123,7 +123,7 @@ export function ReviewModal({ bookingId, onSuccess, onClose }: Props) {
                   <button
                     key={starValue}
                     type="button"
-                    autoFocus={starValue === 1}
+                    data-autofocus={starValue === 1 ? "" : undefined}
                     aria-label={`${starValue} star${starValue === 1 ? "" : "s"}`}
                     aria-pressed={starValue === rating}
                     onClick={() => setRating(starValue)}
