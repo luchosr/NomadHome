@@ -29,11 +29,13 @@ export function Modal({ labelledBy, onClose, children }: Props) {
     const { body, documentElement: root } = document;
     const previousOverflow = body.style.overflow;
     const previousPaddingRight = body.style.paddingRight;
-    const gutterBefore = window.innerWidth - root.clientWidth;
+    // Layout width, not clientWidth: once the scrollbar is gone, clientWidth reports the full width
+    // even when `scrollbar-gutter: stable` still reserves the space, which would pad twice.
+    const layoutBefore = root.getBoundingClientRect().width;
     body.style.overflow = "hidden";
     // `scrollbar-gutter: stable` (index.css) already keeps the space for native scrollbars. Where
-    // the gutter does not apply (for example custom ::-webkit-scrollbar), pad by what vanished.
-    const lost = gutterBefore - (window.innerWidth - root.clientWidth);
+    // the gutter does not apply, pad by the width the layout actually gained.
+    const lost = root.getBoundingClientRect().width - layoutBefore;
     if (lost > 0) {
       body.style.paddingRight = `${parseFloat(getComputedStyle(body).paddingRight) + lost}px`;
     }
