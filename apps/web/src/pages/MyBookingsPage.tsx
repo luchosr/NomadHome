@@ -8,6 +8,8 @@ import { CancelBookingModal } from "../components/CancelBookingModal.js";
 import { ReviewModal } from "../components/ReviewModal.js";
 import { PageWrapper } from "../components/PageWrapper.js";
 import { EmptyState } from "../components/EmptyState.js";
+import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
+import { getDisplayMessage } from "../api/client.js";
 import { formatDate } from "../lib/dates.js";
 
 function statusLabel(status: BookingWithListing["status"]): string {
@@ -55,12 +57,16 @@ export function MyBookingsPage() {
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
   const [reviewBookingId, setReviewBookingId] = useState<string | null>(null);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const handleCompletePayment = async (bookingId: string) => {
     setCheckingOut(bookingId);
+    setCheckoutError(null);
     try {
       const { url } = await bookingsApi.checkout(bookingId);
       window.location.href = url;
+    } catch (err) {
+      setCheckoutError(getDisplayMessage(err));
     } finally {
       setCheckingOut(null);
     }
@@ -140,6 +146,8 @@ export function MyBookingsPage() {
       <h1 className="m-0 mb-6 text-3xl font-black leading-solid text-fg md:text-4xl">
         {t("booking.dashboard.title")}
       </h1>
+
+      <ServerErrorAlert error={checkoutError} className="mb-4" />
 
       {data.data.length === 0 ? (
         <EmptyState
