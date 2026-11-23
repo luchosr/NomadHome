@@ -300,6 +300,14 @@ describe("ReviewModal keyboard, focus and timer (NH-146)", () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
+  it("the success panel is a live region and takes focus when the form is replaced", async () => {
+    await submitUnderFakeTimers();
+    const panel = screen.getByRole("status");
+    expect(panel).toHaveTextContent("Review submitted!");
+    expect(panel).toHaveAttribute("tabindex", "-1");
+    expect(panel).toHaveFocus();
+  });
+
   it("unmounting in the success state clears the 1200 ms timer: onSuccess is never called", async () => {
     const { unmount } = await submitUnderFakeTimers();
     await act(async () => {

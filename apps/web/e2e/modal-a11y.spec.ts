@@ -352,6 +352,32 @@ for (const vp of VIEWPORTS) {
   });
 }
 
+// The review success state replaces the form (which held focus), so focus must move to the success
+// panel, and Escape from there must still close the dialog and hand focus back to the opener.
+for (const vp of VIEWPORTS) {
+  test.describe(`Review success state at ${vp.name}`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test("focus moves to the success status and Escape closes with focus on the opener", async ({
+      page,
+    }) => {
+      await setup(page);
+      await openReview(page);
+      const dialog = page.getByRole("dialog");
+      await dialog.getByRole("button", { name: "4 stars", exact: true }).click();
+      await dialog.getByRole("button", { name: /submit review/i }).click();
+
+      const status = dialog.getByRole("status");
+      await expect(status).toBeVisible();
+      await expect(status).toBeFocused();
+
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(reviewOpener(page)).toBeFocused();
+    });
+  });
+}
+
 // Scrollbar shift (design open point, tasks 2.4 and 3.5). Headless Chromium hides scrollbars by
 // default and macOS uses overlay scrollbars, so a classic 15px scrollbar is forced. The scroll lock
 // (body overflow:hidden) removes the scrollbar; `scrollbar-gutter: stable` must keep its space so the
