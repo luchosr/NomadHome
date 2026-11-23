@@ -117,6 +117,47 @@ describe("Modal", () => {
     });
   });
 
+  describe("initial focus", () => {
+    // `autoFocus` is a no-op in browsers (the dialog is display:none at commit), so Modal focuses the
+    // `[data-autofocus]` element itself after showModal().
+    it("focuses the [data-autofocus] element even when it is not first in DOM order", () => {
+      render(
+        <Modal labelledBy="m-title" onClose={vi.fn()}>
+          <h2 id="m-title">Dialog title</h2>
+          <button>first in DOM order</button>
+          <input aria-label="target" data-autofocus />
+        </Modal>,
+      );
+      expect(screen.getByLabelText("target")).toHaveFocus();
+    });
+
+    it("focuses it after showModal, not before", () => {
+      const order: string[] = [];
+      vi.spyOn(HTMLDialogElement.prototype, "showModal").mockImplementation(function (
+        this: HTMLDialogElement,
+      ) {
+        order.push("showModal");
+        this.setAttribute("open", "");
+      });
+      const focus = vi.spyOn(HTMLElement.prototype, "focus").mockImplementation(() => {
+        order.push("focus");
+      });
+      render(
+        <Modal labelledBy="m-title" onClose={vi.fn()}>
+          <h2 id="m-title">Dialog title</h2>
+          <input aria-label="target" data-autofocus />
+        </Modal>,
+      );
+      expect(order).toEqual(["showModal", "focus"]);
+      focus.mockRestore();
+    });
+
+    it("does nothing when no element is marked", () => {
+      renderModal();
+      expect(screen.getByRole("button", { name: "inside" })).not.toHaveFocus();
+    });
+  });
+
   describe("native close while still mounted", () => {
     // Chromium can deliver a second, non-cancelable `cancel` (CloseWatcher) that closes the dialog
     // behind React's back. The dialog must be re-opened while React still renders the Modal.
