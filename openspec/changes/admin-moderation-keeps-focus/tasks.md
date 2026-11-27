@@ -6,8 +6,8 @@
 - [x] 1.2 `apps/web/src/pages/AdminUsersPage.test.tsx`, block "pending and error feedback (NH-146)": replace `toBeDisabled` with `toHaveAttribute("aria-disabled", "true")` plus no `disabled` attribute, and every `toBeEnabled` with `not.toHaveAttribute("aria-disabled", "true")` (`toBeEnabled` would pass vacuously). Keep the one-request assertion and add Enter and Space while pending
 - [x] 1.3 `apps/web/src/pages/AdminListingsPage.test.tsx`: the same replacements in its pending and error feedback block
 - [x] 1.4 Both page test files: with the button focused, assert it is `document.activeElement` while pending, after failure and after success; after success with a flipped list mock, assert the opposite-action button is the same DOM node. Cover the table and the card list
-- [ ] 1.5 `apps/web/src/pages/AdminUsersPage.test.tsx` and `apps/web/src/pages/AdminListingsPage.test.tsx`: for Disable and Re-enable, `fireEvent.keyDown` with `repeat: true` returns `false` (default prevented) for Enter and Space, and `true` for Tab and for a non-repeated Enter
-- [ ] 1.6 Run the three files and confirm the new assertions fail for the expected reason
+- [x] 1.5 `apps/web/src/pages/AdminUsersPage.test.tsx` and `apps/web/src/pages/AdminListingsPage.test.tsx`: for Disable and Re-enable, `fireEvent.keyDown` with `repeat: true` returns `false` (default prevented) for Enter and Space, and `true` for Tab and for a non-repeated Enter
+- [x] 1.6 Run the three files and confirm the new assertions fail for the expected reason
 
 ## 2. Implementation (Frontend)
 

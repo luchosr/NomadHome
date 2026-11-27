@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -684,6 +684,28 @@ describe("AdminListingsPage: moderation actions keep focus (NH-146)", () => {
       expect(button).toHaveTextContent(action);
       expect(document.activeElement).toBe(button);
       expectNotPending(button);
+    },
+  );
+});
+
+describe("AdminListingsPage: moderation actions ignore key repeat (NH-146)", () => {
+  beforeEach(() => {
+    mockListListings.mockReset();
+    mockListListings.mockResolvedValue(MIXED);
+  });
+
+  it.each(CASES)(
+    "$layout $action: cancels repeated Enter and Space only",
+    async ({ layout, key }) => {
+      const { container } = renderPage();
+      await loaded(container);
+      const button = actionButton(container, layout, key);
+
+      // fireEvent returns false when the default action was prevented.
+      expect(fireEvent.keyDown(button, { key: "Enter", repeat: true })).toBe(false);
+      expect(fireEvent.keyDown(button, { key: " ", repeat: true })).toBe(false);
+      expect(fireEvent.keyDown(button, { key: "Tab", repeat: true })).toBe(true);
+      expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(true);
     },
   );
 });
