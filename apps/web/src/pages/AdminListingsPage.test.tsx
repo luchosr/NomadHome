@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -138,6 +138,15 @@ function listOf(container: HTMLElement): HTMLElement {
 
 function cardsOf(container: HTMLElement): HTMLElement[] {
   return Array.from(listOf(container).querySelectorAll<HTMLElement>(":scope > li"));
+}
+
+function expectPending(button: HTMLElement) {
+  expect(button).toHaveAttribute("aria-disabled", "true");
+  expect(button).not.toHaveAttribute("disabled");
+}
+
+function expectNotPending(button: HTMLElement) {
+  expect(button).not.toHaveAttribute("aria-disabled", "true");
 }
 
 function cardOf(container: HTMLElement, title: string): HTMLElement {
@@ -490,32 +499,38 @@ describe("AdminListingsPage: pending and error feedback (NH-146)", () => {
     mockListListings.mockResolvedValue(MIXED);
   });
 
-  it("disables the row button while the request is in flight and ignores a second click", async () => {
+  it("marks the row button aria-disabled while in flight and ignores further activations", async () => {
     mockDisableListing.mockReturnValue(new Promise(() => {}));
     const { container } = renderPage();
     await loaded(container);
     const table = tableOf(container);
     const disable = within(table).getAllByRole("button", { name: "Disable" })[0] as HTMLElement;
     await userEvent.click(disable);
-    await waitFor(() => expect(disable).toBeDisabled());
+    await waitFor(() => expectPending(disable));
     await userEvent.click(disable);
+    disable.focus();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard(" ");
     expect(mockDisableListing).toHaveBeenCalledTimes(1);
-    expect(within(table).getAllByRole("button", { name: "Disable" })[1]).toBeEnabled();
-    expect(within(table).getByRole("button", { name: "Re-enable" })).toBeEnabled();
+    expectNotPending(within(table).getAllByRole("button", { name: "Disable" })[1] as HTMLElement);
+    expectNotPending(within(table).getByRole("button", { name: "Re-enable" }));
   });
 
-  it("disables the row button while Re-enable is in flight", async () => {
+  it("marks the row button aria-disabled while Re-enable is in flight", async () => {
     mockEnableListing.mockReturnValue(new Promise(() => {}));
     const { container } = renderPage();
     await loaded(container);
     const reenable = within(tableOf(container)).getByRole("button", { name: "Re-enable" });
     await userEvent.click(reenable);
-    await waitFor(() => expect(reenable).toBeDisabled());
+    await waitFor(() => expectPending(reenable));
     await userEvent.click(reenable);
+    reenable.focus();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard(" ");
     expect(mockEnableListing).toHaveBeenCalledTimes(1);
   });
 
-  it("a failed disable shows the display message in an alert and re-enables the button", async () => {
+  it("a failed disable shows the display message in an alert and the button is no longer pending", async () => {
     mockDisableListing.mockRejectedValue(
       new ApiError(500, { message: "Could not disable listing." }),
     );
@@ -526,7 +541,7 @@ describe("AdminListingsPage: pending and error feedback (NH-146)", () => {
     })[0] as HTMLElement;
     await userEvent.click(disable);
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not disable listing.");
-    expect(disable).toBeEnabled();
+    expectNotPending(disable);
   });
 
   it("a failed enable shows the generic message when the server sent none", async () => {
@@ -538,7 +553,7 @@ describe("AdminListingsPage: pending and error feedback (NH-146)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Something went wrong. Please try again.",
     );
-    expect(reenable).toBeEnabled();
+    expectNotPending(reenable);
   });
 
   it("the error is cleared when the next action starts", async () => {
@@ -558,7 +573,7 @@ describe("AdminListingsPage: pending and error feedback (NH-146)", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("a successful action refetches the list and the button is enabled again", async () => {
+  it("a successful action refetches the list and the button is no longer pending", async () => {
     mockDisableListing.mockResolvedValue({});
     const { container } = renderPage();
     await loaded(container);
@@ -568,8 +583,129 @@ describe("AdminListingsPage: pending and error feedback (NH-146)", () => {
     await userEvent.click(disable);
     await waitFor(() => expect(mockListListings).toHaveBeenCalledTimes(2));
     expect(screen.queryByRole("alert")).toBeNull();
-    expect(
+    expectNotPending(
       within(tableOf(container)).getAllByRole("button", { name: "Disable" })[0] as HTMLElement,
-    ).toBeEnabled();
+    );
   });
+});
+
+// NH-146 (admin-moderation-keeps-focus): focus retention and key repeat.
+
+const LAYOUTS = ["table", "card list"] as const;
+
+const ACTIONS = [
+  {
+    action: "Disable",
+    opposite: "Re-enable",
+    key: "Published Cabin",
+    id: "pub",
+    mock: mockDisableListing,
+  },
+  {
+    action: "Re-enable",
+    opposite: "Disable",
+    key: "Disabled Desk",
+    id: "dis",
+    mock: mockEnableListing,
+  },
+];
+
+const CASES = LAYOUTS.flatMap((layout) => ACTIONS.map((a) => ({ layout, ...a })));
+
+function actionButton(container: HTMLElement, layout: (typeof LAYOUTS)[number], key: string) {
+  const scope =
+    layout === "table"
+      ? required(within(tableOf(container)).getByText(key).closest<HTMLElement>("tr"), `row ${key}`)
+      : cardOf(container, key);
+  return within(scope).getByRole("button");
+}
+
+function flipped(id: string) {
+  return {
+    ...MIXED,
+    data: MIXED.data.map((item) => {
+      if (item.id !== id) return item;
+      return id === "pub" ? { ...item, status: "DISABLED" } : { ...item, status: "PUBLISHED" };
+    }),
+  };
+}
+
+describe("AdminListingsPage: moderation actions keep focus (NH-146)", () => {
+  beforeEach(() => {
+    mockListListings.mockReset();
+    mockDisableListing.mockReset();
+    mockEnableListing.mockReset();
+    mockListListings.mockResolvedValue(MIXED);
+  });
+
+  it.each(CASES)(
+    "$layout $action: the same button keeps focus while pending and after success",
+    async ({ layout, action, opposite, key, id, mock }) => {
+      let resolve: (value: unknown) => void = () => {};
+      mock.mockReturnValue(new Promise((res) => (resolve = res)));
+      const { container } = renderPage();
+      await loaded(container);
+      const button = actionButton(container, layout, key);
+      expect(button).toHaveTextContent(action);
+      button.focus();
+      await userEvent.keyboard("{Enter}");
+
+      await waitFor(() => expectPending(button));
+      expect(document.activeElement).toBe(button);
+
+      mockListListings.mockResolvedValue(flipped(id));
+      resolve({});
+
+      await waitFor(() => expect(actionButton(container, layout, key)).toHaveTextContent(opposite));
+      expect(actionButton(container, layout, key)).toBe(button);
+      expect(document.activeElement).toBe(button);
+      expectNotPending(button);
+    },
+  );
+
+  it.each(CASES)(
+    "$layout $action: the button keeps focus while pending and after failure",
+    async ({ layout, action, key, mock }) => {
+      let reject: (reason: unknown) => void = () => {};
+      mock.mockReturnValue(new Promise((_, rej) => (reject = rej)));
+      const { container } = renderPage();
+      await loaded(container);
+      const button = actionButton(container, layout, key);
+      button.focus();
+      await userEvent.keyboard(" ");
+
+      await waitFor(() => expectPending(button));
+      expect(document.activeElement).toBe(button);
+
+      reject(new Error("boom"));
+
+      await screen.findByRole("alert");
+      expect(actionButton(container, layout, key)).toBe(button);
+      expect(button).toHaveTextContent(action);
+      expect(document.activeElement).toBe(button);
+      expectNotPending(button);
+    },
+  );
+});
+
+describe("AdminListingsPage: moderation actions ignore key repeat (NH-146)", () => {
+  beforeEach(() => {
+    mockListListings.mockReset();
+    mockListListings.mockResolvedValue(MIXED);
+  });
+
+  it.each(CASES)(
+    "$layout $action: cancels repeated Enter and Space only",
+    async ({ layout, key }) => {
+      const { container } = renderPage();
+      await loaded(container);
+      const button = actionButton(container, layout, key);
+
+      // fireEvent returns false when the default action was prevented.
+      expect(fireEvent.keyDown(button, { key: "Enter", repeat: true })).toBe(false);
+      expect(fireEvent.keyDown(button, { key: " ", repeat: true })).toBe(false);
+      expect(fireEvent.keyDown(button, { key: "Tab", repeat: true })).toBe(true);
+      expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(true);
+    },
+  );
 });
