@@ -19,9 +19,17 @@ The review dialog SHALL build each rating button's accessible name from the star
 - **WHEN** `booking.ui.star_one` and `booking.ui.star_other` are resolved
 - **THEN** they are "star" and "stars"
 
-### Requirement: Become host terms error is linked to its checkbox
+### Requirement: Become host field errors are linked to their controls
 
-On the Become host page the terms checkbox SHALL expose its validation state with the same convention as the login and register fields. While the terms error is shown, the checkbox MUST have `aria-invalid="true"` and an `aria-describedby` that references the id of the element holding the error text, using the shared field error id for `acceptedTerms`. While no terms error is shown, the checkbox MUST NOT have `aria-describedby` and MUST NOT have `aria-invalid="true"`. The error text, its look, the absence of a role on it, the validation rule and the submitted payload MUST NOT change.
+On the Become host page the display name input, the payout email input and the terms checkbox SHALL expose their validation state with the same convention as the login and register fields. While a control's error is shown, that control MUST have `aria-invalid="true"` and an `aria-describedby` that references the id of the element holding its own error text, using the shared field error id for `displayName`, `payoutEmail` and `acceptedTerms`. While a control shows no error, it MUST NOT have `aria-describedby` and MUST NOT have `aria-invalid="true"`. The error texts, their look, the absence of a role on them, the validation rules and the submitted payload MUST NOT change.
+
+#### Scenario: Display name and payout email errors are linked
+
+- **GIVEN** the Become host form with the display name and payout email left empty
+- **WHEN** the form is submitted
+- **THEN** each of the two inputs has `aria-invalid="true"`
+- **AND** each input's `aria-describedby` references the element that holds that input's own error text
+- **AND** neither error element has a `role` and no request is sent
 
 #### Scenario: Terms error is linked to the checkbox
 
@@ -34,14 +42,14 @@ On the Become host page the terms checkbox SHALL expose its validation state wit
 #### Scenario: No link while there is no error
 
 - **GIVEN** the Become host form before any submit
-- **WHEN** the checkbox is inspected
-- **THEN** it has no `aria-describedby` and `aria-invalid` is not `true`
+- **WHEN** the two inputs and the checkbox are inspected
+- **THEN** none has `aria-describedby` and none has `aria-invalid="true"`
 
 #### Scenario: Link is removed when the error clears
 
-- **GIVEN** the terms error is shown
-- **WHEN** the user checks the terms checkbox and the error clears
-- **THEN** the checkbox has no `aria-describedby` and `aria-invalid` is not `true`
+- **GIVEN** the three errors are shown
+- **WHEN** the user corrects a field (or checks the terms checkbox) and its error clears
+- **THEN** that control has no `aria-describedby` and `aria-invalid` is not `true`
 
 ## MODIFIED Requirements
 

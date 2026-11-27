@@ -10,15 +10,16 @@ Copy guards affected: `apps/web/src/pages/ModalCopy.test.ts` (exact set of keys 
 
 - [ ] 1.1 `apps/web/src/pages/ModalCopy.test.ts`: add `booking.ui.star_one` and `booking.ui.star_other` to `BASELINE` and update the header comment to name them as the only additions. Keep every existing literal.
 - [ ] 1.2 `apps/web/src/pages/BookingCopy.test.ts`: add `star_one: "star"` and `star_other: "stars"` to `BOOKING_UI`. Keep every existing literal. The existing exact-name guard in `apps/web/src/components/ReviewModal.test.tsx` stays unedited.
-- [ ] 1.3 `apps/web/src/pages/BecomeHostPage.test.tsx`: add the three terms scenarios (error shown: `aria-invalid="true"` and `aria-describedby` equal to the id of the error element, which has no role; before submit: no `aria-describedby`, `aria-invalid` not `true`; after checking the box: both cleared).
-- [ ] 1.4 Run `pnpm --filter @nomadhome/web test`; confirm only the new or updated assertions fail, for the expected reasons. Commit `test(web): red tests for star names and terms error link (NH-146)`.
+- [ ] 1.3 `apps/web/src/pages/BecomeHostPage.test.tsx`: add the field error link scenarios for the display name input, payout email input and terms checkbox (error shown: `aria-invalid="true"` and `aria-describedby` equal to the id of that control's own error element, which has no role; before submit: no `aria-describedby`, `aria-invalid` not `true`; after correcting the field or checking the box: both cleared). Leave the email empty to trigger its error, since a malformed value is stopped by native `type="email"` validation before submit.
+- [ ] 1.4 Run `pnpm --filter @nomadhome/web test`; confirm only the new or updated assertions fail, for the expected reasons. Commit `test(web): red tests for star names and become-host error links (NH-146)`.
 
 ## 2. Frontend green
 
 - [ ] 2.1 `packages/shared/src/strings/en.ts`: add `star_one` and `star_other` under `booking.ui`.
 - [ ] 2.2 `apps/web/src/components/ReviewModal.tsx`: set the star `aria-label` to the number, one space, and `t("booking.ui.star_one")` for 1 or `t("booking.ui.star_other")` otherwise, each as its own literal `t()` call (not a ternary inside `t()`, which the copy guards do not match). Make 1.1 and 1.2 pass. Commit `fix(web): route review star names through t() (NH-146)`.
-- [ ] 2.3 `apps/web/src/pages/BecomeHostPage.tsx`: import `errorIdFor` from `../components/FormField.js`; give the checkbox `aria-invalid={!!errors.acceptedTerms}` and `aria-describedby={errors.acceptedTerms ? errorIdFor("acceptedTerms") : undefined}`; give the error paragraph `id={errorIdFor("acceptedTerms")}`. No class, text or role change. Make 1.3 pass. Commit `fix(web): link become-host terms error to its checkbox (NH-146)`.
-- [ ] 2.4 Verify: `pnpm lint`, `pnpm typecheck`, `pnpm --filter @nomadhome/web test`, `pnpm --filter @nomadhome/shared test`, `pnpm build`.
+- [ ] 2.3 `apps/web/src/pages/BecomeHostPage.tsx`: import `errorIdFor` from `../components/FormField.js`; give the checkbox `aria-invalid={!!errors.acceptedTerms}` and `aria-describedby={errors.acceptedTerms ? errorIdFor("acceptedTerms") : undefined}`; give the error paragraph `id={errorIdFor("acceptedTerms")}`. No class, text or role change. Commit `fix(web): link become-host terms error to its checkbox (NH-146)`.
+- [ ] 2.4 `apps/web/src/pages/BecomeHostPage.tsx`: give the `displayName` and `payoutEmail` inputs `aria-describedby={errors.<field> ? errorIdFor("<field>") : undefined}`, keeping their existing `aria-invalid`. `apps/web/src/components/FormField.tsx` already renders the ids and is not edited. Make 1.3 pass. Commit `fix(web): link become-host field errors to their inputs (NH-146)`.
+- [ ] 2.5 Verify: `pnpm lint`, `pnpm typecheck`, `pnpm --filter @nomadhome/web test`, `pnpm --filter @nomadhome/shared test`, `pnpm build`.
 
 ## 3. E2E (no production change)
 
@@ -30,5 +31,5 @@ These cases describe existing behaviour and are expected to pass on first run. I
 
 ## 4. Docs
 
-- [ ] 4.1 `apps/web/DESIGN.md`: in the Field grammar paragraph, note that the Become host terms checkbox links its error with `aria-describedby` and sets `aria-invalid`.
-- [ ] 4.2 Run `openspec validate a11y-rating-terms-moderation --strict`, tick the tasks in `openspec/changes/a11y-rating-terms-moderation/tasks.md` and commit `docs(web): note terms error link and tick tasks (NH-146)`.
+- [ ] 4.1 `apps/web/DESIGN.md`: in the Field grammar paragraph, note that the Become host display name, payout email and terms controls link their errors with `aria-describedby` and set `aria-invalid`.
+- [ ] 4.2 Run `openspec validate a11y-rating-terms-moderation --strict`, tick the tasks in `openspec/changes/a11y-rating-terms-moderation/tasks.md` and commit `docs(web): note become-host error links and tick tasks (NH-146)`.
