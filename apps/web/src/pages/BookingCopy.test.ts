@@ -12,7 +12,8 @@ import emptyStateSource from "../components/EmptyState.tsx?raw";
 
 // NH-124 task 1.12 (booking-payment-identity D11): the restyle changes no copy. The literals below
 // are the baseline values captured before the change, extended in NH-146 with the four new
-// booking.ui keys. Any key rename or string edit fails here.
+// booking.ui keys, and with booking.ui.star_one / star_other for the review star names.
+// Any key rename or string edit fails here.
 
 const BOOKING_UI = {
   form_title: "Confirm your booking",
@@ -39,6 +40,8 @@ const BOOKING_UI = {
     "We have not confirmed your payment yet. This can take a few minutes, so check My bookings shortly.",
   not_found_title: "We could not find your booking",
   not_found_message: "Open My bookings to see your reservations.",
+  star_one: "star",
+  star_other: "stars",
 };
 
 const BOOKING_DASHBOARD = {

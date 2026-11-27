@@ -6,7 +6,7 @@ import { Button, Input } from "@nomadhome/ui";
 import { useAuth } from "../contexts/auth.js";
 import { getDisplayMessage } from "../api/client.js";
 import { useState } from "react";
-import { FormField } from "../components/FormField.js";
+import { errorIdFor, FormField } from "../components/FormField.js";
 import { ServerErrorAlert } from "../components/ServerErrorAlert.js";
 import { CHECKBOX_CLASS, ERROR_BAR_CLASS } from "../components/listingFormStyles.js";
 
@@ -49,6 +49,7 @@ export function BecomeHostPage() {
           <Input
             id="displayName"
             aria-invalid={!!errors.displayName}
+            aria-describedby={errors.displayName ? errorIdFor("displayName") : undefined}
             {...register("displayName")}
           />
         </FormField>
@@ -62,6 +63,7 @@ export function BecomeHostPage() {
             id="payoutEmail"
             type="email"
             aria-invalid={!!errors.payoutEmail}
+            aria-describedby={errors.payoutEmail ? errorIdFor("payoutEmail") : undefined}
             {...register("payoutEmail")}
           />
         </FormField>
@@ -72,6 +74,8 @@ export function BecomeHostPage() {
               id="acceptedTerms"
               type="checkbox"
               className={CHECKBOX_CLASS}
+              aria-invalid={!!errors.acceptedTerms}
+              aria-describedby={errors.acceptedTerms ? errorIdFor("acceptedTerms") : undefined}
               {...register("acceptedTerms")}
             />
             <svg
@@ -92,7 +96,9 @@ export function BecomeHostPage() {
             </label>
           </div>
           {errors.acceptedTerms && (
-            <p className={ERROR_BAR_CLASS}>{errors.acceptedTerms.message}</p>
+            <p id={errorIdFor("acceptedTerms")} className={ERROR_BAR_CLASS}>
+              {errors.acceptedTerms.message}
+            </p>
           )}
         </div>
 
