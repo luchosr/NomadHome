@@ -8,8 +8,8 @@ Copy guards affected: `apps/web/src/pages/ModalCopy.test.ts` (exact set of keys 
 
 ## 1. QA red
 
-- [ ] 1.1 `apps/web/src/pages/ModalCopy.test.ts`: add `booking.ui.star_one` and `booking.ui.star_other` to `BASELINE` and update the header comment to name them as the only additions. Keep every existing literal.
-- [ ] 1.2 `apps/web/src/pages/BookingCopy.test.ts`: add `star_one: "star"` and `star_other: "stars"` to `BOOKING_UI`. Keep every existing literal. The existing exact-name guard in `apps/web/src/components/ReviewModal.test.tsx` stays unedited.
+- [x] 1.1 `apps/web/src/pages/ModalCopy.test.ts`: add `booking.ui.star_one` and `booking.ui.star_other` to `BASELINE` and update the header comment to name them as the only additions. Keep every existing literal.
+- [x] 1.2 `apps/web/src/pages/BookingCopy.test.ts`: add `star_one: "star"` and `star_other: "stars"` to `BOOKING_UI`. Keep every existing literal. The existing exact-name guard in `apps/web/src/components/ReviewModal.test.tsx` stays unedited.
 - [ ] 1.3 `apps/web/src/pages/BecomeHostPage.test.tsx`: add the field error link scenarios for the display name input, payout email input and terms checkbox (error shown: `aria-invalid="true"` and `aria-describedby` equal to the id of that control's own error element, which has no role; before submit: no `aria-describedby`, `aria-invalid` not `true`; after correcting the field or checking the box: both cleared). Leave the email empty to trigger its error, since a malformed value is stopped by native `type="email"` validation before submit.
 - [ ] 1.4 Run `pnpm --filter @nomadhome/web test`; confirm only the new or updated assertions fail, for the expected reasons. Commit `test(web): red tests for star names and become-host error links (NH-146)`.
 

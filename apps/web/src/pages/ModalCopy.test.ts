@@ -8,6 +8,7 @@ import reviewModalSource from "../components/ReviewModal.tsx?raw";
 // NH-146 task 1.9 (modal-a11y): the accessible modal changes no copy. The literals below are the
 // baseline values of every t() key read by Modal, CancelBookingModal and ReviewModal, captured
 // before the change. This whole file is a GUARD: any key rename, addition or removal fails here.
+// The only additions since are booking.ui.star_one and booking.ui.star_other (review star names).
 
 const BASELINE: Record<string, string> = {
   "booking.dashboard.cancel_confirm": "Yes, cancel",
@@ -21,6 +22,8 @@ const BASELINE: Record<string, string> = {
   "booking.dashboard.review_success": "Review submitted!",
   "booking.dashboard.review_text_label": "Your review (optional)",
   "booking.dashboard.review_text_placeholder": "Share your experience...",
+  "booking.ui.star_one": "star",
+  "booking.ui.star_other": "stars",
   "common.action.close": "Close",
   "common.submitting": "…",
 };
