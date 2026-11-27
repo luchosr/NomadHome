@@ -39,6 +39,10 @@ None.
 - Each key is read by its own literal `t("...")` call, so the source-scanning copy guards see both.
 - The three links reuse `errorIdFor` from the shared form field, matching the login, register and create-listing forms. The two inputs are already wrapped in `FormField`, which renders the error ids; the checkbox is not wrapped, so its error paragraph sets the id itself.
 
+## Observed focus behaviour (task 3.3)
+
+Observed in headless Chromium at 1280x720 (table layout), for users and listings, Disable and Re-enable, Enter and Space: `document.activeElement` is `<body>` while the request is pending (the focused button becomes disabled), and it stays `<body>` after the request settles, both on success and on failure (HTTP 500), even though the button is enabled again. Focus retention is not asserted by the e2e cases; fixing it belongs to a separate ticket.
+
 ## Risks & Mitigations
 
 | Risk                                                        | Likelihood | Mitigation                                                                    |
