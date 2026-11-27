@@ -49,6 +49,7 @@ export function BecomeHostPage() {
           <Input
             id="displayName"
             aria-invalid={!!errors.displayName}
+            aria-describedby={errors.displayName ? errorIdFor("displayName") : undefined}
             {...register("displayName")}
           />
         </FormField>
@@ -62,6 +63,7 @@ export function BecomeHostPage() {
             id="payoutEmail"
             type="email"
             aria-invalid={!!errors.payoutEmail}
+            aria-describedby={errors.payoutEmail ? errorIdFor("payoutEmail") : undefined}
             {...register("payoutEmail")}
           />
         </FormField>
