@@ -1979,7 +1979,7 @@ underline hover:no-underline`, so it keeps its padded, underlined-at-rest look.
 
 ### Requirement: Modal is a keyboard-operable modal dialog
 
-`Modal` SHALL render a native `<dialog>` opened with `showModal()` so that it behaves as a real modal dialog, and it MUST take a required `onClose` prop. On open, focus MUST move inside the dialog to the control marked `data-autofocus` (the reason textarea in the cancel dialog, the first star button in the review dialog), and Tab and Shift+Tab MUST stay inside the dialog while the rest of the page is inert to keyboard and assistive technology. Escape and a click on the backdrop MUST call `onClose`, a click inside the dialog surface MUST NOT, and the native Escape close MUST be prevented so that React state stays the single source of truth. While the dialog is mounted, scrolling of the page behind it MUST be locked by setting `overflow: hidden` on `document.body`, and the previous inline value MUST be restored (not cleared) on unmount. On unmount, focus MUST return to the element that was focused before the dialog opened when that element is still connected to the document. The dialog MUST keep `aria-modal="true"` and `aria-labelledby`, the surface MUST stay the first element child of the dialog, and the backdrop MUST be a flat `ink/40` scrim with `backdrop-filter: none`. The change MUST NOT add, remove or rename any `t()` key or change any copy, and the layout at 360 px MUST be unchanged (no horizontal overflow, same surface width and gutter).
+`Modal` SHALL render a native `<dialog>` opened with `showModal()` so that it behaves as a real modal dialog, and it MUST take a required `onClose` prop. On open, focus MUST move inside the dialog to the control marked `data-autofocus` (the reason textarea in the cancel dialog, the first star button in the review dialog), and Tab and Shift+Tab MUST stay inside the dialog while the rest of the page is inert to keyboard and assistive technology. Escape and a click on the backdrop MUST call `onClose`, a click inside the dialog surface MUST NOT, and the native Escape close MUST be prevented so that React state stays the single source of truth. While the dialog is mounted, scrolling of the page behind it MUST be locked by setting `overflow: hidden` on `document.body`, and the previous inline value MUST be restored (not cleared) on unmount. On unmount, focus MUST return to the element that was focused before the dialog opened when that element is still connected to the document. The dialog MUST keep `aria-modal="true"` and `aria-labelledby`, the surface MUST stay the first element child of the dialog, and the backdrop MUST be a flat `ink/40` scrim with `backdrop-filter: none`. Dialog behaviour and markup MUST NOT change any visible copy or accessible name, MUST NOT remove or rename any `t()` key the dialogs read and MUST NOT change any existing string value. The only keys added to the set the dialogs read are `booking.ui.star_one` and `booking.ui.star_other`, which supply the review dialog star names. The layout at 360 px MUST be unchanged (no horizontal overflow, same surface width and gutter).
 
 #### Scenario: Opening moves focus inside
 
@@ -2059,7 +2059,7 @@ underline hover:no-underline`, so it keeps its padded, underlined-at-rest look.
 - **GIVEN** the cancel and review dialogs open at 360 px width
 - **WHEN** the surface and the document are measured
 - **THEN** the surface keeps its 2px ink edge, 4px radius, no shadow and the same width and side gutter as before, and the document scroll width does not exceed the viewport width
-- **AND** the backdrop computed `backdrop-filter` is `none` and no `t()` key or string value differs from before this change
+- **AND** the backdrop computed `backdrop-filter` is `none`, no existing `t()` key or string value differs, and the only added keys the dialogs read are `booking.ui.star_one` and `booking.ui.star_other`
 
 ### Requirement: Modal side effects are cleaned up and degrade safely
 
@@ -2089,3 +2089,52 @@ Modal consumers and `Modal` SHALL leave no stale side effect after a dialog clos
 - **GIVEN** the cancel dialog open on a desktop viewport of 1440 px with a page that scrolls
 - **WHEN** the verification screenshots with and without the dialog are compared
 - **THEN** either the page content does not shift horizontally or the verification report records the shift as accepted, and no other behaviour of the page changes
+
+### Requirement: Review star names come from the dictionary
+
+The review dialog SHALL build each rating button's accessible name from the star number and a word read through `t()`: `booking.ui.star_one` ("star") for 1 and `booking.ui.star_other` ("stars") for 2 to 5, joined by one space. The component MUST NOT contain a hand-written English star word. The resulting names MUST be exactly "1 star", "2 stars", "3 stars", "4 stars" and "5 stars". No visible copy MUST change, and no internationalization library or `t()` signature change MUST be introduced.
+
+#### Scenario: Names are unchanged and sourced from the dictionary
+
+- **GIVEN** the review dialog
+- **WHEN** the rating buttons are listed
+- **THEN** their accessible names are exactly "1 star", "2 stars", "3 stars", "4 stars" and "5 stars"
+- **AND** the component source reads `booking.ui.star_one` and `booking.ui.star_other` through `t()`
+
+#### Scenario: Dictionary holds the two words
+
+- **GIVEN** the English dictionary
+- **WHEN** `booking.ui.star_one` and `booking.ui.star_other` are resolved
+- **THEN** they are "star" and "stars"
+
+### Requirement: Become host field errors are linked to their controls
+
+On the Become host page the display name input, the payout email input and the terms checkbox SHALL expose their validation state with the same convention as the login and register fields. While a control's error is shown, that control MUST have `aria-invalid="true"` and an `aria-describedby` that references the id of the element holding its own error text, using the shared field error id for `displayName`, `payoutEmail` and `acceptedTerms`. While a control shows no error, it MUST NOT have `aria-describedby` and MUST NOT have `aria-invalid="true"`. The error texts, their look, the absence of a role on them, the validation rules and the submitted payload MUST NOT change.
+
+#### Scenario: Display name and payout email errors are linked
+
+- **GIVEN** the Become host form with the display name and payout email left empty
+- **WHEN** the form is submitted
+- **THEN** each of the two inputs has `aria-invalid="true"`
+- **AND** each input's `aria-describedby` references the element that holds that input's own error text
+- **AND** neither error element has a `role` and no request is sent
+
+#### Scenario: Terms error is linked to the checkbox
+
+- **GIVEN** the Become host form with the other fields valid and the terms not accepted
+- **WHEN** the form is submitted
+- **THEN** the checkbox has `aria-invalid="true"`
+- **AND** its `aria-describedby` references the element that holds the existing terms error text
+- **AND** that element has no `role` and no request is sent
+
+#### Scenario: No link while there is no error
+
+- **GIVEN** the Become host form before any submit
+- **WHEN** the two inputs and the checkbox are inspected
+- **THEN** none has `aria-describedby` and none has `aria-invalid="true"`
+
+#### Scenario: Link is removed when the error clears
+
+- **GIVEN** the three errors are shown
+- **WHEN** the user corrects a field (or checks the terms checkbox) and its error clears
+- **THEN** that control has no `aria-describedby` and `aria-invalid` is not `true`
