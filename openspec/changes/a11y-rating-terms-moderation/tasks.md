@@ -25,11 +25,11 @@ Copy guards affected: `apps/web/src/pages/ModalCopy.test.ts` (exact set of keys 
 
 These cases describe existing behaviour and are expected to pass on first run. If one fails because of the application, stop and report it; do not edit production code. Make sure the server on port 5173 is the one from this worktree (`playwright.config.ts` reuses a running server).
 
-- [ ] 3.1 `apps/web/e2e/us-8.1-admin-users.spec.ts`: for Disable and Re-enable, each with Enter and Space (four cases), focus the button, assert it is focused, press the key, assert exactly one matching `PATCH` request and that the refetched row shows the opposite action.
-- [ ] 3.2 `apps/web/e2e/us-8.2-admin-listings.spec.ts`: the same four cases for listings.
-- [ ] 3.3 Run both specs headless. Record where `document.activeElement` is while the request is pending and after it settles (success and failure) and report it; do not assert focus retention and do not change production code. Commit `test(web): cover keyboard activation of admin moderation actions (NH-146)`.
+- [x] 3.1 `apps/web/e2e/us-8.1-admin-users.spec.ts`: for Disable and Re-enable, each with Enter and Space (four cases), focus the button, assert it is focused, press the key, assert exactly one matching `PATCH` request and that the refetched row shows the opposite action.
+- [x] 3.2 `apps/web/e2e/us-8.2-admin-listings.spec.ts`: the same four cases for listings.
+- [x] 3.3 Run both specs headless. Record where `document.activeElement` is while the request is pending and after it settles (success and failure) and report it; do not assert focus retention and do not change production code. Commit `test(web): cover keyboard activation of admin moderation actions (NH-146)`.
 
 ## 4. Docs
 
-- [ ] 4.1 `apps/web/DESIGN.md`: in the Field grammar paragraph, note that the Become host display name, payout email and terms controls link their errors with `aria-describedby` and set `aria-invalid`.
-- [ ] 4.2 Run `openspec validate a11y-rating-terms-moderation --strict`, tick the tasks in `openspec/changes/a11y-rating-terms-moderation/tasks.md` and commit `docs(web): note become-host error links and tick tasks (NH-146)`.
+- [x] 4.1 `apps/web/DESIGN.md`: in the Field grammar paragraph, note that the Become host display name, payout email and terms controls link their errors with `aria-describedby` and set `aria-invalid`.
+- [x] 4.2 Run `openspec validate a11y-rating-terms-moderation --strict`, tick the tasks in `openspec/changes/a11y-rating-terms-moderation/tasks.md` and commit `docs(web): note become-host error links and tick tasks (NH-146)`.
