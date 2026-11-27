@@ -3,9 +3,9 @@
 ## 1. Red tests (QA)
 
 - [x] 1.1 `packages/ui/src/components/button.test.tsx`: assert `primary`, `secondary` and `destructive` carry `aria-disabled:border-dashed`, `aria-disabled:border-border-muted`, `aria-disabled:bg-surface-inset` and `aria-disabled:text-fg-subtle`; `tertiary` carries `aria-disabled:border-transparent`, `aria-disabled:bg-transparent` and `aria-disabled:line-through`; every variant carries `aria-disabled:cursor-default` and `aria-disabled:active:translate-y-0` and no `aria-disabled:pointer-events-none`. Keep the existing `disabled` assertions unchanged
-- [ ] 1.2 `apps/web/src/pages/AdminUsersPage.test.tsx`, block "pending and error feedback (NH-146)": replace `toBeDisabled` with `toHaveAttribute("aria-disabled", "true")` plus no `disabled` attribute, and every `toBeEnabled` with `not.toHaveAttribute("aria-disabled", "true")` (`toBeEnabled` would pass vacuously). Keep the one-request assertion and add Enter and Space while pending
-- [ ] 1.3 `apps/web/src/pages/AdminListingsPage.test.tsx`: the same replacements in its pending and error feedback block
-- [ ] 1.4 Both page test files: with the button focused, assert it is `document.activeElement` while pending, after failure and after success; after success with a flipped list mock, assert the opposite-action button is the same DOM node. Cover the table and the card list
+- [x] 1.2 `apps/web/src/pages/AdminUsersPage.test.tsx`, block "pending and error feedback (NH-146)": replace `toBeDisabled` with `toHaveAttribute("aria-disabled", "true")` plus no `disabled` attribute, and every `toBeEnabled` with `not.toHaveAttribute("aria-disabled", "true")` (`toBeEnabled` would pass vacuously). Keep the one-request assertion and add Enter and Space while pending
+- [x] 1.3 `apps/web/src/pages/AdminListingsPage.test.tsx`: the same replacements in its pending and error feedback block
+- [x] 1.4 Both page test files: with the button focused, assert it is `document.activeElement` while pending, after failure and after success; after success with a flipped list mock, assert the opposite-action button is the same DOM node. Cover the table and the card list
 - [ ] 1.5 `apps/web/src/pages/AdminUsersPage.test.tsx` and `apps/web/src/pages/AdminListingsPage.test.tsx`: for Disable and Re-enable, `fireEvent.keyDown` with `repeat: true` returns `false` (default prevented) for Enter and Space, and `true` for Tab and for a non-repeated Enter
 - [ ] 1.6 Run the three files and confirm the new assertions fail for the expected reason
 
