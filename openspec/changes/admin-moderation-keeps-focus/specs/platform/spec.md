@@ -75,7 +75,8 @@ styling and the added `buttonVariants` export.
 ### Requirement: Moderation actions are 44px real buttons with a flat secondary edge
 
 The admin moderation actions SHALL stay real `button` elements, in both layouts, with the same handlers,
-labels and accessible names as before, and MUST be at least 44px tall. While the
+labels and accessible names as before, and MUST be at least 44px tall. The only added
+handler ignores Enter and Space key repeat, as required by the `admin` capability. While the
 mutation is pending the action MUST be marked with `aria-disabled="true"` instead of
 the native `disabled` attribute, under the same per-row pending condition. Disable MUST stay the
 destructive variant, with the paper label on the danger fill. Re-enable MUST stay
@@ -109,7 +110,8 @@ accessible names, the existing `t()` keys, the text of any existing string, the
 API client or `Badge`. The Disable and Re-enable handlers and `disabled`
 conditions are extended by the `admin` capability requirement "Admin users and
 listings pages show pending and error feedback on moderation actions" (per-row pending state, marked with `aria-disabled` so the button keeps focus, and
-visible failure feedback); that is the only handler and disabled-state change. No data, schema or backend file MUST change. The moderation
+visible failure feedback); Together with the key-repeat guard of the `admin` requirement "Admin moderation
+actions ignore key repeat", these are the only handler and disabled-state changes. No data, schema or backend file MUST change. The moderation
 behavior of the `admin` capability is consumed unchanged. The follow-ups (shared
 state panel and status tag, the `Badge` pill, per-row accessible names) MUST be
 recorded; the secondary button override is closed by the `buttonVariants`
