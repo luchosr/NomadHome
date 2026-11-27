@@ -29,5 +29,5 @@
 
 ## 4. Docs and verification
 
-- [ ] 4.1 `apps/web/DESIGN.md`: in the "Disabled" button bullet, document that `aria-disabled="true"` looks the same and stays focusable; in the admin "Moderation actions" bullet, replace the stale "no disabled-while-pending state ... no error handling" sentence with the pending, error, focus and key-repeat behaviour
+- [x] 4.1 `apps/web/DESIGN.md`: in the "Disabled" button bullet, document that `aria-disabled="true"` looks the same and stays focusable; in the admin "Moderation actions" bullet, replace the stale "no disabled-while-pending state ... no error handling" sentence with the pending, error, focus and key-repeat behaviour
 - [ ] 4.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm build` and `openspec validate admin-moderation-keeps-focus --strict`

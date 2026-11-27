@@ -229,7 +229,7 @@ Square signs. Radius is 0 for the hero destination field and image-bearing badge
 - **Secondary:** transparent, ink text, 2px ink edge, hover stone.
 - **Tertiary:** text-only link style, underline on hover.
 - **Destructive:** danger fill, paper text, darker on hover; never on an orange panel.
-- **Disabled:** shape change, not only colour. Primary and secondary become dashed muted-edge on stone with subtle ink; tertiary is struck through.
+- **Disabled:** shape change, not only colour. Primary and secondary become dashed muted-edge on stone with subtle ink; tertiary is struck through. `aria-disabled="true"` looks the same but stays focusable and keeps pointer events: default cursor, no hover or press change. It does not block activation, so the consumer must ignore it.
 
 ### Inputs
 
@@ -309,7 +309,7 @@ Local pieces of AdminUsersPage and AdminListingsPage, reusing ListingStatusTag. 
 - **Listing status:** AdminListingsPage renders the shared ListingStatusTag (dashed draft, solid published with a marker, struck disabled); it no longer imports the Badge pill.
 - **Layouts:** from sm a flat table (2px ink head rule, bold ink headings, 1px muted row rules, muted secondary cells) in an overflow-x-auto safety container; below sm each row is a 2px-edged card (rounded-card, paper fill, no ring, no shadow) with the email or title beside the state tag, the secondary lines and a full-width action. Both layouts are rendered and only one is displayed, so one layout is exposed to assistive tech.
 - **Long strings:** long cells (email, title, city, host email) sit in a `max-w-[…] [overflow-wrap:anywhere]` wrapper; the action cell is `whitespace-nowrap` with `pr-1` on the last td and th so the 3px focus ring is not clipped by the scroll container. `table-fixed` is not used.
-- **Moderation actions:** Disable is the destructive Button and Re-enable the plain secondary Button; both are 44px high (min-h-11), the same label and handler in both layouts. The Buttons show the full two-layer focus ring (3px ink outline plus the paper gap). There is no disabled-while-pending state, and the mutations have no error handling (pre-existing).
+- **Moderation actions:** Disable is the destructive Button and Re-enable the plain secondary Button; both are 44px high (min-h-11), the same label and handler in both layouts. The Buttons show the full two-layer focus ring (3px ink outline plus the paper gap). While a request is pending, the row action carries `aria-disabled="true"` (never the native `disabled`), so it takes the disabled look and keeps focus; further activations are ignored. A failed request shows the error alert above the list and the button returns to its enabled look. Focus stays on the same button while pending, after success (it now shows the opposite action) and after failure, with no programmatic focus management. Repeated Enter and Space keydown events are cancelled, so a held key sends one request.
 - **State panels:** loading is flat skeleton rows under aria-busy with no heading; empty is a dashed 2px panel on paper with muted text; error is a 36rem danger-bg panel with a solid danger edge, a filled 48px danger tile with an exclamation and one H1 in bold danger, role alert. StatePanel is a local function in each page.
 
 ### Navigation
