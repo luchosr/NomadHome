@@ -107,4 +107,45 @@ test.describe("US-8.2 — Admin disables listings", () => {
     await expect(disable).toBeEnabled();
     await expect(page.getByText("Disabled").filter({ visible: true })).toHaveCount(0);
   });
+
+  const KEYBOARD_CASES = [
+    { action: "Disable", opposite: "Re-enable", endpoint: "disable", startsDisabled: false },
+    { action: "Re-enable", opposite: "Disable", endpoint: "enable", startsDisabled: true },
+  ].flatMap((testCase) => ["Enter", "Space"].map((key) => ({ ...testCase, key })));
+
+  for (const { action, opposite, endpoint, startsDisabled, key } of KEYBOARD_CASES) {
+    test(`${key} on ${action} sends one request and shows ${opposite}`, async ({ page }) => {
+      await mockAdminSession(page);
+      let disabled = startsDisabled;
+      const patches: string[] = [];
+      page.on("request", (request) => {
+        if (request.method() === "PATCH") patches.push(request.url());
+      });
+      await page.route(`${API}/admin/listings*`, (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: [{ ...ACTIVE_LISTING, status: disabled ? "DISABLED" : "PUBLISHED" }],
+            total: 1,
+            page: 1,
+            limit: 50,
+          }),
+        }),
+      );
+      await page.route(`${API}/admin/listings/${LISTING_ID}/${endpoint}`, (route) => {
+        disabled = !startsDisabled;
+        return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+      });
+      await page.goto("/admin/listings");
+
+      const button = page.getByRole("button", { name: action, exact: true });
+      await button.focus();
+      await expect(button).toBeFocused();
+      await page.keyboard.press(key);
+
+      await expect(page.getByRole("button", { name: opposite, exact: true })).toBeEnabled();
+      expect(patches).toEqual([`${API}/admin/listings/${LISTING_ID}/${endpoint}`]);
+    });
+  }
 });
