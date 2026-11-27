@@ -11,7 +11,7 @@
 
 ## 2. Implementation (Frontend)
 
-- [ ] 2.1 `packages/ui/src/components/button.tsx`: add the `aria-disabled:` utilities to `PANEL` (dashed, muted edge, stone, subtle ink), to the `tertiary` variant (transparent edge and fill, line-through) and to the base (`aria-disabled:cursor-default aria-disabled:active:translate-y-0`); update the header comment. Keep `disabled:pointer-events-none`; add no `aria-disabled:pointer-events-none`
+- [x] 2.1 `packages/ui/src/components/button.tsx`: add the `aria-disabled:` utilities to `PANEL` (dashed, muted edge, stone, subtle ink), to the `tertiary` variant (transparent edge and fill, line-through) and to the base (`aria-disabled:cursor-default aria-disabled:active:translate-y-0`); update the header comment. Keep `disabled:pointer-events-none`; add no `aria-disabled:pointer-events-none`
 - [ ] 2.2 `apps/web/src/pages/AdminUsersPage.tsx`: in both `renderAction` branches replace `disabled={pendingId === user.id}` with `aria-disabled={pendingId === user.id}`. Keep both branches as an unkeyed `Button` at the same position; add no focus code
 - [ ] 2.3 `apps/web/src/pages/AdminListingsPage.tsx`: the same for `listing.id`
 - [ ] 2.4 `apps/web/src/pages/AdminUsersPage.tsx` and `apps/web/src/pages/AdminListingsPage.tsx`: add to both `renderAction` branches an `onKeyDown` that calls `preventDefault` when `event.repeat` and `event.key` is `"Enter"` or `" "` (one small handler per file, no new module)
