@@ -120,3 +120,37 @@ describe("buttonVariants (NH-138)", () => {
     expect(classes.filter((c) => /(?:^|:)(?:ring|shadow)(?:-|$)/.test(c))).toEqual([]);
   });
 });
+
+describe("Button aria-disabled look (NH-146)", () => {
+  it.each(["primary", "secondary", "destructive"] as const)(
+    "variant %s takes the dashed, unfilled disabled shape",
+    (variant) => {
+      render(<Button variant={variant}>{variant}</Button>);
+      expect(screen.getByRole("button")).toHaveClass(
+        "aria-disabled:border-dashed",
+        "aria-disabled:border-border-muted",
+        "aria-disabled:bg-surface-inset",
+        "aria-disabled:text-fg-subtle",
+      );
+    },
+  );
+
+  it("tertiary is struck through with a transparent edge and fill", () => {
+    render(<Button variant="tertiary">Learn more</Button>);
+    expect(screen.getByRole("button")).toHaveClass(
+      "aria-disabled:border-transparent",
+      "aria-disabled:bg-transparent",
+      "aria-disabled:line-through",
+    );
+  });
+
+  it.each(VARIANTS)(
+    "variant %s has the default cursor, no press shift and keeps pointer events",
+    (variant) => {
+      render(<Button variant={variant}>{variant}</Button>);
+      const btn = screen.getByRole("button");
+      expect(btn).toHaveClass("aria-disabled:cursor-default", "aria-disabled:active:translate-y-0");
+      expect(btn).not.toHaveClass("aria-disabled:pointer-events-none");
+    },
+  );
+});
