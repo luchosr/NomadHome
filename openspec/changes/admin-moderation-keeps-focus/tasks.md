@@ -12,11 +12,11 @@
 ## 2. Implementation (Frontend)
 
 - [x] 2.1 `packages/ui/src/components/button.tsx`: add the `aria-disabled:` utilities to `PANEL` (dashed, muted edge, stone, subtle ink), to the `tertiary` variant (transparent edge and fill, line-through) and to the base (`aria-disabled:cursor-default aria-disabled:active:translate-y-0`); update the header comment. Keep `disabled:pointer-events-none`; add no `aria-disabled:pointer-events-none`
-- [ ] 2.2 `apps/web/src/pages/AdminUsersPage.tsx`: in both `renderAction` branches replace `disabled={pendingId === user.id}` with `aria-disabled={pendingId === user.id}`. Keep both branches as an unkeyed `Button` at the same position; add no focus code
-- [ ] 2.3 `apps/web/src/pages/AdminListingsPage.tsx`: the same for `listing.id`
-- [ ] 2.4 `apps/web/src/pages/AdminUsersPage.tsx` and `apps/web/src/pages/AdminListingsPage.tsx`: add to both `renderAction` branches an `onKeyDown` that calls `preventDefault` when `event.repeat` and `event.key` is `"Enter"` or `" "` (one small handler per file, no new module)
-- [ ] 2.5 Confirm no other source passes `aria-disabled` to `Button` or `buttonVariants` (`rg -n "aria-disabled" apps packages`)
-- [ ] 2.6 Confirm these guards stay green without edits: `packages/ui/src/index.test.ts`, `packages/ui/src/contrast.test.ts`, `apps/web/src/buttonLinkAudit.test.ts`, the `apps/web/src/test/buttonLink.ts` consumers, and the native `disabled` tests of other components
+- [x] 2.2 `apps/web/src/pages/AdminUsersPage.tsx`: in both `renderAction` branches replace `disabled={pendingId === user.id}` with `aria-disabled={pendingId === user.id}`. Keep both branches as an unkeyed `Button` at the same position; add no focus code
+- [x] 2.3 `apps/web/src/pages/AdminListingsPage.tsx`: the same for `listing.id`
+- [x] 2.4 `apps/web/src/pages/AdminUsersPage.tsx` and `apps/web/src/pages/AdminListingsPage.tsx`: add to both `renderAction` branches an `onKeyDown` that calls `preventDefault` when `event.repeat` and `event.key` is `"Enter"` or `" "` (one small handler per file, no new module)
+- [x] 2.5 Confirm no other source passes `aria-disabled` to `Button` or `buttonVariants` (`rg -n "aria-disabled" apps packages`)
+- [x] 2.6 Confirm these guards stay green without edits: `packages/ui/src/index.test.ts`, `packages/ui/src/contrast.test.ts`, `apps/web/src/buttonLinkAudit.test.ts`, the `apps/web/src/test/buttonLink.ts` consumers, and the native `disabled` tests of other components
 
 ## 3. E2E (QA)
 

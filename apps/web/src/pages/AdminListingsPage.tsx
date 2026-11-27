@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@nomadhome/shared";
 import { Button, Skeleton } from "@nomadhome/ui";
@@ -42,6 +42,11 @@ function StatePanel({ children }: { children: string }) {
   );
 }
 
+/** A held Enter or Space must not toggle the action back and forth. */
+function ignoreKeyRepeat(event: KeyboardEvent) {
+  if (event.repeat && (event.key === "Enter" || event.key === " ")) event.preventDefault();
+}
+
 export function AdminListingsPage() {
   const queryClient = useQueryClient();
 
@@ -75,7 +80,8 @@ export function AdminListingsPage() {
       <Button
         variant="destructive"
         className={className}
-        disabled={pendingId === listing.id}
+        aria-disabled={pendingId === listing.id}
+        onKeyDown={ignoreKeyRepeat}
         onClick={() => void handleDisable(listing.id)}
       >
         {t("admin.listings.disable")}
@@ -84,7 +90,8 @@ export function AdminListingsPage() {
       <Button
         variant="secondary"
         className={className}
-        disabled={pendingId === listing.id}
+        aria-disabled={pendingId === listing.id}
+        onKeyDown={ignoreKeyRepeat}
         onClick={() => void handleEnable(listing.id)}
       >
         {t("admin.listings.enable")}
