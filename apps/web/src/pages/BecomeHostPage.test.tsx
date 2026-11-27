@@ -1,8 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { t } from "@nomadhome/shared";
 import { BecomeHostPage } from "./BecomeHostPage.js";
+import { errorIdFor } from "../components/FormField.js";
 import { ApiError } from "../api/client.js";
 
 // --- mocks ---
@@ -166,5 +168,79 @@ describe("BecomeHostPage identity", () => {
     const alert = await screen.findByRole("alert");
     expect(screen.getAllByRole("alert")).toHaveLength(1);
     expect(alert).toHaveClass("border-2", "border-danger", "bg-danger-bg");
+  });
+});
+
+// NH-146 (platform: Become host field errors are linked to their controls).
+
+describe("BecomeHostPage field error links", () => {
+  beforeEach(() => {
+    mockBecomeHost.mockReset();
+    mockNavigate.mockReset();
+  });
+
+  const displayName = () => screen.getByLabelText(/display name/i);
+  const payoutEmail = () => screen.getByLabelText(/payout email/i);
+  const terms = () => screen.getByRole("checkbox");
+  const submit = () => userEvent.click(screen.getByRole("button", { name: /become a host/i }));
+
+  function expectLinked(control: HTMLElement, field: string, error: HTMLElement) {
+    expect(control).toHaveAttribute("aria-invalid", "true");
+    expect(error).toHaveAttribute("id", errorIdFor(field));
+    expect(control).toHaveAttribute("aria-describedby", error.id);
+    expect(error).not.toHaveAttribute("role");
+  }
+
+  function expectUnlinked(control: HTMLElement) {
+    expect(control).not.toHaveAttribute("aria-describedby");
+    expect(control).not.toHaveAttribute("aria-invalid", "true");
+  }
+
+  it("links the display name error to its input", async () => {
+    renderPage();
+    await submit();
+    const error = await screen.findByText(t("validation.required.field"));
+    expectLinked(displayName(), "displayName", error);
+    expect(mockBecomeHost).not.toHaveBeenCalled();
+  });
+
+  // The email stays empty: a malformed value is stopped by native type="email" validation.
+  it("links the payout email error to its input", async () => {
+    renderPage();
+    await submit();
+    const error = await screen.findByText(t("validation.email.invalid"));
+    expectLinked(payoutEmail(), "payoutEmail", error);
+    expect(mockBecomeHost).not.toHaveBeenCalled();
+  });
+
+  it("links the terms error to the checkbox", async () => {
+    renderPage();
+    await userEvent.type(displayName(), "Lucia");
+    await userEvent.type(payoutEmail(), "pay@example.com");
+    await submit();
+    const error = await screen.findByText(TERMS_ERROR);
+    expectLinked(terms(), "acceptedTerms", error);
+    expect(mockBecomeHost).not.toHaveBeenCalled();
+  });
+
+  it("GUARD: no control is linked or invalid before submit", () => {
+    renderPage();
+    for (const control of [displayName(), payoutEmail(), terms()]) expectUnlinked(control);
+  });
+
+  it("removes each link when its error clears", async () => {
+    renderPage();
+    await submit();
+    await screen.findByText(TERMS_ERROR);
+    for (const control of [displayName(), payoutEmail(), terms()]) {
+      expect(control).toHaveAttribute("aria-describedby");
+    }
+
+    await userEvent.type(displayName(), "Lucia");
+    await waitFor(() => expectUnlinked(displayName()));
+    await userEvent.type(payoutEmail(), "pay@example.com");
+    await waitFor(() => expectUnlinked(payoutEmail()));
+    await userEvent.click(terms());
+    await waitFor(() => expectUnlinked(terms()));
   });
 });
