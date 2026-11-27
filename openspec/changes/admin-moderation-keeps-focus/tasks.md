@@ -20,12 +20,12 @@
 
 ## 3. E2E (QA)
 
-- [ ] 3.1 `apps/web/e2e/us-8.1-admin-users.spec.ts`: for Disable and Re-enable, Enter and Space, at 1280x720 (table) and 360x800 (cards), hold the PATCH response and assert the button is focused, has `aria-disabled="true"` and no `disabled` attribute, and a repeated Enter and Space send no second request; release with 200 and assert the opposite-action button is focused and is the same element handle
-- [ ] 3.2 Same file: failure (HTTP 500) case in both layouts, asserting the alert, the same button focused and no `aria-disabled="true"`
-- [ ] 3.3 Same file: with the response held, compare computed border style and color, background, text color and cursor of the pending button at rest, on hover and on mouse down (no transform shift); a raw mouse click keeps focus and sends no request. Check Disable (destructive) and Re-enable (secondary)
-- [ ] 3.4 `apps/web/e2e/us-8.2-admin-listings.spec.ts`: repeat 3.1 and 3.2 for listings
-- [ ] 3.5 `apps/web/e2e/us-8.1-admin-users.spec.ts` and `apps/web/e2e/us-8.2-admin-listings.spec.ts`: call `page.keyboard.down("Enter")`, wait for the opposite action, call `down("Enter")` again (sent as a repeat) and assert still one PATCH; after `up("Enter")`, one new press sends one request. Also assert a held Space then released sends exactly one request
-- [ ] 3.6 Confirm the existing `toBeEnabled` assertions in both specs, `apps/web/e2e/admin-identity.spec.ts`, `apps/web/e2e/button-link-variants.spec.ts` and `apps/web/e2e/modal-a11y.spec.ts` stay green without edits
+- [x] 3.1 `apps/web/e2e/us-8.1-admin-users.spec.ts`: for Disable and Re-enable, Enter and Space, at 1280x720 (table) and 360x800 (cards), hold the PATCH response and assert the button is focused, has `aria-disabled="true"` and no `disabled` attribute, and a repeated Enter and Space send no second request; release with 200 and assert the opposite-action button is focused and is the same element handle
+- [x] 3.2 Same file: failure (HTTP 500) case in both layouts, asserting the alert, the same button focused and no `aria-disabled="true"`
+- [x] 3.3 Same file: with the response held, compare computed border style and color, background, text color and cursor of the pending button at rest, on hover and on mouse down (no transform shift); a raw mouse click keeps focus and sends no request. Check Disable (destructive) and Re-enable (secondary)
+- [x] 3.4 `apps/web/e2e/us-8.2-admin-listings.spec.ts`: repeat 3.1 and 3.2 for listings
+- [x] 3.5 `apps/web/e2e/us-8.1-admin-users.spec.ts` and `apps/web/e2e/us-8.2-admin-listings.spec.ts`: call `page.keyboard.down("Enter")`, wait for the opposite action, call `down("Enter")` again (sent as a repeat) and assert still one PATCH; after `up("Enter")`, one new press sends one request. Also assert a held Space then released sends exactly one request
+- [x] 3.6 Confirm the existing `toBeEnabled` assertions in both specs, `apps/web/e2e/admin-identity.spec.ts`, `apps/web/e2e/button-link-variants.spec.ts` and `apps/web/e2e/modal-a11y.spec.ts` stay green without edits
 
 ## 4. Docs and verification
 
