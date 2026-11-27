@@ -153,7 +153,15 @@ warm panel system, and all primitives MUST be exported from the package entry
 point. Every `Button` variant MUST paint its edge with `border-2` and MUST NOT
 use a ring or a box shadow at rest; the secondary variant MUST set `border-border`
 on that edge and a disabled secondary MUST keep `border-dashed` and
-`border-border-muted` at the same 2px width. `Card` MUST render with `border-2`
+`border-border-muted` at the same 2px width. A `Button` with
+`aria-disabled="true"` MUST look the same as a natively disabled `Button` of the
+same variant: dashed muted edge, stone fill and subtle ink for `primary`,
+`secondary` and `destructive`, and a struck-through label for `tertiary`. It MUST
+show the default cursor, MUST NOT change its look on hover and MUST NOT shift
+when pressed. It MUST stay focusable with its focus ring, and MUST NOT use
+`pointer-events: none` for this state, so that a pointer press does not move focus
+away from it. `aria-disabled` alone does not block activation: the consumer MUST
+ignore it. `aria-disabled="false"` or no attribute MUST leave the look unchanged. `Card` MUST render with `border-2`
 and `border-border` and no `ring-*` utility, and the shared `FLAT_CARD_CLASS`
 override MUST NOT exist. Existing primitive consumers MUST keep working without
 prop changes (the `variant` prop is optional and defaults to `primary`); this
@@ -184,6 +192,19 @@ styling and the added `buttonVariants` export.
 - **GIVEN** a disabled secondary `Button`
 - **WHEN** its class list and computed border are inspected
 - **THEN** it has `border-dashed` and `border-border-muted` and a 2px border width
+
+#### Scenario: aria-disabled looks like disabled and stays focusable
+
+- **GIVEN** a `Button` of each variant with `aria-disabled="true"`
+- **WHEN** its computed style is read at rest, on hover and while pressed
+- **THEN** it matches the natively disabled look of that variant, with the default cursor and no hover or press change
+- **AND** it can be focused, stays focused when clicked and does not compute `pointer-events: none`
+
+#### Scenario: aria-disabled false keeps the enabled look
+
+- **GIVEN** a `Button` with `aria-disabled="false"`
+- **WHEN** it is rendered and hovered
+- **THEN** it looks and behaves as an enabled `Button`
 
 #### Scenario: Card has a 2px edge and no ring
 
@@ -1725,8 +1746,10 @@ accessibility tree and its text is never announced twice.
 ### Requirement: Moderation actions are 44px real buttons with a flat secondary edge
 
 The admin moderation actions SHALL stay real `button` elements, in both layouts, with the same handlers,
-labels, accessible names and `disabled` condition (disabled while the mutation is
-pending) as before, and MUST be at least 44px tall. Disable MUST stay the
+labels and accessible names as before, and MUST be at least 44px tall. The only added
+handler ignores Enter and Space key repeat, as required by the `admin` capability. While the
+mutation is pending the action MUST be marked with `aria-disabled="true"` instead of
+the native `disabled` attribute, under the same per-row pending condition. Disable MUST stay the
 destructive variant, with the paper label on the danger fill. Re-enable MUST stay
 the plain secondary variant, with no local override, so that it has a solid 2px
 edge from `border-2` and no ring or box shadow. Inside the cards (below `sm`) each action MUST be full
@@ -1838,9 +1861,9 @@ The restyle of the admin screens SHALL NOT change routes, the `RoleGuard`
 accessible names, the existing `t()` keys, the text of any existing string, the
 API client or `Badge`. The Disable and Re-enable handlers and `disabled`
 conditions are extended by the `admin` capability requirement "Admin users and
-listings pages show pending and error feedback on moderation actions" (per-row
-pending disabling and visible failure feedback); that is the only handler and
-`disabled` change. No data, schema or backend file MUST change. The moderation
+listings pages show pending and error feedback on moderation actions" (per-row pending state, marked with `aria-disabled` so the button keeps focus, and
+visible failure feedback); Together with the key-repeat guard of the `admin` requirement "Admin moderation
+actions ignore key repeat", these are the only handler and disabled-state changes. No data, schema or backend file MUST change. The moderation
 behavior of the `admin` capability is consumed unchanged. The follow-ups (shared
 state panel and status tag, the `Badge` pill, per-row accessible names) MUST be
 recorded; the secondary button override is closed by the `buttonVariants`
