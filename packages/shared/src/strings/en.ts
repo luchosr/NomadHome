@@ -240,6 +240,8 @@ export const en = {
         "We have not confirmed your payment yet. This can take a few minutes, so check My bookings shortly.",
       not_found_title: "We could not find your booking",
       not_found_message: "Open My bookings to see your reservations.",
+      star_one: "star",
+      star_other: "stars",
     },
     dashboard: {
       title: "My Bookings",
